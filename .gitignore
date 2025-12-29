@@ -12,6 +12,9 @@
 /[Uu]ser[Ss]ettings/
 *.log
 
+# Vscode file
+.vscode/*
+
 # MACOS DS_store
 .DS_Store
 ._.DS_Store
