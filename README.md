@@ -5,7 +5,7 @@
 ## 브랜치 및 씬 작업 규칙
 유니티 씬 충돌 방지를 위해 **개인 브랜치**의 **개인 씬**에서 작업합니다.  
 
-- 브랜치 및 개인 씬 생성 방법
+### 브랜치 및 개인 씬 생성 방법
 1. Current Branch에서 'develop branch' 선택
 2. Current Branch에서 New Branch 선택하여 이름 작성 후 브랜치 생성
 3. Publish Branch 클릭하여 Github에 업로드
@@ -24,7 +24,7 @@
 (merge 요일은 추후 결정)  
 
 PR 진행 전 **개인 브랜치의 모든 작업 사항을 Push** 했는지 확인하세요.  
-- PR 진행 방법
+# PR 진행 방법
 1. 작업 브랜치에서 "**Create Pull Request**"를 선택
 2. 리다이렉트 된 Github 페이지에서 **base: develop** 확인
 3. 커밋 규칙에 따라 작업한 내용으로 PR 메시지를 작성
