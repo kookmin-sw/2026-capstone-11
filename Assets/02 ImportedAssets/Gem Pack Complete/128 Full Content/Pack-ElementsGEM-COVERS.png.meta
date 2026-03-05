@@ -1,0 +1,861 @@
+fileFormatVersion: 2
+guid: d561946d1359ff841b7a8b607e51a32d
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 12
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 3
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: iPhone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Server
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_0
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 383
+        width: 101
+        height: 97
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c2ea279c1e2fea348ab5d7436ee06d5d
+      internalID: 610997691
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_1
+      rect:
+        serializedVersion: 2
+        x: 133
+        y: 382
+        width: 108
+        height: 97
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 573ea025b5045b741a70d56f891b7f26
+      internalID: 285539519
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_2
+      rect:
+        serializedVersion: 2
+        x: 261
+        y: 383
+        width: 101
+        height: 102
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f10c27cdec49f424dbf6fbb852fb5091
+      internalID: -281577455
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_3
+      rect:
+        serializedVersion: 2
+        x: 385
+        y: 384
+        width: 102
+        height: 96
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b040ff673d1c8f24eba81abd44aa163e
+      internalID: 2057282350
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_4
+      rect:
+        serializedVersion: 2
+        x: 497
+        y: 372
+        width: 123
+        height: 115
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ba0ff28c363943b42a7ac27737ff3fb9
+      internalID: -1402319851
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_5
+      rect:
+        serializedVersion: 2
+        x: 637
+        y: 384
+        width: 103
+        height: 97
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e601d5ebdc80b8b4db158211203aed7e
+      internalID: 1246685752
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_6
+      rect:
+        serializedVersion: 2
+        x: 757
+        y: 381
+        width: 102
+        height: 98
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 570ca67fa1434a34fb72b58eb343348e
+      internalID: 1157724459
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_7
+      rect:
+        serializedVersion: 2
+        x: 882
+        y: 385
+        width: 103
+        height: 98
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8eeedc4492ce22943aef2e34ba33987d
+      internalID: -1319165859
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_8
+      rect:
+        serializedVersion: 2
+        x: 997
+        y: 382
+        width: 101
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aa9b7efba2988294eb3032aa850068ef
+      internalID: 983840006
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_9
+      rect:
+        serializedVersion: 2
+        x: 20
+        y: 257
+        width: 96
+        height: 96
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 278a53bcf3c0d3242942c7b65bd560c8
+      internalID: 1934837042
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_10
+      rect:
+        serializedVersion: 2
+        x: 139
+        y: 257
+        width: 95
+        height: 96
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b07400dbee7f9ea4d840c5654913afdc
+      internalID: -2137442700
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_11
+      rect:
+        serializedVersion: 2
+        x: 265
+        y: 257
+        width: 38
+        height: 103
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7b186d00faaa9004f87a6db92629908e
+      internalID: 1558759485
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_12
+      rect:
+        serializedVersion: 2
+        x: 312
+        y: 258
+        width: 35
+        height: 98
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d93a2b41b15f30e4a9e50709119ea31f
+      internalID: 906486257
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_13
+      rect:
+        serializedVersion: 2
+        x: 357
+        y: 263
+        width: 144
+        height: 83
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6fdb74236658c9f488fdd20ba0c9f790
+      internalID: 1356360698
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_14
+      rect:
+        serializedVersion: 2
+        x: 509
+        y: 252
+        width: 105
+        height: 104
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b9ca5630c2bf66b4e97d69cba56dcb05
+      internalID: 58339311
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_15
+      rect:
+        serializedVersion: 2
+        x: 632
+        y: 247
+        width: 102
+        height: 114
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6079eab1e98512f4e8b698db407c5239
+      internalID: -577521534
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_16
+      rect:
+        serializedVersion: 2
+        x: 756
+        y: 251
+        width: 101
+        height: 101
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4260bbd140fedc342a628ac98987d935
+      internalID: -916283630
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_17
+      rect:
+        serializedVersion: 2
+        x: 14
+        y: 134
+        width: 100
+        height: 91
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f10987057129e3c428b729eb8486e92e
+      internalID: -2069053066
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_18
+      rect:
+        serializedVersion: 2
+        x: 133
+        y: 130
+        width: 103
+        height: 101
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 34cce2f3613bbb645a5215a76960c094
+      internalID: 782050222
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_19
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 127
+        width: 103
+        height: 101
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1d0417d68bef10f4cba3760415f4bc72
+      internalID: 574476392
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_20
+      rect:
+        serializedVersion: 2
+        x: 381
+        y: 132
+        width: 55
+        height: 96
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 26c12fd6398ba3f48aee636399c87e04
+      internalID: -112932800
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_21
+      rect:
+        serializedVersion: 2
+        x: 430
+        y: 132
+        width: 37
+        height: 80
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aa3a8c72225894149a2d49ea3063144e
+      internalID: -912986986
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_22
+      rect:
+        serializedVersion: 2
+        x: 469
+        y: 193
+        width: 15
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 705851ef8a346e84d8c3f84c5cf73994
+      internalID: 713441239
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_23
+      rect:
+        serializedVersion: 2
+        x: 497
+        y: 24
+        width: 124
+        height: 211
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3ec6271f89a5e3b40b1447644fe119ec
+      internalID: -497587789
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_24
+      rect:
+        serializedVersion: 2
+        x: 802
+        y: 172
+        width: 281
+        height: 51
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: eef574c31222e1540b93458c71de3161
+      internalID: -963995096
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_25
+      rect:
+        serializedVersion: 2
+        x: 469
+        y: 154
+        width: 14
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 85ddfb099c8b82943a7741d07ea2dc5d
+      internalID: -1498107231
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_26
+      rect:
+        serializedVersion: 2
+        x: 131
+        y: 4
+        width: 112
+        height: 112
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 40044cecd2032594a92ee37ed7b4e4e7
+      internalID: 932178478
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_30
+      rect:
+        serializedVersion: 2
+        x: 41
+        y: 31
+        width: 44
+        height: 62
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 003706d84088fc446ba6ced8fe6ff2f0
+      internalID: -1252813195
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_33
+      rect:
+        serializedVersion: 2
+        x: 379
+        y: 7
+        width: 104
+        height: 104
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 888573a8abde9394ca6d80b7f6cdcb69
+      internalID: -536651871
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_36
+      rect:
+        serializedVersion: 2
+        x: 254
+        y: 6
+        width: 106
+        height: 107
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d87b09ffc12c3d74ea9f5c22f6a1366c
+      internalID: 507267196
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEM-COVERS_27
+      rect:
+        serializedVersion: 2
+        x: 621
+        y: 24
+        width: 122
+        height: 211
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 729779f7898dc934490d4bf041db2f30
+      internalID: -1104754205
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    nameFileIdTable:
+      Pack-ElementsGEM-COVERS_0: 610997691
+      Pack-ElementsGEM-COVERS_1: 285539519
+      Pack-ElementsGEM-COVERS_10: -2137442700
+      Pack-ElementsGEM-COVERS_11: 1558759485
+      Pack-ElementsGEM-COVERS_12: 906486257
+      Pack-ElementsGEM-COVERS_13: 1356360698
+      Pack-ElementsGEM-COVERS_14: 58339311
+      Pack-ElementsGEM-COVERS_15: -577521534
+      Pack-ElementsGEM-COVERS_16: -916283630
+      Pack-ElementsGEM-COVERS_17: -2069053066
+      Pack-ElementsGEM-COVERS_18: 782050222
+      Pack-ElementsGEM-COVERS_19: 574476392
+      Pack-ElementsGEM-COVERS_2: -281577455
+      Pack-ElementsGEM-COVERS_20: -112932800
+      Pack-ElementsGEM-COVERS_21: -912986986
+      Pack-ElementsGEM-COVERS_22: 713441239
+      Pack-ElementsGEM-COVERS_23: -497587789
+      Pack-ElementsGEM-COVERS_24: -963995096
+      Pack-ElementsGEM-COVERS_25: -1498107231
+      Pack-ElementsGEM-COVERS_26: 932178478
+      Pack-ElementsGEM-COVERS_27: -1104754205
+      Pack-ElementsGEM-COVERS_28: -1031163907
+      Pack-ElementsGEM-COVERS_29: -362529947
+      Pack-ElementsGEM-COVERS_3: 2057282350
+      Pack-ElementsGEM-COVERS_30: -1252813195
+      Pack-ElementsGEM-COVERS_31: 1040141720
+      Pack-ElementsGEM-COVERS_32: 1415170278
+      Pack-ElementsGEM-COVERS_33: -536651871
+      Pack-ElementsGEM-COVERS_34: 2003577634
+      Pack-ElementsGEM-COVERS_35: 1491496080
+      Pack-ElementsGEM-COVERS_36: 507267196
+      Pack-ElementsGEM-COVERS_4: -1402319851
+      Pack-ElementsGEM-COVERS_5: 1246685752
+      Pack-ElementsGEM-COVERS_6: 1157724459
+      Pack-ElementsGEM-COVERS_7: -1319165859
+      Pack-ElementsGEM-COVERS_8: 983840006
+      Pack-ElementsGEM-COVERS_9: 1934837042
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 276847
+  packageName: Gem Game full Pack 128px 256px full version
+  packageVersion: 1.0
+  assetPath: Assets/Gem Pack Complete/128 Full Content/Pack-ElementsGEM-COVERS.png
+  uploadId: 645795

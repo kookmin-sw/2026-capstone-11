@@ -1,0 +1,2918 @@
+fileFormatVersion: 2
+guid: 681e7e53eb6b2464796a3b703bbcd396
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 12
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: 0
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 3
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: iPhone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Server
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b5791185e64c1bb429810775af6167a5
+      internalID: -48168807
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_1
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bb58477a52a4b5446b42a8c0a8ab67c2
+      internalID: 1444667102
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_2
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 53f1024e9b0a780488d7e69d2f5d2c3f
+      internalID: 1901870866
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_3
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7f9ba2ecaf0d6d442ba0d5133b15b23c
+      internalID: -1877319696
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_4
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dc2789b69ad4392478e12d8f99c95271
+      internalID: 825962242
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_5
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c68e8c4081746754ba3bb24e43c574c5
+      internalID: -1493982201
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_6
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7dc5ff79ae883754694318a1e5a46f6d
+      internalID: 2017371905
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_7
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b86f115444b516f47b106aa45b0e0faa
+      internalID: 1799133101
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_8
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2dbb63c748cc836438f856ab2379bc27
+      internalID: 307887459
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_9
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3c546199f5f2fe045ab65f3fb2448caf
+      internalID: -328524046
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_10
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c92b2da0b38d74945b3dc9a73074492e
+      internalID: -105171899
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_11
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 459a27014b9e6364d9dc29c185b76e4c
+      internalID: 56806417
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_12
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e094d1dac4afa4b4b9bca6c63f45fdef
+      internalID: -1245002906
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_13
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f4274cbdfc5cd2c4e90cade411d27190
+      internalID: -1042289333
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_14
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4ac9b0632f3102f40898840df60698ab
+      internalID: -1776176007
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_15
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bf3d5be20792b7846931a1c5d9e28747
+      internalID: -1036847604
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_16
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2acd043e5d31db7419d629b6f6957a7b
+      internalID: 1594971621
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_17
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4d2f6e4150a868f44883e6f7ede2fcc0
+      internalID: 542734443
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_18
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: abc9645c038de6c49ba71966696c7a0b
+      internalID: 569489041
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_19
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a257c926932c8544abde0198c74c9e13
+      internalID: 1707246813
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_20
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e50e53e8689410548b3586f0ea0fc879
+      internalID: 1890826294
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_21
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4b43043d4abafa44f90f82373a62b9a9
+      internalID: -271419216
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_22
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2bb5bafea1655cd4ea3df2ccc2498130
+      internalID: -484658870
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_23
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e53a186934eeaa44395f1f973ac27a0a
+      internalID: 1063405065
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_24
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2f82af54e0ccd124f9d68e0be09a5c52
+      internalID: 1218042977
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_25
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 15ca4294592103d409c8eb1e85fa9dae
+      internalID: -1901304640
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_26
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3eb1e300f48ddc0479ab6799e3dcdcdd
+      internalID: 1679883405
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_27
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8c875e6822db7494da565858e4b25d01
+      internalID: -1960819539
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_28
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5b4dd1b4729293247ae6842e7a4e67cb
+      internalID: 738576322
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_29
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ff2f750a68ac0ed4da08e103b1f55796
+      internalID: -237954121
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_30
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a41166719b5f880498587d85bf356b5b
+      internalID: -326248635
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_31
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4ea5c1c30e794f94fad17f409351038d
+      internalID: -601713802
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_32
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 831da026032849f438ae81bfa20a74a9
+      internalID: -933016987
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_33
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2233fba378f1505479f01117444ec035
+      internalID: 1566882546
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_34
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 49e21bbbf58e0e4498657f7cdc857f7b
+      internalID: 1491867347
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_35
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3071ddcdbfd1d18429350d071f76740b
+      internalID: 704596183
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_36
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 945218164b532fd438956439030284ad
+      internalID: -549630458
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_37
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a59b67b5c7c0b424cbc5cb770dc40717
+      internalID: 794081394
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_38
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aadd316493480a14c9480945771ea3ab
+      internalID: 2056679184
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_39
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 782336b1277329248a0335a06f16e0c3
+      internalID: 2142932079
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_40
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6e51d2f4888db884fba3f528a5c678cb
+      internalID: 1322487495
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_41
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 52c0aab8bf22eb1469f4ef24940b54f6
+      internalID: -574089411
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_42
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 050ce99e0e048c54cb477cf6b5ee167e
+      internalID: -1988357305
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_43
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3c7bd6d8dd8a65f4c9746c95893651f5
+      internalID: 1726562446
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_44
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 58e18930adc1b0e4c846b12789b82479
+      internalID: 357669039
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_45
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 211f4eefc029adc4e91bf9b3d991e8cf
+      internalID: -1811911443
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_46
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 76e1174f31be0b54cafead85f9554fb9
+      internalID: -1932452533
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_47
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 674b835c62c3e6b4882fc712cf21c2c2
+      internalID: 786461004
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_48
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e80d6586f6bfcde418e9e0ab739dcd05
+      internalID: -2031050109
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_49
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d5b3e73d82c21ab4dac44e05733180ae
+      internalID: -230412793
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_50
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d462d4e4e76b08340a258ab4a7b518c0
+      internalID: 86123125
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_51
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3ba4dbc65f0e5104187c2c08b5f3139f
+      internalID: -477945628
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_52
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8dc85096f7066a6489ab95e3bfaed0a2
+      internalID: -1231591012
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_53
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 37492a4a8bf6a764fbc4d182cb31cce5
+      internalID: -996689456
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_54
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a093dbb5070962147abd130e9ce1fc20
+      internalID: -637935296
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_55
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9b1f3b7807bc74742bac777763a1de3d
+      internalID: 479449073
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_56
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e1e9531474bc2dd498f6f72e4a2e8beb
+      internalID: -1283387824
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_57
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9f2d2c470633cc34fbae0cff54475a07
+      internalID: -483467549
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_58
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 480837c82e9104847b216719b8d53b76
+      internalID: -825917218
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_59
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dd93da0730263d84fb4f575620e0e087
+      internalID: -1162619669
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_60
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 80cab6395204e1d43b50c6be983b587c
+      internalID: -1023191141
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_61
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7ce1ea9cc2921c94eb983b423145a025
+      internalID: -1856421790
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_62
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 34c4667f46119cf459ae2f74820fead8
+      internalID: 13489954
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_63
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2ea234c2eb7fd824299ebebe7b51b1c7
+      internalID: -1892400999
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_64
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ea8a00374f77d6f42b3a51bc0cad33b8
+      internalID: 1754853288
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_65
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8583a04b7ad26fb4c8014583be4e992a
+      internalID: -1089414728
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_66
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 32ea962b21848ae4b8e04c1c9629fc1b
+      internalID: -2113854725
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_67
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 56ae7ea302c79b049bc9f496cb3f9c1c
+      internalID: -1224700264
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_68
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a7d682e108915844995a8701a95fb80c
+      internalID: -574699411
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_69
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e448926de98bc4d4ba4555719a14afaf
+      internalID: -1853891410
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_70
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b55eaa41827b9d3448b9ad2f2be6f311
+      internalID: -1425989455
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_71
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 193e1a9bae20cd44eb99e0434ac12cc1
+      internalID: 979894869
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_72
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8d42b04277ace344c9f2bb8913bc40a9
+      internalID: 713776738
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_73
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fcb8cfbadc64fba46b45054c32cf173c
+      internalID: -1241750813
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_74
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 09479d3bb1087be47a6f147f9715fc98
+      internalID: -97525327
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_75
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9216268580fc448488e9e7304b4f95f8
+      internalID: -2107966199
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_76
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c49acef1983f9ec49a398005d8010cce
+      internalID: 581544341
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_77
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 207846f5ed8bdb2439fe551ca515f38a
+      internalID: 789149921
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_78
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1c858683132419c4693a55cf74ce7872
+      internalID: 750314581
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_79
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c57b87d0c34bf12439b3d49fc53fa78e
+      internalID: 651236923
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_80
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9cb5ea4aa4e42694ca5074d6962a42c8
+      internalID: 762299834
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_81
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1a14fc3ff574b84428cfd8490b8c5b32
+      internalID: 1799456408
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_82
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 0
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6922ec7a6af7c6742baa5a6cca89947e
+      internalID: 1218584014
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_83
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 0
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7e80cd9983ad85e40aa15b7b0e6f0d5e
+      internalID: 72352315
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_84
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 0
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6c36b09f3f9a20f4a89382c525c3371f
+      internalID: 380004709
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_85
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 0
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 30799abe07f641c4fb069f00942b3812
+      internalID: 2115068813
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_86
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 0
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 23a228b8f1130dd4b86d6ba7f53377ee
+      internalID: -232939891
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_87
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 0
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 69e3700a7ca663f4d9186c528005698b
+      internalID: 1482272432
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_88
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 0
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8382a4ce062e72a4d901226ab031f960
+      internalID: -123337334
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pack-ElementsGEMS_89
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 0
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ded3cb4fdcaad1a4d9e006fdacb6dd18
+      internalID: 1373165983
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    physicsShape:
+    - - {x: -276, y: -523}
+      - {x: -289, y: -539}
+      - {x: -289, y: -614}
+      - {x: -274, y: -629}
+      - {x: -249, y: -629}
+      - {x: -228, y: -614}
+      - {x: -228, y: -540}
+      - {x: -244, y: -523}
+    - - {x: -376, y: -528}
+      - {x: -389, y: -528}
+      - {x: -411, y: -547}
+      - {x: -423, y: -570}
+      - {x: -423, y: -594}
+      - {x: -402, y: -622}
+      - {x: -392, y: -624}
+      - {x: -373, y: -624}
+      - {x: -363, y: -620}
+      - {x: -343, y: -592}
+      - {x: -343, y: -566}
+    - - {x: -31, y: -539}
+      - {x: -36, y: -552}
+      - {x: -36, y: -616}
+      - {x: 37, y: -616}
+      - {x: 37, y: -553}
+      - {x: 34, y: -539}
+    - - {x: -478, y: -575}
+      - {x: -479, y: -548}
+      - {x: -489, y: -540}
+      - {x: -505, y: -538}
+      - {x: -527, y: -538}
+      - {x: -546, y: -547}
+      - {x: -547, y: -585}
+      - {x: -547, y: -595}
+      - {x: -535, y: -613}
+      - {x: -522, y: -615}
+      - {x: -502, y: -615}
+      - {x: -490, y: -612}
+      - {x: -489, y: -610}
+      - {x: -478, y: -596}
+    - - {x: -166, y: -538}
+      - {x: -168, y: -552}
+      - {x: -168, y: -608}
+      - {x: -154, y: -615}
+      - {x: -107, y: -615}
+      - {x: -94, y: -601}
+      - {x: -94, y: -542}
+      - {x: -106, y: -538}
+    - - {x: 489, y: -537}
+      - {x: 480, y: -551}
+      - {x: 480, y: -613}
+      - {x: 484, y: -615}
+      - {x: 553, y: -615}
+      - {x: 555, y: -607}
+      - {x: 555, y: -542}
+      - {x: 543, y: -537}
+    - - {x: 96, y: -539}
+      - {x: 92, y: -549}
+      - {x: 92, y: -613}
+      - {x: 97, y: -614}
+      - {x: 162, y: -614}
+      - {x: 165, y: -602}
+      - {x: 165, y: -543}
+      - {x: 151, y: -539}
+    - - {x: 221, y: -600}
+      - {x: 222, y: -607}
+      - {x: 226, y: -614}
+      - {x: 286, y: -614}
+      - {x: 295, y: -613}
+      - {x: 295, y: -546}
+      - {x: 293, y: -540}
+      - {x: 232, y: -540}
+      - {x: 221, y: -548}
+    - - {x: 419, y: -551}
+      - {x: 407, y: -540}
+      - {x: 358, y: -540}
+      - {x: 346, y: -550}
+      - {x: 346, y: -603}
+      - {x: 357, y: -613}
+      - {x: 408, y: -613}
+      - {x: 415, y: -607}
+      - {x: 419, y: -603}
+    - - {x: -420, y: -399}
+      - {x: -420, y: -502}
+      - {x: -404, y: -509}
+      - {x: -375, y: -509}
+      - {x: -347, y: -463}
+      - {x: -347, y: -424}
+      - {x: -359, y: -399}
+    - - {x: -246, y: -395}
+      - {x: -286, y: -395}
+      - {x: -298, y: -398}
+      - {x: -298, y: -439}
+      - {x: -278, y: -505}
+      - {x: -253, y: -505}
+      - {x: -220, y: -445}
+      - {x: -220, y: -413}
+      - {x: -231, y: -398}
+    - - {x: -531, y: -421}
+      - {x: -542, y: -427}
+      - {x: -542, y: -504}
+      - {x: -497, y: -504}
+      - {x: -490, y: -486}
+      - {x: -490, y: -428}
+      - {x: -498, y: -421}
+    - - {x: -2, y: -401}
+      - {x: -33, y: -463}
+      - {x: -33, y: -483}
+      - {x: -31, y: -496}
+      - {x: -9, y: -500}
+      - {x: 29, y: -500}
+      - {x: 34, y: -486}
+      - {x: 34, y: -453}
+      - {x: 3, y: -401}
+    - - {x: 481, y: -419}
+      - {x: 481, y: -492}
+      - {x: 546, y: -492}
+      - {x: 554, y: -490}
+      - {x: 554, y: -433}
+      - {x: 539, y: -419}
+    - - {x: 93, y: -418}
+      - {x: 92, y: -422}
+      - {x: 92, y: -490}
+      - {x: 97, y: -491}
+      - {x: 165, y: -491}
+      - {x: 165, y: -423}
+      - {x: 164, y: -418}
+    - - {x: -135, y: -429}
+      - {x: -148, y: -438}
+      - {x: -160, y: -456}
+      - {x: -160, y: -469}
+      - {x: -137, y: -490}
+      - {x: -127, y: -490}
+      - {x: -107, y: -479}
+      - {x: -102, y: -465}
+      - {x: -102, y: -453}
+      - {x: -122, y: -429}
+    - - {x: 346, y: -483}
+      - {x: 349, y: -489}
+      - {x: 408, y: -489}
+      - {x: 419, y: -486}
+      - {x: 419, y: -428}
+      - {x: 415, y: -414}
+      - {x: 354, y: -414}
+      - {x: 346, y: -416}
+    - - {x: 221, y: -479}
+      - {x: 224, y: -486}
+      - {x: 282, y: -486}
+      - {x: 295, y: -483}
+      - {x: 295, y: -426}
+      - {x: 291, y: -412}
+      - {x: 234, y: -412}
+      - {x: 221, y: -416}
+    - - {x: -518, y: -272}
+      - {x: -556, y: -306}
+      - {x: -556, y: -334}
+      - {x: -541, y: -354}
+      - {x: -521, y: -375}
+      - {x: -514, y: -375}
+      - {x: -485, y: -358}
+      - {x: -479, y: -335}
+      - {x: -479, y: -301}
+      - {x: -511, y: -272}
+    - - {x: -152, y: -272}
+      - {x: -167, y: -328}
+      - {x: -167, y: -375}
+      - {x: -116, y: -375}
+      - {x: -96, y: -366}
+      - {x: -94, y: -351}
+      - {x: -94, y: -340}
+      - {x: -127, y: -272}
+    - - {x: -240, y: -273}
+      - {x: -288, y: -273}
+      - {x: -288, y: -373}
+      - {x: -251, y: -373}
+      - {x: -231, y: -331}
+      - {x: -230, y: -326}
+      - {x: -230, y: -298}
+    - - {x: -9, y: -274}
+      - {x: -30, y: -289}
+      - {x: -30, y: -349}
+      - {x: -10, y: -371}
+      - {x: 18, y: -371}
+      - {x: 24, y: -370}
+      - {x: 29, y: -345}
+      - {x: 29, y: -289}
+      - {x: 16, y: -274}
+    - - {x: -425, y: -348}
+      - {x: -392, y: -369}
+      - {x: -378, y: -369}
+      - {x: -342, y: -349}
+      - {x: -342, y: -336}
+      - {x: -348, y: -313}
+      - {x: -373, y: -278}
+      - {x: -387, y: -278}
+      - {x: -425, y: -309}
+    - - {x: 234, y: -285}
+      - {x: 221, y: -298}
+      - {x: 221, y: -349}
+      - {x: 233, y: -362}
+      - {x: 285, y: -362}
+      - {x: 295, y: -358}
+      - {x: 295, y: -299}
+      - {x: 291, y: -285}
+    - - {x: 357, y: -285}
+      - {x: 345, y: -293}
+      - {x: 345, y: -361}
+      - {x: 359, y: -362}
+      - {x: 416, y: -362}
+      - {x: 419, y: -360}
+      - {x: 419, y: -299}
+      - {x: 415, y: -285}
+    - - {x: 484, y: -286}
+      - {x: 481, y: -300}
+      - {x: 481, y: -356}
+      - {x: 492, y: -362}
+      - {x: 552, y: -362}
+      - {x: 554, y: -355}
+      - {x: 554, y: -286}
+    - - {x: 92, y: -360}
+      - {x: 94, y: -361}
+      - {x: 151, y: -361}
+      - {x: 164, y: -359}
+      - {x: 164, y: -292}
+      - {x: 162, y: -286}
+      - {x: 95, y: -286}
+      - {x: 92, y: -300}
+    - - {x: -166, y: -192}
+      - {x: -166, y: -229}
+      - {x: -150, y: -246}
+      - {x: -110, y: -246}
+      - {x: -96, y: -234}
+      - {x: -96, y: -182}
+      - {x: -104, y: -161}
+      - {x: -127, y: -144}
+      - {x: -138, y: -144}
+      - {x: -161, y: -176}
+    - - {x: -520, y: -148}
+      - {x: -556, y: -172}
+      - {x: -556, y: -209}
+      - {x: -550, y: -217}
+      - {x: -519, y: -242}
+      - {x: -509, y: -242}
+      - {x: -477, y: -211}
+      - {x: -477, y: -175}
+      - {x: -504, y: -148}
+    - - {x: -370, y: -151}
+      - {x: -402, y: -151}
+      - {x: -418, y: -170}
+      - {x: -418, y: -178}
+      - {x: -410, y: -225}
+      - {x: -389, y: -240}
+      - {x: -376, y: -240}
+      - {x: -357, y: -221}
+      - {x: -350, y: -198}
+      - {x: -350, y: -163}
+    - - {x: -25, y: -154}
+      - {x: -42, y: -179}
+      - {x: -42, y: -220}
+      - {x: -24, y: -238}
+      - {x: 17, y: -238}
+      - {x: 42, y: -227}
+      - {x: 42, y: -177}
+      - {x: 24, y: -154}
+    - - {x: -242, y: -156}
+      - {x: -294, y: -156}
+      - {x: -297, y: -173}
+      - {x: -297, y: -231}
+      - {x: -284, y: -234}
+      - {x: -234, y: -234}
+      - {x: -228, y: -232}
+      - {x: -221, y: -216}
+      - {x: -221, y: -173}
+    - - {x: 107, y: -159}
+      - {x: 92, y: -163}
+      - {x: 92, y: -220}
+      - {x: 95, y: -232}
+      - {x: 164, y: -232}
+      - {x: 165, y: -219}
+      - {x: 165, y: -168}
+      - {x: 151, y: -159}
+    - - {x: 221, y: -158}
+      - {x: 221, y: -220}
+      - {x: 224, y: -232}
+      - {x: 282, y: -232}
+      - {x: 295, y: -218}
+      - {x: 295, y: -162}
+      - {x: 282, y: -158}
+    - - {x: 486, y: -159}
+      - {x: 481, y: -171}
+      - {x: 481, y: -218}
+      - {x: 492, y: -232}
+      - {x: 551, y: -232}
+      - {x: 554, y: -225}
+      - {x: 554, y: -161}
+      - {x: 540, y: -159}
+    - - {x: 348, y: -158}
+      - {x: 346, y: -159}
+      - {x: 346, y: -218}
+      - {x: 349, y: -231}
+      - {x: 418, y: -231}
+      - {x: 419, y: -227}
+      - {x: 419, y: -160}
+      - {x: 405, y: -158}
+    - - {x: -147, y: -20}
+      - {x: -166, y: -45}
+      - {x: -166, y: -90}
+      - {x: -155, y: -107}
+      - {x: -105, y: -107}
+      - {x: -96, y: -92}
+      - {x: -96, y: -43}
+      - {x: -113, y: -20}
+    - - {x: -36, y: -26}
+      - {x: -40, y: -35}
+      - {x: -40, y: -93}
+      - {x: -28, y: -107}
+      - {x: 21, y: -107}
+      - {x: 44, y: -100}
+      - {x: 44, y: -28}
+      - {x: 35, y: -26}
+    - - {x: -541, y: -25}
+      - {x: -550, y: -38}
+      - {x: -550, y: -95}
+      - {x: -530, y: -101}
+      - {x: -484, y: -101}
+      - {x: -476, y: -96}
+      - {x: -476, y: -32}
+      - {x: -493, y: -25}
+    - - {x: 229, y: -25}
+      - {x: 221, y: -27}
+      - {x: 221, y: -100}
+      - {x: 224, y: -101}
+      - {x: 294, y: -101}
+      - {x: 295, y: -96}
+      - {x: 295, y: -25}
+    - - {x: 408, y: -27}
+      - {x: 385, y: -26}
+      - {x: 358, y: -26}
+      - {x: 346, y: -38}
+      - {x: 346, y: -100}
+      - {x: 352, y: -101}
+      - {x: 416, y: -101}
+      - {x: 419, y: -89}
+      - {x: 419, y: -38}
+    - - {x: -256, y: -28}
+      - {x: -262, y: -28}
+      - {x: -294, y: -54}
+      - {x: -294, y: -72}
+      - {x: -262, y: -99}
+      - {x: -252, y: -99}
+      - {x: -224, y: -75}
+      - {x: -224, y: -52}
+      - {x: -228, y: -41}
+    - - {x: 151, y: -29}
+      - {x: 105, y: -29}
+      - {x: 92, y: -42}
+      - {x: 92, y: -95}
+      - {x: 106, y: -99}
+      - {x: 160, y: -99}
+      - {x: 164, y: -86}
+      - {x: 165, y: -56}
+      - {x: 165, y: -42}
+    - - {x: 481, y: -99}
+      - {x: 546, y: -99}
+      - {x: 554, y: -98}
+      - {x: 554, y: -32}
+      - {x: 552, y: -27}
+      - {x: 484, y: -27}
+      - {x: 481, y: -40}
+    - - {x: -420, y: -30}
+      - {x: -427, y: -36}
+      - {x: -427, y: -42}
+      - {x: -397, y: -87}
+      - {x: -388, y: -97}
+      - {x: -383, y: -97}
+      - {x: -369, y: -87}
+      - {x: -340, y: -41}
+      - {x: -340, y: -39}
+      - {x: -348, y: -30}
+    - - {x: -351, y: 94}
+      - {x: -355, y: 96}
+      - {x: -377, y: 112}
+      - {x: -387, y: 112}
+      - {x: -417, y: 95}
+      - {x: -433, y: 75}
+      - {x: -433, y: 52}
+      - {x: -421, y: 26}
+      - {x: -388, y: 12}
+      - {x: -378, y: 12}
+      - {x: -350, y: 29}
+      - {x: -334, y: 61}
+      - {x: -334, y: 68}
+    - - {x: -263, y: 110}
+      - {x: -294, y: 93}
+      - {x: -301, y: 74}
+      - {x: -301, y: 41}
+      - {x: -281, y: 13}
+      - {x: -248, y: 13}
+      - {x: -217, y: 40}
+      - {x: -217, y: 76}
+      - {x: -252, y: 110}
+    - - {x: -496, y: 109}
+      - {x: -514, y: 109}
+      - {x: -543, y: 66}
+      - {x: -543, y: 40}
+      - {x: -528, y: 14}
+      - {x: -495, y: 14}
+      - {x: -488, y: 15}
+      - {x: -471, y: 42}
+      - {x: -471, y: 66}
+      - {x: -495, y: 108}
+    - - {x: -124, y: 108}
+      - {x: -133, y: 108}
+      - {x: -165, y: 80}
+      - {x: -165, y: 33}
+      - {x: -160, y: 16}
+      - {x: -154, y: 15}
+      - {x: -126, y: 15}
+      - {x: -107, y: 24}
+      - {x: -97, y: 43}
+      - {x: -97, y: 58}
+      - {x: -121, y: 107}
+    - - {x: -7, y: 108}
+      - {x: -41, y: 77}
+      - {x: -41, y: 35}
+      - {x: -16, y: 15}
+      - {x: 39, y: 15}
+      - {x: 45, y: 17}
+      - {x: 45, y: 89}
+      - {x: 21, y: 108}
+    - - {x: 105, y: 98}
+      - {x: 92, y: 93}
+      - {x: 92, y: 39}
+      - {x: 96, y: 25}
+      - {x: 153, y: 25}
+      - {x: 165, y: 29}
+      - {x: 165, y: 83}
+      - {x: 161, y: 98}
+    - - {x: 346, y: 98}
+      - {x: 346, y: 25}
+      - {x: 418, y: 25}
+      - {x: 419, y: 28}
+      - {x: 419, y: 97}
+      - {x: 416, y: 98}
+    - - {x: 481, y: 98}
+      - {x: 481, y: 31}
+      - {x: 493, y: 25}
+      - {x: 554, y: 25}
+      - {x: 554, y: 96}
+      - {x: 540, y: 98}
+    - - {x: 223, y: 99}
+      - {x: 222, y: 93}
+      - {x: 222, y: 30}
+      - {x: 232, y: 26}
+      - {x: 291, y: 26}
+      - {x: 294, y: 39}
+      - {x: 294, y: 97}
+      - {x: 286, y: 99}
+    - - {x: -530, y: 238}
+      - {x: -539, y: 234}
+      - {x: -555, y: 177}
+      - {x: -555, y: 137}
+      - {x: -551, y: 133}
+      - {x: -497, y: 133}
+      - {x: -478, y: 140}
+      - {x: -478, y: 184}
+      - {x: -510, y: 238}
+    - - {x: -385, y: 236}
+      - {x: -394, y: 225}
+      - {x: -434, y: 170}
+      - {x: -434, y: 163}
+      - {x: -425, y: 137}
+      - {x: -341, y: 137}
+      - {x: -334, y: 158}
+      - {x: -334, y: 176}
+      - {x: -381, y: 236}
+    - - {x: -250, y: 242}
+      - {x: -265, y: 242}
+      - {x: -280, y: 226}
+      - {x: -298, y: 197}
+      - {x: -298, y: 165}
+      - {x: -283, y: 137}
+      - {x: -242, y: 137}
+      - {x: -225, y: 157}
+      - {x: -220, y: 170}
+      - {x: -220, y: 189}
+    - - {x: -146, y: 236}
+      - {x: -166, y: 197}
+      - {x: -166, y: 174}
+      - {x: -148, y: 141}
+      - {x: -112, y: 141}
+      - {x: -95, y: 169}
+      - {x: -95, y: 213}
+      - {x: -112, y: 236}
+    - - {x: 103, y: 236}
+      - {x: 78, y: 209}
+      - {x: 78, y: 164}
+      - {x: 80, y: 147}
+      - {x: 110, y: 142}
+      - {x: 181, y: 142}
+      - {x: 181, y: 236}
+    - - {x: -23, y: 230}
+      - {x: -47, y: 221}
+      - {x: -47, y: 154}
+      - {x: -26, y: 147}
+      - {x: 32, y: 147}
+      - {x: 45, y: 164}
+      - {x: 45, y: 213}
+      - {x: 29, y: 230}
+    - - {x: 482, y: 157}
+      - {x: 483, y: 153}
+      - {x: 487, y: 147}
+      - {x: 538, y: 147}
+      - {x: 554, y: 153}
+      - {x: 554, y: 209}
+      - {x: 553, y: 211}
+      - {x: 548, y: 223}
+      - {x: 496, y: 223}
+      - {x: 482, y: 220}
+    - - {x: 234, y: 221}
+      - {x: 221, y: 218}
+      - {x: 221, y: 159}
+      - {x: 233, y: 149}
+      - {x: 292, y: 149}
+      - {x: 295, y: 161}
+      - {x: 295, y: 221}
+    - - {x: 361, y: 221}
+      - {x: 347, y: 218}
+      - {x: 347, y: 163}
+      - {x: 362, y: 149}
+      - {x: 415, y: 149}
+      - {x: 418, y: 159}
+      - {x: 418, y: 221}
+    - - {x: -143, y: 376}
+      - {x: -165, y: 354}
+      - {x: -165, y: 278}
+      - {x: -146, y: 261}
+      - {x: -104, y: 261}
+      - {x: -96, y: 264}
+      - {x: -96, y: 356}
+      - {x: -114, y: 376}
+    - - {x: -268, y: 371}
+      - {x: -291, y: 344}
+      - {x: -291, y: 275}
+      - {x: -288, y: 265}
+      - {x: -226, y: 265}
+      - {x: -226, y: 358}
+      - {x: -239, y: 371}
+    - - {x: -511, y: 369}
+      - {x: -518, y: 369}
+      - {x: -523, y: 367}
+      - {x: -557, y: 334}
+      - {x: -557, y: 317}
+      - {x: -527, y: 268}
+      - {x: -515, y: 268}
+      - {x: -489, y: 282}
+      - {x: -476, y: 314}
+      - {x: -476, y: 341}
+    - - {x: -7, y: 366}
+      - {x: -38, y: 347}
+      - {x: -38, y: 295}
+      - {x: -5, y: 270}
+      - {x: 5, y: 270}
+      - {x: 37, y: 296}
+      - {x: 37, y: 343}
+      - {x: 11, y: 366}
+    - - {x: 106, y: 361}
+      - {x: 101, y: 356}
+      - {x: 97, y: 350}
+      - {x: 89, y: 342}
+      - {x: 80, y: 321}
+      - {x: 80, y: 312}
+      - {x: 103, y: 276}
+      - {x: 160, y: 276}
+      - {x: 177, y: 313}
+      - {x: 177, y: 327}
+      - {x: 155, y: 361}
+    - - {x: -397, y: 358}
+      - {x: -416, y: 353}
+      - {x: -424, y: 341}
+      - {x: -424, y: 304}
+      - {x: -417, y: 281}
+      - {x: -408, y: 279}
+      - {x: -347, y: 279}
+      - {x: -343, y: 294}
+      - {x: -343, y: 354}
+      - {x: -352, y: 358}
+    - - {x: 361, y: 356}
+      - {x: 347, y: 350}
+      - {x: 347, y: 294}
+      - {x: 359, y: 281}
+      - {x: 406, y: 281}
+      - {x: 418, y: 292}
+      - {x: 418, y: 350}
+      - {x: 412, y: 356}
+    - - {x: 487, y: 356}
+      - {x: 481, y: 340}
+      - {x: 481, y: 296}
+      - {x: 495, y: 281}
+      - {x: 507, y: 281}
+      - {x: 539, y: 282}
+      - {x: 554, y: 295}
+      - {x: 554, y: 351}
+      - {x: 537, y: 356}
+    - - {x: 222, y: 283}
+      - {x: 223, y: 282}
+      - {x: 281, y: 282}
+      - {x: 295, y: 284}
+      - {x: 295, y: 346}
+      - {x: 292, y: 355}
+      - {x: 223, y: 355}
+      - {x: 222, y: 350}
+    - - {x: -529, y: 499}
+      - {x: -558, y: 452}
+      - {x: -558, y: 425}
+      - {x: -519, y: 385}
+      - {x: -513, y: 385}
+      - {x: -473, y: 444}
+      - {x: -473, y: 449}
+      - {x: -514, y: 499}
+    - - {x: -43, y: 449}
+      - {x: -43, y: 439}
+      - {x: -16, y: 392}
+      - {x: 14, y: 392}
+      - {x: 43, y: 407}
+      - {x: 43, y: 458}
+      - {x: 28, y: 494}
+      - {x: 2, y: 508}
+      - {x: -9, y: 508}
+      - {x: -41, y: 470}
+    - - {x: -116, y: 503}
+      - {x: -129, y: 513}
+      - {x: -139, y: 513}
+      - {x: -177, y: 459}
+      - {x: -177, y: 428}
+      - {x: -163, y: 399}
+      - {x: -139, y: 393}
+      - {x: -130, y: 393}
+      - {x: -97, y: 411}
+      - {x: -93, y: 417}
+      - {x: -85, y: 443}
+      - {x: -85, y: 449}
+    - - {x: 128, y: 503}
+      - {x: 91, y: 485}
+      - {x: 91, y: 403}
+      - {x: 104, y: 393}
+      - {x: 149, y: 393}
+      - {x: 165, y: 403}
+      - {x: 165, y: 486}
+      - {x: 137, y: 503}
+    - - {x: -383, y: 506}
+      - {x: -387, y: 506}
+      - {x: -422, y: 458}
+      - {x: -422, y: 447}
+      - {x: -420, y: 438}
+      - {x: -386, y: 399}
+      - {x: -380, y: 399}
+      - {x: -345, y: 452}
+      - {x: -345, y: 459}
+      - {x: -373, y: 499}
+    - - {x: -256, y: 504}
+      - {x: -268, y: 504}
+      - {x: -301, y: 452}
+      - {x: -301, y: 422}
+      - {x: -286, y: 400}
+      - {x: -235, y: 400}
+      - {x: -217, y: 423}
+      - {x: -217, y: 450}
+      - {x: -224, y: 473}
+    - - {x: 351, y: 483}
+      - {x: 347, y: 482}
+      - {x: 347, y: 409}
+      - {x: 352, y: 407}
+      - {x: 417, y: 407}
+      - {x: 419, y: 418}
+      - {x: 419, y: 483}
+    - - {x: 281, y: 481}
+      - {x: 232, y: 481}
+      - {x: 222, y: 478}
+      - {x: 222, y: 423}
+      - {x: 226, y: 409}
+      - {x: 280, y: 409}
+      - {x: 294, y: 423}
+      - {x: 294, y: 469}
+    - - {x: 483, y: 485}
+      - {x: 481, y: 479}
+      - {x: 481, y: 412}
+      - {x: 551, y: 412}
+      - {x: 554, y: 426}
+      - {x: 554, y: 481}
+      - {x: 543, y: 485}
+    - - {x: -157, y: 530}
+      - {x: -150, y: 525}
+      - {x: -118, y: 525}
+      - {x: -103, y: 540}
+      - {x: -103, y: 610}
+      - {x: -104, y: 616}
+      - {x: -119, y: 632}
+      - {x: -140, y: 632}
+      - {x: -157, y: 621}
+    - - {x: -277, y: 627}
+      - {x: -300, y: 597}
+      - {x: -300, y: 559}
+      - {x: -274, y: 531}
+      - {x: -248, y: 531}
+      - {x: -231, y: 541}
+      - {x: -218, y: 567}
+      - {x: -218, y: 598}
+      - {x: -236, y: 627}
+    - - {x: -34, y: 624}
+      - {x: -50, y: 613}
+      - {x: -52, y: 604}
+      - {x: -52, y: 533}
+      - {x: -43, y: 531}
+      - {x: 31, y: 531}
+      - {x: 49, y: 556}
+      - {x: 49, y: 616}
+      - {x: 21, y: 624}
+    - - {x: 148, y: 627}
+      - {x: 118, y: 627}
+      - {x: 83, y: 607}
+      - {x: 81, y: 597}
+      - {x: 81, y: 555}
+      - {x: 109, y: 531}
+      - {x: 147, y: 531}
+      - {x: 158, y: 537}
+      - {x: 175, y: 559}
+      - {x: 175, y: 594}
+      - {x: 160, y: 624}
+    - - {x: -558, y: 548}
+      - {x: -544, y: 533}
+      - {x: -472, y: 533}
+      - {x: -465, y: 535}
+      - {x: -465, y: 624}
+      - {x: -553, y: 624}
+      - {x: -558, y: 623}
+    - - {x: -412, y: 625}
+      - {x: -425, y: 611}
+      - {x: -425, y: 535}
+      - {x: -424, y: 533}
+      - {x: -362, y: 533}
+      - {x: -343, y: 543}
+      - {x: -343, y: 609}
+      - {x: -365, y: 625}
+    - - {x: 234, y: 616}
+      - {x: 222, y: 603}
+      - {x: 222, y: 556}
+      - {x: 236, y: 542}
+      - {x: 292, y: 542}
+      - {x: 294, y: 552}
+      - {x: 294, y: 612}
+      - {x: 282, y: 616}
+    - - {x: 347, y: 616}
+      - {x: 347, y: 553}
+      - {x: 350, y: 542}
+      - {x: 418, y: 542}
+      - {x: 419, y: 545}
+      - {x: 419, y: 613}
+      - {x: 406, y: 616}
+    - - {x: 481, y: 615}
+      - {x: 481, y: 550}
+      - {x: 483, y: 542}
+      - {x: 544, y: 542}
+      - {x: 554, y: 546}
+      - {x: 554, y: 601}
+      - {x: 551, y: 615}
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 1537655665
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    nameFileIdTable:
+      Pack-ElementsGEMS_0: -48168807
+      Pack-ElementsGEMS_1: 1444667102
+      Pack-ElementsGEMS_10: -105171899
+      Pack-ElementsGEMS_11: 56806417
+      Pack-ElementsGEMS_12: -1245002906
+      Pack-ElementsGEMS_13: -1042289333
+      Pack-ElementsGEMS_14: -1776176007
+      Pack-ElementsGEMS_15: -1036847604
+      Pack-ElementsGEMS_16: 1594971621
+      Pack-ElementsGEMS_17: 542734443
+      Pack-ElementsGEMS_18: 569489041
+      Pack-ElementsGEMS_19: 1707246813
+      Pack-ElementsGEMS_2: 1901870866
+      Pack-ElementsGEMS_20: 1890826294
+      Pack-ElementsGEMS_21: -271419216
+      Pack-ElementsGEMS_22: -484658870
+      Pack-ElementsGEMS_23: 1063405065
+      Pack-ElementsGEMS_24: 1218042977
+      Pack-ElementsGEMS_25: -1901304640
+      Pack-ElementsGEMS_26: 1679883405
+      Pack-ElementsGEMS_27: -1960819539
+      Pack-ElementsGEMS_28: 738576322
+      Pack-ElementsGEMS_29: -237954121
+      Pack-ElementsGEMS_3: -1877319696
+      Pack-ElementsGEMS_30: -326248635
+      Pack-ElementsGEMS_31: -601713802
+      Pack-ElementsGEMS_32: -933016987
+      Pack-ElementsGEMS_33: 1566882546
+      Pack-ElementsGEMS_34: 1491867347
+      Pack-ElementsGEMS_35: 704596183
+      Pack-ElementsGEMS_36: -549630458
+      Pack-ElementsGEMS_37: 794081394
+      Pack-ElementsGEMS_38: 2056679184
+      Pack-ElementsGEMS_39: 2142932079
+      Pack-ElementsGEMS_4: 825962242
+      Pack-ElementsGEMS_40: 1322487495
+      Pack-ElementsGEMS_41: -574089411
+      Pack-ElementsGEMS_42: -1988357305
+      Pack-ElementsGEMS_43: 1726562446
+      Pack-ElementsGEMS_44: 357669039
+      Pack-ElementsGEMS_45: -1811911443
+      Pack-ElementsGEMS_46: -1932452533
+      Pack-ElementsGEMS_47: 786461004
+      Pack-ElementsGEMS_48: -2031050109
+      Pack-ElementsGEMS_49: -230412793
+      Pack-ElementsGEMS_5: -1493982201
+      Pack-ElementsGEMS_50: 86123125
+      Pack-ElementsGEMS_51: -477945628
+      Pack-ElementsGEMS_52: -1231591012
+      Pack-ElementsGEMS_53: -996689456
+      Pack-ElementsGEMS_54: -637935296
+      Pack-ElementsGEMS_55: 479449073
+      Pack-ElementsGEMS_56: -1283387824
+      Pack-ElementsGEMS_57: -483467549
+      Pack-ElementsGEMS_58: -825917218
+      Pack-ElementsGEMS_59: -1162619669
+      Pack-ElementsGEMS_6: 2017371905
+      Pack-ElementsGEMS_60: -1023191141
+      Pack-ElementsGEMS_61: -1856421790
+      Pack-ElementsGEMS_62: 13489954
+      Pack-ElementsGEMS_63: -1892400999
+      Pack-ElementsGEMS_64: 1754853288
+      Pack-ElementsGEMS_65: -1089414728
+      Pack-ElementsGEMS_66: -2113854725
+      Pack-ElementsGEMS_67: -1224700264
+      Pack-ElementsGEMS_68: -574699411
+      Pack-ElementsGEMS_69: -1853891410
+      Pack-ElementsGEMS_7: 1799133101
+      Pack-ElementsGEMS_70: -1425989455
+      Pack-ElementsGEMS_71: 979894869
+      Pack-ElementsGEMS_72: 713776738
+      Pack-ElementsGEMS_73: -1241750813
+      Pack-ElementsGEMS_74: -97525327
+      Pack-ElementsGEMS_75: -2107966199
+      Pack-ElementsGEMS_76: 581544341
+      Pack-ElementsGEMS_77: 789149921
+      Pack-ElementsGEMS_78: 750314581
+      Pack-ElementsGEMS_79: 651236923
+      Pack-ElementsGEMS_8: 307887459
+      Pack-ElementsGEMS_80: 762299834
+      Pack-ElementsGEMS_81: 1799456408
+      Pack-ElementsGEMS_82: 1218584014
+      Pack-ElementsGEMS_83: 72352315
+      Pack-ElementsGEMS_84: 380004709
+      Pack-ElementsGEMS_85: 2115068813
+      Pack-ElementsGEMS_86: -232939891
+      Pack-ElementsGEMS_87: 1482272432
+      Pack-ElementsGEMS_88: -123337334
+      Pack-ElementsGEMS_89: 1373165983
+      Pack-ElementsGEMS_9: -328524046
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 276847
+  packageName: Gem Game full Pack 128px 256px full version
+  packageVersion: 1.0
+  assetPath: Assets/Gem Pack Complete/128 Full Content/Pack-ElementsGEMS.png
+  uploadId: 645795
