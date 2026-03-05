@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: edc86c8e8a85f4c49b5220917519e6d5
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 284152
+  packageName: Board Game Essentials - Chess / Checkers / Dice
+  packageVersion: 1.0
+  assetPath: Assets/Daniel Riches/BoardGameEssentials/BoardGameEssentialsPrefabs/D6_Rounded.prefab
+  uploadId: 666420

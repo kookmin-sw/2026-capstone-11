@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ace8116c4651f7d489d09ac1001dbfc6
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 284152
+  packageName: Board Game Essentials - Chess / Checkers / Dice
+  packageVersion: 1.0
+  assetPath: Assets/Daniel Riches/BoardGameEssentials/BoardGameEssentialsPrefabs/ChessKing.prefab
+  uploadId: 666420
