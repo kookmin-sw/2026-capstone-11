@@ -155,10 +155,7 @@ namespace Game.Network
         {
             if (_cts == null || _cts.IsCancellationRequested) return null;
 
-
-            var conn = await Connection.ListenAndCreateConnection(ipAddr, portNum, q, _cts.Token);
-
-            //TODO: timer expire 구현
+            var conn = await Connection.ListenAndCreateConnection(ipAddr, portNum, q, expireTimeMs);
 
             if (conn != null && _connectionDict.TryAdd(conn.GetConnectionId(), conn))
             { 

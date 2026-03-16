@@ -8,7 +8,6 @@ namespace Game.Network
     {
         public const int System = 0;
         public const int PingPong = 1;
-        public const int Chat = 2;
     }
 
     public interface INetEventHandler
