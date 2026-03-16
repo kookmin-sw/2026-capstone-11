@@ -3,6 +3,7 @@ using System.IO.Pipelines;
 using System.Net.Security;
 using System.Threading.Tasks;
 using Game.Network;
+using Game.Network.Protocol;
 
 
 namespace Game.Server
@@ -19,15 +20,27 @@ namespace Game.Server
             if (line != null && line.Trim().Equals("s", StringComparison.OrdinalIgnoreCase))
             {
                 var server = NetworkManager.CreateNetworkManager(TransferConfig.ServerPortNum, 10);
-                var PingPong = new PingPongHandler(server, 5000);
-                var Session = new GameSessionHandler(server, "Server"); 
+                //var PingPong = new PingPongHandler(server, 5000);
+                //var Session = new GameSessionHandler(server, "Server"); 
                 
-                
-                server.SetReceiveHandler(NetEventHandlerId.PingPong, PingPong);
-                server.SetControlHandler(PingPong);
-                server.SetReceiveHandler(444, Session);
-                server.SetControlHandler(Session);
+                ConnectionInfo info = new ConnectionInfo(
+                    NetworkType.Dedicated,
+                    ConnectionType.Server,
+                    1,
+                    0,
+                    "Server",
+                    "Develop-0.0.0",
+                    Guid.NewGuid().ToString()
+                );
 
+                var Sessionh = new SessionHandler(server, info, 2, 5000);
+                
+                //server.SetReceiveHandler(NetEventHandlerId.PingPong, PingPong);
+                //server.SetControlHandler(PingPong);
+                // server.SetReceiveHandler(444, Session);
+                // server.SetControlHandler(Session);
+                server.SetReceiveHandler(SessionHandler.Id, Sessionh);
+                server.SetControlHandler(Sessionh);
 
 
                 server.Start();
@@ -66,9 +79,9 @@ namespace Game.Server
                         stopwatch.Restart();
 
                         server.Tick();
-                        PingPong.Tick(TickTime);
-                        Session.Tick();
-                        
+                        // PingPong.Tick(TickTime);
+                        // Session.Tick();
+                        Sessionh.Tick(TickTime);
 
                         stopwatch.Stop();
 

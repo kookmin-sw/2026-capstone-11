@@ -7,4 +7,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="6.0.0-preview.7.21377.19" />
+  </ItemGroup>
+
 </Project>
