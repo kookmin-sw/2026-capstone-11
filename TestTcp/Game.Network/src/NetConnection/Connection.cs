@@ -53,23 +53,34 @@ namespace Game.Network
             ));
         }
 
-        public static async Task<Connection?> ListenAndCreateConnection(string ip, int portNum, NetEventQueue q, CancellationToken ct = default)
+        public static async Task<Connection?> ListenAndCreateConnection(string ip, int portNum, NetEventQueue q, int expireTimeMs)
         {
+            TcpClient? tcp = null;
+            Task? connTask = null;
+            
             try
             {
-                var tcp = new TcpClient();
-                await tcp.ConnectAsync(ip, portNum);
-                var conn = new Connection(tcp, q);
+                tcp = new TcpClient();
+                connTask = tcp.ConnectAsync(ip, portNum);
 
-                return conn;
+                var done = await Task.WhenAny(connTask, Task.Delay(expireTimeMs));
+                if (done != connTask) 
+                { 
+                    try { tcp.Close(); } catch {}
+                    throw new TimeoutException();
+                }
+                
+                await connTask;
+                return new Connection(tcp, q);
             }
-            catch (OperationCanceledException) { }
             catch (Exception e)
             {
+                try { tcp?.Close(); } catch {}
+                try {if (connTask != null) await connTask;} catch {}
+
                 q.InControlQueue.Enqueue(NetInEvent.Exception("New Conn", Array.Empty<byte>(), $"Fail To Connect. Exception MSG: {e.Message}"));
                 return null;
             }
-            return null;
         }
 
         public bool TrySend(byte[] data)

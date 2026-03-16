@@ -12,7 +12,6 @@ namespace Game.Network
         public long _lastPing;
         public long _interval;
         public Task<QueryTaskResult>? _pingTask;
-
         public PingPong() { _lastPing = 0; _interval = 0; _pingTask = null; }
     }
 
