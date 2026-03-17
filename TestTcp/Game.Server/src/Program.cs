@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO.Pipelines;
+using System.Net.NetworkInformation;
 using System.Net.Security;
 using System.Threading.Tasks;
 using Game.Network;
@@ -22,7 +23,7 @@ namespace Game.Server
                 var server = NetworkManager.CreateNetworkManager(TransferConfig.ServerPortNum, 10);
                 //var PingPong = new PingPongHandler(server, 5000);
                 //var Session = new GameSessionHandler(server, "Server"); 
-                
+
                 ConnectionInfo info = new ConnectionInfo(
                     NetworkType.Dedicated,
                     ConnectionType.Server,
@@ -33,14 +34,24 @@ namespace Game.Server
                     Guid.NewGuid().ToString()
                 );
 
-                // var Sessionh = new SessionHandler(server, info, 2, 5000);
+                var option = new ServiceOption(
+                    MaxConnPerService: 2,
+                    HelloTimeOutMs: 10000,
+                    PingIntervalMs: 5000,
+                    PingTimeOutMs: 4500,
+                    PingFailCountToDisconnect: 3
+                );
+
+                var context = new ServiceContext(info, option);
                 
-                // //server.SetReceiveHandler(NetEventHandlerId.PingPong, PingPong);
-                // //server.SetControlHandler(PingPong);
-                // // server.SetReceiveHandler(444, Session);
-                // // server.SetControlHandler(Session);
-                // server.SetReceiveHandler(SessionHandler.Id, Sessionh);
-                // server.SetControlHandler(Sessionh);
+                ServiceHandler service = new ServiceHandler(server, new ByPassAuthenticator(), context);
+                
+                PingPongHandler pingPong = new PingPongHandler(server, context);
+
+                server.SetControlHandler(service);
+
+                server.SetReceiveHandler(ServiceHandler.Id, service);
+                server.SetReceiveHandler(PingPongHandler.Id, pingPong);
 
 
                 server.Start();
@@ -79,9 +90,8 @@ namespace Game.Server
                         stopwatch.Restart();
 
                         server.Tick();
-                        // PingPong.Tick(TickTime);
-                        // Session.Tick();
-                        // Sessionh.Tick(TickTime);
+                        
+                        pingPong.Tick(TickTime);
 
                         stopwatch.Stop();
 
@@ -101,75 +111,79 @@ namespace Game.Server
                     await server.StopAsync();
                     Console.WriteLine("Server stopped.");
                 }
-
-
             }
-            else if (line != null && line.Trim().Equals("c", StringComparison.OrdinalIgnoreCase))
-            {
-                var client = NetworkManager.CreateNetworkManager(0, 10);
-                // var PingPong = new PingPongHandler(client, 5000);
-                // client.SetReceiveHandler(NetEventHandlerId.PingPong, PingPong);
-                // client.SetControlHandler(PingPong);
-                client.Start();
-                await client.ConnectTo(
-                    TransferConfig.ServerIPAddress,
-                    TransferConfig.ServerPortNum,
-                    3000
-                    );
-
-                Console.WriteLine("q를 입력해 클라이언트 중단. 문자를 넣어 전송");
-
-                var cts = new CancellationTokenSource();
-
-                var inputTask = Task.Run(() =>
-                {
-                     while (true)
-                    {
-                        var line = Console.ReadLine();
-                        if (line != null && line.Trim().Equals("q", StringComparison.OrdinalIgnoreCase))
-                        {
-                            cts.Cancel();
-                            break;
-                        }
-                        else if (line != null && line.Trim().Equals("s", StringComparison.OrdinalIgnoreCase))
-                        {
-                            Log.WriteLog(client.GetNetState());
-                        }
-                    }
-                });
-
-                try
-                {
-                    var stopwatch = new Stopwatch();
-                    long delta = 0;
-
-                    while (!cts.IsCancellationRequested)
-                    {
-                        stopwatch.Restart();
-
-                        client.Tick();
-                        //PingPong.Tick(TickTime);
-
-                        stopwatch.Stop();
-
-                        delta = stopwatch.ElapsedMilliseconds;
-                        int sleepTime = TickTime - (int)delta;
-                        if (sleepTime > 0) Thread.Sleep(sleepTime);
-
-                        else Log.WriteLog("TickTime over");
-
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                }
-                finally
-                {
-                    await client.StopAsync();
-                    Log.WriteLog("Client Stopped");
-                }
-            }
-
         }
     }
 }
+
+
+        //     }
+        //     else if (line != null && line.Trim().Equals("c", StringComparison.OrdinalIgnoreCase))
+        //     {
+        //         var client = NetworkManager.CreateNetworkManager(0, 10);
+        //         // var PingPong = new PingPongHandler(client, 5000);
+        //         // client.SetReceiveHandler(NetEventHandlerId.PingPong, PingPong);
+        //         // client.SetControlHandler(PingPong);
+        //         client.Start();
+        //         await client.ConnectTo(
+        //             TransferConfig.ServerIPAddress,
+        //             TransferConfig.ServerPortNum,
+        //             3000
+        //             );
+
+        //         Console.WriteLine("q를 입력해 클라이언트 중단. 문자를 넣어 전송");
+
+        //         var cts = new CancellationTokenSource();
+
+        //         var inputTask = Task.Run(() =>
+        //         {
+        //              while (true)
+        //             {
+        //                 var line = Console.ReadLine();
+        //                 if (line != null && line.Trim().Equals("q", StringComparison.OrdinalIgnoreCase))
+        //                 {
+        //                     cts.Cancel();
+        //                     break;
+        //                 }
+        //                 else if (line != null && line.Trim().Equals("s", StringComparison.OrdinalIgnoreCase))
+        //                 {
+        //                     Log.WriteLog(client.GetNetState());
+        //                 }
+        //             }
+        //         });
+
+        //         try
+        //         {
+        //             var stopwatch = new Stopwatch();
+        //             long delta = 0;
+
+        //             while (!cts.IsCancellationRequested)
+        //             {
+        //                 stopwatch.Restart();
+
+        //                 client.Tick();
+        //                 //PingPong.Tick(TickTime);
+
+        //                 stopwatch.Stop();
+
+        //                 delta = stopwatch.ElapsedMilliseconds;
+        //                 int sleepTime = TickTime - (int)delta;
+        //                 if (sleepTime > 0) Thread.Sleep(sleepTime);
+
+        //                 else Log.WriteLog("TickTime over");
+
+        //             }
+        //         }
+        //         catch (OperationCanceledException)
+        //         {
+        //         }
+        //         finally
+        //         {
+        //             await client.StopAsync();
+        //             Log.WriteLog("Client Stopped");
+        //         }
+        //     }
+
+        // }
+//     }
+// }
