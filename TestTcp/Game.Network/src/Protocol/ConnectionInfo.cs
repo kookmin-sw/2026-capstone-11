@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Game.Network.Protocol
 {
-    public struct ConnectionInfo
+    public class ConnectionInfo
     {
         // Network 식별용
         public readonly NetworkType networkType;

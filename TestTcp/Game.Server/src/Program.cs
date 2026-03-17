@@ -33,14 +33,14 @@ namespace Game.Server
                     Guid.NewGuid().ToString()
                 );
 
-                var Sessionh = new SessionHandler(server, info, 2, 5000);
+                // var Sessionh = new SessionHandler(server, info, 2, 5000);
                 
-                //server.SetReceiveHandler(NetEventHandlerId.PingPong, PingPong);
-                //server.SetControlHandler(PingPong);
-                // server.SetReceiveHandler(444, Session);
-                // server.SetControlHandler(Session);
-                server.SetReceiveHandler(SessionHandler.Id, Sessionh);
-                server.SetControlHandler(Sessionh);
+                // //server.SetReceiveHandler(NetEventHandlerId.PingPong, PingPong);
+                // //server.SetControlHandler(PingPong);
+                // // server.SetReceiveHandler(444, Session);
+                // // server.SetControlHandler(Session);
+                // server.SetReceiveHandler(SessionHandler.Id, Sessionh);
+                // server.SetControlHandler(Sessionh);
 
 
                 server.Start();
@@ -81,7 +81,7 @@ namespace Game.Server
                         server.Tick();
                         // PingPong.Tick(TickTime);
                         // Session.Tick();
-                        Sessionh.Tick(TickTime);
+                        // Sessionh.Tick(TickTime);
 
                         stopwatch.Stop();
 
@@ -107,9 +107,9 @@ namespace Game.Server
             else if (line != null && line.Trim().Equals("c", StringComparison.OrdinalIgnoreCase))
             {
                 var client = NetworkManager.CreateNetworkManager(0, 10);
-                var PingPong = new PingPongHandler(client, 5000);
-                client.SetReceiveHandler(NetEventHandlerId.PingPong, PingPong);
-                client.SetControlHandler(PingPong);
+                // var PingPong = new PingPongHandler(client, 5000);
+                // client.SetReceiveHandler(NetEventHandlerId.PingPong, PingPong);
+                // client.SetControlHandler(PingPong);
                 client.Start();
                 await client.ConnectTo(
                     TransferConfig.ServerIPAddress,
