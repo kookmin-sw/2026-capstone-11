@@ -1,4 +1,6 @@
 
+using System.Dynamic;
+
 namespace Game.Network
 {
     public class PingModule : ServiceModule, INetEventHandler
@@ -19,12 +21,8 @@ namespace Game.Network
             if (_last < Context.Opt.pingIntervalMs) return;
             _last = 0;
 
-            foreach (var elem in Context.PeerDictionary)
+            foreach (var connId in Context.PeerDictionary.Keys)
             {
-                var connId = elem.Key;
-                var ping = elem.Value.Ping;
-                ping.lastPingTime = GameTime.GetNow();
-
                 _ = AsyncQueryPing(connId);
             }
         }
@@ -34,12 +32,14 @@ namespace Game.Network
 
         private Task AsyncQueryPing(string connId)
         {
+            long sentAt = GameTime.GetNow();
+
             return Net.AsyncRequestQuery(Id, connId, Array.Empty<byte>(), Context.Opt.pingTimeOutMs,
                     (answerRaw) =>
                     {
                         if (!Context.TryGetPeer(connId, out var Peer)) return;
 
-                        Peer.Ping.currentPingResult = GameTime.GetNow() - Peer.Ping.lastPingTime;
+                        Peer.Ping.currentPingResult = GameTime.GetNow() - sentAt;
                         Peer.Ping.failureCount = Context.Opt.pingFailCountToDisconnect;
                     },
                     () =>

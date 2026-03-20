@@ -124,7 +124,6 @@ namespace Game.Network
 
                 sb.AppendLine("\t\t\t[Ping]");
                 sb.AppendLine("\t\t\t\tcurrentPingResult=" + info.Ping.currentPingResult);
-                sb.AppendLine("\t\t\t\tlastPingTime=" + info.Ping.lastPingTime);
                 sb.AppendLine("\t\t\t\tfailureCount=" + info.Ping.failureCount);
 
                 sb.AppendLine("\t\t\t[Auth]");

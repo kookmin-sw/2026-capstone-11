@@ -88,9 +88,9 @@ namespace Game.Server
                     {
                         stopwatch.Restart();
 
-                        server.Tick();
-                        
                         pingPong.Tick(TickTime);
+                        
+                        server.Tick();
 
                         stopwatch.Stop();
 
