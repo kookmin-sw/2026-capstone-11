@@ -1,19 +1,23 @@
 using System.Threading.Tasks;
+using Game.Network;
+using Game.Network.Protocol;
+using Game.Server;
+using PlayFab.EconomyModels;
+using TMPro;
 using UnityEngine;
 
 public class NetworkTestSceneMain : MonoBehaviour
 {
-    async Task Start()
-    {
-        var manager = FindAnyObjectByType<NetworkManagerUnity>();
-        manager.Init();
+    [SerializeField] private TMP_Text debugInfoText;
 
-        await NetworkManagerUnity.Instance.Net.ConnectTo("127.0.0.1", 9000, 10000);
+
+    void Start()
+    {
+
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    void Update() {}
+
+
+
 }
