@@ -20,7 +20,7 @@ namespace Game.Network.Protocol
         // payload: int appVersionSize;
         // payload: int tokenSize;
 
-        public readonly string accountName;
+        public readonly string playerPlatformId;
         public readonly string appVersion;
         public readonly string token;
 
@@ -41,14 +41,14 @@ namespace Game.Network.Protocol
             connectionType = connType;
             sessionId = seesion_id;
             accountId = account_id;
-            accountName = account_name;
+            playerPlatformId = account_name;
             appVersion = app_version;
             token = Token;
         }
 
         public static byte[] Serialize(ConnectionInfo info)
         {
-            int accountNameSize = Encoding.UTF8.GetByteCount(info.accountName);
+            int accountNameSize = Encoding.UTF8.GetByteCount(info.playerPlatformId);
             int appVersionSize = Encoding.UTF8.GetByteCount(info.appVersion);
             int tokenSize = Encoding.UTF8.GetByteCount(info.token);
 
@@ -68,7 +68,7 @@ namespace Game.Network.Protocol
             BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(24, 4), tokenSize);
 
             int offset = StaticSize;
-            Encoding.UTF8.GetBytes(info.accountName, payload.AsSpan(offset, accountNameSize));
+            Encoding.UTF8.GetBytes(info.playerPlatformId, payload.AsSpan(offset, accountNameSize));
 
             offset += accountNameSize;
             Encoding.UTF8.GetBytes(info.appVersion, payload.AsSpan(offset, appVersionSize));

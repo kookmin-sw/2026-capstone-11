@@ -21,10 +21,8 @@ namespace Game.Server
             if (line != null && line.Trim().Equals("s", StringComparison.OrdinalIgnoreCase))
             {
                 var server = NetworkManager.CreateNetworkManager(TransferConfig.ServerPortNum, 10);
-                //var PingPong = new PingPongHandler(server, 5000);
-                //var Session = new GameSessionHandler(server, "Server"); 
 
-                ConnectionInfo info = new ConnectionInfo(
+                ConnectionInfo selfInfo = new ConnectionInfo(
                     NetworkType.Dedicated,
                     ConnectionType.Server,
                     1,
@@ -42,16 +40,16 @@ namespace Game.Server
                     PingFailCountToDisconnect: 3
                 );
 
-                var context = new ServiceContext(info, option);
+                var context = new ServiceContext(selfInfo, option);
                 
                 ServiceHandler service = new ServiceHandler(server, new ByPassAuthenticator(), context);
                 
-                PingPongHandler pingPong = new PingPongHandler(server, context);
+                PingModule pingPong = new PingModule(server, context);
 
                 server.SetControlHandler(service);
 
                 server.SetReceiveHandler(ServiceHandler.Id, service);
-                server.SetReceiveHandler(PingPongHandler.Id, pingPong);
+                server.SetReceiveHandler(pingPong.HandlerId, pingPong);
 
 
                 server.Start();
@@ -74,6 +72,7 @@ namespace Game.Server
                         else if (line != null && line.Trim().Equals("s", StringComparison.OrdinalIgnoreCase))
                         {
                             Log.WriteLog(server.GetNetState());
+                            Log.WriteLog(context.GetState());
                         }
                     }
                 });

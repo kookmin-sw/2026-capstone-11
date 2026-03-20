@@ -9,7 +9,7 @@ namespace Game.Server
         public const int Id = 444;
         private INetAPI _net;
         private IAuthenticator _auth;
-        private ServiceContext _context;
+        private ServiceContext _context; 
 
 
         public ServiceHandler(INetAPI net, IAuthenticator authenticator, ServiceContext context)
@@ -24,6 +24,7 @@ namespace Game.Server
         public void OnRespond(string ConnId, int queryNum, byte[] raw)
         {
             var connInfo = ConnectionInfo.Deserialize(raw);
+
             if (connInfo == null)
             {
                 Log.WriteLog("[Session]: Hello Packet Failure");
@@ -42,11 +43,13 @@ namespace Game.Server
 
             var pingInfo = new PingInfo(_context.Opt.pingFailCountToDisconnect);
 
-            _context.Add(ConnId, connInfo, pingInfo, authInfo);
+            var sessionBind = new SessionBindInfo();
+
+            _context.Add(ConnId, connInfo, pingInfo, authInfo, sessionBind);
 
             Log.WriteLog($"[Session] : New Player Entered \n"
                 + "\tConnId=" + ConnId
-                + "\n\tAccountName=" + connInfo.accountName
+                + "\n\tAccountName=" + connInfo.playerPlatformId
                 + "\n\taccountId="   + connInfo.accountId
                 + "\n\tappVersion="  + connInfo.appVersion
                 + "\n\tsessionId="   + connInfo.sessionId
@@ -58,25 +61,31 @@ namespace Game.Server
             => _net.Send(Id, queryNum, ConnId, ConnectionInfo.Serialize(_context.SelfInfo));
 
         // Control
-        public void OnException(string ConnId, byte[] raw, string msg) { /*System Handler will control exception by publishing Disconnect Out Event*/}
+        public void OnException(string ConnId, byte[] raw, string msg) 
+        { /*System Handler will control exception by publishing Disconnect Out Event*/}
         public void OnHello(string ConnId, byte[] raw)
         {
-            if (_context.InfoDictionary.Count() >= _context.Opt.maxConnPerService) return;
+            if (_context.PeerDictionary.Count() >= _context.Opt.maxConnPerService) return;
+    
+            _ = AsnycQueryConnectionInfo(ConnId);
+            Log.WriteLog("[Session]: Send Hello Info");
+        }
+        public void OnDisconnect(string ConnId, byte[] raw)
+            => _context.Remove(ConnId);
 
-            _ = _net.AsyncRequestQuery(Id, ConnId, ConnectionInfo.Serialize(_context.SelfInfo), _context.Opt.helloTimeOutMs,
-                (answerRaw) => {},
+
+
+        private Task AsnycQueryConnectionInfo(string ConnId)
+        {
+            return _net.AsyncRequestQuery(Id, ConnId, Array.Empty<byte>(), _context.Opt.helloTimeOutMs,
+                null,
                 () => // TimeOutAction
                 {
                     Log.WriteLog("[Session]: Authenticate Fail. Reason: Hello Time Out.");
                     _net.Disconnect(ConnId);
                 }
                 );
-
-            Log.WriteLog("[Session]: Send Hello Info");
         }
-        public void OnDisconnect(string ConnId, byte[] raw)
-            => _context.Remove(ConnId);
-
 
     };
 }

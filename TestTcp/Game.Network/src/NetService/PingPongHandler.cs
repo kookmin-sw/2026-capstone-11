@@ -32,7 +32,7 @@ namespace Game.Network
             if (_last < _context.Opt.pingIntervalMs) return;
             _last = 0;
 
-            foreach (var registery in _context.InfoDictionary)
+            foreach (var registery in _context.PeerDictionary)
             {
                 var connId = registery.Key;
                 var ping = registery.Value.Ping;
@@ -41,14 +41,14 @@ namespace Game.Network
                 _ = _net.AsyncRequestQuery(Id, connId, Array.Empty<byte>(), _context.Opt.pingTimeOutMs,
                     (answerRaw) =>
                     {
-                        if (!_context.TryGetInfo(connId, out var targetInfo)) return;
+                        if (!_context.TryGetPeer(connId, out var targetInfo)) return;
 
                         targetInfo.Ping.currentPingResult = GameTime.GetNow() - targetInfo.Ping.lastPingTime;
                         targetInfo.Ping.failureCount = _context.Opt.pingFailCountToDisconnect;
                     },
                     () => 
                     {
-                        if (!_context.TryGetInfo(connId, out var targetInfo)) return;
+                        if (!_context.TryGetPeer(connId, out var targetInfo)) return;
 
                         targetInfo.Ping.failureCount--;
                         if (targetInfo.Ping.failureCount <= 0) _net.Disconnect(connId);
