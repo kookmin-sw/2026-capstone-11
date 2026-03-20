@@ -76,6 +76,7 @@ namespace ui.view
     /// <summary>
     /// UI 뷰의 기본 데이터 클래스
     /// </summary>
+    [Serializable]
     abstract public class BaseViewData
     {
         public ViewID Id { get; }

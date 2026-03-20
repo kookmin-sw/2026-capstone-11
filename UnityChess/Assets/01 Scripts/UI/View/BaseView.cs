@@ -5,8 +5,8 @@ namespace ui.view
 {
     public abstract class BaseView : MonoBehaviour, IView
     {
-        protected BaseViewData viewData;
-        protected IEventBus eventBus;
+        [SerializeField] protected BaseViewData viewData;
+        [SerializeField] protected IEventBus eventBus;
 
         // ViewData 접근 (getter)
         public ViewID Id => viewData.Id;
@@ -16,6 +16,15 @@ namespace ui.view
         {
             viewData = data;
             this.eventBus = eventBus;
+
+            if (eventBus == null)
+            {
+                Debug.LogError("EventBus is not assigned in BaseView.");
+            }
+            else
+            {
+                Debug.Log($"BaseView initialized with ID: {Id.UUID}, Type: {Type}");
+            }
         }
 
         public abstract void Subscribe();

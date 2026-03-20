@@ -33,7 +33,7 @@ namespace core
         /// 해석된 서버 이벤트를 바탕으로 UI 이벤트 발행
         /// </summary>
         /// <param name="uiEvent">발행할 UI 이벤트</param>
-        private void PublishUIEvent(BaseEvent uiEvent)
+        private void PublishUIEvent(IBaseEvent uiEvent)
         {
             eventBus.Publish(uiEvent);
         }
