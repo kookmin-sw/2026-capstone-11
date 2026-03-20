@@ -11,7 +11,7 @@ namespace events.server
         /// <summary>
         /// 유닛 소환 이벤트
         /// </summary>
-        public class UnitSpawnEvent : BaseEvent
+        public class UnitSpawnEvent : IBaseEvent
         {
             string unitID;
         }
@@ -19,7 +19,7 @@ namespace events.server
         /// <summary>
         /// 유닛 이동 이벤트
         /// </summary>
-        public class UnitMoveEvent : BaseEvent
+        public class UnitMoveEvent : IBaseEvent
         {
             string unitID;
             Vector2Int from;
@@ -29,7 +29,7 @@ namespace events.server
         /// <summary>
         /// 유닛 파괴 이벤트
         /// </summary>
-        public class UnitDestroyed : BaseEvent
+        public class UnitDestroyed : IBaseEvent
         {
             string unitID;
         }
@@ -37,7 +37,7 @@ namespace events.server
         /// <summary>
         /// 유닛 피격 이벤트
         /// </summary>
-        public class UnitDamaged : BaseEvent
+        public class UnitDamaged : IBaseEvent
         {
             string unitID;
         }
@@ -46,7 +46,7 @@ namespace events.server
         /// <summary>
         /// 카드 드로우 이벤트
         /// </summary>
-        public class CardAddedToHand : BaseEvent
+        public class CardAddedToHand : IBaseEvent
         {
             string unitID;
         }
@@ -54,7 +54,7 @@ namespace events.server
         /// <summary>
         /// 카드 제거 이벤트
         /// </summary>
-        public class CardRemovedFromHand : BaseEvent
+        public class CardRemovedFromHand : IBaseEvent
         {
             
         }
@@ -62,7 +62,7 @@ namespace events.server
         /// <summary>
         /// 카드 영역 이동 이벤트
         /// </summary>
-        public class CardMoveEvent : BaseEvent
+        public class CardMoveEvent : IBaseEvent
         {
             
         }
@@ -70,7 +70,7 @@ namespace events.server
         /// <summary>
         /// 카드 사용시 이벤트
         /// </summary>
-        public class CardPlayedEvent : BaseEvent
+        public class CardPlayedEvent : IBaseEvent
         {
             
         }

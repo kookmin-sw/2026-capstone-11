@@ -5,45 +5,35 @@ using entity.targetable;
 
 namespace ui.tooltip
 {
-    /// <summary>
-    /// 툴팁 UI 엔티티 클래스
-    /// </summary>
     public class TooltipEntity : MonoBehaviour
     {
-        // 툴팁 UI의 텍스트 컴포넌트
-        [SerializeField] TMP_Text title;
-        [SerializeField] TMP_Text header;
-        [SerializeField] TMP_Text description;
+        [SerializeField] private TMP_Text title;
+        [SerializeField] private TMP_Text header;
+        [SerializeField] private TMP_Text description;
 
-        // 툴팁의 UI 레이아웃 컴포넌트
-        [SerializeField] LayoutGroup layoutGroup;
+        [SerializeField] private LayoutGroup layoutGroup;
+        [SerializeField] private Vector2 offset = new Vector2(20f, -20f);
 
-        // 툴팁이 마우스를 따라다닐 때의 오프셋
-        [SerializeField] Vector2 offset; 
+        private RectTransform rect;
+        private Canvas canvas;
+        private Camera cam;
 
-
-        public void SetData(TooltipData data)
+        private void Awake()
         {
+            rect = transform as RectTransform;
+            canvas = GetComponentInParent<Canvas>();
+            cam = canvas.worldCamera; // Screen Space - Camera 기준
+        }
+
+        public void Show(TooltipData data)
+        {
+            gameObject.SetActive(true);
+
             title.text = data.title;
             header.text = data.header;
             description.text = data.description;
 
-            LayoutRebuilder.ForceRebuildLayoutImmediate(
-                transform as RectTransform
-            );
-        }
-
-        public void Show(TooltipData tooltipData)
-        {
-            gameObject.SetActive(true);
-
-            SetData(tooltipData);
-
-            // 툴팁 크기에 맞게 오프셋 조정
-            offset += new Vector2(
-                layoutGroup.preferredWidth / 4,
-                -layoutGroup.preferredHeight / 2
-            );
+            LayoutRebuilder.ForceRebuildLayoutImmediate(rect);
         }
 
         public void Hide()
@@ -51,20 +41,45 @@ namespace ui.tooltip
             gameObject.SetActive(false);
         }
 
-        void Update()
+        private void Update()
         {
-            transform.position = Input.mousePosition + (Vector3) offset;
+            if (!gameObject.activeSelf) return;
+
+            UpdatePosition();
         }
 
-        // 테스트용
-        void Start()
+        private void UpdatePosition()
         {
-            Show(new TooltipData
-            {
-                title = "테스트 유닛",
-                header = "[클래스: 룩]",
-                description = "공격력: 1 체력: 3\n[턴 시작] 테스트 능력: 아무 일도 일어나지 않습니다.\n배치/이동 코스트: 1"
-            });
+            Vector2 mouse = Input.mousePosition;
+
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                canvas.transform as RectTransform,
+                mouse,
+                cam,
+                out Vector2 local
+            );
+
+            float width = rect.rect.width;
+            float height = rect.rect.height;
+
+            Vector2 pos = local + offset;
+
+            // 방향 전환
+            if (mouse.x + width > Screen.width)
+                pos.x = local.x - width - offset.x;
+
+            if (mouse.y - height < 0)
+                pos.y = local.y + height + offset.y;
+
+            // clamp
+            var canvasRect = canvas.transform as RectTransform;
+            float cw = canvasRect.rect.width;
+            float ch = canvasRect.rect.height;
+
+            pos.x = Mathf.Clamp(pos.x, -cw / 2, cw / 2 - width);
+            pos.y = Mathf.Clamp(pos.y, -ch / 2 + height, ch / 2);
+
+            rect.localPosition = pos;
         }
     }
 }

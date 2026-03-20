@@ -15,8 +15,7 @@ namespace ui.tooltip
                 title: data.name,
                 header: $"[유닛/클래스 : {data.className}]\n",
                 description: data.traitsDesc + "\n" +
-                $"공격력: {data.attack} \t 체력: {data.maxHP}\n"+
-                $"소환 / 이동 코스트: {data.moveCost}"
+                $"공격력: {data.attack} \t 체력: {data.maxHP}\n"
             );
         }
 
@@ -25,8 +24,7 @@ namespace ui.tooltip
             return new TooltipData(
                 title: data.name,
                 header: $"[스펠/클래스 : {data.className}]\n",
-                description: data.spellDesc + "\n" +
-                $"사용 코스트: {data.spellCost}"
+                description: data.spellDesc + "\n"
             );
         }
 
@@ -36,8 +34,7 @@ namespace ui.tooltip
                 title: data.name,
                 header: $"[유닛/클래스 : {data.className}]\n",
                 description: data.traitsDesc + "\n" +
-                $"공격력: {data.attack} \t 체력: {data.currentHP} / {data.maxHP}\n"+
-                $"이동 코스트: {data.moveCost}"
+                $"공격력: {data.attack} \t 체력: {data.currentHP} / {data.maxHP}\n"
             );
         }
     }

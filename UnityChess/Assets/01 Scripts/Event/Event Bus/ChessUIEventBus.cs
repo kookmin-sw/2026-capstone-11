@@ -25,9 +25,9 @@ namespace events.ui
         }
 
         // 이벤트 구독자 목록
-        private Dictionary<Type, List<Action<BaseEvent>>> subscribers = new Dictionary<Type, List<Action<BaseEvent>>>();
+        private Dictionary<Type, List<Action<IBaseEvent>>> subscribers = new Dictionary<Type, List<Action<IBaseEvent>>>();
 
-        public void Publish<T>(T eventData) where T : BaseEvent
+        public void Publish<T>(T eventData) where T : IBaseEvent
         {
             Type eventType = typeof(T);
 
@@ -40,19 +40,19 @@ namespace events.ui
             }
         }
 
-        public void Subscribe<T>(Action<T> callback) where T : BaseEvent
+        public void Subscribe<T>(Action<T> callback) where T : IBaseEvent
         {
             Type eventType = typeof(T);
 
             if (!subscribers.ContainsKey(eventType))
             {
-                subscribers[eventType] = new List<Action<BaseEvent>>();
+                subscribers[eventType] = new List<Action<IBaseEvent>>();
             }
 
             subscribers[eventType].Add((e) => callback((T)e));
         }
 
-        public void Unsubscribe<T>(Action<T> callback) where T : BaseEvent
+        public void Unsubscribe<T>(Action<T> callback) where T : IBaseEvent
         {
             Type eventType = typeof(T);
 

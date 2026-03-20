@@ -3,6 +3,8 @@ using entity.targetable;
 using ui.tooltip;
 using events;
 using events.server;
+using events.client;
+using Game.Network;
 
 namespace ui.view.unit
 {
@@ -21,7 +23,6 @@ namespace ui.view.unit
         public int currentHP;
 
         public string traitsDesc; // 특성 설명 텍스트
-        public int moveCost;
         public int unitID;
 
         // 보드 위에서의 위치
@@ -35,7 +36,6 @@ namespace ui.view.unit
                             int maxHP,
                             int currentHP,
                             string traitsDesc,
-                            int moveCost,
                             int unitID,
                             Vector2Int pos) : base(id, type)
         {
@@ -45,13 +45,12 @@ namespace ui.view.unit
             this.maxHP = maxHP;
             this.currentHP = currentHP;
             this.traitsDesc = traitsDesc;
-            this.moveCost = moveCost;
             this.unitID = unitID;
             this.pos = pos;
         }
     }
 
-    public class UnitView : BaseView, IHoverable
+    public class UnitView : BaseView, IHoverable, ISelectable
     {
         public UnitViewData data;
 
@@ -59,28 +58,39 @@ namespace ui.view.unit
         {
             base.Init(baseData, eventBus);
             data = (UnitViewData)baseData;
+
+            // 유닛 뷰에게 필요한 이벤트 구독
+            Subscribe();
         }
 
+        // ITargetable 인터페이스 구현
         public TooltipData GetTooltipData()
         {
             return TooltipBuilder.UnitOnboardTooltip(data);
         }
 
-        public void OnEnable()
+        public void OnSelected()
         {
-            // 유닛 뷰에게 필요한 이벤트 구독
+            Debug.Log("Unit selected: " + data.name + " id: " + data.unitID);
+            
+            // 유닛이 선택되었을 때의 로직 (예: 상세 정보 표시, 행동 옵션 활성화 등)
+            eventBus.Publish(new IClientEvents.UnitSelectedEvent
+            {
+                UnitUUID = data.Id.UUID
+            });
         }
 
         public void OnDisable()
         {
             // 유닛 뷰가 구독한 이벤트 해제
+            UnSubscribe();
         }
 
         public override void Subscribe()
         {
             eventBus.Subscribe<IServerEvents.UnitMoveEvent>(OnUnitMove);
         }
-
+    
         public override void UnSubscribe()
         {
             eventBus.Unsubscribe<IServerEvents.UnitMoveEvent>(OnUnitMove);
