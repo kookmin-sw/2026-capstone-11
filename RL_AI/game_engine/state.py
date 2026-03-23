@@ -1,4 +1,8 @@
+###상태와 구조를 정의한 파일
 #유닛의 상태, 위치, 게임의 기본적 세팅 등을 정의하는 파일
+#게임의 런타임 state를 정의함
+#데이터 소스는 유닛과 덱/패/트래시임. 6x6 보드가 아님
+#위치, 카드, 유닛, 행동, 게임 상태, 초기 상태 헬퍼를 정의함
 
 from __future__ import annotations
 
@@ -16,27 +20,19 @@ from RL_AI.cards.card_db import (
     build_default_deck,
 )
 
-# ============================================================
-# Fixed assumptions for current prototype
-# ============================================================
-
 BOARD_ROWS = 6
 BOARD_COLS = 6
 HAND_LIMIT_AT_END = 3
+INITIAL_HAND_SIZE = 3
 MAX_UNITS_PER_PLAYER = 7
 MAX_TOTAL_UNITS = 14
 
 SUPPORTED_CARD_IDS = {
-    "0x01000000","0x01000100","0x01000200","0x01000300","0x01000400",
-    "0x02000000","0x02000100","0x02000200","0x02000300","0x02000400",
+    "0x01000000", "0x01000100", "0x01000200", "0x01000300", "0x01000400",
+    "0x02000000", "0x02000100", "0x02000200", "0x02000300", "0x02000400",
 }
-
 SUPPORTED_WORLDS = {1, 2}
 
-
-# ============================================================
-# Enums
-# ============================================================
 
 class PlayerID(IntEnum):
     P1 = 0
@@ -66,9 +62,13 @@ class GameResult(str, Enum):
     DRAW = "DRAW"
 
 
-# ============================================================
-# Value objects
-# ============================================================
+class TargetSelection(str, Enum):
+    NONE = "NONE"
+    EXPLICIT = "EXPLICIT"
+    ALL_ENEMIES = "ALL_ENEMIES"
+    ALL_ALLIES = "ALL_ALLIES"
+    ALL_UNITS = "ALL_UNITS"
+
 
 @dataclass(frozen=True, slots=True)
 class Position:
@@ -88,12 +88,6 @@ class Position:
 
 @dataclass(frozen=True, slots=True)
 class CardInstance:
-    """
-    Runtime card object in deck / hand / trash.
-
-    - card_id: static definition ID
-    - instance_id: runtime unique ID
-    """
     instance_id: str
     card_id: str
     owner: PlayerID
@@ -104,16 +98,6 @@ class CardInstance:
 
 @dataclass(slots=True)
 class UnitState:
-    """
-    Runtime unit state.
-
-    Important:
-    - State source of truth is the unit list, not a 6x6 board array.
-    - Not-yet-summoned units still exist as UnitState, but:
-        is_on_board = False
-        position = None
-        current_life = 0
-    """
     unit_id: str
     source_card_instance_id: str
     source_card_id: str
@@ -173,15 +157,12 @@ class UnitState:
     def take_damage(self, amount: int) -> None:
         if not self.is_alive():
             return
-
         amount = max(0, int(amount))
         if amount == 0:
             return
-
         if self.shield > 0:
             self.shield -= 1
             return
-
         self.current_life = max(0, self.current_life - amount)
         if self.current_life == 0:
             self.retire()
@@ -189,14 +170,9 @@ class UnitState:
     def heal(self, amount: int) -> None:
         if not self.is_alive():
             return
-
         amount = max(0, int(amount))
-        if amount == 0:
+        if amount == 0 or self.current_life >= self.max_life:
             return
-
-        if self.current_life >= self.max_life:
-            return
-
         self.current_life = min(self.max_life, self.current_life + amount)
 
     def full_heal(self) -> None:
@@ -206,10 +182,8 @@ class UnitState:
     def begin_new_turn(self) -> None:
         if not self.is_alive():
             return
-
         self.moved_this_turn = False
         self.attacked_this_turn = False
-
         if self.disabled_move_turns > 0:
             self.disabled_move_turns -= 1
         if self.disabled_attack_turns > 0:
@@ -246,11 +220,9 @@ class UnitState:
 class PlayerState:
     player_id: PlayerID
     world: int
-
     deck: List[CardInstance] = field(default_factory=list)
     hand: List[CardInstance] = field(default_factory=list)
     trash: List[CardInstance] = field(default_factory=list)
-
     leader_card_id: Optional[str] = None
 
     def all_zone_cards(self) -> List[CardInstance]:
@@ -295,31 +267,37 @@ class PlayerState:
 @dataclass(frozen=True, slots=True)
 class Action:
     """
-    Runtime action descriptor.
+    Runtime action descriptor with full multi-target support.
 
-    Notes:
-    - source side is still single for current prototype.
-    - target side now supports multi-select.
-    - for backward compatibility, singleton convenience properties
-      target_unit_id / target_pos are provided.
+    - `source_unit_id` is still the acting unit for move/attack, or an optional helper
+      for card effects that need an explicitly chosen allied unit.
+    - `target_unit_ids` and `target_positions` support arbitrary multi-select.
+    - `target_selection` can naturally represent group targets such as all enemies.
     """
     action_type: ActionType
-
     card_instance_id: Optional[str] = None
     source_unit_id: Optional[str] = None
     target_unit_ids: Tuple[str, ...] = ()
     target_positions: Tuple[Position, ...] = ()
+    target_selection: TargetSelection = TargetSelection.NONE
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "target_unit_ids", tuple(self.target_unit_ids or ()))
-        object.__setattr__(self, "target_positions", tuple(self.target_positions or ()))
+        unit_ids = tuple(self.target_unit_ids or ())
+        positions = tuple(self.target_positions or ())
+        object.__setattr__(self, "target_unit_ids", unit_ids)
+        object.__setattr__(self, "target_positions", positions)
 
-        if any(unit_id is None or unit_id == "" for unit_id in self.target_unit_ids):
+        if any(unit_id is None or unit_id == "" for unit_id in unit_ids):
             raise ValueError("target_unit_ids cannot contain empty values.")
-
-        for pos in self.target_positions:
+        for pos in positions:
             if not isinstance(pos, Position):
                 raise TypeError("target_positions must contain Position objects.")
+
+        if self.target_selection == TargetSelection.NONE and (unit_ids or positions):
+            object.__setattr__(self, "target_selection", TargetSelection.EXPLICIT)
+
+        if self.target_selection != TargetSelection.EXPLICIT and unit_ids:
+            raise ValueError("Explicit target_unit_ids can only be used with TargetSelection.EXPLICIT.")
 
     @property
     def target_unit_id(self) -> Optional[str]:
@@ -329,6 +307,38 @@ class Action:
     def target_pos(self) -> Optional[Position]:
         return self.target_positions[0] if len(self.target_positions) == 1 else None
 
+    @classmethod
+    def use_card_on_all_enemies(
+        cls,
+        card_instance_id: str,
+        *,
+        source_unit_id: Optional[str] = None,
+        target_positions: Tuple[Position, ...] = (),
+    ) -> "Action":
+        return cls(
+            action_type=ActionType.USE_CARD,
+            card_instance_id=card_instance_id,
+            source_unit_id=source_unit_id,
+            target_positions=target_positions,
+            target_selection=TargetSelection.ALL_ENEMIES,
+        )
+
+    @classmethod
+    def use_card_on_all_units(
+        cls,
+        card_instance_id: str,
+        *,
+        source_unit_id: Optional[str] = None,
+        target_positions: Tuple[Position, ...] = (),
+    ) -> "Action":
+        return cls(
+            action_type=ActionType.USE_CARD,
+            card_instance_id=card_instance_id,
+            source_unit_id=source_unit_id,
+            target_positions=target_positions,
+            target_selection=TargetSelection.ALL_UNITS,
+        )
+
     def to_dict(self) -> Dict[str, object]:
         return {
             "action_type": self.action_type.value,
@@ -336,14 +346,11 @@ class Action:
             "source_unit_id": self.source_unit_id,
             "target_unit_ids": list(self.target_unit_ids),
             "target_positions": [pos.to_tuple() for pos in self.target_positions],
+            "target_selection": self.target_selection.value,
             "target_unit_id": self.target_unit_id,
             "target_pos": None if self.target_pos is None else self.target_pos.to_tuple(),
         }
 
-
-# ============================================================
-# Game state: unit-list as source of truth
-# ============================================================
 
 @dataclass(slots=True)
 class GameState:
@@ -351,12 +358,8 @@ class GameState:
     active_player: PlayerID
     phase: Phase
     result: GameResult = GameResult.ONGOING
-
     players: Dict[PlayerID, PlayerState] = field(default_factory=dict)
-
-    # Source of truth: all runtime units, including not-yet-summoned units.
     units: Dict[str, UnitState] = field(default_factory=dict)
-
     winner: Optional[PlayerID] = None
     last_action: Optional[Action] = None
 
@@ -414,6 +417,12 @@ class GameState:
                 return unit
         return None
 
+    def get_leader_runtime_unit(self, owner: PlayerID) -> Optional[UnitState]:
+        for unit in self.units.values():
+            if unit.owner == owner and unit.role == Role.LEADER:
+                return unit
+        return None
+
     def get_empty_home_cells(self, owner: PlayerID) -> List[Position]:
         target_row = 0 if owner == PlayerID.P1 else BOARD_ROWS - 1
         result: List[Position] = []
@@ -424,22 +433,24 @@ class GameState:
         return result
 
     def check_leader_death(self) -> GameResult:
-        p1_alive = self.get_leader_unit(PlayerID.P1) is not None
-        p2_alive = self.get_leader_unit(PlayerID.P2) is not None
+        p1_leader = self.get_leader_runtime_unit(PlayerID.P1)
+        p2_leader = self.get_leader_runtime_unit(PlayerID.P2)
 
-        if not p1_alive and not p2_alive:
+        p1_dead = bool(p1_leader and p1_leader.retired)
+        p2_dead = bool(p2_leader and p2_leader.retired)
+
+        if p1_dead and p2_dead:
             self.result = GameResult.DRAW
             self.winner = None
-        elif not p1_alive:
+        elif p1_dead:
             self.result = GameResult.P2_WIN
             self.winner = PlayerID.P2
-        elif not p2_alive:
+        elif p2_dead:
             self.result = GameResult.P1_WIN
             self.winner = PlayerID.P1
         else:
             self.result = GameResult.ONGOING
             self.winner = None
-
         return self.result
 
     def begin_turn_for_active_player(self) -> None:
@@ -480,10 +491,6 @@ class GameState:
         )
 
 
-# ============================================================
-# Factory helpers
-# ============================================================
-
 def _new_instance_id(prefix: str) -> str:
     return f"{prefix}_{uuid.uuid4().hex[:12]}"
 
@@ -492,12 +499,10 @@ def validate_supported_card_db(card_db: Dict[str, CardDefinition]) -> Dict[str, 
     filtered = {cid: c for cid, c in card_db.items() if cid in SUPPORTED_CARD_IDS}
     missing = SUPPORTED_CARD_IDS - set(filtered.keys())
     extra_worlds = {c.world for c in filtered.values()} - SUPPORTED_WORLDS
-
     if missing:
         raise ValueError(f"Missing required prototype cards: {sorted(missing)}")
     if extra_worlds:
         raise ValueError(f"Unsupported worlds found: {sorted(extra_worlds)}")
-
     return filtered
 
 
@@ -509,11 +514,7 @@ def load_supported_card_db(xlsx_path: str = "Cards.xlsx") -> Dict[str, CardDefin
 def create_card_instance(card_id: str, owner: PlayerID) -> CardInstance:
     if card_id not in SUPPORTED_CARD_IDS:
         raise ValueError(f"Unsupported card_id for current prototype: {card_id}")
-    return CardInstance(
-        instance_id=_new_instance_id("card"),
-        card_id=card_id,
-        owner=owner,
-    )
+    return CardInstance(instance_id=_new_instance_id("card"), card_id=card_id, owner=owner)
 
 
 def build_player_deck_instances(
@@ -524,13 +525,10 @@ def build_player_deck_instances(
 ) -> List[CardInstance]:
     if world not in SUPPORTED_WORLDS:
         raise ValueError(f"Unsupported world: {world}")
-
     deck_card_ids = build_default_deck(card_db, world)
     deck = [create_card_instance(card_id=cid, owner=owner) for cid in deck_card_ids]
-
     if rng is not None:
         rng.shuffle(deck)
-
     return deck
 
 
@@ -563,12 +561,11 @@ def create_initial_player_state(
     player_id: PlayerID,
     world: int,
     card_db: Dict[str, CardDefinition],
-    rng: Optional[random.Random] = None,
+    rng: random.Random,
 ) -> PlayerState:
-    deck = build_player_deck_instances(world=world, owner=player_id, card_db=card_db, rng=rng)
+    deck = build_player_deck_instances(world, player_id, card_db, rng)
     leader_card_id = next(
-        c.card_id for c in card_db.values()
-        if c.world == world and c.role == Role.LEADER
+        c.card_id for c in card_db.values() if c.world == world and c.role == Role.LEADER
     )
     return PlayerState(
         player_id=player_id,
@@ -586,23 +583,33 @@ def create_initial_units_for_player(
     player_state: PlayerState,
     card_db: Dict[str, CardDefinition],
 ) -> List[UnitState]:
-    """
-    Build exactly 7 unit states from the player's starting deck definition.
-    These units exist from game start as runtime objects, but are not on board yet.
-    """
     units: List[UnitState] = []
-
     all_cards = [*player_state.deck, *player_state.hand, *player_state.trash]
     if len(all_cards) != MAX_UNITS_PER_PLAYER:
-        raise ValueError(
-            f"Expected {MAX_UNITS_PER_PLAYER} cards for player {player_id}, got {len(all_cards)}"
-        )
-
+        raise ValueError(f"Expected {MAX_UNITS_PER_PLAYER} cards for player {player_id}, got {len(all_cards)}")
     for card_instance in all_cards:
         card_def = card_db[card_instance.card_id]
         units.append(create_unit_from_card_instance(card_def, card_instance, player_id))
-
     return units
+
+
+
+def get_initial_leader_position(owner: PlayerID) -> Position:
+    """P1 leader starts at 1C, P2 leader starts at 6D."""
+    return Position(0, 2) if owner == PlayerID.P1 else Position(BOARD_ROWS - 1, 3)
+
+
+def _auto_place_initial_leaders(state: GameState) -> None:
+    for owner in (PlayerID.P1, PlayerID.P2):
+        leader = state.get_leader_runtime_unit(owner)
+        if leader is None:
+            raise ValueError(f"Leader runtime unit not found for {owner}")
+        leader.summon_to(get_initial_leader_position(owner))
+
+
+def _draw_initial_hands(state: GameState, rng: random.Random, hand_size: int = INITIAL_HAND_SIZE) -> None:
+    for owner in (PlayerID.P1, PlayerID.P2):
+        state.get_player(owner).draw(hand_size, rng)
 
 
 def create_initial_game_state(
@@ -614,71 +621,35 @@ def create_initial_game_state(
 ) -> GameState:
     rng = random.Random(seed)
     card_db = load_supported_card_db(xlsx_path)
-
     p1 = create_initial_player_state(PlayerID.P1, p1_world, card_db, rng)
     p2 = create_initial_player_state(PlayerID.P2, p2_world, card_db, rng)
-
-    if first_player is None:
-        active_player = rng.choice([PlayerID.P1, PlayerID.P2])
-    else:
-        active_player = first_player
-
+    active_player = rng.choice([PlayerID.P1, PlayerID.P2]) if first_player is None else first_player
     p1_units = create_initial_units_for_player(PlayerID.P1, p1_world, p1, card_db)
     p2_units = create_initial_units_for_player(PlayerID.P2, p2_world, p2, card_db)
-
     all_units = p1_units + p2_units
     if len(all_units) != MAX_TOTAL_UNITS:
         raise ValueError(f"Expected {MAX_TOTAL_UNITS} total units, got {len(all_units)}")
-
     state = GameState(
         turn=1,
         active_player=active_player,
         phase=Phase.START,
-        players={
-            PlayerID.P1: p1,
-            PlayerID.P2: p2,
-        },
+        players={PlayerID.P1: p1, PlayerID.P2: p2},
         units={u.unit_id: u for u in all_units},
     )
+    _auto_place_initial_leaders(state)
+    _draw_initial_hands(state, rng, INITIAL_HAND_SIZE)
     return state
 
 
-# ============================================================
-# Debug helpers
-# ============================================================
-
 def get_sorted_units_for_observation(state: GameState) -> List[UnitState]:
-    """
-    Stable unit ordering for observation vectorization.
-    Recommended order:
-    - P1 units first, then P2 units
-    - within player: Leader, Rook, Knight, Bishop, Pawn, Pawn, Pawn
-    - tie-break with unit_id
-    """
-    role_order = {
-        Role.LEADER: 0,
-        Role.ROOK: 1,
-        Role.KNIGHT: 2,
-        Role.BISHOP: 3,
-        Role.PAWN: 4,
-    }
-
+    role_order = {Role.LEADER: 0, Role.ROOK: 1, Role.KNIGHT: 2, Role.BISHOP: 3, Role.PAWN: 4}
     return sorted(
         state.units.values(),
-        key=lambda u: (
-            int(u.owner),
-            role_order.get(u.role, 99),
-            u.name,
-            u.unit_id,
-        ),
+        key=lambda u: (int(u.owner), role_order.get(u.role, 99), u.name, u.unit_id),
     )
 
 
 def occupied_positions(state: GameState) -> Dict[Tuple[int, int], str]:
-    """
-    Optional helper for rule checks.
-    Returns {(row, col): unit_id}
-    """
     out: Dict[Tuple[int, int], str] = {}
     for unit in state.get_board_units():
         assert unit.position is not None
