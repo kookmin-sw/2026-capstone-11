@@ -5,17 +5,11 @@ from __future__ import annotations
 # It keeps JSONL structured data and a small TXT notation log side by side.
 
 import json
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
 
 from RL_AI.cards.card_db import CardDefinition, ROLE_NAME_KO
 from RL_AI.game_engine.state import Action, GameState, PlayerID, Position, UnitState
-
-
-def _utc_now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
 
 def _player_label(player_id: PlayerID) -> str:
     return "P1" if player_id == PlayerID.P1 else "P2"
@@ -253,7 +247,6 @@ class MatchLogger:
 
     def _write_json_event(self, event_type: str, payload: Dict[str, Any]) -> None:
         record = {
-            "timestamp_utc": _utc_now_iso(),
             "event_type": event_type,
             "payload": payload,
         }
