@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Compile Update="Game_Init.cs">
+        <DependentUpon>Game.cs</DependentUpon>
+      </Compile>
+      <Compile Update="GameDataManager\GameData_Utils.cs">
+        <DependentUpon>GameData_Data.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Game_Actions.cs">
+        <DependentUpon>Game.cs</DependentUpon>
+      </Compile>
+      <Compile Update="GameDataManager\GameData_GetMoveArea.cs">
+        <DependentUpon>GameData_Data.cs</DependentUpon>
+      </Compile>
+      <Compile Update="GameDataManager\GameData_ToString.cs">
+        <DependentUpon>GameData_Data.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="GameEventManager\Events\" />
+    </ItemGroup>
+
+</Project>
