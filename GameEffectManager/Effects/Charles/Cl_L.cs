@@ -11,7 +11,7 @@ public class Cl_L : IEffect
     //카드를 한 장 뽑습니다. 이동범위 내 아군을 선택해 체력을 3 회복시킵니다.
     public string Id => "Cl_L"; 
 
-    public List<EffectTarget> GetTargets(Guid source, GameData data)
+    public List<EffectTarget> GetTargets(Uid source, GameData data)
     {
         var card = data.GetCardById(source);
         return data.GetMoveArea(card)
@@ -21,7 +21,7 @@ public class Cl_L : IEffect
             .ToList();
     }
 
-    public void Apply(Guid source, EffectTarget target, GameData data)
+    public void Apply(Uid source, EffectTarget target, GameData data)
     {
         var zone = data.GetCardZoneById(source);
         var card = data.GetCardById(source);

@@ -8,7 +8,7 @@ public class PawnGeneric : IEffect
 {
     public string Id => "PawnGeneric";
 
-    public List<EffectTarget> GetTargets(Guid source, GameData data)
+    public List<EffectTarget> GetTargets(Uid source, GameData data)
     {
         return data.Board.Cards.Where(u => u.Unit.IsPlaced && u.Owner == data.GetCardById(source).Owner)
             .Aggregate(new List<EffectTarget>(), 
@@ -19,7 +19,7 @@ public class PawnGeneric : IEffect
                 .ToList());
     }
 
-    public void Apply(Guid source, EffectTarget target, GameData data)
+    public void Apply(Uid source, EffectTarget target, GameData data)
     {
         var zone = data.GetCardZoneById(source);
         var card = data.GetCardById(source);

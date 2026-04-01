@@ -1,3 +1,4 @@
+using SeaEngine.Common;
 using SeaEngine.GameDataManager.Components;
 
 namespace SeaEngine.GameDataManager;
@@ -41,7 +42,7 @@ public partial class GameData
         }
     }
 
-    public CardZone GetCardZoneById(Guid guid)
+    public CardZone GetCardZoneById(Uid guid)
     {
         var target = Board.GetCardById(guid);
         var owner = target.Owner;
@@ -51,16 +52,16 @@ public partial class GameData
         throw new InvalidOperationException();
     }
 
-    public Card GetCardById(Guid guid)
+    public Card GetCardById(Uid uid)
     {
-        return Board.GetCardById(guid);
+        return Board.GetCardById(uid);
     }
 
     public void TrashCard(Card card)
     {
         TrashCard(card.Guid);
     }
-    public void TrashCard(Guid cardId)
+    public void TrashCard(Uid cardId)
     {
         var targetZone = GetCardZoneById(cardId);
         var targetCard = Board.GetCardById(cardId);

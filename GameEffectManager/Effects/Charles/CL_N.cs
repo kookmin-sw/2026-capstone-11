@@ -12,7 +12,7 @@ public class Cl_N : IEffect
     //공격받은 적은 다음 턴 끝까지 공격력 -3.
     public string Id => "Cl_N"; 
 
-    public List<EffectTarget> GetTargets(Guid source, GameData data)
+    public List<EffectTarget> GetTargets(Uid source, GameData data)
     {
         var card = data.GetCardById(source);
         return data.GetMoveArea(card)
@@ -21,7 +21,7 @@ public class Cl_N : IEffect
             .ToList();
     }
 
-    public void Apply(Guid source, EffectTarget target, GameData data)
+    public void Apply(Uid source, EffectTarget target, GameData data)
     {
         var zone = data.GetCardZoneById(source);
         var card = data.GetCardById(source);

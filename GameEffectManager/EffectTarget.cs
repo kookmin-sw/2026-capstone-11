@@ -1,17 +1,18 @@
 using SeaEngine.Actions;
+using SeaEngine.Common;
 
 namespace SeaEngine.GameEffectManager;
 
 
 public class EffectTarget
 {
-    public readonly Guid Guid;
-    public readonly Guid Guid2;
+    public readonly Uid Guid;
+    public readonly Uid Guid2;
     public readonly int PosX;
     public readonly int PosY;
     public readonly Types Type;
 
-    private EffectTarget(Guid guid, Guid guid2,Types type, int posX, int posY)
+    private EffectTarget(Uid guid, Uid guid2,Types type, int posX, int posY)
     {
         Guid = guid;
         Guid2 = guid2;
@@ -29,26 +30,26 @@ public class EffectTarget
         None,
     }
     
-    public static readonly EffectTarget None = new EffectTarget(Guid.Empty, System.Guid.Empty, EffectTarget.Types.None, -1, -1);
+    public static readonly EffectTarget None = new EffectTarget(Uid.None, Uid.None, EffectTarget.Types.None, -1, -1);
 
-    public static EffectTarget Unit(Guid guid)
+    public static EffectTarget Unit(Uid guid)
     {
-        return new EffectTarget(guid, System.Guid.Empty,EffectTarget.Types.Unit, -1, -1);
+        return new EffectTarget(guid, Uid.None,EffectTarget.Types.Unit, -1, -1);
     }
 
-    public static EffectTarget Unit2(Guid guid, Guid guid2)
+    public static EffectTarget Unit2(Uid guid, Uid guid2)
     {
         return new EffectTarget(guid, guid2,EffectTarget.Types.Unit2, -1, -1);
     }
 
-    public static EffectTarget Card(Guid guid)
+    public static EffectTarget Card(Uid guid)
     {
-        return new EffectTarget(guid, System.Guid.Empty,EffectTarget.Types.Card, -1, -1);
+        return new EffectTarget(guid, Uid.None,EffectTarget.Types.Card, -1, -1);
     }
 
     public static EffectTarget Cell(int posX, int posY)
     {
-        return new EffectTarget(Guid.Empty, System.Guid.Empty, EffectTarget.Types.Cell, posX, posY);
+        return new EffectTarget(Uid.None, Uid.None, EffectTarget.Types.Cell, posX, posY);
     }
 
     public override string ToString()

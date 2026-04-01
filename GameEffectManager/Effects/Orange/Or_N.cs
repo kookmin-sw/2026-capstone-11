@@ -11,7 +11,7 @@ public class Or_N : IEffect
     //이동범위 내 적을 하나 선택해 공격합니다. 적 유닛이 이 공격으로 파괴되었다면, 이동 범위 내 모든 적을 공격합니다.
     public string Id => "Or_N"; 
 
-    public List<EffectTarget> GetTargets(Guid source, GameData data)
+    public List<EffectTarget> GetTargets(Uid source, GameData data)
     {
         return data.GetMoveArea(data.GetCardById(source))
             .Where(p => !data.Board.IsEmptyCell(p.Item1, p.Item2) && 
@@ -20,7 +20,7 @@ public class Or_N : IEffect
             .ToList();
     }
 
-    public void Apply(Guid source, EffectTarget target, GameData data)
+    public void Apply(Uid source, EffectTarget target, GameData data)
     {
         var zone = data.GetCardZoneById(source);
         var card = data.GetCardById(source);

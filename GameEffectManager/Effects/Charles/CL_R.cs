@@ -13,7 +13,7 @@ public class Cl_R : IEffect
     // 이동할 수 없었다면, 선택한 적에게 피해 1
     public string Id => "Cl_R"; 
 
-    public List<EffectTarget> GetTargets(Guid source, GameData data)
+    public List<EffectTarget> GetTargets(Uid source, GameData data)
     {
         var card = data.GetCardById(source);
         return data.GetMoveArea(card)
@@ -22,7 +22,7 @@ public class Cl_R : IEffect
             .ToList();
     }
 
-    public void Apply(Guid source, EffectTarget target, GameData data)
+    public void Apply(Uid source, EffectTarget target, GameData data)
     {
         var zone = data.GetCardZoneById(source);
         var card = data.GetCardById(source);

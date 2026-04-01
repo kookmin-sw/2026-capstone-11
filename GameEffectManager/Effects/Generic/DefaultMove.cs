@@ -1,3 +1,4 @@
+using SeaEngine.Common;
 using SeaEngine.GameDataManager;
 using SeaEngine.GameDataManager.Components;
 
@@ -8,7 +9,7 @@ public class DefaultMove : IEffect
 {
     public string Id => "DefaultMove";
 
-    public List<EffectTarget> GetTargets(Guid source, GameData data)
+    public List<EffectTarget> GetTargets(Uid source, GameData data)
     {
         var cur = data.Board.GetCardById(source);
         var targets = data.GetMoveArea(cur)
@@ -17,7 +18,7 @@ public class DefaultMove : IEffect
         return targets;
     }
 
-    public void Apply(Guid source, EffectTarget target, GameData data)
+    public void Apply(Uid source, EffectTarget target, GameData data)
     {
         //유효성 검사는 필요없음. GetTarget가 해줌.
         var cur = data.Board.GetCardById(source);

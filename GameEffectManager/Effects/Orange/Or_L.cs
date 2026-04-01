@@ -10,7 +10,7 @@ public class Or_L : IEffect
     //카드를 한 장 뽑습니다. 아군 유닛을 선택해 체력을 1 회복시킵니다.
     public string Id => "Or_L"; 
 
-    public List<EffectTarget> GetTargets(Guid source, GameData data)
+    public List<EffectTarget> GetTargets(Uid source, GameData data)
     {
         return data.Board.Cards
             .Where(c => c.Unit.IsPlaced && c.Owner == data.GetCardById(source).Owner)
@@ -18,7 +18,7 @@ public class Or_L : IEffect
             .ToList();
     }
 
-    public void Apply(Guid source, EffectTarget target, GameData data)
+    public void Apply(Uid source, EffectTarget target, GameData data)
     {
         var zone = data.GetCardZoneById(source);
         var card = data.GetCardById(source);

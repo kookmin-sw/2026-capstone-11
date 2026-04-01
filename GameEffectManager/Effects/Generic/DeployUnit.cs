@@ -1,3 +1,4 @@
+using SeaEngine.Common;
 using SeaEngine.GameDataManager;
 using SeaEngine.GameDataManager.Components;
 
@@ -8,7 +9,7 @@ public class DeployUnit : IEffect
 {
     public string Id => "DeployUnit";
 
-    public List<EffectTarget> GetTargets(Guid source, GameData data)
+    public List<EffectTarget> GetTargets(Uid source, GameData data)
     {
         var card = data.GetCardById(source);
         var currentZone = card.Owner == data.Player1 ? Board.Player1Zone : Board.Player2Zone;
@@ -18,7 +19,7 @@ public class DeployUnit : IEffect
             .ToList();
     }
 
-    public void Apply(Guid source, EffectTarget target, GameData data)
+    public void Apply(Uid source, EffectTarget target, GameData data)
     {
         var zone = data.GetCardZoneById(source);
         var card = data.GetCardById(source);

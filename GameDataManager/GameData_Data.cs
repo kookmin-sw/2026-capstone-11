@@ -6,7 +6,7 @@ public partial class GameData
 {
     public readonly Player Player1;
     public readonly Player Player2;
-    public readonly Player ActivePlayer;
+    public Player ActivePlayer;
     public readonly Board Board = new Board();
 
     public GameData(string player1Id, string player2Id)

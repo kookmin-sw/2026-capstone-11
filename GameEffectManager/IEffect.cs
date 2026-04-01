@@ -1,3 +1,4 @@
+using SeaEngine.Common;
 using SeaEngine.GameDataManager;
 
 namespace SeaEngine.GameEffectManager;
@@ -5,6 +6,6 @@ namespace SeaEngine.GameEffectManager;
 public interface IEffect
 {
     public string Id { get; }
-    public List<EffectTarget> GetTargets(Guid source, GameData data);
-    public void Apply(Guid source, EffectTarget target, GameData data);
+    public List<EffectTarget> GetTargets(Uid source, GameData data);
+    public void Apply(Uid source, EffectTarget target, GameData data);
 }

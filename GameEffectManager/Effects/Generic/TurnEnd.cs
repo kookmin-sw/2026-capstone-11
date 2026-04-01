@@ -1,3 +1,4 @@
+using SeaEngine.Common;
 using SeaEngine.GameDataManager;
 
 namespace SeaEngine.GameEffectManager.Effects;
@@ -7,13 +8,16 @@ public class TurnEnd : IEffect
 {
     public string Id => "TurnEnd";
 
-    public List<EffectTarget> GetTargets(Guid source, GameData data)
+    public List<EffectTarget> GetTargets(Uid source, GameData data)
     {
-        throw new NotImplementedException();
+        return [EffectTarget.None];
     }
 
-    public void Apply(Guid source, EffectTarget target, GameData data)
+    public void Apply(Uid source, EffectTarget target, GameData data)
     {
-        throw new NotImplementedException();
+        //TODO : 턴 종료 시 효과 발동되는 것 처리하기.
+        data.ActivePlayer = data.Player1 == data.ActivePlayer ? data.Player2 : data.Player1;
+        //TODO : 턴 시작 시 효과 발동되는 것 처리하기.
+        data.DrawCard(data.ActivePlayer, 2);
     }
 }

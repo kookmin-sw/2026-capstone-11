@@ -1,4 +1,5 @@
 using System.Text;
+using SeaEngine.Common;
 
 namespace SeaEngine.GameDataManager.Components;
 
@@ -18,7 +19,7 @@ public class CardZone
         _cards.Remove(card);
     }
 
-    public void RemoveCard(Guid guid)
+    public void RemoveCard(Uid guid)
     {
         _cards.RemoveAll(card => card.Guid == guid);
     }
@@ -28,7 +29,7 @@ public class CardZone
         return _cards.Contains(card); //이거 UID 기반으로 찾는 게 맞나...?
     }
 
-    public bool HasCard(Guid guid)
+    public bool HasCard(Uid guid)
     {
         return _cards.Any(card => card.Guid == guid);
     }

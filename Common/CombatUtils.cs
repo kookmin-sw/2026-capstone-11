@@ -10,12 +10,9 @@ public static class CombatUtils
         //TODO : Event 체크
 
         defender.Unit.Hp -= attacker.Unit.Atk;
-        if (defender.Unit.Hp <= 0)
-        {
-            defender.Unit.Withdraw();
-            return true;
-        }
-        return false;
+        if (defender.Unit.Hp > 0) return false;
+        defender.Unit.Withdraw();
+        return true;
     }
 
     public static bool Heal(Card target, int amount, GameData data)

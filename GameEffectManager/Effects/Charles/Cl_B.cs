@@ -1,6 +1,7 @@
 using SeaEngine.Common;
 using SeaEngine.GameDataManager;
 using SeaEngine.GameDataManager.Components;
+using SeaEngine.Logger;
 
 namespace SeaEngine.GameEffectManager.Effects.Charles;
 
@@ -12,12 +13,12 @@ public class Cl_B : IEffect
     //이동범위 내 적을 모두 공격합니다.
     public string Id => "Cl_B"; 
 
-    public List<EffectTarget> GetTargets(Guid source, GameData data)
+    public List<EffectTarget> GetTargets(Uid source, GameData data)
     {
         return [EffectTarget.None];
     }
 
-    public void Apply(Guid source, EffectTarget target, GameData data)
+    public void Apply(Uid source, EffectTarget target, GameData data)
     {
         var zone = data.GetCardZoneById(source);
         var card = data.GetCardById(source);

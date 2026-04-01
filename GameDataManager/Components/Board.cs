@@ -26,7 +26,7 @@ public class Board
         return _cards.Find(c => c.Unit.PosX == x && c.Unit.PosY == y);
     }
 
-    public Card GetCardById(Guid guid)
+    public Card GetCardById(Uid guid)
     {
         return _cards.Find(c => c.Guid == guid) ?? throw new InvalidOperationException();
     }

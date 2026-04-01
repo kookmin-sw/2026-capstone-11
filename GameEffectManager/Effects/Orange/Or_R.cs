@@ -12,7 +12,7 @@ public class Or_R : IEffect
     // 선택한 유닛과 이 유닛은 다음 상대 턴 종료까지 이동할 수 없습니다.
     public string Id => "Or_R"; 
 
-    public List<EffectTarget> GetTargets(Guid source, GameData data)
+    public List<EffectTarget> GetTargets(Uid source, GameData data)
     {
         var card = data.GetCardById(source);
         if (card.Unit.IsMoved) return [];
@@ -23,7 +23,7 @@ public class Or_R : IEffect
             .ToList();
     }
 
-    public void Apply(Guid source, EffectTarget target, GameData data)
+    public void Apply(Uid source, EffectTarget target, GameData data)
     {
         var zone = data.GetCardZoneById(source);
         var card = data.GetCardById(source);
