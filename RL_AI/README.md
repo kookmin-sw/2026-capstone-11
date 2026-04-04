@@ -173,6 +173,9 @@ python -c "from RL_AI.agents.rl_agent import RLAgent; from RL_AI.agents.random_a
 - `*.jsonl`: 분석용 구조화 로그
 - `*.txt`: 간단 기보 로그
 
+에이전트 매치 로그를 남기는 경우, `match_start / match_end` 메타데이터와 TXT 로그 시작부에
+`P1 agent=...`, `P2 agent=...` 정보가 함께 기록됩니다.
+
 현재 JSONL 최상위 필드는 다음 2개만 사용합니다.
 - `event_type`
 - `payload`

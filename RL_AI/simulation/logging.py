@@ -262,15 +262,23 @@ class MatchLogger:
                 f.write("\n")
 
     def log_match_start(self, state: GameState, *, metadata: Optional[Dict[str, Any]] = None) -> None:
+        metadata = metadata or {}
         payload = {
             "state": compact_state_summary(state),
-            "metadata": metadata or {},
+            "metadata": metadata,
         }
         self._write_json_event("match_start", payload)
+        agent_line = ""
+        if "p1_agent" in metadata or "p2_agent" in metadata:
+            agent_line = (
+                f"P1 agent={metadata.get('p1_agent', '-')} | "
+                f"P2 agent={metadata.get('p2_agent', '-')}\n"
+            )
         self._append_text(
             f"=== MATCH START ===\n"
             f"turn={state.turn} active={_player_label(state.active_player)} phase={_phase_label(state)} "
             f"result={_result_label(state)}\n"
+            f"{agent_line}"
             f"P1 leader_hp={_leader_hp(state, PlayerID.P1)} | P2 leader_hp={_leader_hp(state, PlayerID.P2)}\n"
         )
 
@@ -321,13 +329,21 @@ class MatchLogger:
         self._write_json_event(event_type, payload)
 
     def log_match_end(self, state: GameState, *, metadata: Optional[Dict[str, Any]] = None) -> None:
+        metadata = metadata or {}
         payload = {
             "state": compact_state_summary(state),
-            "metadata": metadata or {},
+            "metadata": metadata,
         }
         self._write_json_event("match_end", payload)
+        agent_line = ""
+        if "p1_agent" in metadata or "p2_agent" in metadata:
+            agent_line = (
+                f"P1 agent={metadata.get('p1_agent', '-')} | "
+                f"P2 agent={metadata.get('p2_agent', '-')}\n"
+            )
         self._append_text(
             f"=== MATCH END ===\n"
+            f"{agent_line}"
             f"turn={state.turn} result={_result_label(state)} "
             f"P1_HP={_leader_hp(state, PlayerID.P1)} P2_HP={_leader_hp(state, PlayerID.P2)}\n"
         )

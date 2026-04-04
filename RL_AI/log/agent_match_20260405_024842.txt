@@ -1,0 +1,106 @@
+=== MATCH START ===
+turn=1 active=P2 phase=MAIN result=ONGOING
+P1 leader_hp=12 | P2 leader_hp=9
+T1 P2 MAIN | 턴 종료
+    -> result=ONGOING P1_HP=12 P2_HP=9 board=P1 군주@1C(12/12); P2 군주@6D(9/9) | note=agent_step=0
+T2 P1 MAIN | The King 사용 | 대상=P1 군주 | 위치=1B
+    -> result=ONGOING P1_HP=12 P2_HP=9 board=P1 군주@1B(12/12); P2 군주@6D(9/9) | note=agent_step=1
+T2 P1 MAIN | Pawn 소환 -> 1C
+    -> result=ONGOING P1_HP=12 P2_HP=9 board=P1 폰#1@1C(1/1); P1 군주@1B(12/12); P2 군주@6D(9/9) | note=agent_step=2
+T2 P1 MAIN | The Bishop 소환 -> 1E
+    -> result=ONGOING P1_HP=12 P2_HP=9 board=P1 폰#1@1C(1/1); P1 군주@1B(12/12); P1 비숍@1E(3/3); P2 군주@6D(9/9) | note=agent_step=3
+T2 P1 MAIN | Pawn 소환 -> 1F
+    -> result=ONGOING P1_HP=12 P2_HP=9 board=P1 폰#1@1C(1/1); P1 폰#2@1F(1/1); P1 군주@1B(12/12); P1 비숍@1E(3/3); P2 군주@6D(9/9) | note=agent_step=4
+T2 P1 MAIN | The Rook 소환 -> 1D
+    -> result=ONGOING P1_HP=12 P2_HP=9 board=P1 폰#1@1C(1/1); P1 폰#2@1F(1/1); P1 군주@1B(12/12); P1 비숍@1E(3/3); P1 룩@1D(3/3); P2 군주@6D(9/9) | note=agent_step=5
+T2 P1 MAIN | P1 룩 공격 -> P2 군주
+    -> result=ONGOING P1_HP=12 P2_HP=8 board=P1 폰#1@1C(1/1); P1 폰#2@1F(1/1); P1 군주@1B(12/12); P1 비숍@1E(3/3); P1 룩@1D(3/3); P2 군주@6D(8/9) | note=agent_step=6
+T2 P1 MAIN | Pawn 소환 -> 1A
+    -> result=ONGOING P1_HP=12 P2_HP=8 board=P1 폰#3@1A(1/1); P1 폰#1@1C(1/1); P1 폰#2@1F(1/1); P1 군주@1B(12/12); P1 비숍@1E(3/3); P1 룩@1D(3/3); P2 군주@6D(8/9) | note=agent_step=7
+T2 P1 MAIN | P1 룩 이동 -> 5D
+    -> result=ONGOING P1_HP=12 P2_HP=8 board=P1 폰#3@1A(1/1); P1 폰#1@1C(1/1); P1 폰#2@1F(1/1); P1 군주@1B(12/12); P1 비숍@1E(3/3); P1 룩@5D(3/3); P2 군주@6D(8/9) | note=agent_step=8
+T2 P1 MAIN | P1 비숍 이동 -> 2D
+    -> result=ONGOING P1_HP=12 P2_HP=8 board=P1 폰#3@1A(1/1); P1 폰#1@1C(1/1); P1 폰#2@1F(1/1); P1 군주@1B(12/12); P1 비숍@2D(3/3); P1 룩@5D(3/3); P2 군주@6D(8/9) | note=agent_step=9
+T2 P1 MAIN | P1 폰#1 이동 -> 2C
+    -> result=ONGOING P1_HP=12 P2_HP=8 board=P1 폰#3@1A(1/1); P1 폰#1@2C(1/1); P1 폰#2@1F(1/1); P1 군주@1B(12/12); P1 비숍@2D(3/3); P1 룩@5D(3/3); P2 군주@6D(8/9) | note=agent_step=10
+T2 P1 MAIN | P1 폰#2 이동 -> 2F
+    -> result=ONGOING P1_HP=12 P2_HP=8 board=P1 폰#3@1A(1/1); P1 폰#1@2C(1/1); P1 폰#2@2F(1/1); P1 군주@1B(12/12); P1 비숍@2D(3/3); P1 룩@5D(3/3); P2 군주@6D(8/9) | note=agent_step=11
+T2 P1 MAIN | P1 폰#3 이동 -> 2A
+    -> result=ONGOING P1_HP=12 P2_HP=8 board=P1 폰#3@2A(1/1); P1 폰#1@2C(1/1); P1 폰#2@2F(1/1); P1 군주@1B(12/12); P1 비숍@2D(3/3); P1 룩@5D(3/3); P2 군주@6D(8/9) | note=agent_step=12
+T2 P1 MAIN | 턴 종료
+    -> result=ONGOING P1_HP=12 P2_HP=8 board=P1 폰#3@2A(1/1); P1 폰#1@2C(1/1); P1 폰#2@2F(1/1); P1 군주@1B(12/12); P1 비숍@2D(3/3); P1 룩@5D(3/3); P2 군주@6D(8/9) | note=agent_step=13
+T3 P2 MAIN | 턴 종료
+    -> result=ONGOING P1_HP=12 P2_HP=8 board=P1 폰#3@2A(1/1); P1 폰#1@2C(1/1); P1 폰#2@2F(1/1); P1 군주@1B(12/12); P1 비숍@2D(3/3); P1 룩@5D(3/3); P2 군주@6D(8/9) | note=agent_step=14
+T4 P1 MAIN | P1 룩 공격 -> P2 군주
+    -> result=ONGOING P1_HP=12 P2_HP=7 board=P1 폰#3@2A(1/1); P1 폰#1@2C(1/1); P1 폰#2@2F(1/1); P1 군주@1B(12/12); P1 비숍@2D(3/3); P1 룩@5D(3/3); P2 군주@6D(7/9) | note=agent_step=15
+T4 P1 MAIN | The Rook 사용 | 대상=P1 군주
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@2A(1/1); P1 폰#1@2C(1/1); P1 폰#2@2F(1/1); P1 군주@1B(13/13); P1 비숍@2D(3/3); P1 룩@5D(3/3); P2 군주@6D(7/9) | note=agent_step=16
+T4 P1 MAIN | The Knight 소환 -> 1A
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@2A(1/1); P1 폰#1@2C(1/1); P1 폰#2@2F(1/1); P1 군주@1B(13/13); P1 비숍@2D(3/3); P1 룩@5D(3/3); P1 나이트@1A(3/3); P2 군주@6D(7/9) | note=agent_step=17
+T4 P1 MAIN | P1 룩 이동 -> 4D
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@2A(1/1); P1 폰#1@2C(1/1); P1 폰#2@2F(1/1); P1 군주@1B(13/13); P1 비숍@2D(3/3); P1 룩@4D(3/3); P1 나이트@1A(3/3); P2 군주@6D(7/9) | note=agent_step=18
+T4 P1 MAIN | P1 비숍 이동 -> 3E
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@2A(1/1); P1 폰#1@2C(1/1); P1 폰#2@2F(1/1); P1 군주@1B(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@1A(3/3); P2 군주@6D(7/9) | note=agent_step=19
+T4 P1 MAIN | P1 나이트 이동 -> 3B
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@2A(1/1); P1 폰#1@2C(1/1); P1 폰#2@2F(1/1); P1 군주@1B(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@3B(3/3); P2 군주@6D(7/9) | note=agent_step=20
+T4 P1 MAIN | P1 군주 이동 -> 2B
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@2A(1/1); P1 폰#1@2C(1/1); P1 폰#2@2F(1/1); P1 군주@2B(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@3B(3/3); P2 군주@6D(7/9) | note=agent_step=21
+T4 P1 MAIN | P1 폰#1 이동 -> 3C
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@2A(1/1); P1 폰#1@3C(1/1); P1 폰#2@2F(1/1); P1 군주@2B(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@3B(3/3); P2 군주@6D(7/9) | note=agent_step=22
+T4 P1 MAIN | P1 폰#2 이동 -> 3F
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@2A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@2B(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@3B(3/3); P2 군주@6D(7/9) | note=agent_step=23
+T4 P1 MAIN | P1 폰#3 이동 -> 3A
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@2B(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@3B(3/3); P2 군주@6D(7/9) | note=agent_step=24
+T4 P1 MAIN | 턴 종료
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@2B(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@3B(3/3); P2 군주@6D(7/9) | note=agent_step=25
+T5 P2 MAIN | P2 군주 이동 -> 5E
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@2B(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@3B(3/3); P2 군주@5E(7/9) | note=agent_step=26
+T5 P2 MAIN | 귤 직장인? 소환 -> 6D
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@2B(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@3B(3/3); P2 비숍@6D(4/4); P2 군주@5E(7/9) | note=agent_step=27
+T5 P2 MAIN | 귤 요정 소환 -> 6C
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@2B(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@3B(3/3); P2 비숍@6D(4/4); P2 폰#3@6C(1/1); P2 군주@5E(7/9) | note=agent_step=28
+T5 P2 MAIN | 귤 요정 소환 -> 6E
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@2B(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@3B(3/3); P2 비숍@6D(4/4); P2 폰#3@6C(1/1); P2 폰#2@6E(1/1); P2 군주@5E(7/9) | note=agent_step=29
+T5 P2 MAIN | 귤 요정 소환 -> 6F
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@2B(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@3B(3/3); P2 비숍@6D(4/4); P2 폰#3@6C(1/1); P2 폰#2@6E(1/1); P2 군주@5E(7/9); P2 폰#1@6F(1/1) | note=agent_step=30
+T5 P2 MAIN | P2 비숍 이동 -> 4B
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@2B(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@3B(3/3); P2 비숍@4B(4/4); P2 폰#3@6C(1/1); P2 폰#2@6E(1/1); P2 군주@5E(7/9); P2 폰#1@6F(1/1) | note=agent_step=31
+T5 P2 MAIN | P2 폰#1 이동 -> 5F
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@2B(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@3B(3/3); P2 비숍@4B(4/4); P2 폰#3@6C(1/1); P2 폰#2@6E(1/1); P2 군주@5E(7/9); P2 폰#1@5F(1/1) | note=agent_step=32
+T5 P2 MAIN | P2 폰#3 이동 -> 5C
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@2B(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@3B(3/3); P2 비숍@4B(4/4); P2 폰#3@5C(1/1); P2 폰#2@6E(1/1); P2 군주@5E(7/9); P2 폰#1@5F(1/1) | note=agent_step=33
+T5 P2 MAIN | 턴 종료
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@2B(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@3B(3/3); P2 비숍@4B(4/4); P2 폰#3@5C(1/1); P2 폰#2@6E(1/1); P2 군주@5E(7/9); P2 폰#1@5F(1/1) | note=agent_step=34
+T6 P1 MAIN | P1 나이트 공격 -> P2 폰#3
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@2B(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@3B(3/3); P2 비숍@4B(4/4); P2 폰#2@6E(1/1); P2 군주@5E(7/9); P2 폰#1@5F(1/1) | note=agent_step=35
+T6 P1 MAIN | The King 사용 | 대상=P1 군주 | 위치=1C
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@1C(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@3B(3/3); P2 비숍@4B(4/4); P2 폰#2@6E(1/1); P2 군주@5E(7/9); P2 폰#1@5F(1/1) | note=agent_step=36
+T6 P1 MAIN | P1 룩 공격 -> P2 비숍
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@1C(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@3B(3/3); P2 비숍@4B(3/4); P2 폰#2@6E(1/1); P2 군주@5E(7/9); P2 폰#1@5F(1/1) | note=agent_step=37
+T6 P1 MAIN | P1 폰#1 공격 -> P2 비숍
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@1C(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@3B(3/3); P2 비숍@4B(2/4); P2 폰#2@6E(1/1); P2 군주@5E(7/9); P2 폰#1@5F(1/1) | note=agent_step=38
+T6 P1 MAIN | P1 폰#3 공격 -> P2 비숍
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@1C(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@3B(3/3); P2 비숍@4B(1/4); P2 폰#2@6E(1/1); P2 군주@5E(7/9); P2 폰#1@5F(1/1) | note=agent_step=39
+T6 P1 MAIN | Pawn 사용 | 대상=P1 폰#3, P2 비숍
+    -> result=ONGOING P1_HP=13 P2_HP=9 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@1C(13/13); P1 비숍@3E(3/3); P1 룩@4D(3/3); P1 나이트@3B(3/3); P2 폰#2@6E(1/1); P2 군주@5E(9/9); P2 폰#1@5F(1/1) | note=agent_step=40
+T6 P1 MAIN | P1 룩 이동 -> 5D
+    -> result=ONGOING P1_HP=13 P2_HP=9 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@1C(13/13); P1 비숍@3E(3/3); P1 룩@5D(3/3); P1 나이트@3B(3/3); P2 폰#2@6E(1/1); P2 군주@5E(9/9); P2 폰#1@5F(1/1) | note=agent_step=41
+T6 P1 MAIN | Pawn 사용 | 대상=P1 룩, P2 군주
+    -> result=ONGOING P1_HP=13 P2_HP=8 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@1C(13/13); P1 비숍@3E(3/3); P1 룩@5D(3/3); P1 나이트@3B(3/3); P2 폰#2@6E(1/1); P2 군주@5E(8/9); P2 폰#1@5F(1/1) | note=agent_step=42
+T6 P1 MAIN | P1 나이트 이동 -> 4D
+    -> result=ONGOING P1_HP=13 P2_HP=8 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@1C(13/13); P1 비숍@3E(3/3); P1 룩@5D(3/3); P1 나이트@4D(3/3); P2 폰#2@6E(1/1); P2 군주@5E(8/9); P2 폰#1@5F(1/1) | note=agent_step=43
+T6 P1 MAIN | P1 비숍 이동 -> 4F
+    -> result=ONGOING P1_HP=13 P2_HP=8 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@1C(13/13); P1 비숍@4F(3/3); P1 룩@5D(3/3); P1 나이트@4D(3/3); P2 폰#2@6E(1/1); P2 군주@5E(8/9); P2 폰#1@5F(1/1) | note=agent_step=44
+T6 P1 MAIN | P1 비숍 공격 -> P2 군주
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@3A(1/1); P1 폰#1@3C(1/1); P1 폰#2@3F(1/1); P1 군주@1C(13/13); P1 비숍@4F(3/3); P1 룩@5D(3/3); P1 나이트@4D(3/3); P2 폰#2@6E(1/1); P2 군주@5E(7/9); P2 폰#1@5F(1/1) | note=agent_step=45
+T6 P1 MAIN | P1 폰#1 이동 -> 4C
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@3A(1/1); P1 폰#1@4C(1/1); P1 폰#2@3F(1/1); P1 군주@1C(13/13); P1 비숍@4F(3/3); P1 룩@5D(3/3); P1 나이트@4D(3/3); P2 폰#2@6E(1/1); P2 군주@5E(7/9); P2 폰#1@5F(1/1) | note=agent_step=46
+T6 P1 MAIN | P1 폰#3 이동 -> 4A
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@4A(1/1); P1 폰#1@4C(1/1); P1 폰#2@3F(1/1); P1 군주@1C(13/13); P1 비숍@4F(3/3); P1 룩@5D(3/3); P1 나이트@4D(3/3); P2 폰#2@6E(1/1); P2 군주@5E(7/9); P2 폰#1@5F(1/1) | note=agent_step=47
+T6 P1 MAIN | 턴 종료
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@4A(1/1); P1 폰#1@4C(1/1); P1 폰#2@3F(1/1); P1 군주@1C(13/13); P1 비숍@4F(3/3); P1 룩@5D(3/3); P1 나이트@4D(3/3); P2 폰#2@6E(1/1); P2 군주@5E(7/9); P2 폰#1@5F(1/1) | note=agent_step=48
+T7 P2 MAIN | 망상의 기사님 소환 -> 6B
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@4A(1/1); P1 폰#1@4C(1/1); P1 폰#2@3F(1/1); P1 군주@1C(13/13); P1 비숍@4F(3/3); P1 룩@5D(3/3); P1 나이트@4D(3/3); P2 폰#2@6E(1/1); P2 군주@5E(7/9); P2 폰#1@5F(1/1); P2 나이트@6B(3/3) | note=agent_step=49
+    -> result=ONGOING P1_HP=13 P2_HP=7 board=P1 폰#3@4A(1/1); P1 폰#1@4C(1/1); P1 폰#2@3F(1/1); P1 군주@1C(13/13); P1 비숍@4F(3/3); P1 룩@5D(3/3); P1 나이트@4D(3/3); P2 폰#2@6E(1/1); P2 군주@5E(7/9); P2 폰#1@5F(1/1); P2 나이트@6B(3/3) | note=max_steps_reached
+=== MATCH END ===
+turn=7 result=ONGOING P1_HP=13 P2_HP=7
