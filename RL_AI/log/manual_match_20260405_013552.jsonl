@@ -1,0 +1,3 @@
+{"event_type": "match_start", "payload": {"state": {"turn": 1, "active_player": "P2", "phase": "MAIN", "result": "ONGOING", "p1_leader_hp": 12, "p2_leader_hp": 9, "p1_hand_count": 3, "p2_hand_count": 5, "board_units": ["P1 군주@1C(12/12)", "P2 군주@6D(9/9)"]}, "metadata": {"mode": "manual", "p1_world": 1, "p2_world": 2, "seed": 7, "first_player": null}}}
+{"event_type": "manual_interrupt", "payload": {"turn": 1, "active_player": "P2"}}
+{"event_type": "match_end", "payload": {"state": {"turn": 1, "active_player": "P2", "phase": "MAIN", "result": "ONGOING", "p1_leader_hp": 12, "p2_leader_hp": 9, "p1_hand_count": 3, "p2_hand_count": 5, "board_units": ["P1 군주@1C(12/12)", "P2 군주@6D(9/9)"]}, "metadata": {"interrupted": true}}}

@@ -506,8 +506,8 @@ def validate_supported_card_db(card_db: Dict[str, CardDefinition]) -> Dict[str, 
     return filtered
 
 
-def load_supported_card_db(xlsx_path: str = "Cards.xlsx") -> Dict[str, CardDefinition]:
-    db = load_card_db(xlsx_path=xlsx_path)
+def load_supported_card_db(tsv_path: str = "Cards.tsv") -> Dict[str, CardDefinition]:
+    db = load_card_db(tsv_path=tsv_path)
     return validate_supported_card_db(db)
 
 
@@ -615,12 +615,12 @@ def _draw_initial_hands(state: GameState, rng: random.Random, hand_size: int = I
 def create_initial_game_state(
     p1_world: int,
     p2_world: int,
-    xlsx_path: str = "Cards.xlsx",
+    tsv_path: str = "Cards.tsv",
     seed: Optional[int] = None,
     first_player: Optional[PlayerID] = None,
 ) -> GameState:
     rng = random.Random(seed)
-    card_db = load_supported_card_db(xlsx_path)
+    card_db = load_supported_card_db(tsv_path)
     p1 = create_initial_player_state(PlayerID.P1, p1_world, card_db, rng)
     p2 = create_initial_player_state(PlayerID.P2, p2_world, card_db, rng)
     active_player = rng.choice([PlayerID.P1, PlayerID.P2]) if first_player is None else first_player

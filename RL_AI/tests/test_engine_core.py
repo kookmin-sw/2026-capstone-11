@@ -7,7 +7,7 @@ from RL_AI.game_engine.engine import apply_action
 from RL_AI.game_engine.rules import can_move_unit, can_use_card, get_legal_actions
 from RL_AI.game_engine.state import Action, ActionType, GameResult, Phase, PlayerID, Position
 
-from tests.helpers import (
+from RL_AI.tests.helpers import (
     cards_in_zones,
     clear_board_except,
     move_card_to_hand,
@@ -202,3 +202,4 @@ def test_double_leader_death_is_draw(initialized_state):
 
     assert state.check_leader_death() == GameResult.DRAW
     assert state.winner is None
+

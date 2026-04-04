@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Optional, Sequence, Tuple
 
+from RL_AI.agents.base_agent import BaseAgent
 from RL_AI.game_engine.engine import apply_action, initialize_main_phase
 from RL_AI.game_engine.rules import get_legal_actions
 from RL_AI.game_engine.state import Action, GameState, PlayerID, create_initial_game_state, load_supported_card_db
@@ -65,6 +66,16 @@ def choose_action_randomly(legal_actions: Sequence[Action], rng: random.Random) 
     return idx, legal_actions[idx]
 
 
+def choose_action_with_agent(
+    agent: BaseAgent,
+    state: GameState,
+    legal_actions: Sequence[Action],
+    *,
+    card_db,
+) -> tuple[int, Action]:
+    return agent.select_action(state, legal_actions, card_db=card_db)
+
+
 def _build_match_metadata(
     *,
     p1_world: int,
@@ -91,17 +102,17 @@ def run_manual_match(
     p2_world: int = 2,
     *,
     seed: Optional[int] = None,
-    xlsx_path: str = "Cards.xlsx",
+    tsv_path: str = "Cards.tsv",
     first_player: Optional[PlayerID] = None,
     enable_logging: bool = True,
     log_base_path: Optional[str] = None,
     include_action_options_in_log: bool = False,
 ) -> GameState:
-    card_db = load_supported_card_db(xlsx_path=xlsx_path)
+    card_db = load_supported_card_db(tsv_path=tsv_path)
     initial_state = create_initial_game_state(
         p1_world=p1_world,
         p2_world=p2_world,
-        xlsx_path=xlsx_path,
+        tsv_path=tsv_path,
         seed=seed,
         first_player=first_player,
     )
@@ -187,7 +198,7 @@ def run_random_match(
     p2_world: int = 2,
     *,
     seed: Optional[int] = None,
-    xlsx_path: str = "Cards.xlsx",
+    tsv_path: str = "Cards.tsv",
     first_player: Optional[PlayerID] = None,
     max_steps: int = 500,
     enable_logging: bool = True,
@@ -195,11 +206,11 @@ def run_random_match(
     print_steps: bool = True,
     include_action_options_in_log: bool = False,
 ) -> GameState:
-    card_db = load_supported_card_db(xlsx_path=xlsx_path)
+    card_db = load_supported_card_db(tsv_path=tsv_path)
     initial_state = create_initial_game_state(
         p1_world=p1_world,
         p2_world=p2_world,
-        xlsx_path=xlsx_path,
+        tsv_path=tsv_path,
         seed=seed,
         first_player=first_player,
     )
@@ -273,6 +284,125 @@ def run_random_match(
         print(f"Logs written to: {logger.jsonl_path} and {logger.text_path}")
 
     print(f"Random match finished after {steps} steps.")
+    return runner.state
+
+
+def run_agent_match(
+    p1_agent: BaseAgent,
+    p2_agent: BaseAgent,
+    *,
+    p1_world: int = 1,
+    p2_world: int = 2,
+    seed: Optional[int] = None,
+    tsv_path: str = "Cards.tsv",
+    first_player: Optional[PlayerID] = None,
+    max_steps: int = 500,
+    enable_logging: bool = True,
+    log_base_path: Optional[str] = None,
+    print_steps: bool = True,
+    include_action_options_in_log: bool = False,
+) -> GameState:
+    card_db = load_supported_card_db(tsv_path=tsv_path)
+    initial_state = create_initial_game_state(
+        p1_world=p1_world,
+        p2_world=p2_world,
+        tsv_path=tsv_path,
+        seed=seed,
+        first_player=first_player,
+    )
+
+    runner = MatchRunner(initial_state, card_db, seed=seed)
+    runner.initialize()
+
+    logger: Optional[MatchLogger] = None
+    if enable_logging:
+        logger = MatchLogger(
+            log_base_path or _default_log_base("agent_match"),
+            card_db=card_db,
+            save_text_log=True,
+            include_action_options=include_action_options_in_log,
+        )
+        logger.log_match_start(
+            runner.state,
+            metadata={
+                **_build_match_metadata(
+                    p1_world=p1_world,
+                    p2_world=p2_world,
+                    seed=seed,
+                    first_player=first_player,
+                    mode="agent_vs_agent",
+                    max_steps=max_steps,
+                ),
+                "p1_agent": p1_agent.name,
+                "p2_agent": p2_agent.name,
+            },
+        )
+
+    agent_by_player = {
+        PlayerID.P1: p1_agent,
+        PlayerID.P2: p2_agent,
+    }
+
+    steps = 0
+    while not runner.is_done() and steps < max_steps:
+        legal_actions = runner.get_legal_actions()
+
+        if logger is not None:
+            logger.log_action_options(runner.state, legal_actions)
+
+        if not legal_actions:
+            print("No legal actions available. Stopping match.")
+            if logger is not None:
+                logger.log_event(
+                    "no_legal_actions",
+                    turn=runner.state.turn,
+                    active_player=("P1" if runner.state.active_player == PlayerID.P1 else "P2"),
+                    phase=(runner.state.phase.value if hasattr(runner.state.phase, "value") else str(runner.state.phase)),
+                )
+                logger.log_state_checkpoint(runner.state, note="no_legal_actions")
+            break
+
+        acting_agent = agent_by_player[runner.current_player()]
+        action_index, action = choose_action_with_agent(
+            acting_agent,
+            runner.state,
+            legal_actions,
+            card_db=runner.card_db,
+        )
+
+        if print_steps:
+            print(f"[step {steps}] {acting_agent.name}: {describe_action_local(runner.state, action)}")
+
+        if logger is not None:
+            logger.log_action_chosen(runner.state, action, action_index=action_index)
+
+        runner.step(action)
+
+        if logger is not None:
+            logger.log_state_checkpoint(runner.state, note=f"agent_step={steps}")
+
+        steps += 1
+
+    if steps >= max_steps and not runner.is_done():
+        if logger is not None:
+            logger.log_event("max_steps_reached", max_steps=max_steps)
+            logger.log_state_checkpoint(runner.state, note="max_steps_reached")
+
+    if print_steps:
+        print_state(runner.state, card_db=runner.card_db)
+
+    if logger is not None:
+        logger.log_match_end(
+            runner.state,
+            metadata={
+                "steps": steps,
+                "p1_agent": p1_agent.name,
+                "p2_agent": p2_agent.name,
+            },
+        )
+        print(f"Logs written to: {logger.jsonl_path} and {logger.text_path}")
+
+    print(f"Agent match finished after {steps} steps.")
     return runner.state
 
 
