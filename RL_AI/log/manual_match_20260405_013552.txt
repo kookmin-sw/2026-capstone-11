@@ -1,5 +1,0 @@
-=== MATCH START ===
-turn=1 active=P2 phase=MAIN result=ONGOING
-P1 leader_hp=12 | P2 leader_hp=9
-=== MATCH END ===
-turn=1 result=ONGOING P1_HP=12 P2_HP=9

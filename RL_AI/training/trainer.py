@@ -11,9 +11,11 @@ import torch
 from RL_AI.agents.base_agent import BaseAgent
 from RL_AI.agents.random_agent import RandomAgent
 from RL_AI.agents.rl_agent import RLAgent
+from RL_AI.analysis.reports import build_win_rate_report
 from RL_AI.game_engine.engine import initialize_main_phase
 from RL_AI.game_engine.rules import get_legal_actions
 from RL_AI.game_engine.state import GameResult, PlayerID, create_initial_game_state, load_supported_card_db
+from RL_AI.training.evaluator import evaluate_agents
 from RL_AI.training.reward import terminal_reward_for_player
 from RL_AI.training.storage import RolloutBuffer, RolloutStep
 
@@ -201,6 +203,57 @@ class PPOTrainer:
                 results["draws"] += 1
 
         return results
+
+    def evaluate(
+        self,
+        *,
+        opponent_agent: Optional[BaseAgent] = None,
+        num_matches: int = 20,
+        p1_world: int = 1,
+        p2_world: int = 2,
+        tsv_path: str = "Cards.tsv",
+        seed: Optional[int] = None,
+        max_steps: int = 500,
+        enable_logging: bool = False,
+        print_steps: bool = False,
+    ) -> Dict[str, object]:
+        opponent = RandomAgent(seed=seed) if opponent_agent is None else opponent_agent
+        return evaluate_agents(
+            self.agent,
+            opponent,
+            num_matches=num_matches,
+            p1_world=p1_world,
+            p2_world=p2_world,
+            tsv_path=tsv_path,
+            seed=seed,
+            max_steps=max_steps,
+        )
+
+    def evaluate_report(
+        self,
+        *,
+        opponent_agent: Optional[BaseAgent] = None,
+        num_matches: int = 20,
+        p1_world: int = 1,
+        p2_world: int = 2,
+        tsv_path: str = "Cards.tsv",
+        seed: Optional[int] = None,
+        max_steps: int = 500,
+        enable_logging: bool = False,
+        print_steps: bool = False,
+    ) -> str:
+        summary = self.evaluate(
+            opponent_agent=opponent_agent,
+            num_matches=num_matches,
+            p1_world=p1_world,
+            p2_world=p2_world,
+            tsv_path=tsv_path,
+            seed=seed,
+            max_steps=max_steps,
+            enable_logging=enable_logging,
+            print_steps=print_steps,
+        )
+        return build_win_rate_report(summary)
 
     def _assign_terminal_rewards(self, buffer: RolloutBuffer, result: GameResult) -> None:
         grouped = buffer.trajectory_groups()
