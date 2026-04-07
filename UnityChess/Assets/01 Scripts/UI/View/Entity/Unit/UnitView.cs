@@ -8,6 +8,16 @@ using Game.Network;
 
 namespace ui.view.unit
 {
+    public enum MoveType
+    {
+        Pawn,
+        Rook,
+        Knight,
+        Bishop,
+        Queen,
+        King
+    }
+
     /// <summary>
     /// 유닛의 런타임 상태를 다루는 뷰 데이터
     /// </summary>
@@ -16,6 +26,7 @@ namespace ui.view.unit
         // 공통 유닛 정의
         public string name;
         public string className;
+        public MoveType moveType;
 
         // 전투 관련 상태
         public int attack;
@@ -37,7 +48,8 @@ namespace ui.view.unit
                             int currentHP,
                             string traitsDesc,
                             int unitID,
-                            Vector2Int pos) : base(id, type)
+                            Vector2Int pos,
+                            MoveType moveType) : base(id, type)
         {
             this.name = name;
             this.className = className;
@@ -47,6 +59,7 @@ namespace ui.view.unit
             this.traitsDesc = traitsDesc;
             this.unitID = unitID;
             this.pos = pos;
+            this.moveType = moveType;
         }
     }
 
@@ -73,11 +86,6 @@ namespace ui.view.unit
         {
             Debug.Log("Unit selected: " + data.name + " id: " + data.unitID);
             
-            // 유닛이 선택되었을 때의 로직 (예: 상세 정보 표시, 행동 옵션 활성화 등)
-            eventBus.Publish(new IClientEvents.UnitSelectedEvent
-            {
-                UnitUUID = data.Id.UUID
-            });
         }
 
         public void OnDisable()

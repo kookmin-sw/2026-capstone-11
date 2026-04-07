@@ -314,9 +314,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WorldInputHandler
   cam: {fileID: 76979775}
-  selectableLayer:
+  tilemap: {fileID: 427112744}
+  unitLayer:
     serializedVersion: 2
-    m_Bits: 448
+    m_Bits: 64
+  cellLayer:
+    serializedVersion: 2
+    m_Bits: 128
   hoverableLayer:
     serializedVersion: 2
     m_Bits: 320
@@ -817,8 +821,9 @@ GameObject:
   - component: {fileID: 427112741}
   - component: {fileID: 427112744}
   - component: {fileID: 427112743}
-  - component: {fileID: 427112742}
-  m_Layer: 0
+  - component: {fileID: 427112746}
+  - component: {fileID: 427112747}
+  m_Layer: 7
   m_Name: Board
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -840,18 +845,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1475038798}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &427112742
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 427112740}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d3bf0fe9ede233947a0b98c798e9f076, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ui.view.unit.UnitView
 --- !u!483693784 &427112743
 TilemapRenderer:
   serializedVersion: 2
@@ -1472,7 +1465,7 @@ Tilemap:
   m_AnimationFrameRate: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Origin: {x: -11, y: -12, z: 0}
-  m_Size: {x: 24, y: 26, z: 2}
+  m_Size: {x: 24, y: 26, z: 3}
   m_TileAnchor: {x: 0.5, y: 0.5, z: 0}
   m_TileOrientation: 0
   m_TileOrientationMatrix:
@@ -1492,6 +1485,59 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
+--- !u!114 &427112746
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 427112740}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e87462cbb49e94a988b541f76fab18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ui.view.board.BoardView
+  boardParent: {fileID: 427112740}
+  tilemap: {fileID: 427112744}
+  highlightTile: {fileID: 11400000, guid: 3258dfb73f579f942bb6bbe838b17815, type: 2}
+--- !u!19719996 &427112747
+TilemapCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 427112740}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_MaximumTileChangeCount: 1000
+  m_ExtrusionFactor: 0
+  m_UseDelaunayMesh: 0
 --- !u!1 &454696265
 GameObject:
   m_ObjectHideFlags: 0
@@ -1820,8 +1866,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uBCF8\uBB38 \uC124\uBA85"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 608f4639a6bd2f544b75e1afec80aa11, type: 2}
-  m_sharedMaterial: {fileID: 8995119284889474481, guid: 608f4639a6bd2f544b75e1afec80aa11, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e156467fb78e484489f85bf956e9136f, type: 2}
+  m_sharedMaterial: {fileID: 2037959981050051139, guid: e156467fb78e484489f85bf956e9136f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1845,8 +1891,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 16
-  m_fontSizeBase: 16
+  m_fontSize: 20
+  m_fontSizeBase: 20
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -1933,7 +1979,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 320, y: -30}
+  m_AnchoredPosition: {x: 320.00006, y: -30}
   m_SizeDelta: {x: 1500, y: 400}
   m_Pivot: {x: 1, y: 0}
 --- !u!114 &649486377
@@ -2221,7 +2267,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: -300, y: 50}
+  m_AnchoredPosition: {x: -300.00006, y: 50}
   m_SizeDelta: {x: 1000, y: 300}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &718986977
@@ -2437,9 +2483,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
   m_Padding:
-    m_Left: 10
+    m_Left: 40
     m_Right: 10
-    m_Top: 10
+    m_Top: 20
     m_Bottom: 10
   m_ChildAlignment: 0
   m_Spacing: 0
@@ -2706,8 +2752,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uD134 \uC885\uB8CC!"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: e156467fb78e484489f85bf956e9136f, type: 2}
-  m_sharedMaterial: {fileID: 2037959981050051139, guid: e156467fb78e484489f85bf956e9136f, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 5548523a0dd75c84cafd48248ea0e8b9, type: 2}
+  m_sharedMaterial: {fileID: 2104756661797149995, guid: 5548523a0dd75c84cafd48248ea0e8b9, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2843,8 +2889,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uCE74\uB4DC \uC774\uB984"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 608f4639a6bd2f544b75e1afec80aa11, type: 2}
-  m_sharedMaterial: {fileID: 8995119284889474481, guid: 608f4639a6bd2f544b75e1afec80aa11, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 5548523a0dd75c84cafd48248ea0e8b9, type: 2}
+  m_sharedMaterial: {fileID: 2104756661797149995, guid: 5548523a0dd75c84cafd48248ea0e8b9, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2868,8 +2914,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 28
-  m_fontSizeBase: 28
+  m_fontSize: 36
+  m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -7398,8 +7444,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1f188cac15704148bea23e015c9165f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChessUIController
-  cardViewRoot: {fileID: 0}
-  boardViewRoot: {fileID: 0}
+  cardView: {fileID: 0}
+  boardView: {fileID: 427112746}
   eventBus: {fileID: 64190383}
 --- !u!1 &1176488946
 GameObject:
@@ -7614,8 +7660,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "[\uCE74\uB4DC \uC885\uB958/\uD074\uB798\uC2A4]"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 608f4639a6bd2f544b75e1afec80aa11, type: 2}
-  m_sharedMaterial: {fileID: 8995119284889474481, guid: 608f4639a6bd2f544b75e1afec80aa11, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 7e57148bc9b96924b85921fbed65fd42, type: 2}
+  m_sharedMaterial: {fileID: 8964985669684231805, guid: 7e57148bc9b96924b85921fbed65fd42, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -7639,8 +7685,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20
-  m_fontSizeBase: 20
+  m_fontSize: 24
+  m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -7952,6 +7998,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TestInit
   unitPrefab: {fileID: 9012974345327925349, guid: b9476bac4c5cdb74793da4f0a77ea675, type: 3}
   eventBus: {fileID: 64190383}
+  tilemap: {fileID: 427112744}
 --- !u!1 &1501335244
 GameObject:
   m_ObjectHideFlags: 0
@@ -8020,8 +8067,8 @@ Canvas:
   m_GameObject: {fileID: 1501335244}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 0
-  m_Camera: {fileID: 0}
+  m_RenderMode: 1
+  m_Camera: {fileID: 76979775}
   m_PlaneDistance: 1
   m_PixelPerfect: 0
   m_ReceivesEvents: 1
@@ -8032,7 +8079,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_TargetDisplay: 0
 --- !u!224 &1501335248
 RectTransform:
@@ -8433,7 +8480,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: f7f681cd213d9a7488500ce745f2d4f8, type: 3}
+  m_Sprite: {fileID: 9164097274103974401, guid: 8a13b350ac718bb41909c9812d4d7736, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -8585,8 +8632,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uD134"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: e156467fb78e484489f85bf956e9136f, type: 2}
-  m_sharedMaterial: {fileID: 2037959981050051139, guid: e156467fb78e484489f85bf956e9136f, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 7e57148bc9b96924b85921fbed65fd42, type: 2}
+  m_sharedMaterial: {fileID: 8964985669684231805, guid: 7e57148bc9b96924b85921fbed65fd42, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -8818,7 +8865,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 2
   m_TargetDisplay: 0
 --- !u!224 &1826855863
 RectTransform:
@@ -9393,8 +9440,8 @@ SceneRoots:
   m_Roots:
   - {fileID: 76979776}
   - {fileID: 1176488949}
-  - {fileID: 1826855863}
   - {fileID: 1501335248}
+  - {fileID: 1826855863}
   - {fileID: 1470376624}
   - {fileID: 252991395}
   - {fileID: 1475038798}

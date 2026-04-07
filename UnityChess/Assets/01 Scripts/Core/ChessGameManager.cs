@@ -2,13 +2,14 @@ using UnityEngine;
 using events;
 using events.server;
 using events.client;
+using events.ui;
 
 namespace core
 {
     public class ChessGameManager : MonoBehaviour
     {
         [SerializeField] private GameStateStore gameStateStore;
-        [SerializeField] private IEventBus eventBus;
+        [SerializeField] private ChessUIEventBus eventBus;
         
         /// <summary>
         /// 서버 이벤트의 의미 처리 및 게임 상태 업데이트
