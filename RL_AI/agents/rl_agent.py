@@ -47,22 +47,34 @@ class RLAgentOutput:
 
 
 class PPOActorCritic(nn.Module):
-    def __init__(self, state_dim: int, action_dim: int, hidden_dim: int = 128) -> None:
+    def __init__(self, state_dim: int, action_dim: int, hidden_dim: int = 192) -> None:
         super().__init__()
         self.state_encoder = nn.Sequential(
             nn.Linear(state_dim, hidden_dim),
-            nn.Tanh(),
+            nn.LayerNorm(hidden_dim),
+            nn.GELU(),
             nn.Linear(hidden_dim, hidden_dim),
-            nn.Tanh(),
+            nn.LayerNorm(hidden_dim),
+            nn.GELU(),
         )
         self.action_encoder = nn.Sequential(
             nn.Linear(action_dim, hidden_dim),
-            nn.Tanh(),
+            nn.LayerNorm(hidden_dim),
+            nn.GELU(),
             nn.Linear(hidden_dim, hidden_dim),
-            nn.Tanh(),
+            nn.LayerNorm(hidden_dim),
+            nn.GELU(),
         )
-        self.policy_head = nn.Linear(hidden_dim * 2, 1)
-        self.value_head = nn.Linear(hidden_dim, 1)
+        self.policy_head = nn.Sequential(
+            nn.Linear(hidden_dim * 2, hidden_dim),
+            nn.GELU(),
+            nn.Linear(hidden_dim, 1),
+        )
+        self.value_head = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.GELU(),
+            nn.Linear(hidden_dim, 1),
+        )
 
     def forward(self, state_tensor: torch.Tensor, action_tensor: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
@@ -84,7 +96,7 @@ class RLAgent(BaseAgent):
     def __init__(
         self,
         *,
-        hidden_dim: int = 128,
+        hidden_dim: int = 192,
         learning_rate: float = 3e-4,
         sample_actions: bool = True,
         device: str = "cpu",

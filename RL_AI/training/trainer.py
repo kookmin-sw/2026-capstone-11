@@ -4,11 +4,12 @@ from __future__ import annotations
 # rollout 수집, terminal reward 부여, return/advantage 계산, PPO 업데이트를 한 곳에서 연결한다.
 
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Dict, Optional, Sequence
 
 import torch
 
 from RL_AI.agents.base_agent import BaseAgent
+from RL_AI.agents.greedy_agent import GreedyAgent
 from RL_AI.agents.random_agent import RandomAgent
 from RL_AI.agents.rl_agent import RLAgent
 from RL_AI.analysis.reports import build_win_rate_report
@@ -37,6 +38,24 @@ class PPOTrainer:
         self.agent = agent
         self.config = PPOConfig() if config is None else config
 
+    def _resolve_opponent_for_episode(
+        self,
+        episode_id: int,
+        *,
+        opponent_agent: Optional[BaseAgent] = None,
+        opponent_pool: Optional[Sequence[BaseAgent]] = None,
+        seed: Optional[int] = None,
+    ) -> BaseAgent:
+        if opponent_pool:
+            return opponent_pool[episode_id % len(opponent_pool)]
+        if opponent_agent is not None:
+            return opponent_agent
+        return RandomAgent(seed=seed)
+
+    def _extend_buffer(self, dst: RolloutBuffer, src: RolloutBuffer) -> None:
+        for step in src.steps:
+            dst.add_step(step)
+
     def collect_episode(
         self,
         *,
@@ -61,7 +80,7 @@ class PPOTrainer:
         state = initialize_main_phase(state, card_db)
 
         buffer = RolloutBuffer()
-        opponent = RandomAgent(seed=seed) if opponent_agent is None else opponent_agent
+        opponent = opponent_agent if opponent_agent is not None else RandomAgent(seed=seed)
 
         steps = 0
         while not state.is_terminal() and steps < max_steps and (max_turns is None or state.turn <= max_turns):
@@ -166,12 +185,14 @@ class PPOTrainer:
         *,
         num_episodes: int,
         opponent_agent: Optional[BaseAgent] = None,
+        opponent_pool: Optional[Sequence[BaseAgent]] = None,
         p1_world: int = 2,
         p2_world: int = 6,
         card_data_path: str = "Cards.csv",
         seed: Optional[int] = None,
         max_steps: int = 500,
         max_turns: Optional[int] = None,
+        update_interval: int = 8,
     ) -> Dict[str, object]:
         results = {
             "episodes": 0,
@@ -179,12 +200,22 @@ class PPOTrainer:
             "losses": 0,
             "draws": 0,
             "last_update": None,
+            "updates": 0,
+            "update_interval": update_interval,
+            "opponents": [],
         }
+        pending_buffer = RolloutBuffer()
 
         for episode_id in range(num_episodes):
+            selected_opponent = self._resolve_opponent_for_episode(
+                episode_id,
+                opponent_agent=opponent_agent,
+                opponent_pool=opponent_pool,
+                seed=None if seed is None else seed + 100_000 + episode_id,
+            )
             rollout = self.collect_episode(
                 episode_id=episode_id,
-                opponent_agent=opponent_agent,
+                opponent_agent=selected_opponent,
                 p1_world=p1_world,
                 p2_world=p2_world,
                 card_data_path=card_data_path,
@@ -195,10 +226,11 @@ class PPOTrainer:
 
             result = rollout["result"]
             buffer = rollout["buffer"]
-            update_info = self.update_from_buffer(buffer)
+            self._extend_buffer(pending_buffer, buffer)
 
             results["episodes"] += 1
-            results["last_update"] = update_info
+            if selected_opponent.name not in results["opponents"]:
+                results["opponents"].append(selected_opponent.name)
             if result == GameResult.P1_WIN:
                 results["wins"] += 1
             elif result == GameResult.P2_WIN:
@@ -206,7 +238,22 @@ class PPOTrainer:
             else:
                 results["draws"] += 1
 
+            should_update = len(pending_buffer) > 0 and (
+                results["episodes"] % max(1, update_interval) == 0 or episode_id == num_episodes - 1
+            )
+            if should_update:
+                update_info = self.update_from_buffer(pending_buffer)
+                results["last_update"] = update_info
+                results["updates"] += 1
+                pending_buffer.clear()
+
         return results
+
+    def build_default_opponent_pool(self, *, seed: Optional[int] = None) -> list[BaseAgent]:
+        return [
+            RandomAgent(seed=seed),
+            GreedyAgent(seed=None if seed is None else seed + 1),
+        ]
 
     def evaluate(
         self,

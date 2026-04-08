@@ -1,0 +1,132 @@
+=== Checkpoint Training Experiment ===
+total_train_episodes=2
+eval_interval=1
+eval_matches=2
+final_random_eval_matches=2
+train_opponent=random
+eval_opponent=greedy
+final_eval_opponent=random
+max_steps=50
+max_turns=10
+
+=== Before Training vs Greedy ===
+time=3.16s
+report=C:\code\capstone-temp\RL_AI\log\evaluation_report_20260408_134047.txt
+=== Evaluation Report ===
+Episodes: 2
+P1 (rl) wins: 0 (0.0%)
+P2 (greedy) wins: 0 (0.0%)
+Draws: 2 (100.0%)
+Average steps: 50.00
+Average final turn: 6.00
+
+[Action Type Counts]
+- END_TURN: 10
+- MOVE_UNIT: 42
+- UNIT_ATTACK: 15
+- USE_CARD: 33
+
+[Card Use Counts]
+- 미스티아: 9
+- 귤 요정: 6
+- 귤 직장인?: 3
+- 귤 공주님: 3
+- 릴리아: 3
+- 귤 나무: 2
+- 샤를로테: 2
+- 바이올렛: 2
+- 아이린: 2
+- 망상의 기사님: 1
+
+=== Checkpoint 1 Episodes vs Greedy ===
+train_time=0.35s
+eval_time=0.15s
+report=C:\code\capstone-temp\RL_AI\log\evaluation_report_20260408_134047.txt
+train_summary={'episodes': 1, 'wins': 0, 'losses': 0, 'draws': 1, 'last_update': {'policy_loss': -0.07544847594743426, 'value_loss': 0.048208800555078764, 'entropy': 2.751840803433548}}
+=== Evaluation Report ===
+Episodes: 2
+P1 (rl) wins: 0 (0.0%)
+P2 (greedy) wins: 0 (0.0%)
+Draws: 2 (100.0%)
+Average steps: 50.00
+Average final turn: 5.00
+
+[Action Type Counts]
+- END_TURN: 8
+- MOVE_UNIT: 38
+- UNIT_ATTACK: 18
+- USE_CARD: 36
+
+[Card Use Counts]
+- 미스티아: 8
+- 귤 요정: 7
+- 샤를로테: 3
+- 바이올렛: 3
+- 릴리아: 3
+- 귤 나무: 3
+- 망상의 기사님: 3
+- 귤 직장인?: 2
+- 아이린: 2
+- 귤 공주님: 2
+
+=== Checkpoint 2 Episodes vs Greedy ===
+train_time=0.35s
+eval_time=0.15s
+report=C:\code\capstone-temp\RL_AI\log\evaluation_report_20260408_134048.txt
+train_summary={'episodes': 1, 'wins': 0, 'losses': 0, 'draws': 1, 'last_update': {'policy_loss': -0.022693140087304293, 'value_loss': 0.021586586149619842, 'entropy': 2.3870130093009383}}
+=== Evaluation Report ===
+Episodes: 2
+P1 (rl) wins: 0 (0.0%)
+P2 (greedy) wins: 0 (0.0%)
+Draws: 2 (100.0%)
+Average steps: 50.00
+Average final turn: 4.50
+
+[Action Type Counts]
+- END_TURN: 7
+- MOVE_UNIT: 43
+- UNIT_ATTACK: 16
+- USE_CARD: 34
+
+[Card Use Counts]
+- 귤 요정: 8
+- 미스티아: 7
+- 아이린: 4
+- 바이올렛: 3
+- 귤 공주님: 2
+- 귤 직장인?: 2
+- 망상의 기사님: 2
+- 릴리아: 2
+- 귤 나무: 2
+- 샤를로테: 2
+
+=== Final Evaluation vs random ===
+time=0.14s
+report=C:\code\capstone-temp\RL_AI\log\evaluation_report_20260408_134048.txt
+=== Evaluation Report ===
+Episodes: 2
+P1 (rl) wins: 0 (0.0%)
+P2 (random) wins: 0 (0.0%)
+Draws: 2 (100.0%)
+Average steps: 50.00
+Average final turn: 6.00
+
+[Action Type Counts]
+- END_TURN: 10
+- MOVE_UNIT: 43
+- UNIT_ATTACK: 12
+- USE_CARD: 35
+
+[Card Use Counts]
+- 미스티아: 8
+- 귤 요정: 8
+- 아이린: 3
+- 샤를로테: 3
+- 릴리아: 3
+- 귤 나무: 2
+- 귤 직장인?: 2
+- 바이올렛: 2
+- 귤 공주님: 2
+- 망상의 기사님: 2
+
+TOTAL_TIME=4.29s

@@ -1,0 +1,25 @@
+=== Evaluation Report ===
+Episodes: 2
+P1 (rl) wins: 0 (0.0%)
+P2 (random) wins: 0 (0.0%)
+Draws: 2 (100.0%)
+Average steps: 50.00
+Average final turn: 6.00
+
+[Action Type Counts]
+- END_TURN: 10
+- MOVE_UNIT: 43
+- UNIT_ATTACK: 12
+- USE_CARD: 35
+
+[Card Use Counts]
+- 미스티아: 8
+- 귤 요정: 8
+- 아이린: 3
+- 샤를로테: 3
+- 릴리아: 3
+- 귤 나무: 2
+- 귤 직장인?: 2
+- 바이올렛: 2
+- 귤 공주님: 2
+- 망상의 기사님: 2
