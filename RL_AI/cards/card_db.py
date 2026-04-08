@@ -234,9 +234,10 @@ class CardDefinition:
         }
 
 
-def _read_tsv_rows(tsv_path: Path) -> List[Dict[str, str]]:
-    with tsv_path.open("r", encoding="utf-8-sig", newline="") as f:
-        reader = csv.reader(f, delimiter="\t")
+def _read_table_rows(card_data_path: Path) -> List[Dict[str, str]]:
+    delimiter = "," if card_data_path.suffix.lower() == ".csv" else "\t"
+    with card_data_path.open("r", encoding="utf-8-sig", newline="") as f:
+        reader = csv.reader(f, delimiter=delimiter)
         rows = list(reader)
 
     header_index = None
@@ -246,10 +247,10 @@ def _read_tsv_rows(tsv_path: Path) -> List[Dict[str, str]]:
             break
 
     if header_index is None:
-        raise ValueError("Could not find header row starting with 'CardID' in TSV file.")
+        raise ValueError("Could not find header row starting with 'CardID' in card data file.")
 
     headers = [_normalize_text(cell) for cell in rows[header_index]]
-    required_headers = ["CardID", "Name", "World", "Role", "Attack", "Life", "TextCondition", "TextName", "Text", "EffectName", "Effect"]
+    required_headers = ["CardID", "Name", "World", "Role", "Attack", "Life", "TextCondition", "EffectName", "Effect"]
     missing = [h for h in required_headers if h not in headers]
     if missing:
         raise ValueError(f"Missing required headers: {missing}")
@@ -266,13 +267,13 @@ def _read_tsv_rows(tsv_path: Path) -> List[Dict[str, str]]:
     return out
 
 
-def load_card_list(tsv_path: str | Path = "./Cards.tsv") -> List[CardDefinition]:
-    tsv_path = _resolve_module_relative(tsv_path)
-    rows = _read_tsv_rows(tsv_path)
+def load_card_list(card_data_path: str | Path = "./Cards.csv") -> List[CardDefinition]:
+    card_data_path = _resolve_module_relative(card_data_path)
+    rows = _read_table_rows(card_data_path)
 
     cards: List[CardDefinition] = []
     for row in rows:
-        text = _normalize_text(row.get("Text"))
+        text = _normalize_text(row.get("Text") or row.get("EventText"))
         effect = _normalize_text(row.get("Effect"))
         cards.append(CardDefinition(
             card_id=_normalize_text(row.get("CardID")),
@@ -282,7 +283,7 @@ def load_card_list(tsv_path: str | Path = "./Cards.tsv") -> List[CardDefinition]
             attack=_normalize_int(row.get("Attack")),
             life=_normalize_int(row.get("Life")),
             text_condition=TextCondition.from_value(row.get("TextCondition")),
-            text_name=_normalize_text(row.get("TextName")),
+            text_name=_normalize_text(row.get("TextName") or row.get("EventName")),
             text=text,
             effect_name=_normalize_text(row.get("EffectName")),
             effect=effect,
@@ -294,8 +295,8 @@ def load_card_list(tsv_path: str | Path = "./Cards.tsv") -> List[CardDefinition]
     return cards
 
 
-def load_card_db(tsv_path: str | Path = "./Cards.tsv") -> Dict[str, CardDefinition]:
-    return {card.card_id: card for card in load_card_list(tsv_path=tsv_path)}
+def load_card_db(card_data_path: str | Path = "./Cards.csv") -> Dict[str, CardDefinition]:
+    return {card.card_id: card for card in load_card_list(card_data_path=card_data_path)}
 
 
 def group_cards_by_world(card_db: Dict[str, CardDefinition]) -> Dict[int, List[CardDefinition]]:
@@ -330,7 +331,7 @@ def build_default_deck(card_db: Dict[str, CardDefinition], world: int) -> List[s
 
 
 if __name__ == "__main__":
-    db = load_card_db("./Cards.tsv")
+    db = load_card_db("./Cards.csv")
     grouped = group_cards_by_world(db)
     print(f"Loaded {len(db)} cards from {len(grouped)} worlds.")
     for world, cards in grouped.items():

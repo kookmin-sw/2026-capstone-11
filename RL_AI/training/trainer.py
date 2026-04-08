@@ -42,18 +42,18 @@ class PPOTrainer:
         *,
         episode_id: int = 0,
         opponent_agent: Optional[BaseAgent] = None,
-        p1_world: int = 1,
-        p2_world: int = 2,
-        tsv_path: str = "Cards.tsv",
+        p1_world: int = 2,
+        p2_world: int = 6,
+        card_data_path: str = "Cards.csv",
         seed: Optional[int] = None,
         first_player: Optional[PlayerID] = None,
         max_steps: int = 500,
     ) -> Dict[str, object]:
-        card_db = load_supported_card_db(tsv_path=tsv_path)
+        card_db = load_supported_card_db(card_data_path=card_data_path)
         state = create_initial_game_state(
             p1_world=p1_world,
             p2_world=p2_world,
-            tsv_path=tsv_path,
+            card_data_path=card_data_path,
             seed=seed,
             first_player=first_player,
         )
@@ -164,9 +164,9 @@ class PPOTrainer:
         *,
         num_episodes: int,
         opponent_agent: Optional[BaseAgent] = None,
-        p1_world: int = 1,
-        p2_world: int = 2,
-        tsv_path: str = "Cards.tsv",
+        p1_world: int = 2,
+        p2_world: int = 6,
+        card_data_path: str = "Cards.csv",
         seed: Optional[int] = None,
         max_steps: int = 500,
     ) -> Dict[str, object]:
@@ -184,7 +184,7 @@ class PPOTrainer:
                 opponent_agent=opponent_agent,
                 p1_world=p1_world,
                 p2_world=p2_world,
-                tsv_path=tsv_path,
+                card_data_path=card_data_path,
                 seed=None if seed is None else seed + episode_id,
                 max_steps=max_steps,
             )
@@ -209,9 +209,9 @@ class PPOTrainer:
         *,
         opponent_agent: Optional[BaseAgent] = None,
         num_matches: int = 20,
-        p1_world: int = 1,
-        p2_world: int = 2,
-        tsv_path: str = "Cards.tsv",
+        p1_world: int = 2,
+        p2_world: int = 6,
+        card_data_path: str = "Cards.csv",
         seed: Optional[int] = None,
         max_steps: int = 500,
         enable_logging: bool = False,
@@ -224,7 +224,7 @@ class PPOTrainer:
             num_matches=num_matches,
             p1_world=p1_world,
             p2_world=p2_world,
-            tsv_path=tsv_path,
+            card_data_path=card_data_path,
             seed=seed,
             max_steps=max_steps,
         )
@@ -234,9 +234,9 @@ class PPOTrainer:
         *,
         opponent_agent: Optional[BaseAgent] = None,
         num_matches: int = 20,
-        p1_world: int = 1,
-        p2_world: int = 2,
-        tsv_path: str = "Cards.tsv",
+        p1_world: int = 2,
+        p2_world: int = 6,
+        card_data_path: str = "Cards.csv",
         seed: Optional[int] = None,
         max_steps: int = 500,
         enable_logging: bool = False,
@@ -247,7 +247,7 @@ class PPOTrainer:
             num_matches=num_matches,
             p1_world=p1_world,
             p2_world=p2_world,
-            tsv_path=tsv_path,
+            card_data_path=card_data_path,
             seed=seed,
             max_steps=max_steps,
             enable_logging=enable_logging,
@@ -267,3 +267,6 @@ class PPOTrainer:
                 buffer.steps[index].done = False
             buffer.steps[last_index].reward = terminal_reward
             buffer.steps[last_index].done = True
+
+
+

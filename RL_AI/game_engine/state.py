@@ -10,7 +10,6 @@ from dataclasses import dataclass, field
 from enum import Enum, IntEnum
 from typing import Dict, List, Optional, Tuple
 import random
-import uuid
 
 from RL_AI.cards.card_db import (
     CardDefinition,
@@ -28,10 +27,13 @@ MAX_UNITS_PER_PLAYER = 7
 MAX_TOTAL_UNITS = 14
 
 SUPPORTED_CARD_IDS = {
-    "0x01000000", "0x01000100", "0x01000200", "0x01000300", "0x01000400",
-    "0x02000000", "0x02000100", "0x02000200", "0x02000300", "0x02000400",
+    "Or_L", "Or_B", "Or_K", "Or_R", "Or_P",
+    "Cl_L", "Cl_B", "Cl_K", "Cl_R", "Cl_P",
 }
-SUPPORTED_WORLDS = {1, 2}
+SUPPORTED_WORLDS = {2, 6}
+
+
+_RUNTIME_ID_COUNTERS: Dict[str, int] = {}
 
 
 class PlayerID(IntEnum):
@@ -492,7 +494,9 @@ class GameState:
 
 
 def _new_instance_id(prefix: str) -> str:
-    return f"{prefix}_{uuid.uuid4().hex[:12]}"
+    current = _RUNTIME_ID_COUNTERS.get(prefix, 0)
+    _RUNTIME_ID_COUNTERS[prefix] = current + 1
+    return f"{prefix}{current:03X}"
 
 
 def validate_supported_card_db(card_db: Dict[str, CardDefinition]) -> Dict[str, CardDefinition]:
@@ -506,15 +510,15 @@ def validate_supported_card_db(card_db: Dict[str, CardDefinition]) -> Dict[str, 
     return filtered
 
 
-def load_supported_card_db(tsv_path: str = "Cards.tsv") -> Dict[str, CardDefinition]:
-    db = load_card_db(tsv_path=tsv_path)
+def load_supported_card_db(card_data_path: str = "Cards.csv") -> Dict[str, CardDefinition]:
+    db = load_card_db(card_data_path=card_data_path)
     return validate_supported_card_db(db)
 
 
 def create_card_instance(card_id: str, owner: PlayerID) -> CardInstance:
     if card_id not in SUPPORTED_CARD_IDS:
         raise ValueError(f"Unsupported card_id for current prototype: {card_id}")
-    return CardInstance(instance_id=_new_instance_id("card"), card_id=card_id, owner=owner)
+    return CardInstance(instance_id=_new_instance_id("C"), card_id=card_id, owner=owner)
 
 
 def build_player_deck_instances(
@@ -536,13 +540,16 @@ def create_unit_from_card_instance(
     card_def: CardDefinition,
     card_instance: CardInstance,
     owner: PlayerID,
+    card_db: Dict[str, CardDefinition],
 ) -> UnitState:
+    leader_card_id = f"{card_def.card_id.split('_', 1)[0]}_L"
+    leader_name = card_db[leader_card_id].name if leader_card_id in card_db else card_def.name
     return UnitState(
-        unit_id=_new_instance_id("unit"),
+        unit_id=_new_instance_id("U"),
         source_card_instance_id=card_instance.instance_id,
         source_card_id=card_def.card_id,
         owner=owner,
-        leader_name=card_def.name if card_def.role == Role.LEADER else f"World{card_def.world}",
+        leader_name=leader_name,
         name=card_def.name,
         role=card_def.role,
         attack=card_def.attack,
@@ -589,7 +596,7 @@ def create_initial_units_for_player(
         raise ValueError(f"Expected {MAX_UNITS_PER_PLAYER} cards for player {player_id}, got {len(all_cards)}")
     for card_instance in all_cards:
         card_def = card_db[card_instance.card_id]
-        units.append(create_unit_from_card_instance(card_def, card_instance, player_id))
+        units.append(create_unit_from_card_instance(card_def, card_instance, player_id, card_db))
     return units
 
 
@@ -615,12 +622,12 @@ def _draw_initial_hands(state: GameState, rng: random.Random, hand_size: int = I
 def create_initial_game_state(
     p1_world: int,
     p2_world: int,
-    tsv_path: str = "Cards.tsv",
+    card_data_path: str = "Cards.csv",
     seed: Optional[int] = None,
     first_player: Optional[PlayerID] = None,
 ) -> GameState:
     rng = random.Random(seed)
-    card_db = load_supported_card_db(tsv_path)
+    card_db = load_supported_card_db(card_data_path)
     p1 = create_initial_player_state(PlayerID.P1, p1_world, card_db, rng)
     p2 = create_initial_player_state(PlayerID.P2, p2_world, card_db, rng)
     active_player = rng.choice([PlayerID.P1, PlayerID.P2]) if first_player is None else first_player

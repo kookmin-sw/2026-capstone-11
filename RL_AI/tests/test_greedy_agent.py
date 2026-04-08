@@ -9,16 +9,16 @@ from RL_AI.game_engine.state import ActionType, PlayerID, Position
 from RL_AI.tests.helpers import clear_board_except, runtime_units_for_card_id, summon_unit
 
 
-W1_ROOK = "0x01000300"
-W2_PAWN = "0x02000400"
+OR_ROOK = "Or_R"
+CL_PAWN = "Cl_P"
 
 
 def test_greedy_agent_prefers_attack_over_end_turn(initialized_state, card_db):
     state = initialized_state
     agent = GreedyAgent(seed=1)
 
-    p1_rook = runtime_units_for_card_id(state, PlayerID.P1, W1_ROOK)[0]
-    p2_pawn = runtime_units_for_card_id(state, PlayerID.P2, W2_PAWN)[0]
+    p1_rook = runtime_units_for_card_id(state, PlayerID.P1, OR_ROOK)[0]
+    p2_pawn = runtime_units_for_card_id(state, PlayerID.P2, CL_PAWN)[0]
     p1_leader = state.get_leader_runtime_unit(PlayerID.P1)
     p2_leader = state.get_leader_runtime_unit(PlayerID.P2)
     assert p1_leader is not None and p2_leader is not None
@@ -40,7 +40,7 @@ def test_greedy_agent_prefers_lethal_leader_attack(initialized_state, card_db):
     state = initialized_state
     agent = GreedyAgent(seed=1)
 
-    p1_rook = runtime_units_for_card_id(state, PlayerID.P1, W1_ROOK)[0]
+    p1_rook = runtime_units_for_card_id(state, PlayerID.P1, OR_ROOK)[0]
     p1_leader = state.get_leader_runtime_unit(PlayerID.P1)
     p2_leader = state.get_leader_runtime_unit(PlayerID.P2)
     assert p1_leader is not None and p2_leader is not None

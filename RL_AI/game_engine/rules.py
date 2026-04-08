@@ -21,17 +21,17 @@ from RL_AI.game_engine.state import (
     UnitState,
 )
 
-W1_KING = "0x01000000"
-W1_BISHOP = "0x01000100"
-W1_KNIGHT = "0x01000200"
-W1_ROOK = "0x01000300"
-W1_PAWN = "0x01000400"
+OR_LEADER = "Or_L"
+OR_BISHOP = "Or_B"
+OR_KNIGHT = "Or_K"
+OR_ROOK = "Or_R"
+OR_PAWN = "Or_P"
 
-W2_PRINCESS = "0x02000000"
-W2_BISHOP = "0x02000100"
-W2_KNIGHT = "0x02000200"
-W2_ROOK = "0x02000300"
-W2_PAWN = "0x02000400"
+CL_LEADER = "Cl_L"
+CL_BISHOP = "Cl_B"
+CL_KNIGHT = "Cl_K"
+CL_ROOK = "Cl_R"
+CL_PAWN = "Cl_P"
 
 BOARD_FILES = "ABCDEF"
 
@@ -263,14 +263,50 @@ def _can_use_card_effect(state: GameState, owner: PlayerID, action: Action, card
     if unit is None or not unit.is_alive():
         return False
 
-    targets = _resolve_selection_targets(state, owner, action)
     tu = list(action.target_unit_ids)
     tp = list(action.target_positions)
 
-    if card.card_id == W1_KING:
-        return len(tu) == 1 and len(tp) == 1 and state.get_unit(tu[0]).owner == owner and can_move_unit(state, owner, tu[0], tp[0])
+    if card.card_id == OR_LEADER:
+        if len(tp) != 0 or len(tu) != 1:
+            return False
+        target = state.get_unit(tu[0])
+        return target.owner == owner and target.is_alive()
 
-    if card.card_id == W1_BISHOP:
+    if card.card_id == OR_BISHOP:
+        return len(tu) == 0 and len(tp) == 1 and is_position_in_unit_move_range(state, unit, tp[0], require_empty=True)
+
+    if card.card_id == OR_KNIGHT:
+        if len(tp) != 0 or len(tu) != 1:
+            return False
+        target = state.get_unit(tu[0])
+        return target.owner != owner and target.is_alive() and can_unit_attack_target_by_effect(state, unit, target)
+
+    if card.card_id == OR_ROOK:
+        if len(tp) != 0 or len(tu) != 1 or unit.moved_this_turn:
+            return False
+        target = state.get_unit(tu[0])
+        return target.owner != owner and target.is_alive()
+
+    if card.card_id == OR_PAWN:
+        if len(tp) != 0 or len(tu) != 2:
+            return False
+        units = [state.get_unit(uid) for uid in tu]
+        allies = [u for u in units if u.owner == owner]
+        enemies = [u for u in units if u.owner != owner]
+        return len(allies) == 1 and len(enemies) == 1 and allies[0].is_alive() and enemies[0].is_alive() and can_unit_attack_target_by_effect(state, allies[0], enemies[0])
+
+    if card.card_id == CL_LEADER:
+        if len(tp) != 0 or len(tu) != 1:
+            return False
+        target = state.get_unit(tu[0])
+        return (
+            target.owner == owner
+            and target.is_alive()
+            and target.position is not None
+            and is_position_in_unit_move_range(state, unit, target.position, require_empty=False)
+        )
+
+    if card.card_id == CL_BISHOP:
         if len(tp) != 0 or len(tu) not in {1, 2}:
             return False
         return all(
@@ -280,56 +316,19 @@ def _can_use_card_effect(state: GameState, owner: PlayerID, action: Action, card
             for uid in tu
         )
 
-    if card.card_id == W1_KNIGHT:
+    if card.card_id == CL_KNIGHT:
         if len(tp) != 0 or len(tu) != 1:
             return False
         target = state.get_unit(tu[0])
         return target.owner != owner and target.is_alive() and can_unit_attack_target_by_effect(state, unit, target)
 
-    if card.card_id == W1_ROOK:
-        if len(tp) != 0:
-            return False
-        if len(tu) == 0:
-            return True
-        if len(tu) == 1:
-            target = state.get_unit(tu[0])
-            return target.owner == owner and target.is_alive()
-        return False
-
-    if card.card_id == W1_PAWN:
-        if len(tp) != 0 or len(tu) != 2:
-            return False
-        units = [state.get_unit(uid) for uid in tu]
-        allies = [u for u in units if u.owner == owner]
-        enemies = [u for u in units if u.owner != owner]
-        return len(allies) == 1 and len(enemies) == 1 and allies[0].is_alive() and enemies[0].is_alive() and can_unit_attack_target_by_effect(state, allies[0], enemies[0])
-
-    if card.card_id == W2_PRINCESS:
-        if len(tp) != 0:
-            return False
-        if len(tu) == 0:
-            return True
-        if len(tu) == 1:
-            target = state.get_unit(tu[0])
-            return target.owner == owner and target.is_alive()
-        return False
-
-    if card.card_id == W2_BISHOP:
-        return len(tu) == 0 and len(tp) == 1 and is_position_in_unit_move_range(state, unit, tp[0], require_empty=True)
-
-    if card.card_id == W2_KNIGHT:
+    if card.card_id == CL_ROOK:
         if len(tp) != 0 or len(tu) != 1:
             return False
         target = state.get_unit(tu[0])
         return target.owner != owner and target.is_alive() and can_unit_attack_target_by_effect(state, unit, target)
 
-    if card.card_id == W2_ROOK:
-        if len(tp) != 0 or len(tu) != 1 or unit.moved_this_turn:
-            return False
-        target = state.get_unit(tu[0])
-        return target.owner != owner and target.is_alive()
-
-    if card.card_id == W2_PAWN:
+    if card.card_id == CL_PAWN:
         if len(tp) != 0 or len(tu) != 2:
             return False
         units = [state.get_unit(uid) for uid in tu]
@@ -414,46 +413,45 @@ def _generate_use_card_actions(state: GameState, owner: PlayerID, card_db: Dict[
                 out.append(Action(ActionType.USE_CARD, card_instance_id=card.instance_id, target_positions=(pos,)))
             continue
 
-        if card.card_id == W1_KING:
+        if card.card_id == OR_LEADER:
             for ally in get_ally_units_on_board(state, owner):
-                for pos in get_legal_move_positions(state, owner, ally.unit_id):
-                    out.append(Action(ActionType.USE_CARD, card_instance_id=card.instance_id, target_unit_ids=(ally.unit_id,), target_positions=(pos,)))
-        elif card.card_id == W1_BISHOP:
+                out.append(Action(ActionType.USE_CARD, card_instance_id=card.instance_id, target_unit_ids=(ally.unit_id,)))
+        elif card.card_id == OR_BISHOP:
+            for pos in all_board_positions():
+                if is_position_in_unit_move_range(state, runtime_unit, pos, require_empty=True):
+                    out.append(Action(ActionType.USE_CARD, card_instance_id=card.instance_id, target_positions=(pos,)))
+        elif card.card_id == OR_KNIGHT:
+            for enemy in get_enemy_units_on_board(state, owner):
+                if can_unit_attack_target_by_effect(state, runtime_unit, enemy):
+                    out.append(Action(ActionType.USE_CARD, card_instance_id=card.instance_id, target_unit_ids=(enemy.unit_id,)))
+        elif card.card_id == OR_ROOK:
+            if not runtime_unit.moved_this_turn:
+                for enemy in get_enemy_units_on_board(state, owner):
+                    out.append(Action(ActionType.USE_CARD, card_instance_id=card.instance_id, target_unit_ids=(enemy.unit_id,)))
+        elif card.card_id == OR_PAWN:
+            for ally in get_ally_units_on_board(state, owner):
+                for enemy in get_enemy_units_on_board(state, owner):
+                    if can_unit_attack_target_by_effect(state, ally, enemy):
+                        out.append(Action(ActionType.USE_CARD, card_instance_id=card.instance_id, target_unit_ids=(ally.unit_id, enemy.unit_id)))
+        elif card.card_id == CL_LEADER:
+            for ally in get_ally_units_on_board(state, owner):
+                if ally.position is not None and is_position_in_unit_move_range(state, runtime_unit, ally.position, require_empty=False):
+                    out.append(Action(ActionType.USE_CARD, card_instance_id=card.instance_id, target_unit_ids=(ally.unit_id,)))
+        elif card.card_id == CL_BISHOP:
             enemies = [u.unit_id for u in get_enemy_units_on_board(state, owner) if can_unit_attack_target_by_effect(state, runtime_unit, u)]
             for uid in enemies:
                 out.append(Action(ActionType.USE_CARD, card_instance_id=card.instance_id, target_unit_ids=(uid,)))
             for pair in combinations(enemies, 2):
                 out.append(Action(ActionType.USE_CARD, card_instance_id=card.instance_id, target_unit_ids=pair))
-        elif card.card_id == W1_KNIGHT:
+        elif card.card_id == CL_KNIGHT:
             for enemy in get_enemy_units_on_board(state, owner):
                 if can_unit_attack_target_by_effect(state, runtime_unit, enemy):
                     out.append(Action(ActionType.USE_CARD, card_instance_id=card.instance_id, target_unit_ids=(enemy.unit_id,)))
-        elif card.card_id == W1_ROOK:
-            out.append(Action(ActionType.USE_CARD, card_instance_id=card.instance_id))
-            for ally in get_ally_units_on_board(state, owner):
-                out.append(Action(ActionType.USE_CARD, card_instance_id=card.instance_id, target_unit_ids=(ally.unit_id,)))
-        elif card.card_id == W1_PAWN:
-            for ally in get_ally_units_on_board(state, owner):
-                for enemy in get_enemy_units_on_board(state, owner):
-                    if can_unit_attack_target_by_effect(state, ally, enemy):
-                        out.append(Action(ActionType.USE_CARD, card_instance_id=card.instance_id, target_unit_ids=(ally.unit_id, enemy.unit_id)))
-        elif card.card_id == W2_PRINCESS:
-            out.append(Action(ActionType.USE_CARD, card_instance_id=card.instance_id))
-            for ally in get_ally_units_on_board(state, owner):
-                out.append(Action(ActionType.USE_CARD, card_instance_id=card.instance_id, target_unit_ids=(ally.unit_id,)))
-        elif card.card_id == W2_BISHOP:
-            for pos in all_board_positions():
-                if is_position_in_unit_move_range(state, runtime_unit, pos, require_empty=True):
-                    out.append(Action(ActionType.USE_CARD, card_instance_id=card.instance_id, target_positions=(pos,)))
-        elif card.card_id == W2_KNIGHT:
+        elif card.card_id == CL_ROOK:
             for enemy in get_enemy_units_on_board(state, owner):
                 if can_unit_attack_target_by_effect(state, runtime_unit, enemy):
                     out.append(Action(ActionType.USE_CARD, card_instance_id=card.instance_id, target_unit_ids=(enemy.unit_id,)))
-        elif card.card_id == W2_ROOK:
-            if not runtime_unit.moved_this_turn:
-                for enemy in get_enemy_units_on_board(state, owner):
-                    out.append(Action(ActionType.USE_CARD, card_instance_id=card.instance_id, target_unit_ids=(enemy.unit_id,)))
-        elif card.card_id == W2_PAWN:
+        elif card.card_id == CL_PAWN:
             for ally in get_ally_units_on_board(state, owner):
                 for enemy in get_enemy_units_on_board(state, owner):
                     if can_unit_attack_target_by_effect(state, ally, enemy):
@@ -523,3 +521,4 @@ def describe_action(state: GameState, action: Action) -> str:
             parts.append("위치=" + ", ".join(pos_to_notation(p) for p in action.target_positions))
         return " | ".join(parts)
     return str(action.action_type)
+

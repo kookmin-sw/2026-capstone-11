@@ -50,3 +50,12 @@ def save_report(report_text: str, output_path: str | Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(report_text, encoding="utf-8")
     return path
+
+
+def build_league_report(league_summary: Dict[str, Dict[str, object]]) -> str:
+    lines = ["=== Agent League Report ==="]
+    for matchup_key, summary in league_summary.items():
+        lines.append("")
+        lines.append(f"[{matchup_key}]")
+        lines.append(build_win_rate_report(summary))
+    return "\n".join(lines)

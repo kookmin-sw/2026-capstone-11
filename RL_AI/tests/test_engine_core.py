@@ -17,9 +17,10 @@ from RL_AI.tests.helpers import (
 )
 
 
-W1_KING = "0x01000000"
-W1_ROOK = "0x01000300"
-W1_PAWN = "0x01000400"
+OR_LEADER = "Or_L"
+OR_ROOK = "Or_R"
+OR_PAWN = "Or_P"
+CL_PAWN = "Cl_P"
 
 
 def test_opening_setup_places_leaders_and_draws_extra_two_cards_on_turn1(initialized_state):
@@ -40,10 +41,10 @@ def test_pawn_card_instances_remain_distinct_after_one_pawn_is_summoned(initiali
     state = initialized_state
     p1 = state.get_player(PlayerID.P1)
 
-    pawn_cards = cards_in_zones(state, PlayerID.P1, W1_PAWN)
+    pawn_cards = cards_in_zones(state, PlayerID.P1, OR_PAWN)
     p1.hand = list(pawn_cards)
-    p1.deck = [card for card in p1.deck if card.card_id != W1_PAWN]
-    p1.trash = [card for card in p1.trash if card.card_id != W1_PAWN]
+    p1.deck = [card for card in p1.deck if card.card_id != OR_PAWN]
+    p1.trash = [card for card in p1.trash if card.card_id != OR_PAWN]
 
     first_pawn = p1.hand[0]
     second_pawn = p1.hand[1]
@@ -87,7 +88,7 @@ def test_pawn_card_instances_remain_distinct_after_one_pawn_is_summoned(initiali
 
 def test_pawn_moves_forward_only_once_per_turn(initialized_state, card_db):
     state = initialized_state
-    pawn_card = cards_in_zones(state, PlayerID.P1, W1_PAWN)[0]
+    pawn_card = cards_in_zones(state, PlayerID.P1, OR_PAWN)[0]
 
     state = apply_action(
         state,
@@ -114,8 +115,8 @@ def test_pawn_moves_forward_only_once_per_turn(initialized_state, card_db):
 
 def test_rook_attack_kills_target_and_marks_attack_used(initialized_state, card_db):
     state = initialized_state
-    p1_rook = runtime_units_for_card_id(state, PlayerID.P1, W1_ROOK)[0]
-    p2_pawn = runtime_units_for_card_id(state, PlayerID.P2, "0x02000400")[0]
+    p1_rook = runtime_units_for_card_id(state, PlayerID.P1, OR_ROOK)[0]
+    p2_pawn = runtime_units_for_card_id(state, PlayerID.P2, CL_PAWN)[0]
     p1_leader = state.get_leader_runtime_unit(PlayerID.P1)
     p2_leader = state.get_leader_runtime_unit(PlayerID.P2)
     assert p1_leader is not None and p2_leader is not None
@@ -137,38 +138,38 @@ def test_rook_attack_kills_target_and_marks_attack_used(initialized_state, card_
     assert defender.is_on_board is False
 
 
-def test_world1_king_effect_draws_and_repositions_ally(initialized_state, card_db):
+def test_orange_leader_effect_draws_and_heals_ally(initialized_state, card_db):
     state = initialized_state
-    king = state.get_leader_runtime_unit(PlayerID.P1)
-    assert king is not None
-    move_card_to_hand(state, PlayerID.P1, king.source_card_instance_id)
+    leader = state.get_leader_runtime_unit(PlayerID.P1)
+    assert leader is not None
+    move_card_to_hand(state, PlayerID.P1, leader.source_card_instance_id)
 
-    pawn_card = cards_in_zones(state, PlayerID.P1, W1_PAWN)[0]
+    pawn_card = cards_in_zones(state, PlayerID.P1, OR_PAWN)[0]
     pawn_unit = runtime_unit_for_card_instance(state, PlayerID.P1, pawn_card.instance_id)
     summon_unit(pawn_unit, Position(0, 0))
+    pawn_unit.current_life = 1
 
     hand_before = len(state.get_player(PlayerID.P1).hand)
     state = apply_action(
         state,
         Action(
             ActionType.USE_CARD,
-            card_instance_id=king.source_card_instance_id,
+            card_instance_id=leader.source_card_instance_id,
             target_unit_ids=(pawn_unit.unit_id,),
-            target_positions=(Position(1, 0),),
         ),
         card_db,
     )
 
-    moved_pawn = state.get_unit(pawn_unit.unit_id)
-    assert moved_pawn.position == Position(1, 0)
-    assert moved_pawn.moved_this_turn is True
+    healed_pawn = state.get_unit(pawn_unit.unit_id)
+    assert healed_pawn.position == Position(0, 0)
+    assert healed_pawn.current_life == 1
     assert len(state.get_player(PlayerID.P1).hand) == hand_before
-    assert any(card.instance_id == king.source_card_instance_id for card in state.get_player(PlayerID.P1).trash)
+    assert any(card.instance_id == leader.source_card_instance_id for card in state.get_player(PlayerID.P1).trash)
 
 
 def test_leader_death_from_attack_ends_game_immediately(initialized_state, card_db):
     state = initialized_state
-    p1_rook = runtime_units_for_card_id(state, PlayerID.P1, W1_ROOK)[0]
+    p1_rook = runtime_units_for_card_id(state, PlayerID.P1, OR_ROOK)[0]
     p1_leader = state.get_leader_runtime_unit(PlayerID.P1)
     p2_leader = state.get_leader_runtime_unit(PlayerID.P2)
     assert p1_leader is not None and p2_leader is not None
@@ -202,4 +203,3 @@ def test_double_leader_death_is_draw(initialized_state):
 
     assert state.check_leader_death() == GameResult.DRAW
     assert state.winner is None
-

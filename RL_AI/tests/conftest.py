@@ -17,9 +17,10 @@ def card_db():
 @pytest.fixture
 def initialized_state(card_db) -> GameState:
     state = create_initial_game_state(
-        p1_world=1,
-        p2_world=2,
+        p1_world=2,
+        p2_world=6,
         first_player=PlayerID.P1,
         seed=7,
     )
     return initialize_main_phase(state, card_db)
+

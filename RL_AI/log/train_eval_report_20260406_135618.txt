@@ -1,0 +1,54 @@
+=== Before Training ===
+=== Evaluation Report ===
+Episodes: 30
+P1 (rl) wins: 12 (40.0%)
+P2 (random) wins: 5 (16.7%)
+Draws: 13 (43.3%)
+Average steps: 162.07
+
+[Action Type Counts]
+- END_TURN: 604
+- MOVE_UNIT: 2095
+- UNIT_ATTACK: 686
+- USE_CARD: 1477
+
+[Card Use Counts]
+- Pawn: 346
+- 귤 요정: 306
+- The Rook: 131
+- The King: 112
+- 귤 공주님: 108
+- 귤 직장인?: 105
+- The Bishop: 98
+- 귤 나무: 94
+- 망상의 기사님: 92
+- The Knight: 85
+
+=== Training Summary ===
+{'episodes': 50, 'wins': 11, 'losses': 20, 'draws': 19, 'last_update': {'policy_loss': -0.01516152105013867, 'value_loss': 0.000116907029409629, 'entropy': 2.479812232036035}}
+
+=== After Training ===
+=== Evaluation Report ===
+Episodes: 30
+P1 (rl) wins: 5 (16.7%)
+P2 (random) wins: 9 (30.0%)
+Draws: 16 (53.3%)
+Average steps: 173.33
+
+[Action Type Counts]
+- END_TURN: 676
+- MOVE_UNIT: 2226
+- UNIT_ATTACK: 694
+- USE_CARD: 1604
+
+[Card Use Counts]
+- Pawn: 392
+- 귤 요정: 320
+- The Rook: 137
+- 귤 공주님: 119
+- The King: 119
+- 귤 나무: 108
+- 귤 직장인?: 107
+- The Bishop: 104
+- The Knight: 100
+- 망상의 기사님: 98

@@ -26,9 +26,9 @@ def run_train_eval_experiment(
     eval_matches_before: int = 20,
     train_episodes: int = 50,
     eval_matches_after: int = 20,
-    p1_world: int = 1,
-    p2_world: int = 2,
-    tsv_path: str = "Cards.tsv",
+    p1_world: int = 2,
+    p2_world: int = 6,
+    card_data_path: str = "Cards.csv",
     seed: Optional[int] = None,
     max_steps: int = 200,
     report_path: Optional[str] = None,
@@ -42,7 +42,7 @@ def run_train_eval_experiment(
         num_matches=eval_matches_before,
         p1_world=p1_world,
         p2_world=p2_world,
-        tsv_path=tsv_path,
+        card_data_path=card_data_path,
         seed=seed,
         max_steps=max_steps,
         enable_logging=False,
@@ -54,7 +54,7 @@ def run_train_eval_experiment(
         opponent_agent=opponent,
         p1_world=p1_world,
         p2_world=p2_world,
-        tsv_path=tsv_path,
+        card_data_path=card_data_path,
         seed=None if seed is None else seed + 10_000,
         max_steps=max_steps,
     )
@@ -64,7 +64,7 @@ def run_train_eval_experiment(
         num_matches=eval_matches_after,
         p1_world=p1_world,
         p2_world=p2_world,
-        tsv_path=tsv_path,
+        card_data_path=card_data_path,
         seed=None if seed is None else seed + 20_000,
         max_steps=max_steps,
         enable_logging=False,
@@ -91,3 +91,6 @@ def run_train_eval_experiment(
         "report_text": report_text,
         "report_path": str(saved_path),
     }
+
+
+

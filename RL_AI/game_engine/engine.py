@@ -10,16 +10,16 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 from RL_AI.cards.card_db import CardDefinition, TextCondition
 from RL_AI.game_engine.rules import (
-    W1_BISHOP,
-    W1_KING,
-    W1_KNIGHT,
-    W1_PAWN,
-    W1_ROOK,
-    W2_BISHOP,
-    W2_KNIGHT,
-    W2_PAWN,
-    W2_PRINCESS,
-    W2_ROOK,
+    OR_BISHOP,
+    OR_KNIGHT,
+    OR_LEADER,
+    OR_PAWN,
+    OR_ROOK,
+    CL_BISHOP,
+    CL_KNIGHT,
+    CL_LEADER,
+    CL_PAWN,
+    CL_ROOK,
     can_attack_unit,
     can_move_unit,
     can_unit_attack_target_by_effect,
@@ -155,11 +155,11 @@ def _handle_unit_retired(state: GameState, retired_unit: UnitState, card_db: Dic
     card_id = retired_unit.source_card_id
     owner = retired_unit.owner
 
-    if card_id == W2_BISHOP:
+    if card_id == CL_BISHOP:
         leader = _leader_of(state, owner)
         if leader is not None:
             leader.heal(2)
-    elif card_id == W2_KNIGHT:
+    elif card_id == CL_KNIGHT:
         try:
             zone_name, _ = _find_card_zone_and_index(state, owner, retired_unit.source_card_instance_id)
         except ValueError:
@@ -173,11 +173,6 @@ def _handle_unit_retired(state: GameState, retired_unit: UnitState, card_db: Dic
 def _after_unit_moved(state: GameState, moved_unit: UnitState, card_db: Dict[str, CardDefinition], rng: random.Random) -> None:
     if not moved_unit.is_alive() or moved_unit.position is None:
         return
-    if moved_unit.source_card_id == W2_PAWN and moved_unit.position.row == _far_row_for(moved_unit.owner):
-        moved_unit.retire()
-        _handle_unit_retired(state, moved_unit, card_db, rng)
-        _draw_cards(state, moved_unit.owner, 2, rng)
-        _set_terminal_if_needed(state)
 
 
 def _resolve_direct_attack(state: GameState, attacker: UnitState, defender: UnitState, card_db: Dict[str, CardDefinition], rng: random.Random, move_after_kill: bool = False) -> bool:
@@ -236,54 +231,14 @@ def _resolve_card_effect(state: GameState, player_id: PlayerID, action: Action, 
     if source_unit is None or not source_unit.is_alive():
         raise ValueError("Cannot activate effect: source unit is not alive on board.")
 
-    if card.card_id == W1_KING:
+    if card.card_id == OR_LEADER:
         _draw_cards(state, player_id, 1, rng)
-        if len(action.target_unit_ids) == 1 and len(action.target_positions) == 1:
-            ally = state.get_unit(action.target_unit_ids[0])
-            dst = action.target_positions[0]
-            if ally.owner == player_id and can_move_unit(state, player_id, ally.unit_id, dst):
-                state.move_unit(ally.unit_id, dst)
-                ally.moved_this_turn = True
-                _after_unit_moved(state, ally, card_db, rng)
-
-    elif card.card_id == W1_BISHOP:
-        for target_id in _dedupe_keep_order(action.target_unit_ids)[:2]:
-            if not source_unit.is_alive():
-                break
-            target = state.get_unit(target_id)
-            if target.owner != player_id and target.is_alive() and can_unit_attack_target_by_effect(state, source_unit, target):
-                _resolve_direct_attack(state, source_unit, target, card_db, rng, move_after_kill=False)
-
-    elif card.card_id == W1_KNIGHT:
         if len(action.target_unit_ids) == 1:
-            target = state.get_unit(action.target_unit_ids[0])
-            if target.owner != player_id and target.is_alive() and can_unit_attack_target_by_effect(state, source_unit, target):
-                _resolve_direct_attack(state, source_unit, target, card_db, rng, move_after_kill=True)
+            ally = state.get_unit(action.target_unit_ids[0])
+            if ally.owner == player_id and ally.is_alive():
+                ally.heal(1)
 
-    elif card.card_id == W1_ROOK:
-        if len(action.target_unit_ids) == 0:
-            source_unit.full_heal()
-        elif len(action.target_unit_ids) == 1:
-            target = state.get_unit(action.target_unit_ids[0])
-            if target.owner == player_id and target.is_alive():
-                target.attack += 1
-                target.max_life += 1
-                target.current_life += 1
-
-    elif card.card_id == W1_PAWN:
-        allies, enemies = _partition_mixed_unit_targets(state, player_id, action.target_unit_ids)
-        if len(allies) == 1 and len(enemies) == 1 and can_unit_attack_target_by_effect(state, allies[0], enemies[0]):
-            _resolve_direct_attack(state, allies[0], enemies[0], card_db, rng, move_after_kill=False)
-
-    elif card.card_id == W2_PRINCESS:
-        if len(action.target_unit_ids) == 0:
-            source_unit.heal(1)
-        elif len(action.target_unit_ids) == 1:
-            target = state.get_unit(action.target_unit_ids[0])
-            if target.owner == player_id and target.is_alive():
-                target.heal(1)
-
-    elif card.card_id == W2_BISHOP:
+    elif card.card_id == OR_BISHOP:
         if len(action.target_positions) == 1:
             leader = _leader_of(state, player_id)
             dst = action.target_positions[0]
@@ -292,24 +247,70 @@ def _resolve_card_effect(state: GameState, player_id: PlayerID, action: Action, 
                 leader.moved_this_turn = True
                 _after_unit_moved(state, leader, card_db, rng)
 
-    elif card.card_id == W2_KNIGHT:
+    elif card.card_id == OR_KNIGHT:
+        if len(action.target_unit_ids) == 1:
+            target = state.get_unit(action.target_unit_ids[0])
+            if target.owner != player_id and target.is_alive() and can_unit_attack_target_by_effect(state, source_unit, target):
+                target_was_killed = _resolve_direct_attack(state, source_unit, target, card_db, rng, move_after_kill=False)
+                if target_was_killed and source_unit.is_alive():
+                    for other_enemy in _sort_units_for_determinism(get_enemy_units_on_board(state, player_id)):
+                        if can_unit_attack_target_by_effect(state, source_unit, other_enemy):
+                            _resolve_direct_attack(state, source_unit, other_enemy, card_db, rng, move_after_kill=False)
+
+    elif card.card_id == OR_ROOK:
+        if len(action.target_unit_ids) == 1 and not source_unit.moved_this_turn:
+            target = state.get_unit(action.target_unit_ids[0])
+            if target.owner != player_id and target.is_alive():
+                source_unit.disabled_move_turns = max(source_unit.disabled_move_turns, 1)
+                target.disabled_move_turns = max(target.disabled_move_turns, 2)
+
+    elif card.card_id == OR_PAWN:
+        allies, enemies = _partition_mixed_unit_targets(state, player_id, action.target_unit_ids)
+        if len(allies) == 1 and len(enemies) == 1 and can_unit_attack_target_by_effect(state, allies[0], enemies[0]):
+            _resolve_direct_attack(state, allies[0], enemies[0], card_db, rng, move_after_kill=False)
+
+    elif card.card_id == CL_LEADER:
+        _draw_cards(state, player_id, 1, rng)
+        if len(action.target_unit_ids) == 1:
+            target = state.get_unit(action.target_unit_ids[0])
+            if target.owner == player_id and target.is_alive():
+                target.heal(3)
+
+    elif card.card_id == CL_BISHOP:
+        for target_id in _dedupe_keep_order(action.target_unit_ids)[:2]:
+            if not source_unit.is_alive():
+                break
+            target = state.get_unit(target_id)
+            if target.owner != player_id and target.is_alive() and can_unit_attack_target_by_effect(state, source_unit, target):
+                _resolve_direct_attack(state, source_unit, target, card_db, rng, move_after_kill=False)
+
+    elif card.card_id == CL_KNIGHT:
         if len(action.target_unit_ids) == 1:
             target = state.get_unit(action.target_unit_ids[0])
             if target.owner != player_id and target.is_alive() and can_unit_attack_target_by_effect(state, source_unit, target):
                 _resolve_direct_attack(state, source_unit, target, card_db, rng, move_after_kill=False)
-                if source_unit.is_alive():
-                    source_unit.disabled_move_turns = max(source_unit.disabled_move_turns, 1)
-                    source_unit.disabled_attack_turns = max(source_unit.disabled_attack_turns, 1)
+                if target.is_alive():
+                    target.disabled_attack_turns = max(target.disabled_attack_turns, 2)
 
-    elif card.card_id == W2_ROOK:
+    elif card.card_id == CL_ROOK:
         if len(action.target_unit_ids) == 1:
             target = state.get_unit(action.target_unit_ids[0])
-            if target.owner != player_id and target.is_alive():
-                target.take_damage(1)
-                if not target.is_alive():
-                    _handle_unit_retired(state, target, card_db, rng)
+            if target.owner != player_id and target.is_alive() and can_unit_attack_target_by_effect(state, source_unit, target):
+                target_pos_before = target.position
+                _resolve_direct_attack(state, source_unit, target, card_db, rng, move_after_kill=False)
+                if source_unit.is_alive() and target_pos_before is not None:
+                    dr = 0 if target_pos_before.row == source_unit.position.row else (1 if target_pos_before.row > source_unit.position.row else -1)
+                    dc = 0 if target_pos_before.col == source_unit.position.col else (1 if target_pos_before.col > source_unit.position.col else -1)
+                    move_pos = type(target_pos_before)(source_unit.position.row + dr, source_unit.position.col + dc)
+                    if move_pos.is_in_bounds() and state.is_empty(move_pos):
+                        source_unit.position = move_pos
+                        source_unit.moved_this_turn = True
+                    elif target.is_alive():
+                        target.take_damage(1)
+                        if not target.is_alive():
+                            _handle_unit_retired(state, target, card_db, rng)
 
-    elif card.card_id == W2_PAWN:
+    elif card.card_id == CL_PAWN:
         allies, enemies = _partition_mixed_unit_targets(state, player_id, action.target_unit_ids)
         if len(allies) == 1 and len(enemies) == 1 and can_unit_attack_target_by_effect(state, allies[0], enemies[0]):
             _resolve_direct_attack(state, allies[0], enemies[0], card_db, rng, move_after_kill=False)
@@ -323,12 +324,13 @@ def _process_start_triggers(state: GameState, card_db: Dict[str, CardDefinition]
     for unit in _sort_units_for_determinism(state.get_board_units_by_owner(owner)):
         if unit.text_condition != TextCondition.TURN_START or not unit.is_alive():
             continue
-        if unit.source_card_id in {W1_KING, W1_BISHOP, W1_KNIGHT, W1_ROOK}:
-            target = _choose_first(_alive_enemy_units_in_attack_range(state, unit))
-            if target is not None:
-                _resolve_direct_attack(state, unit, target, card_db, rng, move_after_kill=False)
-        elif unit.source_card_id == W2_PRINCESS:
-            unit.heal(1)
+        if unit.source_card_id == OR_PAWN:
+            if unit.position is not None and unit.position.row == _far_row_for(unit.owner):
+                _draw_cards(state, unit.owner, 1, rng)
+        elif unit.source_card_id == CL_LEADER:
+            knights = [ally for ally in state.get_board_units_by_owner(owner) if ally.role.name == "KNIGHT" and ally.position is not None]
+            if any(is_position_in_unit_move_range(state, unit, ally.position, require_empty=False) for ally in knights):
+                unit.heal(2)
 
         _set_terminal_if_needed(state)
         if state.is_terminal():
@@ -341,15 +343,9 @@ def _process_end_triggers(state: GameState, card_db: Dict[str, CardDefinition], 
         if unit.text_condition != TextCondition.TURN_END or not unit.is_alive():
             continue
 
-        if unit.source_card_id == W1_PAWN:
-            if unit.position is not None and unit.position.row == _far_row_for(owner):
-                unit.promoted = True
-
-        elif unit.source_card_id == W2_BISHOP:
-            unit.retire()
-            _handle_unit_retired(state, unit, card_db, rng)
-
-        elif unit.source_card_id == W2_ROOK:
+        if unit.source_card_id == OR_LEADER:
+            unit.heal(1)
+        elif unit.source_card_id == OR_ROOK:
             target = _choose_first(get_enemy_units_on_board(state, owner))
             if target is not None:
                 _resolve_direct_attack(state, unit, target, card_db, rng, move_after_kill=False)
@@ -468,3 +464,4 @@ def apply_action(
 
 def initialize_main_phase(state: GameState, card_db: Dict[str, CardDefinition], rng: Optional[random.Random] = None) -> GameState:
     return run_start_phase(state, card_db, rng)
+

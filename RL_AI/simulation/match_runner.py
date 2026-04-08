@@ -98,21 +98,21 @@ def _build_match_metadata(
 
 
 def run_manual_match(
-    p1_world: int = 1,
-    p2_world: int = 2,
+    p1_world: int = 2,
+    p2_world: int = 6,
     *,
     seed: Optional[int] = None,
-    tsv_path: str = "Cards.tsv",
+    card_data_path: str = "Cards.csv",
     first_player: Optional[PlayerID] = None,
     enable_logging: bool = True,
     log_base_path: Optional[str] = None,
     include_action_options_in_log: bool = False,
 ) -> GameState:
-    card_db = load_supported_card_db(tsv_path=tsv_path)
+    card_db = load_supported_card_db(card_data_path=card_data_path)
     initial_state = create_initial_game_state(
         p1_world=p1_world,
         p2_world=p2_world,
-        tsv_path=tsv_path,
+        card_data_path=card_data_path,
         seed=seed,
         first_player=first_player,
     )
@@ -194,11 +194,11 @@ def run_manual_match(
 
 
 def run_random_match(
-    p1_world: int = 1,
-    p2_world: int = 2,
+    p1_world: int = 2,
+    p2_world: int = 6,
     *,
     seed: Optional[int] = None,
-    tsv_path: str = "Cards.tsv",
+    card_data_path: str = "Cards.csv",
     first_player: Optional[PlayerID] = None,
     max_steps: int = 500,
     enable_logging: bool = True,
@@ -206,11 +206,11 @@ def run_random_match(
     print_steps: bool = True,
     include_action_options_in_log: bool = False,
 ) -> GameState:
-    card_db = load_supported_card_db(tsv_path=tsv_path)
+    card_db = load_supported_card_db(card_data_path=card_data_path)
     initial_state = create_initial_game_state(
         p1_world=p1_world,
         p2_world=p2_world,
-        tsv_path=tsv_path,
+        card_data_path=card_data_path,
         seed=seed,
         first_player=first_player,
     )
@@ -291,10 +291,10 @@ def run_agent_match(
     p1_agent: BaseAgent,
     p2_agent: BaseAgent,
     *,
-    p1_world: int = 1,
-    p2_world: int = 2,
+    p1_world: int = 2,
+    p2_world: int = 6,
     seed: Optional[int] = None,
-    tsv_path: str = "Cards.tsv",
+    card_data_path: str = "Cards.csv",
     first_player: Optional[PlayerID] = None,
     max_steps: int = 500,
     enable_logging: bool = True,
@@ -302,11 +302,11 @@ def run_agent_match(
     print_steps: bool = True,
     include_action_options_in_log: bool = False,
 ) -> GameState:
-    card_db = load_supported_card_db(tsv_path=tsv_path)
+    card_db = load_supported_card_db(card_data_path=card_data_path)
     initial_state = create_initial_game_state(
         p1_world=p1_world,
         p2_world=p2_world,
-        tsv_path=tsv_path,
+        card_data_path=card_data_path,
         seed=seed,
         first_player=first_player,
     )
@@ -413,4 +413,7 @@ if __name__ == "__main__":
     # Random rollout from Python:
     #   from RL_AI.simulation.match_runner import run_random_match
     #   run_random_match(seed=7)
-    run_manual_match(p1_world=1, p2_world=2, seed=7)
+    run_manual_match(p1_world=2, p2_world=6, seed=7)
+
+
+
