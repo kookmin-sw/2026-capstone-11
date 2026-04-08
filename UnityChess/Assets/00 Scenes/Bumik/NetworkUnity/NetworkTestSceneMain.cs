@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
 using Game.Network;
 using Game.Network.Protocol;
-using Game.Server;
 using PlayFab.EconomyModels;
 using TMPro;
 using UnityEngine;

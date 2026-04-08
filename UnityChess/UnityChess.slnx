@@ -1,4 +1,4 @@
-<Solution>
+﻿<Solution>
   <Project Path="Assembly-CSharp.csproj" />
   <Project Path="UniRx.csproj" />
   <Project Path="PlayFab.csproj" />

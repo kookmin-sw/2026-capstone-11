@@ -5,6 +5,7 @@ using Unity.VisualScripting;
 using System.Text;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using PlayFab;
 
 public class PlayFabAccountUI : MonoBehaviour
 {
@@ -62,7 +63,13 @@ public class PlayFabAccountUI : MonoBehaviour
         + "DisplayName=" 
         + PlayFabAccountManager.Instance.InGameDisplayName + " \n "
         + "SessionTick="
-        + PlayFabAccountManager.Instance.SessionTicket + " \n ";
+        + PlayFabAccountManager.Instance.SessionTicket + " \n "
+        + "EntityID=" 
+        + PlayFabAccountManager.Instance.EntityId + "\n" 
+        + "EntityType="
+        + PlayFabAccountManager.Instance.EntityType + "\n"
+        + "EntityToken="
+        + PlayFabAccountManager.Instance.EntityToken + "\n";
 
         InfoField.text = msg;
     }

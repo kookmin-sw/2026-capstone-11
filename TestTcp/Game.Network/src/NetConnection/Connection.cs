@@ -26,10 +26,10 @@ namespace Game.Network
         private Task? _receiveLoopTask;
         private int _started = 0;
 
-        private string _id;
+        private ConnId _id;
         private bool _isConnected;
 
-        public string GetConnectionId() => _id;
+        public ConnId GetConnectionId() => _id;
         public string? GetRemoteEndPoint() => _client.Client.RemoteEndPoint?.ToString();
 
 
@@ -78,7 +78,37 @@ namespace Game.Network
                 try { tcp?.Close(); } catch {}
                 try {if (connTask != null) await connTask;} catch {}
 
-                q.InControlQueue.Enqueue(NetInEvent.Exception("New Conn", Array.Empty<byte>(), $"Fail To Connect. Exception MSG: {e.Message}"));
+                q.InControlQueue.Enqueue(NetInEvent.Exception(ConnId.Default(), Array.Empty<byte>(), $"Fail To Connect. Exception MSG: {e.Message}"));
+                return null;
+            }
+        }
+
+        public static async Task<Connection?> ListenAndCreateConnection(string ip, int portNum, ConnId connId, NetEventQueue q, int expireTimeMs)
+        {
+            TcpClient? tcp = null;
+            Task? connTask = null;
+            
+            try
+            {
+                tcp = new TcpClient();
+                connTask = tcp.ConnectAsync(ip, portNum);
+
+                var done = await Task.WhenAny(connTask, Task.Delay(expireTimeMs));
+                if (done != connTask) 
+                { 
+                    try { tcp.Close(); } catch {}
+                    throw new TimeoutException();
+                }
+                
+                await connTask;
+                return new Connection(tcp, q, connId);
+            }
+            catch (Exception e)
+            {
+                try { tcp?.Close(); } catch {}
+                try {if (connTask != null) await connTask;} catch {}
+
+                q.InControlQueue.Enqueue(NetInEvent.Exception(ConnId.Default(), Array.Empty<byte>(), $"Fail To Connect. Exception MSG: {e.Message}"));
                 return null;
             }
         }
@@ -102,7 +132,19 @@ namespace Game.Network
             _queue = q;
             _isConnected = true;
 
-            _id = Guid.NewGuid().ToString();
+            _id = ConnId.Get();
+        }
+
+        private Connection(TcpClient tcpClient, NetEventQueue q, ConnId connId)
+        {
+            _client = tcpClient;
+            _stream = tcpClient.GetStream();
+            _channel = new ConcurrentQueue<byte[]>();
+
+            _queue = q;
+            _isConnected = true;
+
+            _id = connId;
         }
 
         private async Task AsyncSendLoop(CancellationToken token)

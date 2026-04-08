@@ -20,7 +20,7 @@ namespace Game.Network
             var defaultHandler = new SystemHandler(manager);
 
             manager.NetEvent.SetControlHandler(defaultHandler);
-            manager.NetEvent.SetReceiveHandler(NetEventHandlerId.System, defaultHandler);
+            manager.NetEvent.SetReceiveHandler(defaultHandler);
             return manager;
         }
 
@@ -48,48 +48,57 @@ namespace Game.Network
         }
 
         
-        public void Send(int handlerId, int queryNum, string ConnId, byte[] raw)
-            => NetStream.Send(handlerId, queryNum, ConnId, raw);
+        public void Send(int handlerId, int queryNum, ConnId id, byte[] raw)
+            => NetStream.Send(handlerId, queryNum, id, raw);
         
 
         public void BroadCast(int handlerId, int queryNum, byte[] raw)
             => NetStream.BroadCast(handlerId, queryNum, raw);
         
 
-        public void Disconnect(string ConnId)
+        public void Disconnect(ConnId id)
         { 
-            NetEvent.CancelAll(ConnId);
-            NetStream.Disconnect(ConnId); 
+            NetEvent.CancelAll(id);
+            NetStream.Disconnect(id); 
         }
 
-        public Task<string?> ConnectTo(string ipAddr, int portNum, long expireTimeMs)
+        public Task<ConnId?> ConnectTo(string ipAddr, int portNum, long expireTimeMs)
         => NetConn.ConnectTo(ipAddr, portNum, _netEventQueue, (int)expireTimeMs);
-        
-        public bool IsConnValid(string connId)
-        => NetConn.IsConnValid(connId);
 
-        public Task<QueryTaskResult> AsyncRequestQuery(int handlerId, string ConnId, byte[] query_raw, long expireTimeMs)
+        public bool IsConnValid(ConnId id)
+        => NetConn.IsConnValid(id);
+
+        public Task<QueryTaskResult> AsyncRequestQuery(int handlerId, ConnId id, byte[] query_raw, long expireTimeMs)
         {
-            var (queryNum, task) = NetEvent.RegisterQueryTask(ConnId, expireTimeMs);
-            NetStream.Query(handlerId, queryNum, ConnId, query_raw);
+            var (queryNum, task) = NetEvent.RegisterQueryTask(id, expireTimeMs);
+            NetStream.Query(handlerId, queryNum, id, query_raw);
 
             return task;
         }
-        public Task<QueryTaskResult> AsyncRequestQuery(int handlerId, string ConnId, byte[] query_raw, long expireTimeMs, 
+        public Task<QueryTaskResult> AsyncRequestQuery(int handlerId, ConnId id, byte[] query_raw, long expireTimeMs, 
                                                         TaskCompletionSource<QueryTaskResult> tcs)
         {
-            var (queryNum, task) = NetEvent.RegisterQueryTask(ConnId, expireTimeMs, tcs);
-            NetStream.Query(handlerId, queryNum, ConnId, query_raw);
+            var (queryNum, task) = NetEvent.RegisterQueryTask(id, expireTimeMs, tcs);
+            NetStream.Query(handlerId, queryNum, id, query_raw);
 
             return task;
         }
 
 
-        public Task<QueryTaskResult> AsyncRequestQuery(int handlerId, string ConnId, byte[] query_raw, long expireTimeMs, 
-                                                        Action<byte[]>? responseAction, Action? timeOutAction)
+        // public Task<QueryTaskResult> AsyncRequestQuery(int handlerId, ConnId id, byte[] query_raw, long expireTimeMs, 
+        //                                                 Action<ConnId, byte[]>? responseAction, Action<ConnId>? timeOutAction)
+        // {
+        //     var (queryNum, task) = NetEvent.RegisterQueryTask(id, expireTimeMs, responseAction, timeOutAction);
+        //     NetStream.Query(handlerId, queryNum, id, query_raw);
+
+        //     return task;
+        // }
+
+        public Task<QueryTaskResult> AsyncRequestQuery(int handlerId, ConnId id, byte[] query_raw, long expireTimeMs, 
+                                                        Action<ConnId, QueryTaskResult>? callBack)
         {
-            var (queryNum, task) = NetEvent.RegisterQueryTask(ConnId, expireTimeMs, responseAction, timeOutAction);
-            NetStream.Query(handlerId, queryNum, ConnId, query_raw);
+            var (queryNum, task) = NetEvent.RegisterQueryTask(id, expireTimeMs, callBack);
+            NetStream.Query(handlerId, queryNum, id, query_raw);
 
             return task;
         }
@@ -97,14 +106,20 @@ namespace Game.Network
         /// <summary>
         /// 이 함수는 Connection을 항상 보장하지 않음. 별도 핸들러 관리하는 걸 권장
         /// </summary>
-        public bool TryGetConnIdList(int minConnCount, out List<string> connIdList)
+        public bool TryGetConnIdList(int minConnCount, out List<ConnId> connIdList)
             => NetConn.TryGetConnIdList(minConnCount, out connIdList);
             
-    
+
         public void SetReceiveHandler(int id, INetEventHandler handler)
-            => NetEvent.SetReceiveHandler(id, handler);
+            => SetReceiveHandler(handler);
+
+        public void SetReceiveHandler(INetReceiveEventHandler handler)
+            => NetEvent.SetReceiveHandler(handler);
 
         public void SetControlHandler(INetEventHandler handler) 
+            => SetControlHandler(handler);
+
+        public void SetControlHandler(INetControlEventHandler handler) 
             => NetEvent.SetControlHandler(handler);
 
         public async Task StopAsync()

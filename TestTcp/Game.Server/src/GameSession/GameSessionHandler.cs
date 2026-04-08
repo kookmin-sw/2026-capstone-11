@@ -1,14 +1,7 @@
 
 
 using System.Collections.Concurrent;
-using System.ComponentModel;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.CompilerServices;
-using System.Security.AccessControl;
-using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json.Serialization.Metadata;
-using Microsoft.VisualBasic;
 using Game.Network;
 
 namespace Game.Server
@@ -17,34 +10,34 @@ namespace Game.Server
 
     public class GameQuery
     {
-        public readonly string ConnId;
+        public readonly ConnId connId;
         public readonly byte[] Raw;
         public readonly long ExpireTimeMs;
-        public TaskCompletionSource<QueryTaskResult> tcs;
+        public Action<QueryTaskResult> CallBack;
 
-        public GameQuery(string playerName, byte[] raw, long expireTimeMs)
+        public GameQuery(ConnId id, byte[] raw, long expireTimeMs, Action<QueryTaskResult> callBack)
         {
-            ConnId = playerName;
+            connId = id;
             Raw = raw;
             ExpireTimeMs = expireTimeMs;
-            tcs = new();
+            CallBack = callBack;    
         }
     }
 
     public class GameMessage
     {
-        public readonly string ConnId;
+        public readonly ConnId connId;
         public readonly byte[] Raw;
 
-        public GameMessage(string connId, byte[] raw) {ConnId = connId; Raw = raw;}
+        public GameMessage(ConnId id, byte[] raw) {connId = id; Raw = raw;}
     }
 
     public class GameSessionHandler : INetEventHandler
     {
-        private const int Id = 444;
+        public int HandlerId => NetEventHandlerId.Constant.GameMessage;
 
         // Read in Race Cond
-        private ConcurrentDictionary<string, string> _player_connectionDict; // (PlayerName, ConnectoinId)
+        private ConcurrentDictionary<SessionPlayerId, ConnId> _player_connectionDict; // (PlayerName, ConnectoinId)
 
         // Write in Race Cond
         private ConcurrentQueue<GameQuery> _queryQueue; 
@@ -53,21 +46,20 @@ namespace Game.Server
 
         // Write & Read in Server Tick
         private INetAPI _net;
-        private string _sessionOwner;
         private int _maxProcessPerTick = 30; // TODO: 이거 다른 값으로 변경. 일단 테스트용
         private bool _isGameRunning = false;
 
 
 
-        public async Task<QueryTaskResult> AsyncQueryPlayer(string playerName, byte[] raw, long expireTimeMs)
+        public void QueryPlayer(SessionPlayerId playerId, byte[] raw, long expireTimeMs, Action<QueryTaskResult> callBack)
         {
-            if (_player_connectionDict.TryGetValue(playerName, out var connId))
+            if (_player_connectionDict.TryGetValue(playerId, out var connId))
             {
-                var req = new GameQuery(connId, raw, expireTimeMs);
+                var req = new GameQuery(connId, raw, expireTimeMs, callBack);
                 _queryQueue.Enqueue(req);
-                return await req.tcs.Task;
+                return;
             }
-            else return QueryTaskResult.CancelledResult;
+            else return;
         }
 
         public void BroadCastPlayer(byte[] raw)
@@ -76,13 +68,11 @@ namespace Game.Server
                 _messageQueue.Enqueue(new GameMessage(connId, raw));
         }
 
-        public void SendPlayer(string playerName, byte[] raw) 
+        public void SendPlayer(SessionPlayerId playerId, byte[] raw) 
         {
-            if (_player_connectionDict.TryGetValue(playerName, out var connId))
+            if (_player_connectionDict.TryGetValue(playerId, out var connId))
                 _messageQueue.Enqueue(new GameMessage(connId, raw));
         }
-
-
 
         public GameSessionHandler(INetAPI net, string sessionOwner)
         {
@@ -90,7 +80,6 @@ namespace Game.Server
             _queryQueue = new();
             _messageQueue = new();
             _net = net;
-            _sessionOwner = sessionOwner;
         }
 
         public void Tick()
@@ -100,11 +89,11 @@ namespace Game.Server
                 if (!_queryQueue.TryDequeue(out var query)) break;
 
                 _net.AsyncRequestQuery(
-                    Id, 
-                    query.ConnId, 
+                    HandlerId, 
+                    query.connId, 
                     query.Raw, 
                     query.ExpireTimeMs,
-                    query.tcs
+                    (connId, result) => {query.CallBack(result);}
                     );
             }
 
@@ -112,57 +101,45 @@ namespace Game.Server
             {
                 if (!_messageQueue.TryDequeue(out var message)) break;
                 
-                _net.Send(Id, 0, message.ConnId, message.Raw); 
+                _net.Send(HandlerId, 0, message.connId, message.Raw); 
             }
         }
 
         private void StartGame()
         {
-            RockScissorsPaperGameContext context = new();
             var playerList = _player_connectionDict.Keys.ToArray();
 
             if (playerList.Count() != 2) 
                 Log.WriteLog("Wrong Player Count. Wrong StartGame()");   
-
-            context.player_1 = playerList[0];
-            context.player_2 = playerList[1];
-            context.session = this;
-
-            var game = new RockScissorsPaperGame(context);
-            Task.Run(game.RunGame);
         }
 
 
 
         // Data
-        public void OnReceive(string ConnId, byte[] raw) { }
-        public void OnRespond(string ConnId, int queryNum, byte[] raw) { }
-        public void OnQuery(string ConnId, int queryNum, byte[] raw) {}
+        public void OnReceive(ConnId connId, byte[] raw) { }
+        public void OnRespond(ConnId connId, int queryNum, byte[] raw) { }
+        public void OnQuery(ConnId connId, int queryNum, byte[] raw) {}
 
         // Control
-        public void OnException(string ConnId, byte[] raw, string msg) { }
-        public void OnHello(string ConnId, byte[] raw)
+        public void OnException(ConnId connId, byte[] raw, string msg) { }
+        public void OnHello(ConnId connId, byte[] raw)
         {
             if (_player_connectionDict.Count >= 2) return;
-            _ = _net.AsyncRequestQuery(Id, ConnId, Encoding.UTF8.GetBytes("HELLO"), 3000, 
-                (answerRaw) => // Succ Action
+            _ = _net.AsyncRequestQuery(HandlerId, connId, Encoding.UTF8.GetBytes("HELLO"), 3000, 
+                (rspConnId, rsp) => // Succ Action
                 {
-                    string playerName = Encoding.UTF8.GetString(answerRaw);
-                    _player_connectionDict[playerName] = ConnId;
-                    Log.WriteLog($"Player Enter: [{playerName}] From [{ConnId}]");
+                    var newId = SessionPlayerId.NewId();
+                    _player_connectionDict[newId] = rspConnId;
+                    Log.WriteLog($"Player Enter: [{newId}] From [{rspConnId}]");
                     if (_player_connectionDict.Count == 2 && !_isGameRunning)
                     {
                         _isGameRunning = true;
                         StartGame();
                     }
-                }, 
-                () => // Fail Action
-                {
-                    Log.WriteLog($"Player Answer TimeOut. Target ConnectionID: [{ConnId}]");
                 }
                 );
         }
-        public void OnDisconnect(string ConnId, byte[] raw) { }
+        public void OnDisconnect(ConnId connId, byte[] raw) { }
 
 
     };

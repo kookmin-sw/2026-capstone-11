@@ -14,8 +14,6 @@ public class ModeSelectionSceneMain : MonoBehaviour
     [SerializeField] private TMP_InputField PortNumInputField;
     [SerializeField] private NetworkManagerUnity networkManager;
 
-
-
     public void OnClickStartDedicateMode()
     {
         string IPAddrInput = IPaddrInputField.text;
@@ -40,28 +38,7 @@ public class ModeSelectionSceneMain : MonoBehaviour
         }
 
 
-        ConnectionInfo selfInfo = new ConnectionInfo(
-            netType: NetworkType.Dedicated, 
-            connType: ConnectionType.Client, 
-            seesion_id: 0, 
-            account_id: 0, 
-            account_name: PlayFabAccountManager.Instance.InGameDisplayName, 
-            app_version: "DevelopVersion", 
-            Token: PlayFabAccountManager.Instance.SessionTicket
-        );
-
-        ServiceOption option = new ServiceOption(
-            MaxConnPerService: 2,
-            HelloTimeOutMs: 10000,
-            PingIntervalMs: 5000,
-            PingTimeOutMs: 4500,
-            PingFailCountToDisconnect: 3       
-            );
-
-        BypassAuthenticator auth = new();
-
-
-        networkManager.Init(selfInfo, option, auth);
+        networkManager.Init();
         _ = networkManager.Net.ConnectTo(ipAddr.ToString(), portNum, 20000);
         DontDestroyOnLoad(networkManager);
         SceneManager.LoadScene("NetworkTestScene");
