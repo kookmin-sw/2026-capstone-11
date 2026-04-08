@@ -25,7 +25,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="GameEventManager\Events\Rules\" />
+      <Folder Include="GameEventManager\Events\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     </ItemGroup>
 
 </Project>

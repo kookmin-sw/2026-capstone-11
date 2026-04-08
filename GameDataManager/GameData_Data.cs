@@ -1,4 +1,6 @@
+using Newtonsoft.Json;
 using SeaEngine.GameDataManager.Components;
+using SeaEngine.GameDataManager.Converters;
 
 namespace SeaEngine.GameDataManager;
 
@@ -6,7 +8,10 @@ public partial class GameData
 {
     public readonly Player Player1;
     public readonly Player Player2;
+    
+    [JsonIgnore]
     public Player ActivePlayer;
+    public string ActivePlayerId => ActivePlayer.Id;
     public readonly Board Board = new Board();
 
     public GameData(string player1Id, string player2Id)
@@ -29,5 +34,10 @@ public partial class GameData
             Board.Register(card);
             Player2.Deck.AddCard(card);
         }
+    }
+
+    public string Serialize()
+    {
+        return JsonConvert.SerializeObject(this, Formatting.Indented, [new CardZoneConverter(), new CardConverter(), new BoardConverter()]);
     }
 }

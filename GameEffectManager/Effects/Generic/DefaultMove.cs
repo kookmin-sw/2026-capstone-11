@@ -1,6 +1,5 @@
 using SeaEngine.Common;
 using SeaEngine.GameDataManager;
-using SeaEngine.GameDataManager.Components;
 
 namespace SeaEngine.GameEffectManager.Effects;
 
