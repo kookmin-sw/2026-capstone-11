@@ -13,6 +13,7 @@ def build_win_rate_report(summary: Dict[str, object]) -> str:
     p2_wins = int(summary.get("p2_wins", 0))
     draws = int(summary.get("draws", 0))
     avg_steps = float(summary.get("avg_steps", 0.0))
+    avg_final_turn = float(summary.get("avg_final_turn", 0.0))
     p1_name = str(summary.get("p1_agent", "P1"))
     p2_name = str(summary.get("p2_agent", "P2"))
     action_type_counts = dict(summary.get("action_type_counts", {}))
@@ -28,6 +29,7 @@ def build_win_rate_report(summary: Dict[str, object]) -> str:
         f"P2 ({p2_name}) wins: {p2_wins} ({rate(p2_wins):.1f}%)",
         f"Draws: {draws} ({rate(draws):.1f}%)",
         f"Average steps: {avg_steps:.2f}",
+        f"Average final turn: {avg_final_turn:.2f}",
     ]
 
     if action_type_counts:

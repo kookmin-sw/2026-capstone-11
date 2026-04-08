@@ -84,6 +84,7 @@ def _build_match_metadata(
     first_player: Optional[PlayerID],
     mode: str,
     max_steps: Optional[int] = None,
+    max_turns: Optional[int] = None,
 ) -> dict:
     meta = {
         "mode": mode,
@@ -94,7 +95,13 @@ def _build_match_metadata(
     }
     if max_steps is not None:
         meta["max_steps"] = max_steps
+    if max_turns is not None:
+        meta["max_turns"] = max_turns
     return meta
+
+
+def _turn_limit_reached(state: GameState, max_turns: Optional[int]) -> bool:
+    return max_turns is not None and state.turn > max_turns
 
 
 def run_manual_match(
@@ -201,6 +208,7 @@ def run_random_match(
     card_data_path: str = "Cards.csv",
     first_player: Optional[PlayerID] = None,
     max_steps: int = 500,
+    max_turns: Optional[int] = None,
     enable_logging: bool = True,
     log_base_path: Optional[str] = None,
     print_steps: bool = True,
@@ -235,11 +243,12 @@ def run_random_match(
                 first_player=first_player,
                 mode="random",
                 max_steps=max_steps,
+                max_turns=max_turns,
             ),
         )
 
     steps = 0
-    while not runner.is_done() and steps < max_steps:
+    while not runner.is_done() and steps < max_steps and not _turn_limit_reached(runner.state, max_turns):
         legal_actions = runner.get_legal_actions()
 
         if logger is not None:
@@ -276,6 +285,10 @@ def run_random_match(
         if logger is not None:
             logger.log_event("max_steps_reached", max_steps=max_steps)
             logger.log_state_checkpoint(runner.state, note="max_steps_reached")
+    if _turn_limit_reached(runner.state, max_turns) and not runner.is_done():
+        if logger is not None:
+            logger.log_event("max_turns_reached", max_turns=max_turns, turn=runner.state.turn)
+            logger.log_state_checkpoint(runner.state, note="max_turns_reached")
 
     print_state(runner.state, card_db=runner.card_db)
 
@@ -297,6 +310,7 @@ def run_agent_match(
     card_data_path: str = "Cards.csv",
     first_player: Optional[PlayerID] = None,
     max_steps: int = 500,
+    max_turns: Optional[int] = None,
     enable_logging: bool = True,
     log_base_path: Optional[str] = None,
     print_steps: bool = True,
@@ -332,6 +346,7 @@ def run_agent_match(
                     first_player=first_player,
                     mode="agent_vs_agent",
                     max_steps=max_steps,
+                    max_turns=max_turns,
                 ),
                 "p1_agent": p1_agent.name,
                 "p2_agent": p2_agent.name,
@@ -344,7 +359,7 @@ def run_agent_match(
     }
 
     steps = 0
-    while not runner.is_done() and steps < max_steps:
+    while not runner.is_done() and steps < max_steps and not _turn_limit_reached(runner.state, max_turns):
         legal_actions = runner.get_legal_actions()
 
         if logger is not None:
@@ -387,6 +402,10 @@ def run_agent_match(
         if logger is not None:
             logger.log_event("max_steps_reached", max_steps=max_steps)
             logger.log_state_checkpoint(runner.state, note="max_steps_reached")
+    if _turn_limit_reached(runner.state, max_turns) and not runner.is_done():
+        if logger is not None:
+            logger.log_event("max_turns_reached", max_turns=max_turns, turn=runner.state.turn)
+            logger.log_state_checkpoint(runner.state, note="max_turns_reached")
 
     if print_steps:
         print_state(runner.state, card_db=runner.card_db)

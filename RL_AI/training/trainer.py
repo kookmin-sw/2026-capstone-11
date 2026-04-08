@@ -48,6 +48,7 @@ class PPOTrainer:
         seed: Optional[int] = None,
         first_player: Optional[PlayerID] = None,
         max_steps: int = 500,
+        max_turns: Optional[int] = None,
     ) -> Dict[str, object]:
         card_db = load_supported_card_db(card_data_path=card_data_path)
         state = create_initial_game_state(
@@ -63,7 +64,7 @@ class PPOTrainer:
         opponent = RandomAgent(seed=seed) if opponent_agent is None else opponent_agent
 
         steps = 0
-        while not state.is_terminal() and steps < max_steps:
+        while not state.is_terminal() and steps < max_steps and (max_turns is None or state.turn <= max_turns):
             legal_actions = get_legal_actions(state, card_db=card_db)
             if not legal_actions:
                 break
@@ -101,6 +102,7 @@ class PPOTrainer:
             "buffer": buffer,
             "result": state.result,
             "steps": steps,
+            "final_turn": state.turn,
         }
 
     def update_from_buffer(self, buffer: RolloutBuffer) -> Dict[str, float]:
@@ -169,6 +171,7 @@ class PPOTrainer:
         card_data_path: str = "Cards.csv",
         seed: Optional[int] = None,
         max_steps: int = 500,
+        max_turns: Optional[int] = None,
     ) -> Dict[str, object]:
         results = {
             "episodes": 0,
@@ -187,6 +190,7 @@ class PPOTrainer:
                 card_data_path=card_data_path,
                 seed=None if seed is None else seed + episode_id,
                 max_steps=max_steps,
+                max_turns=max_turns,
             )
 
             result = rollout["result"]
@@ -214,6 +218,7 @@ class PPOTrainer:
         card_data_path: str = "Cards.csv",
         seed: Optional[int] = None,
         max_steps: int = 500,
+        max_turns: Optional[int] = None,
         enable_logging: bool = False,
         print_steps: bool = False,
     ) -> Dict[str, object]:
@@ -227,6 +232,7 @@ class PPOTrainer:
             card_data_path=card_data_path,
             seed=seed,
             max_steps=max_steps,
+            max_turns=max_turns,
         )
 
     def evaluate_report(
@@ -239,6 +245,7 @@ class PPOTrainer:
         card_data_path: str = "Cards.csv",
         seed: Optional[int] = None,
         max_steps: int = 500,
+        max_turns: Optional[int] = None,
         enable_logging: bool = False,
         print_steps: bool = False,
     ) -> str:
@@ -250,6 +257,7 @@ class PPOTrainer:
             card_data_path=card_data_path,
             seed=seed,
             max_steps=max_steps,
+            max_turns=max_turns,
             enable_logging=enable_logging,
             print_steps=print_steps,
         )

@@ -31,6 +31,7 @@ def run_train_eval_experiment(
     card_data_path: str = "Cards.csv",
     seed: Optional[int] = None,
     max_steps: int = 200,
+    max_turns: Optional[int] = None,
     report_path: Optional[str] = None,
 ) -> Dict[str, object]:
     learning_agent = RLAgent(seed=seed) if agent is None else agent
@@ -45,6 +46,7 @@ def run_train_eval_experiment(
         card_data_path=card_data_path,
         seed=seed,
         max_steps=max_steps,
+        max_turns=max_turns,
         enable_logging=False,
         print_steps=False,
     )
@@ -57,6 +59,7 @@ def run_train_eval_experiment(
         card_data_path=card_data_path,
         seed=None if seed is None else seed + 10_000,
         max_steps=max_steps,
+        max_turns=max_turns,
     )
 
     after_summary = trainer.evaluate(
@@ -67,6 +70,7 @@ def run_train_eval_experiment(
         card_data_path=card_data_path,
         seed=None if seed is None else seed + 20_000,
         max_steps=max_steps,
+        max_turns=max_turns,
         enable_logging=False,
         print_steps=False,
     )

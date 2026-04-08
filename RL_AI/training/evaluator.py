@@ -5,12 +5,20 @@ from __future__ import annotations
 # 행동 타입 분포, 카드 사용 빈도를 함께 집계한다.
 
 from collections import Counter
+from datetime import datetime
+from pathlib import Path
 from typing import Dict, Optional
 
 from RL_AI.agents.base_agent import BaseAgent
+from RL_AI.analysis.reports import build_win_rate_report, save_report
 from RL_AI.game_engine.engine import apply_action, initialize_main_phase
 from RL_AI.game_engine.rules import get_legal_actions
 from RL_AI.game_engine.state import ActionType, GameResult, PlayerID, create_initial_game_state, load_supported_card_db
+
+
+def _default_evaluation_report_path(prefix: str = "evaluation_report") -> Path:
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return Path(__file__).resolve().parent.parent / "log" / f"{prefix}_{ts}.txt"
 
 
 def play_evaluation_match(
@@ -22,6 +30,7 @@ def play_evaluation_match(
     card_data_path: str = "Cards.csv",
     seed: Optional[int] = None,
     max_steps: int = 500,
+    max_turns: Optional[int] = None,
 ) -> Dict[str, object]:
     card_db = load_supported_card_db(card_data_path=card_data_path)
     state = create_initial_game_state(
@@ -40,7 +49,7 @@ def play_evaluation_match(
     action_type_counts: Counter[str] = Counter()
     card_use_counts: Counter[str] = Counter()
 
-    while not state.is_terminal() and steps < max_steps:
+    while not state.is_terminal() and steps < max_steps and (max_turns is None or state.turn <= max_turns):
         legal_actions = get_legal_actions(state, card_db=card_db)
         if not legal_actions:
             break
@@ -62,6 +71,7 @@ def play_evaluation_match(
     return {
         "state": state,
         "steps": steps,
+        "final_turn": state.turn,
         "action_type_counts": dict(sorted(action_type_counts.items())),
         "card_use_counts": dict(card_use_counts.most_common()),
     }
@@ -77,11 +87,14 @@ def evaluate_agents(
     card_data_path: str = "Cards.csv",
     seed: Optional[int] = None,
     max_steps: int = 500,
+    max_turns: Optional[int] = None,
+    report_path: Optional[str] = None,
 ) -> Dict[str, object]:
     p1_wins = 0
     p2_wins = 0
     draws = 0
     total_steps = 0
+    total_final_turns = 0
     action_type_counts: Counter[str] = Counter()
     card_use_counts: Counter[str] = Counter()
 
@@ -95,9 +108,11 @@ def evaluate_agents(
             card_data_path=card_data_path,
             seed=match_seed,
             max_steps=max_steps,
+            max_turns=max_turns,
         )
         state = match_result["state"]
         total_steps += int(match_result["steps"])
+        total_final_turns += int(match_result["final_turn"])
         action_type_counts.update(match_result["action_type_counts"])
         card_use_counts.update(match_result["card_use_counts"])
         if state.result == GameResult.P1_WIN:
@@ -107,7 +122,7 @@ def evaluate_agents(
         else:
             draws += 1
 
-    return {
+    summary = {
         "episodes": num_matches,
         "p1_agent": p1_agent.name,
         "p2_agent": p2_agent.name,
@@ -115,9 +130,14 @@ def evaluate_agents(
         "p2_wins": p2_wins,
         "draws": draws,
         "avg_steps": 0.0 if num_matches == 0 else total_steps / num_matches,
+        "avg_final_turn": 0.0 if num_matches == 0 else total_final_turns / num_matches,
         "action_type_counts": dict(sorted(action_type_counts.items())),
         "card_use_counts": dict(card_use_counts.most_common()),
     }
+    report_text = build_win_rate_report(summary)
+    saved_path = save_report(report_text, _default_evaluation_report_path() if report_path is None else report_path)
+    summary["report_path"] = str(saved_path)
+    return summary
 
 
 def evaluate_agent_league(
@@ -129,6 +149,7 @@ def evaluate_agent_league(
     card_data_path: str = "Cards.csv",
     seed: Optional[int] = None,
     max_steps: int = 500,
+    max_turns: Optional[int] = None,
 ) -> Dict[str, Dict[str, object]]:
     names = list(agents.keys())
     league_summary: Dict[str, Dict[str, object]] = {}
@@ -146,6 +167,7 @@ def evaluate_agent_league(
                 card_data_path=card_data_path,
                 seed=matchup_seed,
                 max_steps=max_steps,
+                max_turns=max_turns,
             )
 
     return league_summary
