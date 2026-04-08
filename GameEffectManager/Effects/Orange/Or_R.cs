@@ -18,7 +18,7 @@ public class Or_R : IEffect
         if (card.Unit.IsMoved) return [];
         
         return data.GetMoveArea(card)
-            .Where(p => data.Board.IsEmptyCell(p.Item1, p.Item2) && data.Board.GetCardByPos(p.Item1, p.Item2)!.Owner != card.Owner)
+            .Where(p => !data.Board.IsEmptyCell(p.Item1, p.Item2) && data.Board.GetCardByPos(p.Item1, p.Item2)!.Owner != card.Owner)
             .Select(p => EffectTarget.Unit(data.Board.GetCardByPos(p.Item1, p.Item2)!.Guid))
             .ToList();
     }

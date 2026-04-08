@@ -30,6 +30,7 @@ public class Cl_L : IEffect
         zone.RemoveCard(card);
 
         CombatUtils.Heal(data.GetCardById(target.Guid), 3, data);
+        data.DrawCard(owner, 1);
         
         owner.Trash.AddCard(card);
     }

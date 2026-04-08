@@ -27,7 +27,7 @@ public class Or_L : IEffect
         zone.RemoveCard(card);
 
         data.DrawCard(data.GetCardById(source).Owner, 1);
-        CombatUtils.Heal(data.GetCardById(source), 1, data);
+        CombatUtils.Heal(data.GetCardById(target.Guid), 1, data);
         
         owner.Trash.AddCard(card);
     }

@@ -32,7 +32,7 @@ public partial class Game
         }
         
         //03. 활성 플레이어의 패에 없고, 유닛이 소환상태인 카드
-        var effectCards = activeHand.Cards.Where(c => !c.Unit.IsPlaced);
+        var effectCards = activeHand.Cards.Where(c => c.Unit.IsPlaced);
         foreach(var card in effectCards)
         {
             foreach (var target in EffectRegistry.Get(card.Data.EffectId).GetTargets(card.Guid, Data))

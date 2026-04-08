@@ -28,7 +28,7 @@ public class PawnGeneric : IEffect
         zone.RemoveCard(card);
 
         var attacker = data.GetCardById(target.Guid);
-        var defender = data.GetCardById(target.Guid);
+        var defender = data.GetCardById(target.Guid2);
         
         CombatUtils.Attack(attacker, defender, data);
         

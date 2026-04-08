@@ -27,7 +27,7 @@ public class Cl_B : IEffect
         zone.RemoveCard(card);
 
         var enemy = data.GetMoveArea(card)
-            .Where(p => data.Board.IsEmptyCell(p.Item1, p.Item2) && data.Board.GetCardByPos(p.Item1, p.Item2)!.Owner != card.Owner)
+            .Where(p => !data.Board.IsEmptyCell(p.Item1, p.Item2) && data.Board.GetCardByPos(p.Item1, p.Item2)!.Owner != card.Owner)
             .Select(p => data.Board.GetCardByPos(p.Item1, p.Item2))
             .ToList();
         if (enemy.Count >= 3)
