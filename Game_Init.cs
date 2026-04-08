@@ -1,6 +1,7 @@
 using SeaEngine.Common;
 using SeaEngine.GameDataManager;
 using SeaEngine.GameDataManager.Components;
+using Newtonsoft.Json;
 
 namespace SeaEngine;
 
@@ -8,9 +9,8 @@ public partial class Game
 {
     public void Init(string player1Deck, string player2Deck)
     {
-        //TODO : Json Parse하게 만들기.
-        List<string> player1DeckList = ["Or_L", "Or_B", "Or_N", "Or_R", "Or_P", "Or_P", "Or_P"];
-        List<string> player2DeckList = ["Cl_L", "Cl_B", "Cl_N", "Cl_R", "Cl_P", "Cl_P", "Cl_P"];
+        var player1DeckList = ParseDeck(player1Deck, nameof(player1Deck));
+        var player2DeckList = ParseDeck(player2Deck, nameof(player2Deck));
         
         Data.Init(player1DeckList.Select(id => new Card(CardLoader.GetCard(id), Data.Player1)).ToList(),  
             player2DeckList.Select(id => new Card(CardLoader.GetCard(id), Data.Player2)).ToList());
@@ -27,5 +27,26 @@ public partial class Game
         
         //TODO : Active Player 랜덤하게 지정하기.(굳이 해야 할까?)
         UpdateActions();
+    }
+
+    private static List<string> ParseDeck(string deckJson, string paramName)
+    {
+        if (string.IsNullOrWhiteSpace(deckJson))
+        {
+            throw new ArgumentException("Deck JSON cannot be empty.", paramName);
+        }
+
+        var deck = JsonConvert.DeserializeObject<List<string>>(deckJson);
+        if (deck == null || deck.Count == 0)
+        {
+            throw new ArgumentException("Deck JSON must be a non-empty JSON array of card IDs.", paramName);
+        }
+
+        if (deck.Any(string.IsNullOrWhiteSpace))
+        {
+            throw new ArgumentException("Deck JSON cannot contain empty card IDs.", paramName);
+        }
+
+        return deck;
     }
 }

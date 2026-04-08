@@ -7,18 +7,16 @@ public static class CombatUtils
 {
     public static bool Attack(Card attacker, Card defender, GameData data)
     {
-        //TODO : Event 체크
-
         defender.Unit.Hp -= attacker.Unit.Atk;
         if (defender.Unit.Hp > 0) return false;
+        
+        data.TriggerEvent(defender.Data.EventId, "OnDestroy", defender.Guid);
         defender.Unit.Withdraw();
         return true;
     }
 
     public static bool Heal(Card target, int amount, GameData data)
     {
-        //TODO : Event 체크
-        
         target.Unit.Hp += amount;
         if (target.Unit.Hp < target.Unit.MaxHp) return false;
         

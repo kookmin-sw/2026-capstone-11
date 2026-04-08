@@ -19,11 +19,10 @@ public class DefaultMove : IEffect
 
     public void Apply(Uid source, EffectTarget target, GameData data)
     {
-        //유효성 검사는 필요없음. GetTarget가 해줌.
         var cur = data.Board.GetCardById(source);
         cur.Unit.Move(target.PosX, target.PosY);
         cur.Unit.IsMoved = true;
         
-        //TODO : 일반 이동 시 일어나는 이벤트 호출해야 함.
+        data.TriggerEvent(cur.Data.EventId, "AfterMove", source);
     }
 }

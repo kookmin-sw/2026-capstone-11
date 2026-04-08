@@ -5,6 +5,8 @@ namespace SeaEngine.GameDataManager.Components;
 
 public class Board
 {
+    public const int BoardSize = 6;
+    
     public static readonly IReadOnlyList<(int, int)> Player1Zone = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5)];
     public static readonly IReadOnlyList<(int, int)> Player2Zone = [(5, 0), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5)];
     
@@ -34,9 +36,9 @@ public class Board
     public override string ToString()
     {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < BoardSize; i++)
         {
-            for (int j = 0; j < 6; j++)
+            for (int j = 0; j < BoardSize; j++)
             {
                 sb.Append(IsEmptyCell(i, j) ? "-" : UnitTypeIcon.Get(GetCardByPos(i, j)!.Data.UnitType, GetCardByPos(i, j)!.Owner.Id == "Player1"));
             }

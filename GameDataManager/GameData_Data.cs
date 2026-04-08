@@ -1,6 +1,8 @@
 using Newtonsoft.Json;
+using SeaEngine.Common;
 using SeaEngine.GameDataManager.Components;
 using SeaEngine.GameDataManager.Converters;
+using SeaEngine.GameEventManager;
 
 namespace SeaEngine.GameDataManager;
 
@@ -39,5 +41,20 @@ public partial class GameData
     public string Serialize()
     {
         return JsonConvert.SerializeObject(this, Formatting.Indented, [new CardZoneConverter(), new CardConverter(), new BoardConverter()]);
+    }
+
+    public void TriggerEvent(string eventId, string timing, Uid source)
+    {
+        EventRegistry.GetEvent(timing, eventId)?.Apply(source, this);
+    }
+
+    public void TriggerEventToAll(string timing)
+    {
+        foreach (var boardCard in Board.Cards)
+        {
+            if (!boardCard.Unit.IsPlaced) continue;
+            TriggerEvent(boardCard.Data.EventId, timing, boardCard.Guid);
+        }
+        TriggerEvent("Rule", timing, Uid.None);
     }
 }
