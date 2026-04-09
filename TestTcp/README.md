@@ -1,3 +1,12 @@
+## 서버 빌드 전 사항
+
+**Game.Server는 `SeaEngine` 과 의존성을 가집니다.**
+
+SeaEngine.dll은 Game.Network.dll 파일과 동일하게 개발 버전에서의 dll 파일은 깃으로 추적하지 않습니다. 
+SeaEngine Repo를 별도로 build 후, `TestTcp/Game.Server/lib` 폴더 내에 넣은 후, 서버를 빌드 하는 것을 원칙으로 합니다.
+
+위 과정을 수행 후 아래 명령어로 서버를 빌드 및 실행합니다.
+
 ## 서버 실행
 ```
 dotnet run --project ./Game.Server/Game.Server.csproj

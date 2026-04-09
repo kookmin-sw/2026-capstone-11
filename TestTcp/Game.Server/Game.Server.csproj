@@ -12,6 +12,12 @@
   <ProjectReference Include="../Game.Network/Game.Network.csproj" />
 </ItemGroup>
 
+<ItemGroup>
+  <Reference Include="SeaEngine">
+    <HintPath>./lib/SeaEngine.dll</HintPath>
+  </Reference>
+</ItemGroup>
+
 
 
 </Project>

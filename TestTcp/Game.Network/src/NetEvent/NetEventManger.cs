@@ -15,6 +15,22 @@ namespace Game.Network
         private int _maxControlPerTick;
         private int _query_seq;
 
+        public NetEventManger(int maxControlPerTick, int maxDataPerTick)
+        {
+            if (maxControlPerTick < 0 || maxDataPerTick < 0)
+                throw new ArgumentException();
+
+            _handlerDict = new();
+            _controlHandler = new();
+
+            _maxControlPerTick = maxControlPerTick;
+            _maxDataPerTick = maxDataPerTick;
+
+            _queryDict = new();
+            _query_seq = 1;
+        }
+
+
 
         // for CheckTimeOut() cache
         private readonly List<(ConnId, int)> _removeList = new();
@@ -98,20 +114,6 @@ namespace Game.Network
             }
 
         }
-        public NetEventManger(int maxControlPerTick, int maxDataPerTick)
-        {
-            if (maxControlPerTick < 0 || maxDataPerTick < 0)
-                throw new ArgumentException();
-
-            _handlerDict = new();
-            _controlHandler = new();
-
-            _maxControlPerTick = maxControlPerTick;
-            _maxDataPerTick = maxDataPerTick;
-
-            _queryDict = new();
-            _query_seq = 1;
-        }
 
 
 
@@ -176,7 +178,7 @@ namespace Game.Network
             for (int i = 0; i < toDelete.Count; i++)
             {
                 if (_queryDict.Remove(toDelete[i], out var registery))
-                { registery.tcs.TrySetResult(_cancelResult); registery.CallBack?.Invoke(connId, _cancelResult);}
+                { registery.tcs.TrySetResult(_cancelResult); registery.CallBack?.Invoke(connId, _cancelResult); }
             }
         }
         private void ProcessNetInControl(NetInEvent inCon)

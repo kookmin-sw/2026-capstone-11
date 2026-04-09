@@ -18,7 +18,7 @@ namespace Game.Network.Service
         public SessionId sessionId;
         public SessionPlayerId playerId;
         public string msg = "";
-
+        
         public SessionRsp(SessionRspType Type, SessionId SessionId, SessionPlayerId PlayerId, string Msg = "")
         {
             type = Type;

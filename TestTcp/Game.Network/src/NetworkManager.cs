@@ -117,7 +117,7 @@ namespace Game.Network
             => NetEvent.SetReceiveHandler(handler);
 
         public void SetControlHandler(INetEventHandler handler) 
-            => SetControlHandler(handler);
+            => NetEvent.SetControlHandler(handler);
 
         public void SetControlHandler(INetControlEventHandler handler) 
             => NetEvent.SetControlHandler(handler);

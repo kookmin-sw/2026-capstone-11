@@ -5,6 +5,7 @@ using System.Net.Security;
 using System.Threading.Tasks;
 using Game.Network;
 using Game.Network.Protocol;
+using Game.Server.Chess;
 
 
 namespace Game.Server
@@ -18,6 +19,10 @@ namespace Game.Server
 
             var server = NetworkManager.CreateNetworkManager(TransferConfig.ServerPortNum, 10);
             server.Start();
+
+            Session session = new(server);
+            ChessGame game  = new(session);
+
 
             Console.WriteLine("q를 입력해 서버 중단");
 
@@ -52,6 +57,7 @@ namespace Game.Server
                     stopwatch.Restart();
 
                     server.Tick();
+                    game.Tick((int)delta);
 
                     stopwatch.Stop();
 
