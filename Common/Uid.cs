@@ -17,6 +17,11 @@ public class Uid
         _id = $"{prefix}{id:X2}";
     }
 
+    private Uid(string id, bool ignore)
+    {
+        _id = id;
+    }
+
     public static readonly Uid None = new Uid("",0);
 
     public override string ToString()
@@ -32,5 +37,10 @@ public class Uid
     public override int GetHashCode()
     {
         return _id.GetHashCode();
+    }
+
+    public static Uid Parse(string id)
+    {
+        return new Uid(id, true);
     }
 }
