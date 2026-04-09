@@ -33,6 +33,19 @@ public class Unit(Card card)
         IsPlaced = false;
         PosX = -1;
         PosY = -1;
+        Buffs.Clear();
     }
-    //TODO: 버프/디버프 만들기.
+
+    public Dictionary<string, int> Buffs = new Dictionary<string, int>();
+    
+    public void GiveBuff(string buff, int amount = 1)
+    {
+        Buffs.TryAdd(buff, 0);
+        Buffs[buff] += amount;
+    }
+
+    public void RemoveBuff(string buff)
+    {
+        Buffs.Remove(buff);
+    }
 }

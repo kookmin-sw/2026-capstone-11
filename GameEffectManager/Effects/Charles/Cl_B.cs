@@ -1,6 +1,7 @@
 using SeaEngine.Common;
 using SeaEngine.GameDataManager;
 using SeaEngine.GameDataManager.Components;
+using SeaEngine.GameEventManager.Events.Buff;
 using SeaEngine.Logger;
 
 namespace SeaEngine.GameEffectManager.Effects.Charles;
@@ -9,7 +10,7 @@ namespace SeaEngine.GameEffectManager.Effects.Charles;
 // ReSharper disable once InconsistentNaming
 public class Cl_B : IEffect
 {
-    //이동범위 안에 유닛이 3기 이상 존재한다면 공격력 +1을 얻습니다.
+    //이동범위 안에 유닛이 3기 이상 존재한다면 턴 종료시까지 공격력 +1을 얻습니다.
     //이동범위 내 적을 모두 공격합니다.
     public string Id => "Cl_B"; 
 
@@ -32,7 +33,8 @@ public class Cl_B : IEffect
             .ToList();
         if (enemy.Count >= 3)
         {
-            //TODO : 버프 구현
+            card.Unit.Atk += 1;
+            card.Unit.GiveBuff("TempAtk");
         }
         foreach (var e in enemy)
         {

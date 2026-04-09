@@ -57,4 +57,16 @@ public partial class GameData
         }
         TriggerEvent("Rule", timing, Uid.None);
     }
+
+    public void TriggerBuffEventToAll(string timing)
+    {
+        foreach (var boardCard in Board.Cards)
+        {
+            if(!boardCard.Unit.IsPlaced) continue;
+            foreach (var buff in boardCard.Unit.Buffs)
+            {
+                TriggerEvent(buff.Key, timing, boardCard.Guid);
+            }
+        }
+    }
 }

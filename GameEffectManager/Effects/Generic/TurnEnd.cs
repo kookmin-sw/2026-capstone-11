@@ -16,9 +16,11 @@ public class TurnEnd : IEffect
     public void Apply(Uid source, EffectTarget target, GameData data)
     {
         data.TriggerEventToAll("TurnEnd");
+        data.TriggerBuffEventToAll("TurnEnd");
         
         data.ActivePlayer = data.Player1 == data.ActivePlayer ? data.Player2 : data.Player1;
         
         data.TriggerEventToAll("TurnStart");
+        data.TriggerBuffEventToAll("TurnStart");
     }
 }

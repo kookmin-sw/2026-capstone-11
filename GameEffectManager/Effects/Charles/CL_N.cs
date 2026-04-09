@@ -25,12 +25,15 @@ public class Cl_N : IEffect
     {
         var zone = data.GetCardZoneById(source);
         var card = data.GetCardById(source);
+        var defender = data.GetCardById(target.Guid);
         var owner = card.Owner;
         
         zone.RemoveCard(card);
 
-        CombatUtils.Attack(card, data.GetCardById(target.Guid), data);
-        //TODO : 공격력 -3 구현
+        CombatUtils.Attack(card, defender, data);
+
+        defender.Unit.Atk -= 3;
+        defender.Unit.GiveBuff("TempAtk", -3);
         
         owner.Trash.AddCard(card);
     }

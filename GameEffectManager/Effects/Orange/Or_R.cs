@@ -31,7 +31,8 @@ public class Or_R : IEffect
         
         zone.RemoveCard(card);
 
-        //TODO: 미구현, 버프 구현 이후에 구현
+        card.Unit.IsMoved = true;
+        data.GetCardById(target.Guid).Unit.GiveBuff("CantMove", 1);
         
         owner.Trash.AddCard(card);
     }
