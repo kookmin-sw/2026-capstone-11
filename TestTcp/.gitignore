@@ -3,6 +3,10 @@
 ##
 ## Get latest from `dotnet new gitignore`
 
+# project dll SeaEngine
+./Game.Server/lib/
+
+
 # dotenv files
 .env
 
