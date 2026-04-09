@@ -4,7 +4,7 @@
 ## Get latest from `dotnet new gitignore`
 
 # project dll SeaEngine
-./Game.Server/lib/
+Game.Server/lib/SeaEngine.dll
 
 
 # dotenv files
