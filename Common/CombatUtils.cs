@@ -7,11 +7,16 @@ public static class CombatUtils
 {
     public static bool Attack(Card attacker, Card defender, GameData data)
     {
-        defender.Unit.Hp -= attacker.Unit.Atk;
-        if (defender.Unit.Hp > 0) return false;
+        return Damage(attacker, attacker.Unit.Atk, data);
+    }
+
+    public static bool Damage(Card target, int amount, GameData data)
+    {
+        target.Unit.Hp -= amount;
+        if (target.Unit.Hp > 0) return false;
         
-        data.TriggerEvent(defender.Data.EventId, "OnDestroy", defender.Guid);
-        defender.Unit.Withdraw();
+        data.TriggerEvent(target.Data.EventId, "OnDestroy", target.Guid);
+        target.Unit.Withdraw();
         return true;
     }
 

@@ -15,7 +15,7 @@ public class CardLoader
         _cards.Add("Or_L", new CardData("Or_L", "귤 공주님", "Or_L", UnitType.Leader, 3, 9));
         _cards.Add("Or_B", new CardData("Or_B", "귤 직장인?", "Or_L", UnitType.Bishop, 1, 4));
         _cards.Add("Or_N", new CardData("Or_N", "망상의 기사님", "Or_L", UnitType.Knight, 2, 3));
-        _cards.Add("Or_R", new CardData("Or_R", "귤 나무", "Or_L", UnitType.Rook, 1, 3));
+        _cards.Add("Or_R", new CardData("Or_R", "귤 나무", "Or_L", UnitType.Rook, 1, 2));
         _cards.Add("Or_P", new CardData("Or_P", "귤 요정", "Or_L", UnitType.Pawn, 1, 1, EffectId: "PawnGeneric"));
         
         _cards.Add("Cl_L", new CardData("Cl_L", "샤를로테", "Cl_L", UnitType.Leader, 3, 9));

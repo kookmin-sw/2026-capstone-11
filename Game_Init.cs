@@ -1,5 +1,4 @@
 using SeaEngine.Common;
-using SeaEngine.GameDataManager;
 using SeaEngine.GameDataManager.Components;
 using Newtonsoft.Json;
 
@@ -9,8 +8,8 @@ public partial class Game
 {
     public void Init(string player1Deck, string player2Deck)
     {
-        var player1DeckList = ParseDeck(player1Deck, nameof(player1Deck));
-        var player2DeckList = ParseDeck(player2Deck, nameof(player2Deck));
+        var player1DeckList = ParseDeck(player1Deck);
+        var player2DeckList = ParseDeck(player2Deck);
         
         Data.Init(player1DeckList.Select(id => new Card(CardLoader.GetCard(id), Data.Player1)).ToList(),  
             player2DeckList.Select(id => new Card(CardLoader.GetCard(id), Data.Player2)).ToList());
@@ -24,30 +23,28 @@ public partial class Game
         Data.DrawCard(Data.Player1, 3);  
         Data.DrawCard(Data.Player2, 3);  
         
-        //TODO : Active Player 랜덤하게 지정하기.(굳이 해야 할까?)
-        
         Data.TriggerEventToAll("TurnStart");
         Data.TriggerBuffEventToAll("TurnStart");
         
         UpdateActions();
     }
 
-    private static List<string> ParseDeck(string deckJson, string paramName)
+    private static List<string> ParseDeck(string deckJson)
     {
         if (string.IsNullOrWhiteSpace(deckJson))
         {
-            throw new ArgumentException("Deck JSON cannot be empty.", paramName);
+            throw new ArgumentException("Deck JSON cannot be empty.");
         }
 
         var deck = JsonConvert.DeserializeObject<List<string>>(deckJson);
         if (deck == null || deck.Count == 0)
         {
-            throw new ArgumentException("Deck JSON must be a non-empty JSON array of card IDs.", paramName);
+            throw new ArgumentException("Deck JSON must be a non-empty JSON array of card IDs.");
         }
 
         if (deck.Any(string.IsNullOrWhiteSpace))
         {
-            throw new ArgumentException("Deck JSON cannot contain empty card IDs.", paramName);
+            throw new ArgumentException("Deck JSON cannot contain empty card IDs.");
         }
 
         return deck;
