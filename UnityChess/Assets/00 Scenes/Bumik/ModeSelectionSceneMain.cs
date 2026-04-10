@@ -33,11 +33,12 @@ public class ModeSelectionSceneMain : MonoBehaviour
 
         if (!PlayFabAccountManager.Instance.IsLoggedIn)
         {
-            Debug.Log("Need Playfab LogIn First");
-            return;
+            Debug.Log("No Playfab LogIn.");
+            string pcID = SystemInfo.deviceUniqueIdentifier;
+            gameInitializer.Data.PlayerName = "Jimmy, The Mind of PlaceHolder" + pcID;
         }
+        else gameInitializer.Data.PlayerName = PlayFabAccountManager.Instance.InGameDisplayName;
 
-        gameInitializer.Data.PlayerName = PlayFabAccountManager.Instance.InGameDisplayName;
         gameInitializer.Data.IpAddr = ipAddr.ToString();
         gameInitializer.Data.PortNum = portNum;
         
