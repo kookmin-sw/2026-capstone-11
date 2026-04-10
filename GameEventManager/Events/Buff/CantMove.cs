@@ -15,7 +15,7 @@ public class CantMove : IEvent
         var unit = data.GetCardById(source).Unit;
         unit.IsMoved = true;
         unit.GiveBuff("CantMove", -1);
-        if (unit.Buffs["CantMove"] == 0)
+        if (unit.Buffs["CantMove"] <= 0)
         {
             unit.RemoveBuff("CantMove");
         }

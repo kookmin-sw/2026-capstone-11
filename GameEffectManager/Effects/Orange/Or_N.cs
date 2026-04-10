@@ -1,8 +1,7 @@
 using SeaEngine.Common;
 using SeaEngine.GameDataManager;
-using SeaEngine.GameDataManager.Components;
 
-namespace SeaEngine.GameEffectManager.Effects.Charles;
+namespace SeaEngine.GameEffectManager.Effects.Orange;
 
 [Effect]
 // ReSharper disable once InconsistentNaming

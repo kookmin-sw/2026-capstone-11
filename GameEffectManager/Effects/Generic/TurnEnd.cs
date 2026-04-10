@@ -1,7 +1,7 @@
 using SeaEngine.Common;
 using SeaEngine.GameDataManager;
 
-namespace SeaEngine.GameEffectManager.Effects;
+namespace SeaEngine.GameEffectManager.Effects.Generic;
 
 [Effect]
 public class TurnEnd : IEffect

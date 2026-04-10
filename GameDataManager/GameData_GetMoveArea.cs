@@ -27,8 +27,7 @@ public partial class GameData
                 .Select( v => (v.Item1 + x, v.Item2 + y))
                 .Where(v =>  
                     v.Item1 is >= 0 and < Board.BoardSize && 
-                    v.Item2 is >= 0 and < Board.BoardSize && 
-                    Board.IsEmptyCell(v.Item1, v.Item2))
+                    v.Item2 is >= 0 and < Board.BoardSize)
                 ).ToList();
         }
 
@@ -38,8 +37,7 @@ public partial class GameData
                 .Select( v => (v.Item1 + x, v.Item2 + y))
                 .Where(v =>  
                     v.Item1 is >= 0 and < Board.BoardSize && 
-                    v.Item2 is >= 0 and < Board.BoardSize && 
-                    Board.IsEmptyCell(v.Item1, v.Item2))
+                    v.Item2 is >= 0 and < Board.BoardSize)
             ).ToList();
         }
 

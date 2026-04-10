@@ -1,5 +1,6 @@
 using System.Reflection;
 using SeaEngine.GameEffectManager.Effects;
+using SeaEngine.GameEffectManager.Effects.Generic;
 
 namespace SeaEngine.GameEffectManager;
 
@@ -37,6 +38,6 @@ public class EffectRegistry
         {
             return effect;
         }
-        else return new Blank();
+        else return new ER_L();
     }
 }

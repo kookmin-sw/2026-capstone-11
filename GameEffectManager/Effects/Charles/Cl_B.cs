@@ -34,7 +34,7 @@ public class Cl_B : IEffect
         if (enemy.Count >= 3)
         {
             card.Unit.Atk += 1;
-            card.Unit.GiveBuff("TempAtk");
+            card.Unit.GiveBuff("TempAtk", 1);
         }
         foreach (var e in enemy)
         {

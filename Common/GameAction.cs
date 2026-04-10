@@ -1,7 +1,6 @@
-using SeaEngine.Common;
 using SeaEngine.GameEffectManager;
 
-namespace SeaEngine.Actions;
+namespace SeaEngine.Common;
 
 public record GameAction(string EffectId, Uid Source, EffectTarget Target)
 {

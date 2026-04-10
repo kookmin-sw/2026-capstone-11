@@ -1,4 +1,3 @@
-using SeaEngine.Actions;
 using SeaEngine.Common;
 using SeaEngine.GameEffectManager;
 
@@ -31,7 +30,7 @@ public partial class Game
             }
         }
         
-        //03. 활성 플레이어의 패에 없고, 유닛이 소환상태인 카드
+        //03. 활성 플레이어의 패에 있고, 유닛이 소환상태인 카드
         var effectCards = activeHand.Cards.Where(c => c.Unit.IsPlaced);
         foreach(var card in effectCards)
         {
@@ -47,8 +46,7 @@ public partial class Game
 
     public void UseAction(Uid actionId)
     {
-        if(_actions.All(a => a.Guid != actionId)) throw new KeyNotFoundException($"No action with the guid : {actionId}");
-        var selectedAction = _actions.First(a => a.Guid == actionId);
+        var selectedAction = _actions.FirstOrDefault(a => a.Guid == actionId) ?? throw new KeyNotFoundException($"No action with the guid : {actionId}");
         Logger.Log("UseAction", selectedAction, Data);
         EffectRegistry.Get(selectedAction.EffectId).Apply(selectedAction.Source, selectedAction.Target, Data);
         

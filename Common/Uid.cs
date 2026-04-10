@@ -1,6 +1,6 @@
 namespace SeaEngine.Common;
 
-public class Uid
+public record Uid
 {
     private static readonly Dictionary<string, int> _cur = new Dictionary<string, int>();
     
@@ -14,7 +14,7 @@ public class Uid
 
     private Uid(string prefix, int id)
     {
-        _id = $"{prefix}{id:X2}";
+        _id = $"{prefix}{id:X3}";
     }
 
     private Uid(string id, bool ignore)
@@ -27,16 +27,6 @@ public class Uid
     public override string ToString()
     {
         return _id;
-    }
-
-    public bool Equals(Uid other)
-    {
-        return _id == other._id;
-    }
-
-    public override int GetHashCode()
-    {
-        return _id.GetHashCode();
     }
 
     public static Uid Parse(string id)

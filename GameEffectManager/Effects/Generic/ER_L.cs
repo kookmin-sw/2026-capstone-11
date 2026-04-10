@@ -1,9 +1,10 @@
 using SeaEngine.Common;
 using SeaEngine.GameDataManager;
 
-namespace SeaEngine.GameEffectManager.Effects;
+namespace SeaEngine.GameEffectManager.Effects.Generic;
 
-public class Blank : IEffect
+[Effect]
+public class ER_L : IEffect
 {
     public string Id => "Er_L";
 

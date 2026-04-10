@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using SeaEngine.Actions;
 using SeaEngine.CardManager;
 using SeaEngine.Common;
 using SeaEngine.GameDataManager;
@@ -24,7 +23,7 @@ public partial class Game(CardLoader cardLoader, ILogger logger, string player1I
 {Data}
 
 Actions:
-{string.Join("\n", _actions)}
+{string.Join("\n", Actions)}
 ";
     }
 

@@ -23,9 +23,10 @@ public class Board
         return !_cards.Any(c => c.Unit.PosX == x && c.Unit.PosY == y);
     }
 
-    public Card? GetCardByPos(int x, int y)
+    public Card GetCardByPos(int x, int y)
     {
-        return _cards.Find(c => c.Unit.PosX == x && c.Unit.PosY == y);
+        int index = _cards.FindIndex(c => c.Unit.PosX == x && c.Unit.PosY == y);
+        return index == -1 ? throw new InvalidOperationException("Cannot find card by pos(maybe cell is empty)") : _cards[index];
     }
 
     public Card GetCardById(Uid guid)
