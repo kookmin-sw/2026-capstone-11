@@ -25,7 +25,7 @@ public class ClientSession : INetEventHandler
         NetworkManagerUnity.Instance.Net.SetReceiveHandler(this);
     }
 
-    public void SetName(string name) {if (String.IsNullOrEmpty(name)) _name = name;}
+    public void SetName(string name) {if (!String.IsNullOrEmpty(name)) _name = name;}
 
     public void StartSession(string ipAddr, int portNum)
     {
