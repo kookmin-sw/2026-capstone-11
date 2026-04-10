@@ -5,11 +5,6 @@ public partial class GameData
     public override string ToString()
     {
         return $@"
-Turn: {Turn}
-ActivePlayer: {ActivePlayerId}
-Result: {Result}
-Winner: {WinnerId ?? "-"}
-
 {Board}
 {Board.ToString2()}
 

@@ -1,7 +1,7 @@
 using SeaEngine.Common;
 using SeaEngine.GameDataManager;
 
-namespace SeaEngine.GameEffectManager.Effects;
+namespace SeaEngine.GameEffectManager.Effects.Generic;
 
 [Effect]
 public class DefaultMove : IEffect
@@ -19,10 +19,10 @@ public class DefaultMove : IEffect
 
     public void Apply(Uid source, EffectTarget target, GameData data)
     {
-        //유효성 검사는 필요없음. GetTarget가 해줌.
         var cur = data.Board.GetCardById(source);
         cur.Unit.Move(target.PosX, target.PosY);
         cur.Unit.IsMoved = true;
-        data.ApplyBasicMoveEvent(cur);
+        
+        data.TriggerEvent(cur.Data.EventId, "AfterMove", source);
     }
 }

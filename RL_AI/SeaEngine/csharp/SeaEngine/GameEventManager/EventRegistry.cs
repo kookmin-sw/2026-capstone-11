@@ -29,11 +29,20 @@ public class EventRegistry
         }
     }
 
-    public static IEvent? GetEvent(string timing,string id)
+    public static IEvent? GetEvent(string timing, string id)
     {
         if (_instance == null) Init();
         if (_instance == null) return null;
-        if (!_instance._registry.TryGetValue(timing, out var timedEvents)) return null;
-        return timedEvents.GetValueOrDefault(id);
+        if (!_instance._registry.TryGetValue(timing, out var events))
+            return null;
+        return events.TryGetValue(id, out var evt) == true ? evt : null;
+    }
+
+    public static IEnumerable<IEvent> GetEventsByTiming(string timing)
+    {
+        if (_instance == null) Init();
+        if (_instance?._registry.TryGetValue(timing, out var events) == true)
+            return events.Values;
+        return [];
     }
 }

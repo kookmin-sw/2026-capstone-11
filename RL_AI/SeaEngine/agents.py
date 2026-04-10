@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from dataclasses import dataclass
 import random
 from typing import Any, Dict, List, Optional, Sequence, Tuple
@@ -154,7 +155,7 @@ class SeaEngineRLAgent(SeaEngineAgent):
     def __init__(
         self,
         *,
-        hidden_dim: int = 192,
+        hidden_dim: int = 256,
         learning_rate: float = 3e-4,
         sample_actions: bool = True,
         device: str = "cpu",
@@ -170,6 +171,15 @@ class SeaEngineRLAgent(SeaEngineAgent):
         self.model: Optional[PPOActorCritic] = None
         self.optimizer: Optional[torch.optim.Optimizer] = None
         self.last_output: Optional[SeaEngineRLAgentOutput] = None
+
+    @contextmanager
+    def sampling_mode(self, enabled: bool):
+        previous = self.sample_actions
+        self.sample_actions = enabled
+        try:
+            yield
+        finally:
+            self.sample_actions = previous
 
     def ensure_model(self, state_dim: int) -> None:
         if self.model is not None:

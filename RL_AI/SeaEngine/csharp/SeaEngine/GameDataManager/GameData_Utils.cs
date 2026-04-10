@@ -1,6 +1,5 @@
 using SeaEngine.Common;
 using SeaEngine.GameDataManager.Components;
-using SeaEngine.GameEventManager;
 
 namespace SeaEngine.GameDataManager;
 
@@ -68,84 +67,5 @@ public partial class GameData
         var targetCard = Board.GetCardById(cardId);
         targetZone.RemoveCard(targetCard);
         targetCard.Owner.Trash.AddCard(targetCard);
-    }
-
-    public Card? GetLeader(Player player)
-    {
-        return Board.Cards.FirstOrDefault(c => c.Owner == player && c.Data.UnitType == UnitType.Leader);
-    }
-
-    public void UpdateResult()
-    {
-        var p1LeaderDead = !(GetLeader(Player1)?.Unit.IsPlaced ?? false);
-        var p2LeaderDead = !(GetLeader(Player2)?.Unit.IsPlaced ?? false);
-
-        if (p1LeaderDead && p2LeaderDead)
-        {
-            Result = GameResult.Draw;
-            WinnerId = null;
-        }
-        else if (p1LeaderDead)
-        {
-            Result = GameResult.Player2Win;
-            WinnerId = Player2.Id;
-        }
-        else if (p2LeaderDead)
-        {
-            Result = GameResult.Player1Win;
-            WinnerId = Player1.Id;
-        }
-        else
-        {
-            Result = GameResult.Ongoing;
-            WinnerId = null;
-        }
-    }
-
-    public void ResetMovementForTurn(Player player)
-    {
-        foreach (var card in Board.Cards.Where(c => c.Owner == player && c.Unit.IsPlaced))
-        {
-            card.Unit.ResetForNewTurn();
-        }
-    }
-
-    public void TickStatuses()
-    {
-        foreach (var card in Board.Cards.Where(c => c.Unit.IsPlaced))
-        {
-            card.Unit.TickStatuses();
-        }
-    }
-
-    public void DiscardDownTo(Player player, int handLimit)
-    {
-        while (player.Hand.Count > handLimit)
-        {
-            var card = player.Hand.Cards.Last();
-            player.Hand.RemoveCard(card);
-            player.Trash.AddCard(card);
-        }
-    }
-
-    public void ApplyTimedEvents(string timing)
-    {
-        foreach (var card in Board.Cards.Where(c => c.Unit.IsPlaced))
-        {
-            var evt = EventRegistry.GetEvent(timing, card.Data.EventId);
-            evt?.Apply(card.Guid, this);
-        }
-    }
-
-    public void ApplyDestroyedEvent(Card destroyedCard)
-    {
-        var evt = EventRegistry.GetEvent("OnDestroyed", destroyedCard.Data.EventId);
-        evt?.Apply(destroyedCard.Guid, this);
-    }
-
-    public void ApplyBasicMoveEvent(Card movedCard)
-    {
-        var evt = EventRegistry.GetEvent("OnBasicMove", movedCard.Data.EventId);
-        evt?.Apply(movedCard.Guid, this);
     }
 }

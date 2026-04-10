@@ -1,7 +1,10 @@
 namespace SeaEngine.Common;
 
-public class Uid
+public record Uid
 {
+    
+    //TODO : prefix에 따른 Uid의 Factory를 생성하도록 재작성하기.
+    
     private static readonly Dictionary<string, int> _cur = new Dictionary<string, int>();
     
     private readonly string _id;
@@ -14,7 +17,12 @@ public class Uid
 
     private Uid(string prefix, int id)
     {
-        _id = $"{prefix}{id:X2}";
+        _id = $"{prefix}{id:X3}";
+    }
+
+    private Uid(string id, bool ignore)
+    {
+        _id = id;
     }
 
     public static readonly Uid None = new Uid("",0);
@@ -24,30 +32,8 @@ public class Uid
         return _id;
     }
 
-    public bool Equals(Uid other)
+    public static Uid Parse(string id)
     {
-        return _id == other._id;
-    }
-
-    public override bool Equals(object? obj)
-    {
-        return obj is Uid other && Equals(other);
-    }
-
-    public override int GetHashCode()
-    {
-        return _id.GetHashCode();
-    }
-
-    public static bool operator ==(Uid? left, Uid? right)
-    {
-        if (ReferenceEquals(left, right)) return true;
-        if (left is null || right is null) return false;
-        return left.Equals(right);
-    }
-
-    public static bool operator !=(Uid? left, Uid? right)
-    {
-        return !(left == right);
+        return new Uid(id, true);
     }
 }

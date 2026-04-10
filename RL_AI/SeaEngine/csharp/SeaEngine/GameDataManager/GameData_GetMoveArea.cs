@@ -14,7 +14,6 @@ public partial class GameData
     
     public List<(int, int)> GetMoveArea(Card card)
     {
-        //TODO: 맵사이즈 매직넘버임 척결해야함.
         
         var moveArea = new List<(int, int)>();
         if(!card.Unit.IsPlaced) return moveArea;
@@ -27,9 +26,8 @@ public partial class GameData
             moveArea = moveArea.Concat(_kingStyle
                 .Select( v => (v.Item1 + x, v.Item2 + y))
                 .Where(v =>  
-                    v.Item1 is >= 0 and < 6 && 
-                    v.Item2 is >= 0 and < 6 && 
-                    Board.IsEmptyCell(v.Item1, v.Item2))
+                    v.Item1 is >= 0 and < Board.BoardSize && 
+                    v.Item2 is >= 0 and < Board.BoardSize)
                 ).ToList();
         }
 
@@ -38,9 +36,8 @@ public partial class GameData
             moveArea = moveArea.Concat(_knightStyle
                 .Select( v => (v.Item1 + x, v.Item2 + y))
                 .Where(v =>  
-                    v.Item1 is >= 0 and < 6 && 
-                    v.Item2 is >= 0 and < 6 && 
-                    Board.IsEmptyCell(v.Item1, v.Item2))
+                    v.Item1 is >= 0 and < Board.BoardSize && 
+                    v.Item2 is >= 0 and < Board.BoardSize)
             ).ToList();
         }
 
@@ -60,7 +57,7 @@ public partial class GameData
                     cx += dx;
                     cy += dy;
 
-                    if (!(cx is >= 0 and < 6 && cy is >= 0 and < 6)) break;
+                    if (!(cx is >= 0 and < Board.BoardSize && cy is >= 0 and < Board.BoardSize)) break;
                     moveArea.Add((cx, cy));
                     if(!Board.IsEmptyCell(cx, cy)) break;
                 }
@@ -76,7 +73,7 @@ public partial class GameData
                     cx += dx;
                     cy += dy;
 
-                    if (!(cx is >= 0 and < 6 && cy is >= 0 and < 6)) break;
+                    if (!(cx is >= 0 and < Board.BoardSize && cy is >= 0 and < Board.BoardSize)) break;
                     moveArea.Add((cx, cy));
                     if(!Board.IsEmptyCell(cx, cy)) break;
                 }

@@ -1,8 +1,7 @@
 using SeaEngine.Common;
 using SeaEngine.GameDataManager;
-using SeaEngine.GameDataManager.Components;
 
-namespace SeaEngine.GameEffectManager.Effects.Charles;
+namespace SeaEngine.GameEffectManager.Effects.Orange;
 
 [Effect]
 // ReSharper disable once InconsistentNaming
@@ -31,8 +30,8 @@ public class Or_R : IEffect
         
         zone.RemoveCard(card);
 
-        card.Unit.AddOrRefreshStatus(UnitStatusType.MoveLock, 1, 2, $"effect:{Id}:self");
-        data.GetCardById(target.Guid).Unit.AddOrRefreshStatus(UnitStatusType.MoveLock, 1, 2, $"effect:{Id}:target");
+        card.Unit.IsMoved = true;
+        data.GetCardById(target.Guid).Unit.GiveBuff("CantMove", 1);
         
         owner.Trash.AddCard(card);
     }

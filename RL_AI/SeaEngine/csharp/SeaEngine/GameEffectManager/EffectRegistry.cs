@@ -1,4 +1,6 @@
 using System.Reflection;
+using SeaEngine.GameEffectManager.Effects;
+using SeaEngine.GameEffectManager.Effects.Generic;
 
 namespace SeaEngine.GameEffectManager;
 
@@ -36,6 +38,7 @@ public class EffectRegistry
         {
             return effect;
         }
-        else throw new KeyNotFoundException($"No effect with the id {id}");
+        //return new ER_L();
+        throw new KeyNotFoundException($"Effect with id {id} not found");
     }
 }

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Optional, Sequence
+from typing import Callable, Dict, Optional, Sequence
 
 import torch
 
@@ -70,13 +70,16 @@ class SeaEnginePPOTrainer:
         *,
         episode_id: int = 0,
         opponent_agent: Optional[SeaEngineAgent] = None,
+        session: Optional[SeaEngineSession] = None,
         card_data_path: Optional[str] = None,
         player1_deck: str = "",
         player2_deck: str = "",
         max_turns: int = 100,
     ) -> Dict[str, object]:
-        session = SeaEngineSession(card_data_path=card_data_path)
-        session.start()
+        owns_session = session is None
+        if session is None:
+            session = SeaEngineSession(card_data_path=card_data_path)
+            session.start()
         try:
             snapshot = session.init_game(player1_deck=player1_deck, player2_deck=player2_deck)
             buffer = RolloutBuffer()
@@ -122,7 +125,8 @@ class SeaEnginePPOTrainer:
                 "final_turn": snapshot["turn"],
             }
         finally:
-            session.close()
+            if owns_session:
+                session.close()
 
     def update_from_buffer(self, buffer: RolloutBuffer) -> Dict[str, float]:
         if len(buffer) == 0:
@@ -183,6 +187,7 @@ class SeaEnginePPOTrainer:
         player2_deck: str = "",
         max_turns: int = 100,
         update_interval: int = 8,
+        progress_callback: Optional[Callable[[int, int, str, Dict[str, object]], None]] = None,
     ) -> Dict[str, object]:
         results = {
             "episodes": 0,
@@ -195,41 +200,74 @@ class SeaEnginePPOTrainer:
             "opponents": [],
         }
         pending_buffer = RolloutBuffer()
+        session = SeaEngineSession(card_data_path=card_data_path)
+        session.start()
+        try:
+            for episode_id in range(num_episodes):
+                selected_opponent = self._resolve_opponent_for_episode(
+                    episode_id,
+                    opponent_agent=opponent_agent,
+                    opponent_pool=opponent_pool,
+                )
+                rollout = self.collect_episode(
+                    episode_id=episode_id,
+                    opponent_agent=selected_opponent,
+                    session=session,
+                    card_data_path=card_data_path,
+                    player1_deck=player1_deck,
+                    player2_deck=player2_deck,
+                    max_turns=max_turns,
+                )
+                result = str(rollout["result"])
+                self._extend_buffer(pending_buffer, rollout["buffer"])
 
-        for episode_id in range(num_episodes):
-            selected_opponent = self._resolve_opponent_for_episode(
-                episode_id,
-                opponent_agent=opponent_agent,
-                opponent_pool=opponent_pool,
-            )
-            rollout = self.collect_episode(
-                episode_id=episode_id,
-                opponent_agent=selected_opponent,
-                card_data_path=card_data_path,
-                player1_deck=player1_deck,
-                player2_deck=player2_deck,
-                max_turns=max_turns,
-            )
-            result = str(rollout["result"])
-            self._extend_buffer(pending_buffer, rollout["buffer"])
+                results["episodes"] += 1
+                if selected_opponent.name not in results["opponents"]:
+                    results["opponents"].append(selected_opponent.name)
+                if result == "Player1Win":
+                    results["wins"] += 1
+                elif result == "Player2Win":
+                    results["losses"] += 1
+                else:
+                    results["draws"] += 1
 
-            results["episodes"] += 1
-            if selected_opponent.name not in results["opponents"]:
-                results["opponents"].append(selected_opponent.name)
-            if result == "Player1Win":
-                results["wins"] += 1
-            elif result == "Player2Win":
-                results["losses"] += 1
-            else:
-                results["draws"] += 1
+                if progress_callback is not None:
+                    progress_callback(
+                        results["episodes"],
+                        num_episodes,
+                        selected_opponent.name,
+                        {
+                            "result": result,
+                            "wins": results["wins"],
+                            "losses": results["losses"],
+                            "draws": results["draws"],
+                            "updates": results["updates"],
+                        },
+                    )
 
-            should_update = len(pending_buffer) > 0 and (
-                results["episodes"] % max(1, update_interval) == 0 or episode_id == num_episodes - 1
-            )
-            if should_update:
-                results["last_update"] = self.update_from_buffer(pending_buffer)
-                results["updates"] += 1
-                pending_buffer.clear()
+                should_update = len(pending_buffer) > 0 and (
+                    results["episodes"] % max(1, update_interval) == 0 or episode_id == num_episodes - 1
+                )
+                if should_update:
+                    results["last_update"] = self.update_from_buffer(pending_buffer)
+                    results["updates"] += 1
+                    pending_buffer.clear()
+                    if progress_callback is not None:
+                        progress_callback(
+                            results["episodes"],
+                            num_episodes,
+                            selected_opponent.name,
+                            {
+                                "result": result,
+                                "wins": results["wins"],
+                                "losses": results["losses"],
+                                "draws": results["draws"],
+                                "updates": results["updates"],
+                                "last_update": results["last_update"],
+                            },
+                        )
+        finally:
+            session.close()
 
         return results
 
@@ -248,6 +286,7 @@ class SeaEnginePPOTrainer:
         player1_deck: str = "",
         player2_deck: str = "",
         max_turns: int = 100,
+        progress_callback: Optional[Callable[[int, int, str, str], None]] = None,
     ) -> Dict[str, object]:
         opponent = SeaEngineRandomAgent() if opponent_agent is None else opponent_agent
         return evaluate_agents(
@@ -258,6 +297,7 @@ class SeaEnginePPOTrainer:
             player1_deck=player1_deck,
             player2_deck=player2_deck,
             max_turns=max_turns,
+            progress_callback=progress_callback,
         )
 
     def evaluate_report(

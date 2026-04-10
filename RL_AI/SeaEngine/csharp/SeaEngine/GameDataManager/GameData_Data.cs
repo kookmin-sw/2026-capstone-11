@@ -2,6 +2,7 @@ using Newtonsoft.Json;
 using SeaEngine.Common;
 using SeaEngine.GameDataManager.Components;
 using SeaEngine.GameDataManager.Converters;
+using SeaEngine.GameEventManager;
 
 namespace SeaEngine.GameDataManager;
 
@@ -9,22 +10,21 @@ public partial class GameData
 {
     public readonly Player Player1;
     public readonly Player Player2;
+    [JsonIgnore]
+    public Player? Winner;
+    public string WinnerId => Winner?.Id ?? "";
     
     [JsonIgnore]
     public Player ActivePlayer;
     public string ActivePlayerId => ActivePlayer.Id;
     public readonly Board Board = new Board();
-    public int Turn = 1;
-    public GameResult Result = GameResult.Ongoing;
-    public string? WinnerId = null;
-    [JsonIgnore]
-    public bool IsTerminal => Result != GameResult.Ongoing;
 
     public GameData(string player1Id, string player2Id)
     {
         Player1 = new Player(player1Id);
         Player2 = new Player(player2Id);
         ActivePlayer = Player1;
+        Winner = null;
     }
 
     public void Init(List<Card> player1Cards, List<Card> player2Cards)
@@ -45,5 +45,32 @@ public partial class GameData
     public string Serialize()
     {
         return JsonConvert.SerializeObject(this, Formatting.Indented, [new CardZoneConverter(), new CardConverter(), new BoardConverter()]);
+    }
+
+    public void TriggerEvent(string eventId, string timing, Uid source)
+    {
+        EventRegistry.GetEvent(timing, eventId)?.Apply(source, this);
+    }
+
+    public void TriggerEventToAll(string timing)
+    {
+        foreach (var boardCard in Board.Cards)
+        {
+            if (!boardCard.Unit.IsPlaced) continue;
+            TriggerEvent(boardCard.Data.EventId, timing, boardCard.Guid);
+        }
+        TriggerEvent("Rule", timing, Uid.None);
+    }
+
+    public void TriggerBuffEventToAll(string timing)
+    {
+        foreach (var boardCard in Board.Cards)
+        {
+            if(!boardCard.Unit.IsPlaced) continue;
+            foreach (var buff in boardCard.Unit.Buffs)
+            {
+                TriggerEvent(buff.Key, timing, boardCard.Guid);
+            }
+        }
     }
 }

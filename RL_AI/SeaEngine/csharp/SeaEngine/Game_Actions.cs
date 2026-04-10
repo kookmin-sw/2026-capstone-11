@@ -1,4 +1,3 @@
-using SeaEngine.Actions;
 using SeaEngine.Common;
 using SeaEngine.GameEffectManager;
 
@@ -9,25 +8,19 @@ public partial class Game
     private void UpdateActions()
     {
         _actions = [];
-        Data.UpdateResult();
-        if (Data.IsTerminal) return;
+        
+        if (Data.Winner != null)
+        {
+            return;
+        }
         
         //01. 활성 플레이어의, 아직 안 움직인 유닛.
-        var movableUnits = Data.Board.Cards.Where(c => c.Owner == Data.ActivePlayer && c.Unit.CanBasicMove);
+        var movableUnits = Data.Board.Cards.Where(c => c.Owner == Data.ActivePlayer && c.Unit is { IsPlaced: true, IsMoved: false });
         foreach(var unit in movableUnits)
         {
             foreach(var target in EffectRegistry.Get("DefaultMove").GetTargets(unit.Guid, Data))
             {
                 _actions.Add(new GameAction("DefaultMove", unit.Guid, target));
-            }
-        }
-
-        var attackableUnits = Data.Board.Cards.Where(c => c.Owner == Data.ActivePlayer && c.Unit.CanBasicAttack);
-        foreach (var unit in attackableUnits)
-        {
-            foreach (var target in EffectRegistry.Get("DefaultAttack").GetTargets(unit.Guid, Data))
-            {
-                _actions.Add(new GameAction("DefaultAttack", unit.Guid, target));
             }
         }
 
@@ -42,7 +35,7 @@ public partial class Game
             }
         }
         
-        //03. 활성 플레이어의 패에 없고, 유닛이 소환상태인 카드
+        //03. 활성 플레이어의 패에 있고, 유닛이 소환상태인 카드
         var effectCards = activeHand.Cards.Where(c => c.Unit.IsPlaced);
         foreach(var card in effectCards)
         {
@@ -58,11 +51,10 @@ public partial class Game
 
     public void UseAction(Uid actionId)
     {
-        if(_actions.All(a => a.Guid != actionId)) throw new KeyNotFoundException($"No action with the guid : {actionId}");
-        var selectedAction = _actions.First(a => a.Guid == actionId);
+        var selectedAction = _actions.FirstOrDefault(a => a.Guid == actionId) ?? throw new KeyNotFoundException($"No action with the guid : {actionId}");
         Logger.Log("UseAction", selectedAction, Data);
         EffectRegistry.Get(selectedAction.EffectId).Apply(selectedAction.Source, selectedAction.Target, Data);
-        Data.UpdateResult();
+        
         UpdateActions();
     }
 }

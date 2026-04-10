@@ -7,14 +7,25 @@ from __future__ import annotations
 import random
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-from RL_AI.agents.base_agent import BaseAgent
-from RL_AI.game_engine.engine import apply_action, initialize_main_phase
-from RL_AI.game_engine.rules import get_legal_actions
-from RL_AI.game_engine.state import Action, GameState, PlayerID, create_initial_game_state, load_supported_card_db
-from RL_AI.simulation.debug_view import describe_action_local, print_state
-from RL_AI.simulation.logging import MatchLogger
+from RL_AI.SeaEngine.action_adapter import choose_action_with_agent as choose_cs_action_with_agent
+from RL_AI.SeaEngine.bridge.seaengine_session import SeaEngineSession
+
+try:
+    from RL_AI.agents.base_agent import BaseAgent
+    from RL_AI.game_engine.engine import apply_action, initialize_main_phase
+    from RL_AI.game_engine.rules import get_legal_actions
+    from RL_AI.game_engine.state import Action, GameState, PlayerID, create_initial_game_state, load_supported_card_db
+    _LEGACY_ENGINE_AVAILABLE = True
+except ModuleNotFoundError:
+    BaseAgent = object  # type: ignore[assignment]
+    Action = object  # type: ignore[assignment]
+    GameState = object  # type: ignore[assignment]
+    PlayerID = object  # type: ignore[assignment]
+    apply_action = initialize_main_phase = get_legal_actions = None  # type: ignore[assignment]
+    create_initial_game_state = load_supported_card_db = None  # type: ignore[assignment]
+    _LEGACY_ENGINE_AVAILABLE = False
 
 
 def _default_log_base(prefix: str) -> str:
@@ -23,8 +34,17 @@ def _default_log_base(prefix: str) -> str:
     return str(log_dir / f"{prefix}_{ts}")
 
 
+def _require_legacy_engine() -> None:
+    if not _LEGACY_ENGINE_AVAILABLE:
+        raise RuntimeError(
+            "Legacy Python engine is not available in this layout. Use the SeaEngine functions "
+            "such as run_cs_random_match / run_cs_agent_match / run_cs_manual_match instead."
+        )
+
+
 class MatchRunner:
     def __init__(self, state: GameState, card_db, seed: Optional[int] = None):
+        _require_legacy_engine()
         self.state = state
         self.card_db = card_db
         self.rng = random.Random(seed)
@@ -73,6 +93,7 @@ def choose_action_with_agent(
     *,
     card_db,
 ) -> tuple[int, Action]:
+    _require_legacy_engine()
     return agent.select_action(state, legal_actions, card_db=card_db)
 
 
@@ -104,6 +125,207 @@ def _turn_limit_reached(state: GameState, max_turns: Optional[int]) -> bool:
     return max_turns is not None and state.turn > max_turns
 
 
+def print_cs_snapshot(snapshot: Dict[str, Any]) -> None:
+    print(
+        f"Turn={snapshot['turn']} Active={snapshot['active_player']} "
+        f"Result={snapshot['result']} Winner={snapshot.get('winner_id') or '-'}"
+    )
+    print("Board:")
+    for card in snapshot.get("board", []):
+        if not card["is_placed"]:
+            continue
+        pos = f"({card['pos_x']},{card['pos_y']})"
+        print(
+            f"  {card['owner']} {card['name']}[{card['card_id']}] {pos} "
+            f"ATK={card['effective_atk']} HP={card['hp']}/{card['max_hp']}"
+        )
+    print("Actions:")
+    for idx, action in enumerate(snapshot.get("actions", [])):
+        print(f"  [{idx}] {action['uid']} {action['effect_id']} {action['text']}")
+
+
+def _prompt_cs_manual_action(snapshot: Dict[str, Any]) -> Dict[str, Any]:
+    actions = snapshot.get("actions", [])
+    while True:
+        raw = input("Select action index (or q): ").strip()
+        if raw.lower() in {"q", "quit", "exit"}:
+            raise KeyboardInterrupt("manual_exit")
+        if not raw.isdigit():
+            print("Please enter a numeric index.")
+            continue
+        idx = int(raw)
+        if idx < 0 or idx >= len(actions):
+            print("Index out of range.")
+            continue
+        return actions[idx]
+
+
+def run_cs_random_match(
+    *,
+    seed: Optional[int] = None,
+    max_turns: int = 100,
+    card_data_path: Optional[str] = None,
+    player1_deck: str = "",
+    player2_deck: str = "",
+    print_steps: bool = True,
+) -> Dict[str, Any]:
+    rng = random.Random(seed)
+    session = SeaEngineSession(card_data_path=card_data_path)
+    session.start()
+    try:
+        snapshot = session.init_game(player1_deck=player1_deck, player2_deck=player2_deck)
+        while snapshot["result"] == "Ongoing" and snapshot["turn"] <= max_turns:
+            actions = snapshot.get("actions", [])
+            if not actions:
+                break
+            chosen = rng.choice(actions)
+            if print_steps:
+                print(f"[turn {snapshot['turn']}] {snapshot['active_player']} -> {chosen['text']}")
+            snapshot = session.apply_action(chosen["uid"])
+
+        if print_steps:
+            print_cs_snapshot(snapshot)
+        return snapshot
+    finally:
+        session.close()
+
+
+def run_cs_manual_match(
+    *,
+    card_data_path: Optional[str] = None,
+    player1_deck: str = "",
+    player2_deck: str = "",
+) -> Dict[str, Any]:
+    session = SeaEngineSession(card_data_path=card_data_path)
+    session.start()
+    try:
+        snapshot = session.init_game(player1_deck=player1_deck, player2_deck=player2_deck)
+        while snapshot["result"] == "Ongoing":
+            print_cs_snapshot(snapshot)
+            actions = snapshot.get("actions", [])
+            if not actions:
+                break
+            try:
+                chosen = _prompt_cs_manual_action(snapshot)
+            except KeyboardInterrupt:
+                break
+            snapshot = session.apply_action(chosen["uid"])
+
+        print_cs_snapshot(snapshot)
+        return snapshot
+    finally:
+        session.close()
+
+
+def run_cs_agent_match(
+    p1_agent,
+    p2_agent,
+    *,
+    seed: Optional[int] = None,
+    max_turns: int = 100,
+    card_data_path: Optional[str] = None,
+    player1_deck: str = "",
+    player2_deck: str = "",
+    print_steps: bool = True,
+) -> Dict[str, Any]:
+    random.Random(seed)
+    session = SeaEngineSession(card_data_path=card_data_path)
+    session.start()
+    try:
+        snapshot = session.init_game(player1_deck=player1_deck, player2_deck=player2_deck)
+        agents = {"P1": p1_agent, "P2": p2_agent}
+        while snapshot["result"] == "Ongoing" and snapshot["turn"] <= max_turns:
+            actions = snapshot.get("actions", [])
+            if not actions:
+                break
+            acting_agent = agents[snapshot["active_player"]]
+            _, chosen = choose_cs_action_with_agent(acting_agent, snapshot)
+            if print_steps:
+                print(f"[turn {snapshot['turn']}] {snapshot['active_player']}:{acting_agent.name} -> {chosen['text']}")
+            snapshot = session.apply_action(chosen["uid"])
+
+        if print_steps:
+            print_cs_snapshot(snapshot)
+        return snapshot
+    finally:
+        session.close()
+
+
+def run_cs_mixed_match(
+    p1_controller=None,
+    p2_controller=None,
+    *,
+    seed: Optional[int] = None,
+    max_turns: int = 100,
+    card_data_path: Optional[str] = None,
+    player1_deck: str = "",
+    player2_deck: str = "",
+    print_steps: bool = True,
+) -> Dict[str, Any]:
+    random.Random(seed)
+    session = SeaEngineSession(card_data_path=card_data_path)
+    session.start()
+    try:
+        snapshot = session.init_game(player1_deck=player1_deck, player2_deck=player2_deck)
+        controllers = {"P1": p1_controller, "P2": p2_controller}
+
+        while snapshot["result"] == "Ongoing" and snapshot["turn"] <= max_turns:
+            actions = snapshot.get("actions", [])
+            if not actions:
+                break
+            active_player = snapshot["active_player"]
+            controller = controllers[active_player]
+
+            if controller is None:
+                print_cs_snapshot(snapshot)
+                try:
+                    chosen = _prompt_cs_manual_action(snapshot)
+                except KeyboardInterrupt:
+                    break
+                actor_name = "manual"
+            else:
+                _, chosen = choose_cs_action_with_agent(controller, snapshot)
+                actor_name = getattr(controller, "name", controller.__class__.__name__)
+
+            if print_steps:
+                print(f"[turn {snapshot['turn']}] {active_player}:{actor_name} -> {chosen['text']}")
+            snapshot = session.apply_action(chosen["uid"])
+
+        if print_steps:
+            print_cs_snapshot(snapshot)
+        return snapshot
+    finally:
+        session.close()
+
+
+def run_cs_manual_vs_agent(
+    agent,
+    *,
+    human_player: str = "P1",
+    seed: Optional[int] = None,
+    max_turns: int = 100,
+    card_data_path: Optional[str] = None,
+    player1_deck: str = "",
+    player2_deck: str = "",
+    print_steps: bool = True,
+) -> Dict[str, Any]:
+    human_player = human_player.upper()
+    if human_player not in {"P1", "P2"}:
+        raise ValueError("human_player must be 'P1' or 'P2'")
+    p1_controller = None if human_player == "P1" else agent
+    p2_controller = None if human_player == "P2" else agent
+    return run_cs_mixed_match(
+        p1_controller=p1_controller,
+        p2_controller=p2_controller,
+        seed=seed,
+        max_turns=max_turns,
+        card_data_path=card_data_path,
+        player1_deck=player1_deck,
+        player2_deck=player2_deck,
+        print_steps=print_steps,
+    )
+
+
 def run_manual_match(
     p1_world: int = 2,
     p2_world: int = 6,
@@ -115,6 +337,9 @@ def run_manual_match(
     log_base_path: Optional[str] = None,
     include_action_options_in_log: bool = False,
 ) -> GameState:
+    _require_legacy_engine()
+    from RL_AI.simulation.debug_view import describe_action_local, print_state
+    from RL_AI.simulation.logging import MatchLogger
     card_db = load_supported_card_db(card_data_path=card_data_path)
     initial_state = create_initial_game_state(
         p1_world=p1_world,
@@ -214,6 +439,9 @@ def run_random_match(
     print_steps: bool = True,
     include_action_options_in_log: bool = False,
 ) -> GameState:
+    _require_legacy_engine()
+    from RL_AI.simulation.debug_view import describe_action_local, print_state
+    from RL_AI.simulation.logging import MatchLogger
     card_db = load_supported_card_db(card_data_path=card_data_path)
     initial_state = create_initial_game_state(
         p1_world=p1_world,
@@ -316,6 +544,9 @@ def run_agent_match(
     print_steps: bool = True,
     include_action_options_in_log: bool = False,
 ) -> GameState:
+    _require_legacy_engine()
+    from RL_AI.simulation.debug_view import describe_action_local, print_state
+    from RL_AI.simulation.logging import MatchLogger
     card_db = load_supported_card_db(card_data_path=card_data_path)
     initial_state = create_initial_game_state(
         p1_world=p1_world,

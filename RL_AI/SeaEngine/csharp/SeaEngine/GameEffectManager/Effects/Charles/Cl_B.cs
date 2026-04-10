@@ -1,6 +1,8 @@
 using SeaEngine.Common;
 using SeaEngine.GameDataManager;
 using SeaEngine.GameDataManager.Components;
+using SeaEngine.GameEventManager.Events.Buff;
+using SeaEngine.Logger;
 
 namespace SeaEngine.GameEffectManager.Effects.Charles;
 
@@ -8,7 +10,7 @@ namespace SeaEngine.GameEffectManager.Effects.Charles;
 // ReSharper disable once InconsistentNaming
 public class Cl_B : IEffect
 {
-    //이동범위 안에 유닛이 3기 이상 존재한다면 공격력 +1을 얻습니다.
+    //이동범위 안에 유닛이 3기 이상 존재한다면 턴 종료시까지 공격력 +1을 얻습니다.
     //이동범위 내 적을 모두 공격합니다.
     public string Id => "Cl_B"; 
 
@@ -29,17 +31,16 @@ public class Cl_B : IEffect
             .Where(p => !data.Board.IsEmptyCell(p.Item1, p.Item2) && data.Board.GetCardByPos(p.Item1, p.Item2)!.Owner != card.Owner)
             .Select(p => data.Board.GetCardByPos(p.Item1, p.Item2))
             .ToList();
-        var tempSource = $"effect:{Id}:temp";
         if (enemy.Count >= 3)
         {
-            card.Unit.AddOrRefreshStatus(UnitStatusType.AttackModifier, 1, 1, tempSource);
+            card.Unit.Atk += 1;
+            card.Unit.GiveBuff("TempAtk", 1);
         }
         foreach (var e in enemy)
         {
             if (e == null) continue;
             CombatUtils.Attack(card, e, data);
         }
-        card.Unit.RemoveStatus(UnitStatusType.AttackModifier, tempSource);
         
         owner.Trash.AddCard(card);
     }

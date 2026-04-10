@@ -1,399 +1,338 @@
-# Call of the King Python Prototype
+# RL_AI
 
-이 디렉터리는 `Call of the King`의 Python 프로토타입 레이어입니다.
+`RL_AI`는 `Call of the King`의 실험/학습 레이어입니다.  
+지금 기준의 실제 게임 로직 source of truth는 Python 프로토타입이 아니라 **C# SeaEngine**이고, Python은 그 위에서:
 
-현재 목적:
-- 게임 엔진 검증
-- AI vs AI 자동 플레이 로그 생성
-- 강화학습 기반 밸런싱 실험
+- C# 엔진 실행
+- 상태 관측 변환
+- 에이전트 선택
+- PPO 학습
+- 평가 / 리포트 저장
 
-장기적으로 실제 source of truth는 C# 서버가 담당하고, Python은 프로토타입, 테스트, 관측, 학습, 분석 레이어 역할을 맡습니다.
+을 담당합니다.
 
-## 현재 기준
+## 현재 구조
 
-- 기본 실험 덱: `귤(World 2)` vs `샤를로테(World 6)`
-- 카드 데이터 기본 파일: [Cards.csv](C:/code/capstone-temp/RL_AI/cards/Cards.csv)
-- 로그 기본 저장 위치: [log](C:/code/capstone-temp/RL_AI/log)
-- 상태 source of truth는 2D 보드 배열이 아니라 `units registry`입니다.
-- reward는 terminal reward만 사용합니다.
-  - 승리 `+1`
-  - 패배 `-1`
-  - 무승부 `0`
-- RL 프레임워크는 `TensorFlow`가 아니라 `PyTorch`입니다.
-- 현재 RL 알고리즘은 `PPO` 기반입니다.
+핵심 디렉터리:
 
-## 지금까지 반영된 큰 변경
+- [SeaEngine](C:/code/capstone-temp/RL_AI/SeaEngine)
+  - C# SeaEngine 브리지, observation, RL trainer/evaluator
+- [SeaEngine/csharp/SeaEngine](C:/code/capstone-temp/RL_AI/SeaEngine/csharp/SeaEngine)
+  - 복사된 C# 게임 엔진
+- [SeaEngine/csharp/SeaEngineCli](C:/code/capstone-temp/RL_AI/SeaEngine/csharp/SeaEngineCli)
+  - Python이 C# 엔진과 통신하기 위한 CLI 브리지
+- [simulation/match_runner.py](C:/code/capstone-temp/RL_AI/simulation/match_runner.py)
+  - Python legacy 엔진 매치 러너 + SeaEngine 매치 러너 통합 진입점
+- [start.ipynb](C:/code/capstone-temp/RL_AI/start.ipynb)
+  - DLPC에서 실행하는 기본 notebook
+- [cards/Cards.csv](C:/code/capstone-temp/RL_AI/cards/Cards.csv)
+  - 카드 데이터
+- [log](C:/code/capstone-temp/RL_AI/log)
+  - 평가 / 학습 리포트 저장 위치
 
-- 카드 DB 기본 입력을 `Cards.tsv`에서 `Cards.csv`로 변경
-- `CardID`를 `0x...` 형식에서 `Or_L`, `Cl_B` 같은 prefix 기반 형식으로 변경
-- 런타임 카드/유닛 ID를 순차형으로 변경
-  - 예: `C000`, `U000`
-- 기본 실험 덱을 `체스 vs 귤`에서 `귤 vs 샤를로테`로 변경
-- 평가 루프에 `max_turns`를 추가해서 `100턴 제한` 같은 실험 가능
-- `evaluate_agents(...)` 결과를 자동으로 [log](C:/code/capstone-temp/RL_AI/log) 아래 `evaluation_report_*.txt`로 저장하도록 변경
+legacy Python 엔진 파일은 별도 보관되어 있고, 현재 SeaEngine 실험과는 분리되어 있습니다.
 
-## 핵심 파일
+## 실제 호출 흐름
 
-- [card_db.py](C:/code/capstone-temp/RL_AI/cards/card_db.py)
-  - `Cards.csv`를 읽어 카드 정의 DB 생성
-- [state.py](C:/code/capstone-temp/RL_AI/game_engine/state.py)
-  - `GameState`, `UnitState`, `Action`, 초기 상태 생성
-- [rules.py](C:/code/capstone-temp/RL_AI/game_engine/rules.py)
-  - legal action 생성 / 판정
-- [engine.py](C:/code/capstone-temp/RL_AI/game_engine/engine.py)
-  - 상태 전이, 드로우, 카드 사용, 공격, 종료 판정
-- [observation.py](C:/code/capstone-temp/RL_AI/game_engine/observation.py)
-  - RL 입력용 observation 생성
+현재 SeaEngine 기준 흐름은 이렇습니다.
+
+```text
+start.ipynb
+  -> RL_AI.SeaEngine.experiment.run_train_eval_experiment()
+    -> SeaEnginePPOTrainer / evaluator
+      -> SeaEngineSession
+        -> SeaEngineCli
+          -> C# SeaEngine Game
+```
+
+조금 더 풀면:
+
+1. Python이 [seaengine_session.py](C:/code/capstone-temp/RL_AI/SeaEngine/bridge/seaengine_session.py) 로 `SeaEngineCli` 프로세스를 띄움
+2. `SeaEngineCli`가 C# `Game` 객체를 메모리에 유지
+3. Python은 `init / snapshot / apply / close` 요청만 JSON으로 주고받음
+4. snapshot은 [observation.py](C:/code/capstone-temp/RL_AI/SeaEngine/observation.py) 에서 RL 입력으로 변환됨
+5. [agents.py](C:/code/capstone-temp/RL_AI/SeaEngine/agents.py) 의 `Random / Greedy / RL` 에이전트가 action을 선택
+6. [trainer.py](C:/code/capstone-temp/RL_AI/SeaEngine/trainer.py) 가 rollout 수집 + PPO update
+7. [evaluator.py](C:/code/capstone-temp/RL_AI/SeaEngine/evaluator.py) 가 다회전 평가 후 리포트 저장
+
+## 매치 러너
+
+통합된 진입점:
 - [match_runner.py](C:/code/capstone-temp/RL_AI/simulation/match_runner.py)
-  - 수동 매치 / 랜덤 매치 / agent vs agent 실행
-- [logging.py](C:/code/capstone-temp/RL_AI/simulation/logging.py)
-  - JSONL / TXT 기보 로그 저장
-- [rl_agent.py](C:/code/capstone-temp/RL_AI/agents/rl_agent.py)
-  - PyTorch + PPO 기반 RL agent
-- [trainer.py](C:/code/capstone-temp/RL_AI/training/trainer.py)
-  - rollout 수집, PPO update
-- [evaluator.py](C:/code/capstone-temp/RL_AI/training/evaluator.py)
-  - 다회전 평가 + 평가 리포트 자동 저장
-- [experiment.py](C:/code/capstone-temp/RL_AI/training/experiment.py)
-  - 학습 전 평가 -> 학습 -> 학습 후 평가 실험
 
-## match_runner 호출 구조
+여기서 두 종류를 모두 다룹니다.
 
-### 1. 수동 대전
+- 기존 Python 프로토타입 엔진
+  - `run_manual_match`
+  - `run_random_match`
+  - `run_agent_match`
+- C# SeaEngine 엔진
+  - `run_cs_manual_match`
+  - `run_cs_random_match`
+  - `run_cs_agent_match`
+  - `run_cs_mixed_match`
+  - `run_cs_manual_vs_agent`
 
-실행:
-```powershell
-python -m RL_AI.simulation.match_runner
-```
+호환용으로 [cs_match_runner.py](C:/code/capstone-temp/RL_AI/simulation/cs_match_runner.py) 도 남아 있지만, 앞으로는 `match_runner.py` 기준으로 보면 됩니다.
 
-실제 호출 흐름:
+## DLPC 실행
 
-```text
-__main__
-  -> run_manual_match()
-    -> state.load_supported_card_db()
-      -> cards/card_db.py
-    -> state.create_initial_game_state()
-    -> engine.initialize_main_phase()
-    -> 반복 루프
-      -> rules.get_legal_actions()
-      -> debug_view.print_state()
-      -> 사용자 입력
-      -> engine.apply_action()
-      -> logging.MatchLogger (옵션)
-    -> match_end 로그 저장
-```
+기본 notebook:
+- [start.ipynb](C:/code/capstone-temp/RL_AI/start.ipynb)
 
-### 2. 랜덤 대전
+현재 notebook이 하는 일:
 
-실행:
-```powershell
-python -c "from RL_AI.simulation.match_runner import run_random_match; run_random_match(seed=7)"
-```
+1. `dotnet` 확인 / 설치
+2. 현재 notebook kernel에 `torch`, `numpy`, `pytest`가 없으면 설치
+3. `RL_AI.zip` 압축 해제
+4. `SeaEngineCli` 빌드
+5. SeaEngine 기준 학습 전/후 평가 실험 실행
 
-실제 호출 흐름:
+중요:
+- notebook의 Python 셀은 **현재 kernel Python**을 사용합니다
+- 그래서 패키지 설치는 `sys.executable -m pip install -I ...` 기준으로 처리합니다
 
-```text
-run_random_match()
-  -> state.load_supported_card_db()
-  -> state.create_initial_game_state()
-  -> engine.initialize_main_phase()
-  -> while not terminal:
-       -> rules.get_legal_actions()
-       -> choose_action_randomly()
-       -> engine.apply_action()
-       -> logging.py에 action/state 저장
-  -> 종료 상태 반환
-```
+## 기본 실험 함수
 
-### 3. 에이전트 vs 에이전트 대전
+현재 주로 쓰는 함수:
+- [run_train_eval_experiment](C:/code/capstone-temp/RL_AI/SeaEngine/experiment.py)
+- [run_checkpoint_training_experiment](C:/code/capstone-temp/RL_AI/SeaEngine/experiment.py)
 
-실행:
-```powershell
-python -c "from RL_AI.agents.greedy_agent import GreedyAgent; from RL_AI.agents.random_agent import RandomAgent; from RL_AI.simulation.match_runner import run_agent_match; run_agent_match(GreedyAgent(seed=1), RandomAgent(seed=2), seed=7)"
-```
+### `run_train_eval_experiment(...)`
 
-실제 호출 흐름:
+한 번에 아래를 수행합니다.
 
-```text
-run_agent_match(p1_agent, p2_agent)
-  -> state.load_supported_card_db()
-  -> state.create_initial_game_state()
-  -> engine.initialize_main_phase()
-  -> while not terminal:
-       -> rules.get_legal_actions()
-       -> 현재 플레이어 agent.select_action()
-          -> random_agent / greedy_agent / rl_agent
-       -> engine.apply_action()
-       -> logging.py 기록
-  -> 종료 상태 반환
-```
+1. 학습 전 `RL vs Random`
+2. 학습 전 `RL vs Greedy`
+3. mixed opponent 학습
+4. 학습 후 `RL vs Random`
+5. 학습 후 `RL vs Greedy`
 
-## RL 호출 구조
-
-### 4. RL 학습
-
-실행 예시:
-```powershell
-python -c "from RL_AI.agents.rl_agent import RLAgent; from RL_AI.agents.random_agent import RandomAgent; from RL_AI.training.trainer import PPOTrainer; agent=RLAgent(seed=1); trainer=PPOTrainer(agent); print(trainer.train(num_episodes=20, opponent_agent=RandomAgent(seed=3), seed=11, max_steps=999999, max_turns=100))"
-```
-
-실제 호출 흐름:
-
-```text
-PPOTrainer.train()
-  -> collect_episode()
-     -> state.create_initial_game_state()
-     -> engine.initialize_main_phase()
-     -> while not terminal:
-          -> rules.get_legal_actions()
-          -> RLAgent.compute_policy_output()
-             -> observation.py
-             -> rl_agent.py
-          -> engine.apply_action()
-     -> reward.py로 terminal reward 부여
-     -> storage.py에 rollout 정리
-  -> update_from_buffer()
-     -> PPO loss 계산
-     -> torch optimizer step
-```
-
-### 5. 학습 전/후 평가 실험
-
-실행 예시:
-```powershell
-python -c "import time; from RL_AI.agents.rl_agent import RLAgent; from RL_AI.agents.random_agent import RandomAgent; from RL_AI.agents.greedy_agent import GreedyAgent; from RL_AI.training.trainer import PPOTrainer; from RL_AI.training.evaluator import evaluate_agents; agent=RLAgent(seed=1); trainer=PPOTrainer(agent); t0=time.time(); before=evaluate_agents(agent, GreedyAgent(seed=2), num_matches=50, seed=7, max_steps=999999, max_turns=100); t1=time.time(); train=trainer.train(num_episodes=100, opponent_agent=RandomAgent(seed=3), seed=11, max_steps=999999, max_turns=100); t2=time.time(); after=evaluate_agents(agent, GreedyAgent(seed=2), num_matches=50, seed=21, max_steps=999999, max_turns=100); t3=time.time(); print(before['report_path']); print(after['report_path']); print(t1-t0, t2-t1, t3-t2, t3-t0)"
-```
-
-실제 호출 흐름:
-
-```text
-학습 전 평가
-  -> evaluator.evaluate_agents()
-  -> log/evaluation_report_*.txt 저장
-학습
-  -> trainer.train()
-학습 후 평가
-  -> evaluator.evaluate_agents()
-  -> log/evaluation_report_*.txt 저장
-```
-
-## 한눈에 보는 전체 구조
-
-```mermaid
-flowchart TD
-    A[Cards.csv] --> B[cards/card_db.py]
-    B --> C[state.py]
-    C --> D[rules.py]
-    C --> E[engine.py]
-    C --> F[observation.py]
-
-    D --> G[simulation/match_runner.py]
-    E --> G
-    B --> G
-
-    G --> H[debug_view.py]
-    G --> I[logging.py]
-    I --> J[log/*.jsonl, *.txt]
-
-    F --> K[agents/rl_agent.py]
-    G --> L[agents/random_agent.py]
-    G --> M[agents/greedy_agent.py]
-    G --> K
-
-    K --> N[training/storage.py]
-    K --> O[training/trainer.py]
-    O --> P[training/reward.py]
-    O --> Q[training/evaluator.py]
-    Q --> R[analysis/reports.py]
-    O --> S[training/experiment.py]
-    S --> R
-```
-
-## 기본 실행 명령
-
-프로젝트 루트 `C:\code\capstone-temp` 에서 실행합니다.
-
-수동 대전:
-```powershell
-python -m RL_AI.simulation.match_runner
-```
-
-랜덤 대전:
-```powershell
-python -c "from RL_AI.simulation.match_runner import run_random_match; run_random_match(seed=7, max_steps=999999, max_turns=100)"
-```
-
-Greedy vs Random:
-```powershell
-python -c "from RL_AI.agents.greedy_agent import GreedyAgent; from RL_AI.agents.random_agent import RandomAgent; from RL_AI.simulation.match_runner import run_agent_match; run_agent_match(GreedyAgent(seed=1), RandomAgent(seed=2), seed=7, max_steps=999999, max_turns=100, print_steps=True)"
-```
-
-RL vs RL 평가:
-```powershell
-python -c "from RL_AI.agents.rl_agent import RLAgent; from RL_AI.training.evaluator import evaluate_agents; summary=evaluate_agents(RLAgent(seed=1), RLAgent(seed=2), num_matches=1000, seed=7, max_steps=999999, max_turns=100); print(summary['report_path'])"
-```
-
-RL vs Greedy 평가:
-```powershell
-python -c "from RL_AI.agents.rl_agent import RLAgent; from RL_AI.agents.greedy_agent import GreedyAgent; from RL_AI.training.evaluator import evaluate_agents; summary=evaluate_agents(RLAgent(seed=1), GreedyAgent(seed=2), num_matches=100, seed=7, max_steps=999999, max_turns=100); print(summary['report_path'])"
-```
-
-RL 학습:
-```powershell
-python -c "from RL_AI.agents.rl_agent import RLAgent; from RL_AI.agents.random_agent import RandomAgent; from RL_AI.training.trainer import PPOTrainer; agent=RLAgent(seed=1); trainer=PPOTrainer(agent); print(trainer.train(num_episodes=100, opponent_agent=RandomAgent(seed=3), seed=11, max_steps=999999, max_turns=100))"
-```
-
-## 평가 / 학습 실험 명령 모음
-
-평가만 해보기:
-- 현재 정책으로 여러 판을 붙여서 승률, 행동 통계, 카드 사용 통계를 확인합니다.
-- 결과는 터미널에 출력되고, 동시에 `RL_AI/log/evaluation_report_*.txt`로 저장됩니다.
-
-RL vs RL 평가:
-```powershell
-python -c "from RL_AI.agents.rl_agent import RLAgent; from RL_AI.training.evaluator import evaluate_agents; summary=evaluate_agents(RLAgent(seed=1), RLAgent(seed=2), num_matches=100, seed=7, max_steps=999999, max_turns=100); print(summary['report_path'])"
-```
-
-RL vs Greedy 평가:
-```powershell
-python -c "from RL_AI.agents.rl_agent import RLAgent; from RL_AI.agents.greedy_agent import GreedyAgent; from RL_AI.training.evaluator import evaluate_agents; summary=evaluate_agents(RLAgent(seed=1), GreedyAgent(seed=2), num_matches=100, seed=7, max_steps=999999, max_turns=100); print(summary['report_path'])"
-```
-
-학습만 해보기:
-- RLAgent를 상대 에이전트와 반복 대전시키면서 PPO로 가중치를 업데이트합니다.
-- 처음에는 `RandomAgent`를 상대로 학습시키는 편이 안정적입니다.
-
-```powershell
-python -c "from RL_AI.agents.rl_agent import RLAgent; from RL_AI.agents.random_agent import RandomAgent; from RL_AI.training.trainer import PPOTrainer; agent=RLAgent(seed=1); trainer=PPOTrainer(agent); print(trainer.train(num_episodes=100, opponent_agent=RandomAgent(seed=3), seed=11, max_steps=999999, max_turns=100))"
-```
-
-학습 전 평가 -> 학습 -> 학습 후 평가를 한 번에:
-- 같은 `RLAgent` 인스턴스를 유지한 채로 전후 비교를 합니다.
-- 이 방식이 가장 정확한 1차 실험 방법입니다.
-
-```powershell
-python -c "import time; from RL_AI.agents.rl_agent import RLAgent; from RL_AI.agents.random_agent import RandomAgent; from RL_AI.agents.greedy_agent import GreedyAgent; from RL_AI.training.trainer import PPOTrainer; from RL_AI.training.evaluator import evaluate_agents; agent=RLAgent(seed=1); trainer=PPOTrainer(agent); t0=time.time(); before=evaluate_agents(agent, GreedyAgent(seed=2), num_matches=50, seed=7, max_steps=999999, max_turns=100); t1=time.time(); train=trainer.train(num_episodes=100, opponent_agent=RandomAgent(seed=3), seed=11, max_steps=999999, max_turns=100); t2=time.time(); after=evaluate_agents(agent, GreedyAgent(seed=2), num_matches=50, seed=21, max_steps=999999, max_turns=100); t3=time.time(); print(f'BEFORE report: {before[\"report_path\"]}'); print(f'BEFORE time: {t1-t0:.2f}s'); print(train); print(f'TRAIN time: {t2-t1:.2f}s'); print(f'AFTER report: {after[\"report_path\"]}'); print(f'AFTER time: {t3-t2:.2f}s'); print(f'TOTAL time: {t3-t0:.2f}s')"
-```
-
-## 로그와 리포트
-
-저장 위치: [log](C:/code/capstone-temp/RL_AI/log)
-
-생성 파일:
-- `*.jsonl`: 분석용 구조화 로그
-- `*.txt`: 사람이 읽는 기보 로그
-- `evaluation_report_*.txt`: 평가 리포트
-- `train_eval_report_*.txt`: 학습 전/후 평가 리포트
-
-에이전트 매치 로그에는 `P1 agent=...`, `P2 agent=...`가 같이 기록됩니다.
-
-평가 리포트에는 다음이 포함됩니다.
-- 승 / 패 / 무
-- 평균 step 수
-- 평균 final turn
-- 행동 타입 통계
-- 카드 사용 통계
-
-## 현재 학습 상태 메모
-
-현재 기준으로는 PPO 학습이 실제로 동작합니다.
-
-확인된 점:
-- `RLAgent vs GreedyAgent` 비교에서 학습 전보다 학습 후 RL 승률이 올라감
-- 즉, 현재 학습 루프가 완전히 무의미한 상태는 아님
-- 다만 아직 `GreedyAgent`보다 강하다고 보기는 어려움
-
-현재 해석:
-- RL은 아직 baseline 추격 단계
-- observation, action encoding, self-play, 평가 루프 고도화 여지가 큼
-- 지금은 “정말 학습이 되는가”를 확인한 첫 단계라고 보면 됨
-
-최근 예시:
-- 학습 전 `RL vs Greedy` 평가에서 RL 승률이 낮았음
-- 짧은 PPO 학습 후 같은 조건에서 RL 승률이 눈에 띄게 상승했음
-- 즉, 현재 구조는 “학습 전 평가 -> 학습 -> 학습 후 평가” 사이클을 실제로 돌릴 수 있는 상태임
-
-## DLPC 실행 메모
-
-- DLPC 같은 리눅스 서버로 옮길 때는 `RL_AI` 폴더를 통째로 복사하거나 압축 해제해서 사용하면 됩니다.
-- 실행 위치는 보통 `RL_AI`의 부모 디렉터리입니다.
-- RL 실행에는 `torch`가 필요합니다.
+진행률은 화면에 출력되고, 요약은 자동으로 저장됩니다.
 
 예시:
-```bash
-python -m venv ~/rlai-venv
-source ~/rlai-venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install torch pytest
-python -m RL_AI.simulation.match_runner
+```python
+from RL_AI.SeaEngine.experiment import run_train_eval_experiment
+
+result = run_train_eval_experiment(
+    eval_matches=100,
+    train_episodes=1000,
+    max_turns=100,
+    update_interval=8,
+    seed=7,
+)
+print(result["report_path"])
 ```
 
-## 테스트
+### `run_checkpoint_training_experiment(...)`
 
-테스트 위치: [tests](C:/code/capstone-temp/RL_AI/tests)
+긴 학습을 여러 checkpoint로 나누어 평가합니다.
 
-코어 테스트:
-```powershell
-python -m pytest RL_AI\tests\test_engine_core.py -q
+예시:
+```python
+from RL_AI.SeaEngine.experiment import run_checkpoint_training_experiment
+
+checkpoint = run_checkpoint_training_experiment(
+    eval_matches=100,
+    total_train_episodes=1000,
+    eval_interval=200,
+    max_turns=100,
+    update_interval=8,
+    seed=7,
+)
+print(checkpoint["summary_report_path"])
 ```
 
-legal action 검증:
-```powershell
-python -m pytest RL_AI\tests\test_legal_actions_validation.py -q
+사람 vs agent 수동 대전 예시:
+```python
+from RL_AI.SeaEngine.agents import SeaEngineGreedyAgent
+from RL_AI.simulation.match_runner import run_cs_manual_vs_agent
+
+run_cs_manual_vs_agent(
+    SeaEngineGreedyAgent(seed=1),
+    human_player="P1",
+    max_turns=100,
+    print_steps=True,
+)
 ```
 
-greedy 테스트:
-```powershell
-python -m pytest RL_AI\tests\test_greedy_agent.py -q
+혼합 수동/자동 대전 예시:
+```python
+from RL_AI.SeaEngine.agents import SeaEngineRLAgent
+from RL_AI.simulation.match_runner import run_cs_mixed_match
+
+run_cs_mixed_match(
+    p1_controller=None,  # manual
+    p2_controller=SeaEngineRLAgent(seed=1),
+    max_turns=100,
+    print_steps=True,
+)
 ```
 
-전체 주요 테스트:
-```powershell
-python -m pytest RL_AI\tests\test_engine_core.py RL_AI\tests\test_greedy_agent.py RL_AI\tests\test_legal_actions_validation.py -q
+## 리포트 저장
+
+저장 위치:
+- [log](C:/code/capstone-temp/RL_AI/log)
+
+주요 파일:
+- `seaengine_evaluation_report_*.txt`
+- `seaengine_train_eval_report_*.txt`
+- `seaengine_checkpoint_training_report_*.txt`
+
+`run_train_eval_experiment(...)` 요약 리포트에는 아래 시간도 함께 저장됩니다.
+
+- `before_random_time_sec`
+- `before_greedy_time_sec`
+- `train_time_sec`
+- `after_random_time_sec`
+- `after_greedy_time_sec`
+- `total_time_sec`
+
+## 현재 학습 결과 해석
+
+2026-04-10 기준으로 확인된 상태:
+
+- `Greedy > Random`
+- `RL > Random`
+- 아직 `RL < Greedy`
+
+즉 RL은 기본 플레이는 배웠지만, 아직 Greedy baseline을 넘지는 못했습니다.
+
+대표적인 최근 결과:
+
+- 학습 전 `RL vs Random`: `78%`
+- 학습 후 `RL vs Random`: `92%`
+- 학습 전 `RL vs Greedy`: `19%`
+- 학습 후 `RL vs Greedy`: `25%`
+
+해석:
+
+- mixed opponent 학습은 실제로 효과가 있음
+- Random 상대 승률은 크게 올랐음
+- Greedy 상대도 개선은 있었지만 아직 충분하지 않음
+
+## observation / action feature 현 상태
+
+현재 [observation.py](C:/code/capstone-temp/RL_AI/SeaEngine/observation.py)는 이전보다 더 많은 정보를 씁니다.
+
+상태 벡터에 들어가는 정보 예:
+
+- 턴 / active player / result
+- 손패 수, 덱 수, 트래시 수
+- 리더 체력 비율과 체력 차이
+- 보드 유닛 수 / 공격력 총합 / 준비된 유닛 수
+- deploy 가능 손패 수
+- skill action 수
+- attack / move action 수
+- 리더에 대한 위협 수
+- 중앙 지역 점유 수
+- 보드 카드별:
+  - 위치
+  - 체력 / 공격력 / 효과 공격력
+  - 이동 / 공격 상태
+  - 상태이상 요약
+  - 적 리더와 거리
+  - 인접 적 수
+  - 들어오는 공격자 수
+  - 실제 공격/이동 action 보유 여부
+
+action feature에 들어가는 정보 예:
+
+- effect type / target type
+- source 유닛 스탯
+- target 유닛 스탯
+- 이동 전후 리더 거리
+- 리더 존 진입 여부
+- 즉시 킬 가능 여부
+- 리더 위협 여부
+- 두 대상 액션 여부
+- 교환 후 생존 가능성 추정
+- 저체력 타깃 여부
+- 손패에서 나가는 행동인지 여부
+
+## 아직 개선 여지가 큰 부분
+
+지금도 개선 여지는 많습니다.
+
+가장 큰 후보:
+
+1. **self-play**
+   - 현재는 `random + greedy` mixed opponent가 기본
+   - 여기에 이전 checkpoint RL을 섞으면 일반화에 더 좋을 가능성이 큼
+
+2. **best checkpoint 선택**
+   - 마지막 모델보다 중간 checkpoint가 더 좋은 경우가 있을 수 있음
+
+3. **leader pressure / tactical exchange feature 추가 정교화**
+   - 현재도 들어가 있지만 더 정교한 “다음 턴 킬 각” 정보를 넣을 수 있음
+
+4. **학습 속도 최적화**
+   - 가장 큰 병목은 GPU보다 **C# 엔진 호출 / snapshot 왕복 비용**일 가능성이 큼
+
+## 학습 속도가 느린 이유와 현재 개선
+
+1000 episode가 40분 안팎 걸리는 가장 큰 이유는, 연산보다도:
+
+- C# SeaEngine 프로세스
+- Python <-> C# 브리지
+- snapshot JSON 직렬화/파싱
+
+비용이 큽니다.
+
+이번에 이미 한 개선:
+
+- [trainer.py](C:/code/capstone-temp/RL_AI/SeaEngine/trainer.py)
+  - episode마다 `SeaEngineSession`을 새로 띄우지 않고, 학습 루프 동안 재사용
+- [evaluator.py](C:/code/capstone-temp/RL_AI/SeaEngine/evaluator.py)
+  - 평가 매치마다 프로세스를 새로 띄우지 않고, 평가 루프 동안 재사용
+
+이건 환경과 상관없이 실제로 시간을 줄이는 방향입니다.
+
+그래도 남는 병목:
+
+- snapshot 전체를 매 step Python으로 넘기는 구조
+- legal action 수가 많을 때 action feature 계산 비용
+- PPO가 step 단위로 모든 action set을 다시 평가하는 비용
+
+## 사람이랑 붙이기
+
+아직 notebook에는 넣지 않았지만, SeaEngine 기준으로 사람 vs agent도 가능합니다.
+
+함수:
+- [run_cs_manual_vs_agent](C:/code/capstone-temp/RL_AI/simulation/match_runner.py)
+- [run_cs_mixed_match](C:/code/capstone-temp/RL_AI/simulation/match_runner.py)
+
+예시:
+```python
+from RL_AI.SeaEngine.agents import SeaEngineGreedyAgent
+from RL_AI.simulation.match_runner import run_cs_manual_vs_agent
+
+run_cs_manual_vs_agent(
+    SeaEngineGreedyAgent(seed=1),
+    human_player="P1",
+    max_turns=100,
+    print_steps=True,
+)
 ```
 
-## 강화학습 짧은 메모
+## 용어 메모
 
 - `episode`
-  - 게임 한 판 전체입니다.
-  - 현재 프로젝트에서는 거의 `episode = match`로 이해하면 됩니다.
-
-- `step`
-  - 행동 1번입니다.
-  - 이동 1번, 공격 1번, 카드 사용 1번, 턴 종료 1번이 각각 1 step입니다.
-
+  - 게임 한 판 전체
 - `turn`
-  - 한 플레이어의 턴입니다.
-  - `max_turns=100`처럼 실제 턴 제한 실험을 할 수 있습니다.
-
+  - 한 플레이어의 턴
+- `step`
+  - 행동 1회
 - `rollout`
-  - 에이전트가 실제 게임을 하면서 쌓은 플레이 기록입니다.
-  - 강화학습에서는 이 기록이 학습 데이터 역할을 합니다.
+  - 학습용으로 쌓은 플레이 기록
 
-- `PPO`
-  - `Proximal Policy Optimization`의 줄임말입니다.
-  - 정책을 한 번에 너무 크게 바꾸지 않고 조금씩 안정적으로 업데이트하는 강화학습 알고리즘입니다.
+## 현재 권장 다음 단계
 
-## 그림 그릴 때 쓸 만한 도구
+지금 상태에서 가장 자연스러운 다음 수순:
 
-README 같은 문서 안에서 바로 그리고 싶으면:
-- `Mermaid`
-- `Markdown + Mermaid Preview`
+1. `checkpoint` 기준으로 best model 찾기
+2. opponent pool에 self-play 추가
+3. Greedy 비중을 높인 mixed training 실험
+4. `RL vs Greedy` 100판 평가 반복
 
-브라우저에서 빠르게 구조도 그리려면:
-- `draw.io` / `diagrams.net`
-- `Mermaid Live Editor`
-- `Excalidraw`
-
-추천 기준:
-- 코드/문서에 같이 넣고 싶다: `Mermaid`
-- 박스/화살표를 손으로 편하게 옮기고 싶다: `draw.io`
-- 빠르게 회의용 스케치가 필요하다: `Excalidraw`
-
-## 참고
-
-- `rules.py`는 상태를 바꾸지 않습니다.
-- `engine.py`는 상태 전이만 담당합니다.
-- `debug_view.py`는 사람용, `logging.py`는 분석용입니다.
-- 같은 종류 카드 여러 장은 `card_id`가 아니라 `card_instance_id` 기준으로 구분합니다.
+즉 지금 병목은 엔진보다도 **정책 품질과 학습 효율** 쪽입니다.
