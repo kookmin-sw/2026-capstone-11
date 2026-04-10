@@ -9,11 +9,14 @@ using UnityEngine.Rendering.Universal;
 public class NetworkManagerUnity : MonoBehaviour
 {
     public static NetworkManagerUnity Instance;
+
+    public ClientSession Session => _session;
     public INetAPI Net => _network;
     public bool IsNetworkRunning => _IsNetworkRunning;
     public string GetState() => _network.GetNetState();
 
     private NetworkManager _network;
+    private ClientSession _session;
 
     private bool _IsNetworkRunning;
     private Coroutine NetTickCoroutine;
@@ -32,6 +35,8 @@ public class NetworkManagerUnity : MonoBehaviour
         _network = NetworkManager.CreateNetworkManager(0, 10);
         _network.Start();
         
+        
+        _session = new();
         _IsNetworkRunning = true;
         NetTickCoroutine = StartCoroutine(TickCoroutine());
     }

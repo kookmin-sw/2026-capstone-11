@@ -12,11 +12,11 @@ namespace Game.Server.Chess
         private List<string> _players = new(2);
         private bool _hasSomethingToSend = false;
         private Session _session;
-        
+
         private bool _isGameRunnable;
         public ChessGame(Session session)
         {
-            
+
             _session = session;
             _session.Events.OnPlayerEnter = EnterPlayer;
             _session.Events.OnPlayerExit = ExitPlayer;
@@ -25,7 +25,10 @@ namespace Game.Server.Chess
         public void InitGame(string p1 = "1", string p2 = "2")
         {
             _seaGame = new(new SeaEngine.CardManager.CardLoader(""), new SimpleLogger(), p1, p2);
-            _seaGame.Init("", "");
+            _seaGame.Init(
+                        "[\"Or_L\", \"Or_B\", \"Or_R\", \"Or_N\", \"Or_P\", \"Or_P\", \"Or_P\"]", 
+                        "[\"Cl_L\", \"Cl_B\", \"Cl_R\", \"Cl_N\", \"Cl_P\", \"Cl_P\", \"Cl_P\"]"
+                        );
         }
 
         public void Tick(int delta)
@@ -66,6 +69,7 @@ namespace Game.Server.Chess
             if (result.IsResponded)
             {
                 Uid toAct = Uid.Parse(Encoding.UTF8.GetString(result.AnswerRaw));
+                Log.WriteLog($"[ChessGame] Use Action | Uid: {toAct}");
                 _seaGame.UseAction(toAct);
             }
             else

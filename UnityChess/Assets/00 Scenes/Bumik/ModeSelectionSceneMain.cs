@@ -12,7 +12,7 @@ public class ModeSelectionSceneMain : MonoBehaviour
 {
     [SerializeField] private TMP_InputField IPaddrInputField;
     [SerializeField] private TMP_InputField PortNumInputField;
-    [SerializeField] private NetworkManagerUnity networkManager;
+    [SerializeField] private GameInitializer gameInitializer;
 
     public void OnClickStartDedicateMode()
     {
@@ -37,10 +37,11 @@ public class ModeSelectionSceneMain : MonoBehaviour
             return;
         }
 
-
-        networkManager.Init();
-        _ = networkManager.Net.ConnectTo(ipAddr.ToString(), portNum, 20000);
-        DontDestroyOnLoad(networkManager);
+        gameInitializer.Data.PlayerName = PlayFabAccountManager.Instance.InGameDisplayName;
+        gameInitializer.Data.IpAddr = ipAddr.ToString();
+        gameInitializer.Data.PortNum = portNum;
+        
+        DontDestroyOnLoad(gameInitializer);
         SceneManager.LoadScene("NetworkTestScene");
     }
 }

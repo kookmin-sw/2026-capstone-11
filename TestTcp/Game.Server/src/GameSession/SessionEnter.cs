@@ -21,12 +21,10 @@ namespace Game.Server
             _net.SetReceiveHandler(this);
         }
 
-        public void OnReceive(ConnId connId, byte[] raw) {}
-        public void OnRespond(ConnId connId, int queryNum, byte[] raw) {}
-        public void OnQuery(ConnId connId, int queryNum, byte[] raw)
+        public void OnReceive(ConnId connId, byte[] raw)
         {
             string name = Encoding.UTF8.GetString(raw);
-            if (String.IsNullOrEmpty(name)) 
+            if (String.IsNullOrEmpty(name))
             {
                 Log.WriteLog($"[SessionEnter] Wrong Name from {connId}");
                 return;
@@ -37,8 +35,11 @@ namespace Game.Server
                 Log.WriteLog("[SessionEnter] Fail to Enter Session");
                 return;
             }
-
             _events.OnPlayerEnter?.Invoke(name);
+        }
+        public void OnRespond(ConnId connId, int queryNum, byte[] raw) { }
+        public void OnQuery(ConnId connId, int queryNum, byte[] raw)
+        {
         }
     }
 
