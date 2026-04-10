@@ -367,7 +367,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dc00a6e53a2c646b2b0f8eb170d988e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnitChar
-  background: {fileID: 6910006991005516967}
+  background: {fileID: 2186583479338196714}
   uidText: {fileID: 8691625796289386888}
   idText: {fileID: 2098169831327688695}
   hpText: {fileID: 3169246167061591016}
