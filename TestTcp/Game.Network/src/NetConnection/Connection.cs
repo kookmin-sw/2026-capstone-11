@@ -186,14 +186,15 @@ namespace Game.Network
                 while (!token.IsCancellationRequested)
                 {
 
-                    int n = await _stream.ReadAsync(sizeBuffer, 0, sizeBuffer.Length, token);
-                    if (n == 0) throw new SocketException();
+                    // int n = await _stream.ReadAsync(sizeBuffer, 0, sizeBuffer.Length, token);
+                    // if (n == 0) throw new SocketException();
+
+                    await ReadExactAsync(sizeBuffer, 4, token);
 
                     int size = BitConverter.ToInt32(sizeBuffer);
                     byte[] dataBuffer = new byte[size];
 
-                    n = await _stream.ReadAsync(dataBuffer, 0, dataBuffer.Length, token);
-                    if (n == 0) throw new SocketException();
+                    await ReadExactAsync(dataBuffer, size, token);
 
                     _queue.InQueue.Enqueue(NetInEvent.Receive(
                         GetConnectionId(),
@@ -231,6 +232,18 @@ namespace Game.Network
                 GetConnectionId(),
                 Array.Empty<byte>()
             ));
+        }
+
+        private async Task ReadExactAsync(byte[] buffer, int length, CancellationToken token)
+        {
+            int offset = 0;
+            while (offset < length)
+            {
+                int read = await _stream.ReadAsync(buffer, offset, length - offset, token);
+                if (read == 0) throw new SocketException();
+
+                offset += read;
+            }
         }
     }
 }
