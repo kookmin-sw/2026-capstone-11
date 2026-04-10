@@ -34,14 +34,19 @@ class SeaEngineSession:
             (Path.home() / ".dotnet_cli_home").resolve()
         )
         launch_cmd = self._build_launch_command(dotnet_cmd)
+        dotnet_root = Path(dotnet_cmd).resolve().parent if dotnet_cmd else None
+        env = {
+            **os.environ,
+            "DOTNET_CLI_HOME": dotnet_cli_home,
+            "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1",
+        }
+        if dotnet_root is not None:
+            env.setdefault("DOTNET_ROOT", str(dotnet_root))
+            env.setdefault("DOTNET_ROOT_X64", str(dotnet_root))
         self._proc = subprocess.Popen(
             launch_cmd,
             cwd=str(self.project_root.parent),
-            env={
-                **os.environ,
-                "DOTNET_CLI_HOME": dotnet_cli_home,
-                "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1",
-            },
+            env=env,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -59,7 +64,12 @@ class SeaEngineSession:
         if self._proc is None:
             return
         try:
-            self._request({"command": "close"})
+            try:
+                self._request({"command": "close"})
+            except (BrokenPipeError, json.JSONDecodeError, RuntimeError):
+                # Shutdown is best-effort. Some environments close the bridge
+                # before returning the final JSON response, which is fine here.
+                pass
         finally:
             if self._proc.stdin:
                 self._proc.stdin.close()
@@ -106,17 +116,33 @@ class SeaEngineSession:
         self._proc.stdin.write(json.dumps(payload, ensure_ascii=False) + "\n")
         self._proc.stdin.flush()
 
-        line = self._proc.stdout.readline()
-        if not line:
-            stderr = ""
-            if self._proc.stderr is not None:
-                stderr = self._proc.stderr.read()
-            raise RuntimeError(f"SeaEngine bridge terminated unexpectedly. stderr={stderr}")
-
-        response = json.loads(line)
+        response = self._read_response_line()
         if response.get("status") != "ok":
             raise RuntimeError(response.get("error", "unknown_seaengine_error"))
         return response["payload"]
+
+    def _read_response_line(self) -> Dict[str, Any]:
+        if self._proc is None or self._proc.stdout is None:
+            raise RuntimeError("SeaEngine session is not started.")
+
+        while True:
+            line = self._proc.stdout.readline()
+            if not line:
+                stderr = ""
+                if self._proc.stderr is not None:
+                    stderr = self._proc.stderr.read()
+                raise RuntimeError(f"SeaEngine bridge terminated unexpectedly. stderr={stderr}")
+
+            stripped = line.strip()
+            if not stripped:
+                continue
+
+            try:
+                return json.loads(stripped)
+            except json.JSONDecodeError:
+                # Ignore any unexpected non-JSON line and keep reading the next
+                # response line. The bridge protocol itself is still JSON-only.
+                continue
 
 
     def _build_launch_command(self, dotnet_cmd: str) -> list[str]:
@@ -124,12 +150,12 @@ class SeaEngineSession:
         linux_apphost = self.cli_build_dir / "SeaEngineCli"
         windows_apphost = self.cli_build_dir / "SeaEngineCli.exe"
 
-        if linux_apphost.exists():
-            return [str(linux_apphost)]
-        if windows_apphost.exists() and os.name == "nt":
+        if os.name == "nt" and windows_apphost.exists():
             return [str(windows_apphost)]
         if dll_path.exists():
             return [dotnet_cmd, str(dll_path)]
+        if linux_apphost.exists():
+            return [str(linux_apphost)]
         return [dotnet_cmd, "run", "--project", str(self.cli_project), "-c", "Debug", "--no-build"]
 
     @staticmethod

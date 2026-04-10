@@ -1,0 +1,30 @@
+=== Evaluation Report ===
+Episodes: 100
+P1 (rl) wins: 98 (98.0%)
+P2 (random) wins: 2 (2.0%)
+Draws: 0 (0.0%)
+Average steps: 171.38
+Average final turn: 24.35
+
+[Action Type Counts]
+- Cl_B: 107
+- Cl_R: 88
+- DefaultAttack: 2524
+- DefaultMove: 7488
+- DeployUnit: 3057
+- Or_B: 244
+- Or_L: 449
+- Or_R: 67
+- PawnGeneric: 779
+- TurnEnd: 2335
+
+[Card Use Counts]
+- 귤 요정: 1177
+- 미스티아: 1147
+- 귤 공주님: 449
+- 귤 직장인?: 438
+- 바이올렛: 405
+- 릴리아: 339
+- 아이린: 307
+- 귤 나무: 295
+- 망상의 기사님: 234
