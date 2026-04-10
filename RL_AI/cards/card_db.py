@@ -8,6 +8,10 @@ from typing import Any, Dict, List, Optional
 import re
 
 MODULE_DIR = Path(__file__).resolve().parent
+CARD_ID_ALIASES = {
+    "Or_K": "Or_N",
+    "Cl_K": "Cl_N",
+}
 
 
 class Role(IntEnum):
@@ -186,6 +190,8 @@ class CardDefinition:
     text: str
     effect_name: str
     effect: str
+    effect_id: str = ""
+    event_id: str = ""
     text_flags: Dict[str, int] = field(default_factory=dict)
     effect_flags: Dict[str, int] = field(default_factory=dict)
     text_target_schema: str = "none"
@@ -214,6 +220,8 @@ class CardDefinition:
             "text": self.text,
             "effect_name": self.effect_name,
             "effect": self.effect,
+            "effect_id": self.effect_id,
+            "event_id": self.event_id,
             "text_flags": dict(self.text_flags),
             "effect_flags": dict(self.effect_flags),
             "text_target_schema": self.text_target_schema,
@@ -227,6 +235,8 @@ class CardDefinition:
             "attack": self.attack,
             "life": self.life,
             "text_condition": int(self.text_condition),
+            "effect_id": self.effect_id,
+            "event_id": self.event_id,
             "text_flags": dict(self.text_flags),
             "effect_flags": dict(self.effect_flags),
             "text_target_schema": self.text_target_schema,
@@ -275,8 +285,10 @@ def load_card_list(card_data_path: str | Path = "./Cards.csv") -> List[CardDefin
     for row in rows:
         text = _normalize_text(row.get("Text") or row.get("EventText"))
         effect = _normalize_text(row.get("Effect"))
+        raw_card_id = _normalize_text(row.get("CardID"))
+        canonical_card_id = CARD_ID_ALIASES.get(raw_card_id, raw_card_id)
         cards.append(CardDefinition(
-            card_id=_normalize_text(row.get("CardID")),
+            card_id=canonical_card_id,
             name=_normalize_text(row.get("Name")),
             world=_normalize_int(row.get("World")),
             role=Role.from_value(row.get("Role")),
@@ -287,6 +299,8 @@ def load_card_list(card_data_path: str | Path = "./Cards.csv") -> List[CardDefin
             text=text,
             effect_name=_normalize_text(row.get("EffectName")),
             effect=effect,
+            effect_id=_normalize_text(row.get("EffectID")) or canonical_card_id,
+            event_id=_normalize_text(row.get("EventID")) or canonical_card_id,
             text_flags=extract_effect_flags(text),
             effect_flags=extract_effect_flags(effect),
             text_target_schema=classify_target_schema(text),
