@@ -26,6 +26,7 @@ namespace ui.view.board
             foreach (var c in cells)
             {
                 var cell = BoardToCell(c);
+                Debug.Log($"[BoardView.Show] board={c} -> tileCell={cell}");
                 tilemap.SetTile(cell, highlightTile);
                 current.Add(cell);
             }

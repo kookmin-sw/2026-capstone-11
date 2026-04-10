@@ -7396,7 +7396,6 @@ GameObject:
   - component: {fileID: 1157191415}
   - component: {fileID: 1157191414}
   - component: {fileID: 1157191416}
-  - component: {fileID: 1157191417}
   m_Layer: 0
   m_Name: UIController
   m_TagString: Untagged
@@ -7448,22 +7447,6 @@ MonoBehaviour:
   cardView: {fileID: 0}
   boardView: {fileID: 427112746}
   eventBus: {fileID: 64190383}
---- !u!114 &1157191417
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1157191413}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8bd9ca1431fa01b4f9b6b87cb34d53d4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TestInit
-  unitPrefab: {fileID: 9012974345327925349, guid: b9476bac4c5cdb74793da4f0a77ea675, type: 3}
-  eventBus: {fileID: 64190383}
-  uiController: {fileID: 1157191416}
-  tilemap: {fileID: 427112744}
 --- !u!1 &1176488946
 GameObject:
   m_ObjectHideFlags: 0
