@@ -38,6 +38,7 @@ public class EffectRegistry
         {
             return effect;
         }
-        else return new ER_L();
+        //return new ER_L();
+        throw new KeyNotFoundException($"Effect with id {id} not found");
     }
 }

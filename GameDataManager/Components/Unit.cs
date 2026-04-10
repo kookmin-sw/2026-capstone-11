@@ -16,6 +16,10 @@ public class Unit(Card card)
 
     public void Place(int x, int y)
     {
+        if (x is < 0 or >= Board.BoardSize || y is < 0 or >= Board.BoardSize)
+        {
+            throw new ArgumentOutOfRangeException($"Place Out of range({card.Guid})");
+        }
         IsPlaced = true;
         PosX = x;
         PosY = y;
@@ -23,7 +27,10 @@ public class Unit(Card card)
 
     public void Move(int x, int y)
     {
-        //주의 : 가능 여부 체크 안 함.
+        if (x is < 0 or >= Board.BoardSize || y is < 0 or >= Board.BoardSize)
+        {
+            throw new ArgumentOutOfRangeException($"Move Out of range({card.Guid})");
+        }
         PosX = x;
         PosY = y;
     }

@@ -10,6 +10,9 @@ public partial class GameData
 {
     public readonly Player Player1;
     public readonly Player Player2;
+    [JsonIgnore]
+    public Player? Winner;
+    public string WinnerId => Winner?.Id ?? "";
     
     [JsonIgnore]
     public Player ActivePlayer;
@@ -21,6 +24,7 @@ public partial class GameData
         Player1 = new Player(player1Id);
         Player2 = new Player(player2Id);
         ActivePlayer = Player1;
+        Winner = null;
     }
 
     public void Init(List<Card> player1Cards, List<Card> player2Cards)

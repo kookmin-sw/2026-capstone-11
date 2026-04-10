@@ -26,7 +26,7 @@ public class CardZone
 
     public bool HasCard(Card card)
     {
-        return _cards.Contains(card); //이거 UID 기반으로 찾는 게 맞나...?
+        return HasCard(card.Guid);
     }
 
     public bool HasCard(Uid guid)

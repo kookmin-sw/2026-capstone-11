@@ -20,7 +20,7 @@ public class Board
 
     public bool IsEmptyCell(int x, int y)
     {
-        return !_cards.Any(c => c.Unit.PosX == x && c.Unit.PosY == y);
+        return !_cards.Any(c => c.Unit.IsPlaced && c.Unit.PosX == x && c.Unit.PosY == y);
     }
 
     public Card GetCardByPos(int x, int y)

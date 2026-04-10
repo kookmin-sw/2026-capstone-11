@@ -33,8 +33,8 @@ public class Cl_R : IEffect
 
         CombatUtils.Attack(card, defender, data);
         
-        int dx = Math.Sign(card.Unit.PosX - defender.Unit.PosX);
-        int dy = Math.Sign(card.Unit.PosY - defender.Unit.PosY);
+        int dx = Math.Sign(defender.Unit.PosX - card.Unit.PosX);
+        int dy = Math.Sign(defender.Unit.PosY - card.Unit.PosY);
 
         if (card.Unit.PosX + dx is >= 0 and < Board.BoardSize && 
             card.Unit.PosY + dy is >= 0 and < Board.BoardSize && 

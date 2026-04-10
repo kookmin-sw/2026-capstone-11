@@ -17,9 +17,9 @@ public partial class Game
         Data.Player1.Deck.Shuffle();
         Data.Player2.Deck.Shuffle();
 
-        if (Data.Player1.Deck.Cards.Any(c => c.Data.UnitType == UnitType.Leader))
+        if (Data.Player1.Deck.Cards.All(c => c.Data.UnitType != UnitType.Leader))
             throw new InvalidOperationException("No Leader in Player 1 Deck");
-        if (Data.Player1.Deck.Cards.Any(c => c.Data.UnitType == UnitType.Leader))
+        if (Data.Player2.Deck.Cards.All(c => c.Data.UnitType != UnitType.Leader))
             throw new InvalidOperationException("No Leader in Player 2 Deck");
         
         Data.Player1.Deck.Cards.First(c => c.Data.UnitType == UnitType.Leader).Unit.Place(0, 2);

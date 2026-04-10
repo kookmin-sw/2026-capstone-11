@@ -9,6 +9,11 @@ public partial class Game
     {
         _actions = [];
         
+        if (Data.Winner != null)
+        {
+            return;
+        }
+        
         //01. 활성 플레이어의, 아직 안 움직인 유닛.
         var movableUnits = Data.Board.Cards.Where(c => c.Owner == Data.ActivePlayer && c.Unit is { IsPlaced: true, IsMoved: false });
         foreach(var unit in movableUnits)

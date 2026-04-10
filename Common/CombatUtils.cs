@@ -18,6 +18,11 @@ public static class CombatUtils
         
         data.TriggerEvent(target.Data.EventId, "OnDestroy", target.Guid);
         target.Unit.Withdraw();
+
+        if (target.Data.UnitType == UnitType.Leader)
+        {
+            data.Winner = target.Owner == data.Player1 ? data.Player2 : data.Player1;
+        }
         return true;
     }
 
