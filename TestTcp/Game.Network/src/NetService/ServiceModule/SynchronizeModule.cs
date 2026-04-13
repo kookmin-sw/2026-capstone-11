@@ -1,5 +1,0 @@
-
-namespace Game.Network
-{
-    
-}
