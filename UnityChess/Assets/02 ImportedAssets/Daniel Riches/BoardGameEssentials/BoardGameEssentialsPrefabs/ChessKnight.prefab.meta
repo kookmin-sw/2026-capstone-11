@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ac79da14418c01d47897b15720d466be
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 284152
+  packageName: Board Game Essentials - Chess / Checkers / Dice
+  packageVersion: 1.0
+  assetPath: Assets/Daniel Riches/BoardGameEssentials/BoardGameEssentialsPrefabs/ChessKnight.prefab
+  uploadId: 666420
