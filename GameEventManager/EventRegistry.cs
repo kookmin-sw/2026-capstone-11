@@ -35,7 +35,7 @@ public class EventRegistry
         if (_instance == null) return null;
         if (!_instance._registry.TryGetValue(timing, out var events))
             return null;
-        return events.TryGetValue(id, out var evt) == true ? evt : null;
+        return events.GetValueOrDefault(id);
     }
 
     public static IEnumerable<IEvent> GetEventsByTiming(string timing)

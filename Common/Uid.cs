@@ -2,17 +2,16 @@ namespace SeaEngine.Common;
 
 public record Uid
 {
-    
     //TODO : prefix에 따른 Uid의 Factory를 생성하도록 재작성하기.
     
-    private static readonly Dictionary<string, int> _cur = new Dictionary<string, int>();
+    private static readonly Dictionary<string, int> Cur = new Dictionary<string, int>();
     
     private readonly string _id;
     public Uid(string prefix)
     {
-        _cur.TryAdd(prefix, 0);
-        _id = $"{prefix}{_cur[prefix]:X3}";
-        _cur[prefix] += 1;
+        Cur.TryAdd(prefix, 0);
+        _id = $"{prefix}{Cur[prefix]:X3}";
+        Cur[prefix] += 1;
     }
 
     private Uid(string prefix, int id)
@@ -24,7 +23,7 @@ public record Uid
     {
         _id = id;
     }
-
+    
     public static readonly Uid None = new Uid("",0);
 
     public override string ToString()
