@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+package seaengine;
+
+option csharp_namespace = "SeaEngine.Protos";
+
+service SeaEngineService {
+  rpc Ping (Empty) returns (PongResponse);
+  rpc InitGame (InitRequest) returns (Snapshot);
+  rpc ApplyAction (ActionRequest) returns (Snapshot);
+  rpc GetSnapshot (Empty) returns (Snapshot);
+}
+
+message Empty {}
+message PongResponse { string message = 1; }
+
+message InitRequest {
+  string card_data_path = 2;
+  string player1_deck = 3;
+  string player2_deck = 4;
+  string player1_id = 5;
+  string player2_id = 6;
+}
+
+message ActionRequest {
+  string action_uid = 1;
+}
+
+message Snapshot {
+  int32 turn = 1;
+  string active_player = 2;
+  string result = 3;
+  string winner_id = 4;
+  repeated Player players = 5;
+  repeated Card board = 6;
+  repeated GameAction actions = 7;
+}
+
+message Player {
+  string id = 1;
+  int32 hand_count = 2;
+  int32 deck_count = 3;
+  int32 trash_count = 4;
+  repeated CardData hand = 5;
+}
+
+message CardData {
+  string uid = 1;
+  string card_id = 2;
+  string name = 3;
+}
+
+message Card {
+  string uid = 1;
+  string card_id = 2;
+  string name = 3;
+  string owner = 4;
+  string role = 5;
+  int32 atk = 6;
+  int32 effective_atk = 7;
+  int32 hp = 8;
+  int32 max_hp = 9;
+  bool is_placed = 10;
+  bool is_moved = 11;
+  bool is_attacked = 12;
+  int32 pos_x = 13;
+  int32 pos_y = 14;
+  repeated Status statuses = 15;
+}
+
+message Status {
+  string type = 1;
+  int32 value = 2;
+  int32 remaining_turns = 3;
+  string source_key = 4;
+}
+
+message GameAction {
+  string uid = 1;
+  string effect_id = 2;
+  string source = 3;
+  Target target = 4;
+  string text = 5;
+}
+
+message Target {
+  string type = 1;
+  string guid = 2;
+  string guid2 = 3;
+  int32 pos_x = 4;
+  int32 pos_y = 5;
+}

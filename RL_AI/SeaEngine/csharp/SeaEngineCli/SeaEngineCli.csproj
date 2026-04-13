@@ -8,7 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" Version="2.67.0" />
     <ProjectReference Include="..\SeaEngine\SeaEngine.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="..\..\..\protos\seaengine.proto" GrpcServices="Server" />
   </ItemGroup>
 
 </Project>

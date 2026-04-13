@@ -1,254 +1,224 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Net;
+using Grpc.Core;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using SeaEngine;
-using SeaEngine.Actions;
 using SeaEngine.CardManager;
+using SeaEngine.Common;
 using SeaEngine.GameDataManager.Components;
 using SeaEngine.Logger;
+using SeaEngine.Protos;
+using System.Text.Json;
 
-var jsonOptions = new JsonSerializerOptions
+// Alias to resolve ambiguity
+using ProtoPlayer = SeaEngine.Protos.Player;
+using ProtoCard = SeaEngine.Protos.Card;
+using ProtoAction = SeaEngine.Protos.GameAction;
+using ProtoStatus = SeaEngine.Protos.Status;
+using ProtoCardData = SeaEngine.Protos.CardData;
+using EnginePlayer = SeaEngine.GameDataManager.Components.Player;
+using EngineCard = SeaEngine.GameDataManager.Components.Card;
+using EngineAction = SeaEngine.Common.GameAction;
+using GrpcStatus = Grpc.Core.Status;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// gRPC 서비스 등록
+builder.Services.AddGrpc();
+
+// Kestrel이 동적 포트를 사용하도록 설정
+builder.WebHost.ConfigureKestrel(options =>
 {
-    PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-};
-
-Game? game = null;
-var turnCounter = 1;
-
-while (true)
-{
-    var line = Console.ReadLine();
-    if (line == null) break;
-    if (string.IsNullOrWhiteSpace(line)) continue;
-
-    try
+    options.Listen(IPAddress.Loopback, 0, listenOptions =>
     {
-        var request = JsonSerializer.Deserialize<BridgeRequest>(line, jsonOptions);
-        if (request == null || string.IsNullOrWhiteSpace(request.Command))
+        listenOptions.Protocols = HttpProtocols.Http2;
+    });
+});
+
+var app = builder.Build();
+
+app.MapGrpcService<SeaEngineServiceImpl>();
+
+// 서버 시작 및 포트 출력
+await app.StartAsync();
+
+var address = app.Urls.First();
+var port = address.Split(':').Last();
+Console.WriteLine($"PORT:{port}");
+Console.Out.Flush();
+
+await app.WaitForShutdownAsync();
+
+public class SeaEngineServiceImpl : SeaEngineService.SeaEngineServiceBase
+{
+    private Game? _game;
+    private int _turnCounter = 1;
+
+    public override Task<PongResponse> Ping(Empty request, ServerCallContext context)
+    {
+        return Task.FromResult(new PongResponse { Message = "pong" });
+    }
+
+    public override Task<Snapshot> InitGame(InitRequest request, ServerCallContext context)
+    {
+        _game = CreateGame(request);
+        _turnCounter = 1;
+        return Task.FromResult(BuildSnapshot(_game, _turnCounter));
+    }
+
+    public override Task<Snapshot> ApplyAction(ActionRequest request, ServerCallContext context)
+    {
+        if (_game == null) throw new RpcException(new GrpcStatus(StatusCode.FailedPrecondition, "Game not initialized"));
+
+        var action = _game.Actions.FirstOrDefault(a => a.Guid.ToString() == request.ActionUid);
+        if (action == null) throw new RpcException(new GrpcStatus(StatusCode.NotFound, $"Unknown action uid: {request.ActionUid}"));
+
+        _game.UseAction(action.Guid);
+        if (action.EffectId == "TurnEnd")
         {
-            WriteResponse(new BridgeResponse("error", null, "invalid_request"));
-            continue;
+            _turnCounter += 1;
         }
+        return Task.FromResult(BuildSnapshot(_game, _turnCounter));
+    }
 
-        switch (request.Command)
+    public override Task<Snapshot> GetSnapshot(Empty request, ServerCallContext context)
+    {
+        if (_game == null) throw new RpcException(new GrpcStatus(StatusCode.FailedPrecondition, "Game not initialized"));
+        return Task.FromResult(BuildSnapshot(_game, _turnCounter));
+    }
+
+    private Game CreateGame(InitRequest request)
+    {
+        var cardsPath = string.IsNullOrWhiteSpace(request.CardDataPath)
+            ? Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "cards", "Cards.csv"))
+            : Path.GetFullPath(request.CardDataPath);
+        var loader = new CardLoader(cardsPath);
+        var created = new Game(loader, new SilentLogger(), request.Player1Id ?? "P1", request.Player2Id ?? "P2");
+        created.Init(
+            NormalizeDeckJson(request.Player1Deck, true),
+            NormalizeDeckJson(request.Player2Deck, false)
+        );
+        return created;
+    }
+
+    private string NormalizeDeckJson(string? deckJson, bool player1)
+    {
+        if (!string.IsNullOrWhiteSpace(deckJson)) return deckJson;
+
+        var fallback = player1
+            ? new[] { "Or_L", "Or_B", "Or_N", "Or_R", "Or_P", "Or_P", "Or_P" }
+            : new[] { "Cl_L", "Cl_B", "Cl_N", "Cl_R", "Cl_P", "Cl_P", "Cl_P" };
+        return JsonSerializer.Serialize(fallback);
+    }
+
+    private Snapshot BuildSnapshot(Game game, int turnCounter)
+    {
+        var data = game.Data;
+        var snapshot = new Snapshot
         {
-            case "ping":
-                WriteResponse(new BridgeResponse("ok", new { message = "pong" }, null));
-                break;
+            Turn = turnCounter,
+            ActivePlayer = data.ActivePlayerId,
+            Result = BuildResult(data),
+            WinnerId = data.WinnerId
+        };
 
-            case "init":
-                game = CreateGame(request);
-                turnCounter = 1;
-                WriteResponse(new BridgeResponse("ok", BuildSnapshot(game, turnCounter), null));
-                break;
+        snapshot.Players.Add(BuildPlayer(data.Player1));
+        snapshot.Players.Add(BuildPlayer(data.Player2));
+        snapshot.Board.AddRange(data.Board.Cards.Select(BuildCard));
+        snapshot.Actions.AddRange(game.Actions.Select(BuildAction));
 
-            case "snapshot":
-                EnsureGame(game);
-                WriteResponse(new BridgeResponse("ok", BuildSnapshot(game!, turnCounter), null));
-                break;
-
-            case "apply":
-                EnsureGame(game);
-                if (string.IsNullOrWhiteSpace(request.ActionUid))
-                {
-                    throw new InvalidOperationException("action_uid is required");
-                }
-
-                var action = game!.Actions.FirstOrDefault(a => a.Guid.ToString() == request.ActionUid);
-                if (action == null)
-                {
-                    throw new InvalidOperationException($"Unknown action uid: {request.ActionUid}");
-                }
-
-                game.UseAction(action.Guid);
-                if (action.EffectId == "TurnEnd")
-                {
-                    turnCounter += 1;
-                }
-                WriteResponse(new BridgeResponse("ok", BuildSnapshot(game, turnCounter), null));
-                break;
-
-            case "close":
-                WriteResponse(new BridgeResponse("ok", new { closed = true }, null));
-                return;
-
-            default:
-                WriteResponse(new BridgeResponse("error", null, $"unknown_command:{request.Command}"));
-                break;
-        }
-    }
-    catch (Exception ex)
-    {
-        WriteResponse(new BridgeResponse("error", null, ex.Message));
-    }
-}
-
-return;
-
-void WriteResponse(BridgeResponse response)
-{
-    Console.WriteLine(JsonSerializer.Serialize(response, jsonOptions));
-    Console.Out.Flush();
-}
-
-Game CreateGame(BridgeRequest request)
-{
-    var cardsPath = string.IsNullOrWhiteSpace(request.CardDataPath)
-        ? Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "cards", "Cards.csv"))
-        : Path.GetFullPath(request.CardDataPath);
-    var loader = new CardLoader(cardsPath);
-    var created = new Game(loader, new SilentLogger(), request.Player1Id ?? "P1", request.Player2Id ?? "P2");
-    created.Init(
-        NormalizeDeckJson(request.Player1Deck, true),
-        NormalizeDeckJson(request.Player2Deck, false)
-    );
-    return created;
-}
-
-static string NormalizeDeckJson(string? deckJson, bool player1)
-{
-    if (!string.IsNullOrWhiteSpace(deckJson))
-    {
-        return deckJson;
+        return snapshot;
     }
 
-    var fallback = player1
-        ? new[] { "Or_L", "Or_B", "Or_N", "Or_R", "Or_P", "Or_P", "Or_P" }
-        : new[] { "Cl_L", "Cl_B", "Cl_N", "Cl_R", "Cl_P", "Cl_P", "Cl_P" };
-    return JsonSerializer.Serialize(fallback);
-}
-
-static void EnsureGame(Game? existing)
-{
-    if (existing == null)
+    private string BuildResult(SeaEngine.GameDataManager.GameData data)
     {
-        throw new InvalidOperationException("game_not_initialized");
+        if (data.Winner == null) return "Ongoing";
+        return data.Winner.Id == data.Player1.Id ? "Player1Win" : "Player2Win";
     }
-}
 
-static object BuildSnapshot(Game game, int turnCounter)
-{
-    var data = game.Data;
-    return new
+    private ProtoPlayer BuildPlayer(EnginePlayer player)
     {
-        turn = turnCounter,
-        active_player = data.ActivePlayerId,
-        result = BuildResult(data),
-        winner_id = data.WinnerId,
-        players = new[]
+        var p = new ProtoPlayer
         {
-            BuildPlayer(data.Player1),
-            BuildPlayer(data.Player2),
-        },
-        board = data.Board.Cards.Select(BuildCard).ToList(),
-        actions = game.Actions.Select(BuildAction).ToList(),
-    };
-}
-
-static string BuildResult(SeaEngine.GameDataManager.GameData data)
-{
-    if (data.Winner == null)
-    {
-        return "Ongoing";
+            Id = player.Id,
+            HandCount = player.Hand.Count,
+            DeckCount = player.Deck.Count,
+            TrashCount = player.Trash.Count
+        };
+        p.Hand.AddRange(player.Hand.Cards.Select(card => new ProtoCardData
+        {
+            Uid = card.Guid.ToString(),
+            CardId = card.Data.Id,
+            Name = card.Data.Name
+        }));
+        return p;
     }
-    return data.Winner.Id == data.Player1.Id ? "Player1Win" : "Player2Win";
-}
 
-static object BuildPlayer(Player player)
-{
-    return new
+    private ProtoCard BuildCard(EngineCard card)
     {
-        id = player.Id,
-        hand_count = player.Hand.Count,
-        deck_count = player.Deck.Count,
-        trash_count = player.Trash.Count,
-        hand = player.Hand.Cards.Select(card => new
+        var tempAtk = card.Unit.Buffs.TryGetValue("TempAtk", out var atkBuff) ? atkBuff : 0;
+        var effectiveAtk = card.Unit.Atk + tempAtk;
+
+        var c = new ProtoCard
         {
-            uid = card.Guid.ToString(),
-            card_id = card.Data.Id,
-            name = card.Data.Name,
-        }).ToList(),
-    };
-}
+            Uid = card.Guid.ToString(),
+            CardId = card.Data.Id,
+            Name = card.Data.Name,
+            Owner = card.Owner.Id,
+            Role = card.Data.UnitType.ToString(),
+            Atk = card.Unit.Atk,
+            EffectiveAtk = effectiveAtk,
+            Hp = card.Unit.Hp,
+            MaxHp = card.Unit.MaxHp,
+            IsPlaced = card.Unit.IsPlaced,
+            IsMoved = card.Unit.IsMoved,
+            IsAttacked = false,
+            PosX = card.Unit.PosX,
+            PosY = card.Unit.PosY
+        };
 
-static object BuildCard(Card card)
-{
-    var statusPayload = BuildStatuses(card).ToList();
-    var tempAtk = card.Unit.Buffs.TryGetValue("TempAtk", out var atkBuff) ? atkBuff : 0;
-    var effectiveAtk = card.Unit.Atk + tempAtk;
-    return new
-    {
-        uid = card.Guid.ToString(),
-        card_id = card.Data.Id,
-        name = card.Data.Name,
-        owner = card.Owner.Id,
-        role = card.Data.UnitType.ToString(),
-        atk = card.Unit.Atk,
-        effective_atk = effectiveAtk,
-        hp = card.Unit.Hp,
-        max_hp = card.Unit.MaxHp,
-        is_placed = card.Unit.IsPlaced,
-        is_moved = card.Unit.IsMoved,
-        is_attacked = false,
-        pos_x = card.Unit.PosX,
-        pos_y = card.Unit.PosY,
-        statuses = statusPayload,
-    };
-}
-
-static IEnumerable<object> BuildStatuses(Card card)
-{
-    foreach (var buff in card.Unit.Buffs)
-    {
-        yield return new
+        c.Statuses.AddRange(card.Unit.Buffs.Select(buff => new ProtoStatus
         {
-            type = buff.Key switch
+            Type = buff.Key switch
             {
                 "TempAtk" => "AttackModifier",
                 "CantMove" => "MoveLock",
-                _ => buff.Key,
+                _ => buff.Key
             },
-            value = buff.Value,
-            remaining_turns = 1,
-            source_key = buff.Key,
+            Value = buff.Value,
+            RemainingTurns = 1,
+            SourceKey = buff.Key
+        }));
+
+        return c;
+    }
+
+    private ProtoAction BuildAction(EngineAction action)
+    {
+        return new ProtoAction
+        {
+            Uid = action.Guid.ToString(),
+            EffectId = action.EffectId,
+            Source = action.Source.ToString(),
+            Target = new Target
+            {
+                Type = action.Target.Type.ToString(),
+                Guid = action.Target.Guid.ToString(),
+                Guid2 = action.Target.Guid2.ToString(),
+                PosX = action.Target.PosX,
+                PosY = action.Target.PosY
+            },
+            Text = action.ToString()
         };
     }
 }
 
-static object BuildAction(GameAction action)
-{
-    return new
-    {
-        uid = action.Guid.ToString(),
-        effect_id = action.EffectId,
-        source = action.Source.ToString(),
-        target = new
-        {
-            type = action.Target.Type.ToString(),
-            guid = action.Target.Guid.ToString(),
-            guid2 = action.Target.Guid2.ToString(),
-            pos_x = action.Target.PosX,
-            pos_y = action.Target.PosY,
-        },
-        text = action.ToString(),
-    };
-}
-
-file sealed record BridgeRequest(
-    string? Command,
-    string? CardDataPath = null,
-    string? Player1Deck = null,
-    string? Player2Deck = null,
-    string? Player1Id = null,
-    string? Player2Id = null,
-    string? ActionUid = null
-);
-
-file sealed record BridgeResponse(string Status, object? Payload = null, string? Error = null);
-
 file sealed class SilentLogger : ILogger
 {
-    public void Log(string message, GameAction action, SeaEngine.GameDataManager.GameData data)
+    public void Log(string message, EngineAction action, SeaEngine.GameDataManager.GameData data)
     {
     }
 }

@@ -113,24 +113,50 @@ class SeaEngineRLAgentOutput:
 
 
 class PPOActorCritic(nn.Module):
-    def __init__(self, state_dim: int, action_dim: int, hidden_dim: int = 192) -> None:
+    """Transformer-based Actor-Critic for SeaEngine.
+    
+    Restructures the flat state vector into tokens:
+    - 1 Global Token
+    - 14 Board Unit Tokens
+    - 7 Hand Card Tokens
+    Total 22 tokens processed via Self-Attention.
+    """
+    def __init__(self, state_dim: int, action_dim: int, hidden_dim: int = 256) -> None:
         super().__init__()
-        self.state_encoder = nn.Sequential(
-            nn.Linear(state_dim, hidden_dim),
-            nn.LayerNorm(hidden_dim),
-            nn.GELU(),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.LayerNorm(hidden_dim),
-            nn.GELU(),
+        # State vector components (matching observation.py)
+        self.global_dim = 39
+        self.num_units = 14
+        self.unit_dim = 29
+        self.num_hand = 7
+        self.hand_dim = 10
+        
+        # Projections to hidden_dim
+        self.global_proj = nn.Linear(self.global_dim, hidden_dim)
+        self.unit_proj = nn.Linear(self.unit_dim, hidden_dim)
+        self.hand_proj = nn.Linear(self.hand_dim, hidden_dim)
+        
+        # Type embeddings to help Transformer distinguish token types
+        self.type_emb = nn.Parameter(torch.randn(3, hidden_dim))
+        
+        # Transformer Encoder
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=hidden_dim, 
+            nhead=8, 
+            dim_feedforward=hidden_dim * 4, 
+            batch_first=True, 
+            activation='gelu'
         )
+        self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=3)
+        
+        # Action Encoder (MLP is fine for action features)
         self.action_encoder = nn.Sequential(
             nn.Linear(action_dim, hidden_dim),
             nn.LayerNorm(hidden_dim),
             nn.GELU(),
             nn.Linear(hidden_dim, hidden_dim),
-            nn.LayerNorm(hidden_dim),
-            nn.GELU(),
         )
+        
+        # Heads
         self.policy_head = nn.Sequential(
             nn.Linear(hidden_dim * 2, hidden_dim),
             nn.GELU(),
@@ -143,11 +169,54 @@ class PPOActorCritic(nn.Module):
         )
 
     def forward(self, state_tensor: torch.Tensor, action_tensor: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-        state_hidden = self.state_encoder(state_tensor.unsqueeze(0)).squeeze(0)
-        action_hidden = self.action_encoder(action_tensor)
-        repeated_state = state_hidden.unsqueeze(0).expand(action_hidden.shape[0], -1)
-        logits = self.policy_head(torch.cat([repeated_state, action_hidden], dim=-1)).squeeze(-1)
-        value = self.value_head(state_hidden).squeeze(-1)
+        # Handle batch or single vector
+        is_batched = state_tensor.dim() > 1
+        if not is_batched:
+            state_tensor = state_tensor.unsqueeze(0)
+        
+        batch_size = state_tensor.shape[0]
+        
+        # Split tokens
+        global_part = state_tensor[:, :self.global_dim]
+        board_part = state_tensor[:, self.global_dim : self.global_dim + self.num_units * self.unit_dim].view(batch_size, self.num_units, self.unit_dim)
+        hand_part = state_tensor[:, self.global_dim + self.num_units * self.unit_dim :].view(batch_size, self.num_hand, self.hand_dim)
+        
+        # Project to hidden_dim
+        g_token = self.global_proj(global_part).unsqueeze(1) # [B, 1, hidden]
+        u_tokens = self.unit_proj(board_part) # [B, 14, hidden]
+        h_tokens = self.hand_proj(hand_part) # [B, 7, hidden]
+        
+        # Add type embeddings
+        g_token = g_token + self.type_emb[0]
+        u_tokens = u_tokens + self.type_emb[1]
+        h_tokens = h_tokens + self.type_emb[2]
+        
+        # Concatenate tokens
+        all_tokens = torch.cat([g_token, u_tokens, h_tokens], dim=1) # [B, 22, hidden]
+        
+        # Transformer Attention
+        attended = self.transformer(all_tokens) # [B, 22, hidden]
+        
+        # Use the global token (context) for value and combined with action for policy
+        state_context = attended[:, 0] # [B, hidden]
+        
+        # Action features
+        action_hidden = self.action_encoder(action_tensor) # [num_actions, hidden]
+        
+        # Policy: calculate logits for each action
+        # If batched, we need to handle this carefully. Currently compute_policy_output calls with single state.
+        if not is_batched:
+            repeated_state = state_context.expand(action_hidden.shape[0], -1)
+            logits = self.policy_head(torch.cat([repeated_state, action_hidden], dim=-1)).squeeze(-1)
+            value = self.value_head(state_context).squeeze(-1)
+        else:
+            # For training updates (batched)
+            # This part needs to align with how trainer calls it.
+            # In trainer.update_from_buffer, it loops over steps one by one.
+            # So is_batched might only be True if we change trainer to batch updates.
+            logits = self.policy_head(torch.cat([state_context.unsqueeze(1).expand(-1, action_hidden.shape[1], -1), action_hidden], dim=-1)).squeeze(-1)
+            value = self.value_head(state_context).squeeze(-1)
+            
         return logits, value
 
 
