@@ -17,7 +17,7 @@ public class CardLoader
         for (int i = 1; i < cardData.Length; i++)
         {
             string[] data = cardData[i].Split(',');
-            if (data.Length != 9 || data[0] == "")
+            if (data[0] == "")
             {
                 continue;
             }
