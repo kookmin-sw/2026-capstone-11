@@ -1,78 +1,91 @@
-# 👑 Call of the King: RL_AI (SeaEngine Edition) 
+# Call of the King: RL_AI (SeaEngine)
 
-`RL_AI`는 C# 기반 보드게임 엔진 **SeaEngine** 위에서 동작하는 최첨단 강화학습 실험 레이어입니다.  
-현재 프로젝트는 단순한 로직 구현을 넘어, **병렬 데이터 수집**과 **비동기 통신**을 통한 학습 가속화 단계에 도달해 있습니다.
+`RL_AI`는 C# 게임 엔진 `SeaEngine`을 Python 강화학습 루프에 연결해, 대량 self-play 로그를 쌓고 밸런싱 분석에 활용하는 프로젝트입니다.
 
 ---
 
-## 🏗️ 시스템 아키텍처
-
-현재 시스템은 **Python(지능)**과 **C#(육체)**이 분리된 하이브리드 구조입니다.
+## 현재 코드 기준 아키텍처
 
 ```text
-[ start.ipynb ] (User Interface)
-      ↓ (await)
-[ experiment.py ] (Global Loop & Checkpointing)
-      ↓ (async)
-[ trainer.py ] (PPO Algorithm & Rollout Management)
-      ↓ (await)
-[ VectorSeaEngineEnv ] (Parallel Environment Manager)
-      ↓ (Multi-Process IPC)
-[ SeaEngineCli (C#) ] × 8 Engines (Concurrent Simulation)
+start.ipynb
+  -> experiment.py (실험 전체 흐름, 체크포인트, 평가, 리포트/압축)
+  -> trainer.py (PPO 학습 루프)
+  -> bridge/vector_env.py (병렬 env 관리)
+  -> bridge/pythonnet_session.py (C# DLL in-process 호출, PythonNet)
+  -> csharp/SeaEngine (핵심 게임 로직)
 ```
 
-### ⚡ 핵심 기술적 특징
-- **Vectorized Environment**: 8개 이상의 C# 엔진을 동시에 구동하여 데이터를 병렬로 수집합니다.
-- **Batched Inference**: 병렬 환경의 상태를 하나로 묶어 GPU에서 한 번에 추론하여 효율을 극대화했습니다.
-- **Pure Async Architecture**: 주피터 노트북의 루프 충돌 문제를 해결하기 위해 전체 파이프라인을 `async/await` 기반의 순수 비동기로 재설계했습니다.
-- **Automated Log Management**: 실험 종료 시 생성된 로그를 자동 압축(.zip)하고 정리하여 저장 공간을 효율적으로 관리합니다.
+- 기본 브리지 경로는 `PythonNet + DLL 직접 호출`입니다.
+- `VectorSeaEngineEnv`는 `local` 백엔드 기준 다중 세션 병렬 실행을 지원합니다.
+- 정책 추론은 배치(`compute_policy_output_batch`)로 처리합니다.
 
 ---
 
-## 📁 디렉토리 구조 (Standardized)
+## 최근 핵심 변경 요약
 
-- **[SeaEngine/](RL_AI/SeaEngine)**: C# 엔진 브리지 및 관측(Observation) 변환 로직
-  - `bridge/`: `VectorEnv`, `SeaEngineSession` (IPC 통신 핵심)
-  - `csharp/`: 실제 C# 게임 엔진 소스 코드 및 CLI
-- **[training/](RL_AI/training)**: 강화학습 핵심 알고리즘
-  - `trainer.py`: PPO 트레이너 (비동기 최적화)
-  - `reward.py`: 지능형 보상 함수 (HP 격차 및 효율성 평가)
-  - `storage.py`: 데이터 수집 버퍼
-- **[simulation/](RL_AI/simulation)**: 매치 실행 및 평가 도구
-  - `evaluator.py`: 16방향 정밀 매트릭스 평가기 (Mirror/Counter Match 지원)
-  - `match_runner.py`: 통합 매치 실행 진입점
-- **[models/](RL_AI/models)**: 학습된 최적의 모델(`pt`) 저장소
-- **[log/](RL_AI/log)**: 리포트 및 매치 로그 (자동 압축 관리)
+### 1) 안정성/실행 환경
+- `start.ipynb`에서 압축 해제/실행 흐름을 정리하고, 실험 재실행 시 모듈 캐시를 정리하도록 반영.
+- C# DLL 경로 해석을 `Release/Debug` 모두 대응하도록 보강.
+- `Uid` 처리 및 액션 적용 경로를 정리해 `Guid` 포맷 오류를 제거.
+- `RlObservationExporter`에서 중복 key 예외(`An item with the same key...`)가 나지 않도록 방어 로직 추가.
 
----
+### 2) 로그/출력 정리
+- 과도한 매치 단위 출력 제거, 핵심 진행 로그(heartbeat/200ep 요약/checkpoint) 중심으로 정리.
+- 체크포인트 평가는 `greedy` 기준 8조합(`덱 2 x 선후공 2 x 같은/다른 덱 2`), 조합당 50판(총 400판)으로 통일.
+- 체크포인트마다 조합별 `history` 텍스트를 별도 파일로 저장.
 
-## ⚖️ 밸런스 패치 (Current Baseline)
+### 3) 학습 구조 개선
+- `train_max_turns=100` 기본화(학습 horizon 확장).
+- `SeaEngineRLAgent`가 `device=auto`를 지원하며 CUDA 가능 시 GPU 사용.
+- Dense reward shaping 추가:
+  - 리더 HP 변화
+  - 보드 점유 변화
+  - 행동 타입(attack/deploy/turn end) 기반 작은 밀집 보상
+  - terminal reward와 누적 결합
+- 커리큘럼 스케줄 추가:
+  - 초반: random 중심
+  - 중반: random + greedy
+  - 후반: random + greedy + self_ep_*
 
-공정한 학습 환경을 위해 **'귤 덱'**의 수치를 다음과 같이 조정하였습니다.
-
-| 카드 ID | 이름 | Atk | HP | 비고 |
-| :--- | :--- | :--- | :--- | :--- |
-| **Or_L** | 귤 공주님 | 3 | **7** | 리더 유지력 조정 |
-| **Or_B** | 귤 직장인? | 1 | **3** | 워프 기동 리스크 강화 |
-| **Or_K** | 망상의 기사님 | 2 | **2** | 전투 효율 정상화 |
-| **Or_P** | 귤 요정 | 1 | 1 | 자원 수급 전용 |
-
----
-
-## 📊 평가 지표 및 분석
-
-학습 후 실행되는 **Deep Analytics**를 통해 다음 지표를 추적합니다.
-1. **Mirror Match Win Rate**: 동일 덱 조건에서 상대(Greedy)보다 얼마나 영리한가? (진정한 지능의 척도)
-2. **Counter Match Win Rate**: 덱 상성을 전략으로 극복하고 있는가?
-3. **Avg Interaction Steps**: 게임이 단순 암살이 아닌 정석적인 운영 싸움으로 흘러가는가?
+### 4) 산출물 관리
+- 실험 완료 시 이번 실행에서 생성된 `log/*.txt` 자동 zip 압축.
+- 실험 완료 시 이번 실행에서 생성된 `models/*.pt` 자동 zip 압축.
+- 반환값에 `log_zip_path`, `model_zip_path` 포함.
 
 ---
 
-## 🚀 향후 로드맵 (Roadmap)
+## 체크포인트/평가 정책 (현재)
 
-1. **gRPC 기반 통신 (RPC 전환)**: 텍스트 기반 JSON 통신을 이진(Binary) RPC로 교체하여 학습 속도를 5배 이상 추가 가속.
-2. **Transformer 아키텍처**: 현재의 MLP 신경망을 기물 간의 관계를 파악하는 **Attention** 구조로 리뉴얼.
-3. **대규모 Self-Play**: 15,000 에피소드 이상의 자기 대전을 통해 '알파고'급 전술 지능 확보.
+- 기본 학습: `10000` episodes
+- 학습 chunk: `1000` episodes
+- 매 chunk 종료 시 checkpoint 평가:
+  - 상대: `greedy`
+  - 축: `귤/샤를로테`, `선공/후공`, `같은 덱/다른 덱`
+  - 조합: 8개
+  - 조합당 50판, 총 400판
+- 최종 전/후 평가:
+  - `vs random` 50판
+  - `vs greedy` 50판
 
 ---
-**Maintained by Su-seok AI Engineer**
+
+## 최근 실험 결과 요약 (2026-04-15 실행 로그 기준)
+
+- Before training:
+  - vs random: `0%`
+  - vs greedy: `0%`
+- After training:
+  - vs random: `86%`
+  - vs greedy: `60%`
+- 해석:
+  - 초기 대비 실력은 큰 폭으로 개선.
+  - 다만 체크포인트별 성능 변동성이 남아 있어, 안정 수렴 개선이 다음 과제.
+
+---
+
+## 현재 남은 과제
+
+1. `self_ep_n`별 성능을 직접 집계하는 로그/리포트 확장  
+2. 커리큘럼 비율(특히 3000~7000 구간) 안정화  
+3. 병렬 설정(`local_threads`, `num_envs`) 실측 기반 튜닝  
+4. 체크포인트 history 기반 전술 패턴(콤보/자원 아끼기/마무리 타이밍) 분석 자동화
