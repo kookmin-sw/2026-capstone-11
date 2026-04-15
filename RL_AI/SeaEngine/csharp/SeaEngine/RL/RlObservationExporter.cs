@@ -180,14 +180,15 @@ public static class RlObservationExporter
         }
         var actionTotal = Math.Max(1.0f, actions.Length);
 
-        var resultVector = new List<float>
+        var resultVector = new List<float>();
+        resultVector.AddRange(new float[]
         {
             NormalizeRatio(data.ActivePlayerId == null ? 0 : data.ActivePlayerId.Length, 100.0f),
             data.ActivePlayerId == playerId ? 1.0f : 0.0f,
-            ..ResultOneHot(BuildResult(data))
-        };
+        });
+        resultVector.AddRange(ResultOneHot(BuildResult(data)));
 
-        resultVector.AddRange(new[]
+        resultVector.AddRange(new float[]
         {
             NormalizeRatio(data.GetPlayer(playerId).Hand.Count, 7.0f),
             NormalizeRatio(enemyPlayer.Hand.Count, 7.0f),
@@ -234,8 +235,6 @@ public static class RlObservationExporter
         var ownLy = ownLeader?.Unit.PosY ?? -1;
         var enemyLx = enemyLeader?.Unit.PosX ?? -1;
         var enemyLy = enemyLeader?.Unit.PosY ?? -1;
-        var actionMap = board.Select(card => card.Guid.ToString()).ToDictionary(uid => uid, _ => new List<RlActionView>());
-
         var vectors = new List<float>();
         var cards = board.OrderBy(card => card.Owner.Id)
             .ThenBy(card => RoleRank(RoleFromCard(card)))
@@ -263,7 +262,7 @@ public static class RlObservationExporter
                 ? NormalizeRatio(card.Owner.Id == "P1" ? cx : (Board.BoardSize - 1 - cx), Board.BoardSize - 1)
                 : 0.0f;
 
-            vectors.AddRange(new[]
+            vectors.AddRange(new float[]
             {
                 card.Owner.Id == playerId ? 1.0f : -1.0f,
                 card.Unit.IsPlaced ? 1.0f : 0.0f,
@@ -289,8 +288,8 @@ public static class RlObservationExporter
                 threatensEnemyLeader,
                 inCenter,
                 rowProgress,
-                ..RoleOneHot(role)
             });
+            vectors.AddRange(RoleOneHot(role));
         }
 
         var missingSlots = 14 - Math.Min(cards.Length, 14);
@@ -316,15 +315,15 @@ public static class RlObservationExporter
             var cardId = card.Data.Id;
             var deployable = 0.0f;
             var skillUsable = 0.0f;
-            vectors.AddRange(new[]
+            vectors.AddRange(new float[]
             {
                 1.0f,
                 cardId.StartsWith("Or_") ? 1.0f : 0.0f,
                 cardId.StartsWith("Cl_") ? 1.0f : 0.0f,
                 deployable,
                 skillUsable,
-                ..RoleOneHot(role)
             });
+            vectors.AddRange(RoleOneHot(role));
         }
         var missingSlots = 7 - Math.Min(hand.Length, 7);
         if (missingSlots > 0)
@@ -380,7 +379,7 @@ public static class RlObservationExporter
         var vectors = new List<float>();
         vectors.AddRange(EffectOneHot(effectId));
         vectors.AddRange(TargetOneHot(targetType));
-        vectors.AddRange(new[]
+        vectors.AddRange(new float[]
         {
             effectId == "TurnEnd" ? 1.0f : 0.0f,
             effectId == "DeployUnit" ? 1.0f : 0.0f,
@@ -396,7 +395,7 @@ public static class RlObservationExporter
             NormalizeRatio(timedStatusCount, 4.0f),
         });
         vectors.AddRange(RoleOneHot(sourceRole));
-        vectors.AddRange(new[]
+        vectors.AddRange(new float[]
         {
             targetCard == null ? 0.0f : (targetCard.Owner.Id != playerId ? 1.0f : -1.0f),
             targetCard == null ? 0.0f : NormalizeRatio(targetCard.Unit.Atk + (targetCard.Unit.Buffs.TryGetValue("TempAtk", out var targetAtkBuff2) ? targetAtkBuff2 : 0), 10.0f),
@@ -404,7 +403,7 @@ public static class RlObservationExporter
             targetCard == null ? 0.0f : (targetRole == "Leader" ? 1.0f : 0.0f),
         });
         vectors.AddRange(RoleOneHot(targetRole));
-        vectors.AddRange(new[]
+        vectors.AddRange(new float[]
         {
             NormalizePos(sourceX),
             NormalizePos(sourceY),
