@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SeaEngineCli")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+614ffe4e0c281fddbf36977cbb9e5fba73946cf1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+281b621f2491f80a492ff970d702560ad249a572")]
 [assembly: System.Reflection.AssemblyProductAttribute("SeaEngineCli")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SeaEngineCli")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

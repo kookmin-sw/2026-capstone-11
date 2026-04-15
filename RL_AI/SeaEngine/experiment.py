@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import os
 from pathlib import Path
 import time
 from typing import Dict, Optional, Sequence
@@ -21,10 +22,14 @@ def _seed_with_offset(seed: Optional[int], offset: int) -> Optional[int]:
 
 def _progress_print_interval(total: int) -> int:
     if total <= 100:
-        return 20
-    if total <= 1000:
         return 100
-    return max(100, total // 10)
+    if total <= 1000:
+        return 250
+    return max(500, total // 4)
+
+
+def _verbose_experiment_logs() -> bool:
+    return os.getenv("SEAENGINE_VERBOSE_EXPERIMENT_LOG", "0") == "1"
 
 
 def run_train_eval_experiment(
@@ -34,18 +39,24 @@ def run_train_eval_experiment(
     eval_random_agent: Optional[SeaEngineAgent] = None,
     eval_greedy_agent: Optional[SeaEngineAgent] = None,
     eval_matches: int = 100,
-    train_episodes: int = 300,
+    train_episodes: int = 10000,
     max_turns: int = 100,
-    update_interval: int = 8,
+    update_interval: int = 16,
     card_data_path: Optional[str] = None,
     player1_deck: str = "",
     player2_deck: str = "",
     seed: Optional[int] = None,
     report_path: Optional[str] = None,
+    num_envs: Optional[int] = None,
 ) -> Dict[str, object]:
     learning_agent = SeaEngineRLAgent(seed=seed) if agent is None else agent
     trainer = SeaEnginePPOTrainer(learning_agent)
     overall_start = time.time()
+
+    # Fast-path defaults for large-scale simulation throughput.
+    train_turn_cap = int(os.getenv("SEAENGINE_TRAIN_MAX_TURNS", "60"))
+    min_update_interval = int(os.getenv("SEAENGINE_MIN_UPDATE_INTERVAL", "32"))
+    fast_pool_enabled = os.getenv("SEAENGINE_FAST_POOL", "1") == "1"
 
     random_eval_opponent = (
         SeaEngineRandomAgent(seed=_seed_with_offset(seed, 101))
@@ -57,13 +68,34 @@ def run_train_eval_experiment(
         if eval_greedy_agent is None
         else eval_greedy_agent
     )
-    opponent_pool = (
-        trainer.build_default_opponent_pool(seed=_seed_with_offset(seed, 303))
-        if train_opponent_pool is None
-        else list(train_opponent_pool)
+    if train_opponent_pool is None:
+        if fast_pool_enabled:
+            opponent_pool = [SeaEngineRandomAgent(seed=_seed_with_offset(seed, 303))]
+        else:
+            opponent_pool = trainer.build_default_opponent_pool(seed=_seed_with_offset(seed, 303))
+    else:
+        opponent_pool = list(train_opponent_pool)
+
+    if num_envs is None:
+        cpu = os.cpu_count() or 8
+        num_envs = max(8, min(24, cpu))
+
+    train_max_turns = min(max_turns, train_turn_cap)
+    train_update_interval = max(update_interval, min_update_interval)
+
+    backend = os.getenv("SEAENGINE_VECTOR_BACKEND", "local")
+    local_threads = os.getenv("SEAENGINE_LOCAL_THREADS", "1")
+    print(
+        f"[*] Experiment start | eval_matches={eval_matches} | train_episodes={train_episodes} | "
+        f"max_turns={max_turns} | update_interval={update_interval} | num_envs={num_envs} | "
+        f"vector_backend={backend} | local_threads={local_threads} | "
+        f"train_max_turns={train_max_turns} | train_update_interval={train_update_interval} | "
+        f"fast_pool={fast_pool_enabled}"
     )
 
     def log_eval_progress(stage: str):
+        if not _verbose_experiment_logs():
+            return None
         def _callback(current: int, total: int, result: str, matchup: str) -> None:
             interval = max(1, _progress_print_interval(total))
             if current % interval != 0 and current != total:
@@ -73,6 +105,8 @@ def run_train_eval_experiment(
         return _callback
 
     def log_train_progress(current: int, total: int, opponent_name: str, stats: Dict[str, object]) -> None:
+        if not _verbose_experiment_logs():
+            return
         interval = max(1, _progress_print_interval(total))
         if current % interval != 0 and current != total:
             return
@@ -85,6 +119,7 @@ def run_train_eval_experiment(
         )
         print(message)
 
+    print("[*] Evaluating before training vs random...")
     before_random_start = time.time()
     before_random = trainer.evaluate(
         opponent_agent=random_eval_opponent,
@@ -97,6 +132,7 @@ def run_train_eval_experiment(
     )
     before_random_elapsed = time.time() - before_random_start
 
+    print("[*] Evaluating before training vs greedy...")
     before_greedy_start = time.time()
     before_greedy = trainer.evaluate(
         opponent_agent=greedy_eval_opponent,
@@ -109,6 +145,7 @@ def run_train_eval_experiment(
     )
     before_greedy_elapsed = time.time() - before_greedy_start
 
+    print("[*] Training starts...")
     train_start = time.time()
     train_summary = trainer.train(
         num_episodes=train_episodes,
@@ -116,12 +153,15 @@ def run_train_eval_experiment(
         card_data_path=card_data_path,
         player1_deck=player1_deck,
         player2_deck=player2_deck,
-        max_turns=max_turns,
-        update_interval=update_interval,
-        progress_callback=log_train_progress,
+        max_turns=train_max_turns,
+        update_interval=train_update_interval,
+        progress_callback=log_train_progress if _verbose_experiment_logs() else None,
+        num_envs=num_envs,
+        log_interval=200,
     )
     train_elapsed = time.time() - train_start
 
+    print("[*] Evaluating after training vs random...")
     after_random_start = time.time()
     after_random = trainer.evaluate(
         opponent_agent=SeaEngineRandomAgent(seed=_seed_with_offset(seed, 404)),
@@ -134,6 +174,7 @@ def run_train_eval_experiment(
     )
     after_random_elapsed = time.time() - after_random_start
 
+    print("[*] Evaluating after training vs greedy...")
     after_greedy_start = time.time()
     after_greedy = trainer.evaluate(
         opponent_agent=SeaEngineGreedyAgent(seed=_seed_with_offset(seed, 505)),

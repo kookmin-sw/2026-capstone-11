@@ -1,12 +1,12 @@
 namespace SeaEngine.GameDataManager.Components;
 
-public class Unit(Card card)
+public class Unit
 {
-    public readonly Card Card = card;
+    public readonly Card Card;
 
-    public int Atk = card.Data.Atk;
-    public int MaxHp = card.Data.Hp;
-    public int Hp = card.Data.Hp;
+    public int Atk;
+    public int MaxHp;
+    public int Hp;
 
     public bool IsPlaced = false; // 설치된 유닛인지
     public bool IsMoved = false; // 이번 턴에 기본행동으로 움직였는지
@@ -14,11 +14,19 @@ public class Unit(Card card)
     public int PosX = -1;
     public int PosY = -1;
 
+    public Unit(Card card)
+    {
+        Card = card;
+        Atk = card.Data.Atk;
+        MaxHp = card.Data.Hp;
+        Hp = card.Data.Hp;
+    }
+
     public void Place(int x, int y)
     {
         if (x is < 0 or >= Board.BoardSize || y is < 0 or >= Board.BoardSize)
         {
-            throw new ArgumentOutOfRangeException($"Place Out of range({card.Guid})");
+            throw new ArgumentOutOfRangeException($"Place Out of range({Card.Guid})");
         }
         IsPlaced = true;
         PosX = x;
@@ -29,7 +37,7 @@ public class Unit(Card card)
     {
         if (x is < 0 or >= Board.BoardSize || y is < 0 or >= Board.BoardSize)
         {
-            throw new ArgumentOutOfRangeException($"Move Out of range({card.Guid})");
+            throw new ArgumentOutOfRangeException($"Move Out of range({Card.Guid})");
         }
         PosX = x;
         PosY = y;

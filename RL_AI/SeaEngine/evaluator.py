@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from collections import Counter
 from contextlib import nullcontext
 from datetime import datetime
@@ -9,8 +10,10 @@ from pathlib import Path
 from typing import Callable, Dict, Optional
 
 from RL_AI.SeaEngine.action_adapter import choose_action_with_agent
-from RL_AI.SeaEngine.bridge.seaengine_session import SeaEngineSession
+from RL_AI.SeaEngine.bridge.pythonnet_session import PythonNetSession
 from RL_AI.analysis.reports import build_win_rate_report, save_report
+
+_VERBOSE_EVAL_MATCH_LOG = os.getenv("SEAENGINE_VERBOSE_EVAL_MATCH_LOG", "0") == "1"
 
 
 def _default_evaluation_report_path(prefix: str = "seaengine_evaluation_report") -> Path:
@@ -30,7 +33,7 @@ def play_evaluation_match(
     p1_agent,
     p2_agent,
     *,
-    session: Optional[SeaEngineSession] = None,
+    session: Optional[PythonNetSession] = None,
     card_data_path: Optional[str] = None,
     player1_deck: str = "",
     player2_deck: str = "",
@@ -38,7 +41,7 @@ def play_evaluation_match(
 ) -> Dict[str, object]:
     owns_session = session is None
     if session is None:
-        session = SeaEngineSession(card_data_path=card_data_path)
+        session = PythonNetSession(card_data_path=card_data_path)
         session.start()
     p1_context = p1_agent.sampling_mode(False) if hasattr(p1_agent, "sampling_mode") else nullcontext()
     p2_context = p2_agent.sampling_mode(False) if hasattr(p2_agent, "sampling_mode") else nullcontext()
@@ -55,7 +58,8 @@ def play_evaluation_match(
                 if not actions:
                     break
 
-                acting_agent = agents[snapshot["active_player"]]
+                active_player = snapshot["active_player"]
+                acting_agent = agents[active_player]
                 _, action = choose_action_with_agent(acting_agent, snapshot)
 
                 effect_id = str(action.get("effect_id", ""))
@@ -101,7 +105,7 @@ def evaluate_agents(
     action_type_counts: Counter[str] = Counter()
     card_use_counts: Counter[str] = Counter()
 
-    session = SeaEngineSession(card_data_path=card_data_path)
+    session = PythonNetSession(card_data_path=card_data_path)
     session.start()
     try:
         for match_index in range(num_matches):
@@ -123,6 +127,10 @@ def evaluate_agents(
             total_final_turns += int(result["final_turn"])
             action_type_counts.update(result["action_type_counts"])
             card_use_counts.update(result["card_use_counts"])
+            
+            if _VERBOSE_EVAL_MATCH_LOG:
+                print(f"  [Match {match_index + 1}/{num_matches}] Result: {snapshot['result']} | Steps: {result['steps']}")
+            
             if progress_callback is not None:
                 progress_callback(
                     match_index + 1,

@@ -15,11 +15,11 @@ message Empty {}
 message PongResponse { string message = 1; }
 
 message InitRequest {
-  string card_data_path = 2;
-  string player1_deck = 3;
-  string player2_deck = 4;
-  string player1_id = 5;
-  string player2_id = 6;
+  string card_data_path = 1;
+  string player1_deck = 2;
+  string player2_deck = 3;
+  string player1_id = 4;
+  string player2_id = 5;
 }
 
 message ActionRequest {

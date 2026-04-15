@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import subprocess
 import time
+import shutil
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -39,11 +40,14 @@ class SeaEngineSession:
             return
         
         dotnet_cmd = os.environ.get("DOTNET_CMD") or self._resolve_dotnet_cmd()
+        # Ensure we have an absolute path if possible for DOTNET_ROOT
+        resolved_dotnet = shutil.which(dotnet_cmd) or dotnet_cmd
+        
         dotnet_cli_home = os.environ.get("DOTNET_CLI_HOME") or str(
             (Path.home() / ".dotnet_cli_home").resolve()
         )
-        launch_cmd = self._build_launch_command(dotnet_cmd)
-        dotnet_root = Path(dotnet_cmd).resolve().parent if dotnet_cmd else None
+        launch_cmd = self._build_launch_command(resolved_dotnet)
+        dotnet_root = Path(resolved_dotnet).resolve().parent if resolved_dotnet else None
         
         env = {
             **os.environ,
@@ -69,18 +73,40 @@ class SeaEngineSession:
         # 서버가 출력하는 포트 번호 대기
         port = None
         start_time = time.time()
-        while time.time() - start_time < 30: # 30초 타임아웃
+        print(f"[*] Waiting for SeaEngine gRPC server to start...")
+        while time.time() - start_time < 60: # 60초 타임아웃으로 상향
             line = self._proc.stdout.readline()
             if not line:
+                # 프로세스가 조기에 종료된 경우 체크
+                if self._proc.poll() is not None:
+                    stderr = self._proc.stderr.read()
+                    raise RuntimeError(f"C# server exited prematurely. stderr={stderr}")
+                continue
+            
+            stripped = line.strip()
+            if stripped.startswith("PORT:"):
+                port = stripped.split(":")[1]
+                print(f"[*] SeaEngine gRPC server started on port {port}")
                 break
-            if line.startswith("PORT:"):
-                port = line.strip().split(":")[1]
-                break
+            else:
+                # PORT 정보가 아닌 다른 메시지가 나오면 출력 (디버깅용)
+                if stripped: print(f"  [C# Output] {stripped}")
         
         if not port:
-            stderr = self._proc.stderr.read()
-            self.close()
-            raise RuntimeError(f"Failed to get gRPC port from SeaEngineCli. stderr={stderr}")
+            self._proc.terminate()
+            raise RuntimeError("Failed to detect PORT from C# server output within timeout.")
+
+        # 파이프 버퍼가 가득 차서 프로세스가 멈추는 것을 방지하기 위해 백그라운드에서 출력 소비
+        import threading
+        def drain_stream(stream):
+            try:
+                for _ in stream:
+                    pass
+            except:
+                pass
+
+        threading.Thread(target=drain_stream, args=(self._proc.stdout,), daemon=True).start()
+        threading.Thread(target=drain_stream, args=(self._proc.stderr,), daemon=True).start()
 
         # gRPC 채널 및 스텁 설정
         self._channel = grpc.insecure_channel(f"localhost:{port}")
@@ -145,10 +171,11 @@ class SeaEngineSession:
 
     def _message_to_dict(self, message) -> Dict[str, Any]:
         # 기존 코드 호환성을 위해 snake_case 유지 및 빈 리스트 처리
+        # 환경(5.29.6)에 맞는 파라미터명 사용
         return MessageToDict(
             message,
             preserving_proto_field_name=True,
-            including_default_value_fields=True
+            always_print_fields_with_no_presence=True
         )
 
     def _build_launch_command(self, dotnet_cmd: str) -> list[str]:

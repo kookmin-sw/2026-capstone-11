@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using SeaEngine;
 using SeaEngine.CardManager;
 using SeaEngine.Common;
@@ -26,10 +27,12 @@ using GrpcStatus = Grpc.Core.Status;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// gRPC 서비스 등록
+// 로그 억제
+builder.Logging.ClearProviders();
+builder.Logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Error);
+
 builder.Services.AddGrpc();
 
-// Kestrel이 동적 포트를 사용하도록 설정
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.Listen(IPAddress.Loopback, 0, listenOptions =>
@@ -39,23 +42,27 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 
 var app = builder.Build();
-
 app.MapGrpcService<SeaEngineServiceImpl>();
 
-// 서버 시작 및 포트 출력
+// 서버 시작 전/후에 포트 정보를 확실히 노출
 await app.StartAsync();
 
-var address = app.Urls.First();
-var port = address.Split(':').Last();
-Console.WriteLine($"PORT:{port}");
-Console.Out.Flush();
+// 실제 할당된 포트 찾기
+var address = app.Urls.FirstOrDefault();
+if (address != null)
+{
+    var actualPort = address.Split(':').Last();
+    Console.WriteLine($"PORT:{actualPort}");
+    Console.Out.Flush();
+}
 
 await app.WaitForShutdownAsync();
 
 public class SeaEngineServiceImpl : SeaEngineService.SeaEngineServiceBase
 {
-    private Game? _game;
-    private int _turnCounter = 1;
+    private static Game? _game;
+    private static int _turnCounter = 1;
+    private static readonly object _lock = new();
 
     public override Task<PongResponse> Ping(Empty request, ServerCallContext context)
     {
@@ -64,30 +71,62 @@ public class SeaEngineServiceImpl : SeaEngineService.SeaEngineServiceBase
 
     public override Task<Snapshot> InitGame(InitRequest request, ServerCallContext context)
     {
-        _game = CreateGame(request);
-        _turnCounter = 1;
-        return Task.FromResult(BuildSnapshot(_game, _turnCounter));
+        try
+        {
+            lock (_lock)
+            {
+                _game = CreateGame(request);
+                _turnCounter = 1;
+                return Task.FromResult(BuildSnapshot(_game, _turnCounter));
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new RpcException(new GrpcStatus(StatusCode.Internal, ex.ToString()));
+        }
     }
 
     public override Task<Snapshot> ApplyAction(ActionRequest request, ServerCallContext context)
     {
-        if (_game == null) throw new RpcException(new GrpcStatus(StatusCode.FailedPrecondition, "Game not initialized"));
-
-        var action = _game.Actions.FirstOrDefault(a => a.Guid.ToString() == request.ActionUid);
-        if (action == null) throw new RpcException(new GrpcStatus(StatusCode.NotFound, $"Unknown action uid: {request.ActionUid}"));
-
-        _game.UseAction(action.Guid);
-        if (action.EffectId == "TurnEnd")
+        try
         {
-            _turnCounter += 1;
+            lock (_lock)
+            {
+                if (_game == null) throw new RpcException(new GrpcStatus(StatusCode.FailedPrecondition, "Game not initialized"));
+
+                var action = _game.Actions.FirstOrDefault(a => a.Guid.ToString() == request.ActionUid);
+                if (action == null) throw new RpcException(new GrpcStatus(StatusCode.NotFound, $"Unknown action uid: {request.ActionUid}"));
+
+                try
+                {
+                    _game.UseAction(action.Guid);
+                    if (action.EffectId == "TurnEnd")
+                    {
+                        _turnCounter += 1;
+                    }
+                }
+                catch (Exception engineEx)
+                {
+                    Console.Error.WriteLine($"[Engine Logic Error] {engineEx.Message}");
+                }
+                
+                return Task.FromResult(BuildSnapshot(_game, _turnCounter));
+            }
         }
-        return Task.FromResult(BuildSnapshot(_game, _turnCounter));
+        catch (Exception ex)
+        {
+            if (ex is RpcException) throw;
+            throw new RpcException(new GrpcStatus(StatusCode.Internal, ex.ToString()));
+        }
     }
 
     public override Task<Snapshot> GetSnapshot(Empty request, ServerCallContext context)
     {
-        if (_game == null) throw new RpcException(new GrpcStatus(StatusCode.FailedPrecondition, "Game not initialized"));
-        return Task.FromResult(BuildSnapshot(_game, _turnCounter));
+        lock (_lock)
+        {
+            if (_game == null) throw new RpcException(new GrpcStatus(StatusCode.FailedPrecondition, "Game not initialized"));
+            return Task.FromResult(BuildSnapshot(_game, _turnCounter));
+        }
     }
 
     private Game CreateGame(InitRequest request)
@@ -125,10 +164,24 @@ public class SeaEngineServiceImpl : SeaEngineService.SeaEngineServiceBase
             WinnerId = data.WinnerId
         };
 
-        snapshot.Players.Add(BuildPlayer(data.Player1));
-        snapshot.Players.Add(BuildPlayer(data.Player2));
-        snapshot.Board.AddRange(data.Board.Cards.Select(BuildCard));
-        snapshot.Actions.AddRange(game.Actions.Select(BuildAction));
+        if (data.Player1 != null) snapshot.Players.Add(BuildPlayer(data.Player1));
+        if (data.Player2 != null) snapshot.Players.Add(BuildPlayer(data.Player2));
+        
+        if (data.Board?.Cards != null)
+        {
+            foreach (var card in data.Board.Cards)
+            {
+                if (card != null) snapshot.Board.Add(BuildCard(card));
+            }
+        }
+
+        if (game.Actions != null)
+        {
+            foreach (var action in game.Actions)
+            {
+                if (action != null) snapshot.Actions.Add(BuildAction(action));
+            }
+        }
 
         return snapshot;
     }
@@ -143,55 +196,70 @@ public class SeaEngineServiceImpl : SeaEngineService.SeaEngineServiceBase
     {
         var p = new ProtoPlayer
         {
-            Id = player.Id,
-            HandCount = player.Hand.Count,
-            DeckCount = player.Deck.Count,
-            TrashCount = player.Trash.Count
+            Id = player.Id ?? "",
+            HandCount = player.Hand?.Count ?? 0,
+            DeckCount = player.Deck?.Count ?? 0,
+            TrashCount = player.Trash?.Count ?? 0
         };
-        p.Hand.AddRange(player.Hand.Cards.Select(card => new ProtoCardData
+        
+        if (player.Hand?.Cards != null)
         {
-            Uid = card.Guid.ToString(),
-            CardId = card.Data.Id,
-            Name = card.Data.Name
-        }));
+            foreach (var card in player.Hand.Cards)
+            {
+                if (card == null) continue;
+                p.Hand.Add(new ProtoCardData
+                {
+                    Uid = card.Guid?.ToString() ?? "",
+                    CardId = card.Data?.Id ?? "",
+                    Name = card.Data?.Name ?? ""
+                });
+            }
+        }
         return p;
     }
 
     private ProtoCard BuildCard(EngineCard card)
     {
-        var tempAtk = card.Unit.Buffs.TryGetValue("TempAtk", out var atkBuff) ? atkBuff : 0;
-        var effectiveAtk = card.Unit.Atk + tempAtk;
+        var buffs = card.Unit?.Buffs;
+        var tempAtk = (buffs != null && buffs.TryGetValue("TempAtk", out var atkBuff)) ? atkBuff : 0;
+        var effectiveAtk = (card.Unit?.Atk ?? 0) + tempAtk;
 
         var c = new ProtoCard
         {
-            Uid = card.Guid.ToString(),
-            CardId = card.Data.Id,
-            Name = card.Data.Name,
-            Owner = card.Owner.Id,
-            Role = card.Data.UnitType.ToString(),
-            Atk = card.Unit.Atk,
+            Uid = card.Guid?.ToString() ?? "",
+            CardId = card.Data?.Id ?? "",
+            Name = card.Data?.Name ?? "",
+            Owner = card.Owner?.Id ?? "",
+            Role = card.Data?.UnitType.ToString() ?? "",
+            Atk = card.Unit?.Atk ?? 0,
             EffectiveAtk = effectiveAtk,
-            Hp = card.Unit.Hp,
-            MaxHp = card.Unit.MaxHp,
-            IsPlaced = card.Unit.IsPlaced,
-            IsMoved = card.Unit.IsMoved,
+            Hp = card.Unit?.Hp ?? 0,
+            MaxHp = card.Unit?.MaxHp ?? 0,
+            IsPlaced = card.Unit?.IsPlaced ?? false,
+            IsMoved = card.Unit?.IsMoved ?? false,
             IsAttacked = false,
-            PosX = card.Unit.PosX,
-            PosY = card.Unit.PosY
+            PosX = card.Unit?.PosX ?? -1,
+            PosY = card.Unit?.PosY ?? -1
         };
 
-        c.Statuses.AddRange(card.Unit.Buffs.Select(buff => new ProtoStatus
+        if (buffs != null)
         {
-            Type = buff.Key switch
+            foreach (var buff in buffs)
             {
-                "TempAtk" => "AttackModifier",
-                "CantMove" => "MoveLock",
-                _ => buff.Key
-            },
-            Value = buff.Value,
-            RemainingTurns = 1,
-            SourceKey = buff.Key
-        }));
+                c.Statuses.Add(new ProtoStatus
+                {
+                    Type = buff.Key switch
+                    {
+                        "TempAtk" => "AttackModifier",
+                        "CantMove" => "MoveLock",
+                        _ => buff.Key
+                    },
+                    Value = buff.Value,
+                    RemainingTurns = 1,
+                    SourceKey = buff.Key
+                });
+            }
+        }
 
         return c;
     }
@@ -200,23 +268,23 @@ public class SeaEngineServiceImpl : SeaEngineService.SeaEngineServiceBase
     {
         return new ProtoAction
         {
-            Uid = action.Guid.ToString(),
-            EffectId = action.EffectId,
-            Source = action.Source.ToString(),
-            Target = new Target
+            Uid = action.Guid?.ToString() ?? "",
+            EffectId = action.EffectId ?? "",
+            Source = action.Source?.ToString() ?? "",
+            Target = action.Target == null ? null : new Target
             {
                 Type = action.Target.Type.ToString(),
-                Guid = action.Target.Guid.ToString(),
-                Guid2 = action.Target.Guid2.ToString(),
+                Guid = action.Target.Guid?.ToString() ?? "",
+                Guid2 = action.Target.Guid2?.ToString() ?? "",
                 PosX = action.Target.PosX,
                 PosY = action.Target.PosY
             },
-            Text = action.ToString()
+            Text = action.ToString() ?? ""
         };
     }
 }
 
-file sealed class SilentLogger : ILogger
+file sealed class SilentLogger : SeaEngine.Logger.ILogger
 {
     public void Log(string message, EngineAction action, SeaEngine.GameDataManager.GameData data)
     {

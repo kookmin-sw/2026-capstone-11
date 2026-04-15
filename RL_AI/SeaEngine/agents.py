@@ -113,15 +113,8 @@ class SeaEngineRLAgentOutput:
 
 
 class PPOActorCritic(nn.Module):
-    """Transformer-based Actor-Critic for SeaEngine.
-    
-    Restructures the flat state vector into tokens:
-    - 1 Global Token
-    - 14 Board Unit Tokens
-    - 7 Hand Card Tokens
-    Total 22 tokens processed via Self-Attention.
-    """
-    def __init__(self, state_dim: int, action_dim: int, hidden_dim: int = 256) -> None:
+    """Transformer-based Actor-Critic for SeaEngine."""
+    def __init__(self, state_dim: int, action_dim: int, hidden_dim: int = 128) -> None:
         super().__init__()
         # State vector components (matching observation.py)
         self.global_dim = 39
@@ -135,20 +128,20 @@ class PPOActorCritic(nn.Module):
         self.unit_proj = nn.Linear(self.unit_dim, hidden_dim)
         self.hand_proj = nn.Linear(self.hand_dim, hidden_dim)
         
-        # Type embeddings to help Transformer distinguish token types
+        # Type embeddings
         self.type_emb = nn.Parameter(torch.randn(3, hidden_dim))
         
         # Transformer Encoder
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=hidden_dim, 
-            nhead=8, 
+            nhead=4, 
             dim_feedforward=hidden_dim * 4, 
             batch_first=True, 
             activation='gelu'
         )
-        self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=3)
+        self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=1)
         
-        # Action Encoder (MLP is fine for action features)
+        # Action Encoder
         self.action_encoder = nn.Sequential(
             nn.Linear(action_dim, hidden_dim),
             nn.LayerNorm(hidden_dim),
@@ -169,7 +162,6 @@ class PPOActorCritic(nn.Module):
         )
 
     def forward(self, state_tensor: torch.Tensor, action_tensor: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-        # Handle batch or single vector
         is_batched = state_tensor.dim() > 1
         if not is_batched:
             state_tensor = state_tensor.unsqueeze(0)
@@ -178,42 +170,25 @@ class PPOActorCritic(nn.Module):
         
         # Split tokens
         global_part = state_tensor[:, :self.global_dim]
-        board_part = state_tensor[:, self.global_dim : self.global_dim + self.num_units * self.unit_dim].view(batch_size, self.num_units, self.unit_dim)
-        hand_part = state_tensor[:, self.global_dim + self.num_units * self.unit_dim :].view(batch_size, self.num_hand, self.hand_dim)
+        board_part = state_tensor[:, self.global_dim : self.global_dim + self.num_units * self.unit_dim].reshape(batch_size, self.num_units, self.unit_dim)
+        hand_part = state_tensor[:, self.global_dim + self.num_units * self.unit_dim :].reshape(batch_size, self.num_hand, self.hand_dim)
         
-        # Project to hidden_dim
-        g_token = self.global_proj(global_part).unsqueeze(1) # [B, 1, hidden]
-        u_tokens = self.unit_proj(board_part) # [B, 14, hidden]
-        h_tokens = self.hand_proj(hand_part) # [B, 7, hidden]
+        # Project and embed
+        g_token = self.global_proj(global_part).unsqueeze(1) + self.type_emb[0]
+        u_tokens = self.unit_proj(board_part) + self.type_emb[1]
+        h_tokens = self.hand_proj(hand_part) + self.type_emb[2]
         
-        # Add type embeddings
-        g_token = g_token + self.type_emb[0]
-        u_tokens = u_tokens + self.type_emb[1]
-        h_tokens = h_tokens + self.type_emb[2]
+        all_tokens = torch.cat([g_token, u_tokens, h_tokens], dim=1)
+        attended = self.transformer(all_tokens)
         
-        # Concatenate tokens
-        all_tokens = torch.cat([g_token, u_tokens, h_tokens], dim=1) # [B, 22, hidden]
+        state_context = attended[:, 0]
+        action_hidden = self.action_encoder(action_tensor)
         
-        # Transformer Attention
-        attended = self.transformer(all_tokens) # [B, 22, hidden]
-        
-        # Use the global token (context) for value and combined with action for policy
-        state_context = attended[:, 0] # [B, hidden]
-        
-        # Action features
-        action_hidden = self.action_encoder(action_tensor) # [num_actions, hidden]
-        
-        # Policy: calculate logits for each action
-        # If batched, we need to handle this carefully. Currently compute_policy_output calls with single state.
         if not is_batched:
             repeated_state = state_context.expand(action_hidden.shape[0], -1)
             logits = self.policy_head(torch.cat([repeated_state, action_hidden], dim=-1)).squeeze(-1)
             value = self.value_head(state_context).squeeze(-1)
         else:
-            # For training updates (batched)
-            # This part needs to align with how trainer calls it.
-            # In trainer.update_from_buffer, it loops over steps one by one.
-            # So is_batched might only be True if we change trainer to batch updates.
             logits = self.policy_head(torch.cat([state_context.unsqueeze(1).expand(-1, action_hidden.shape[1], -1), action_hidden], dim=-1)).squeeze(-1)
             value = self.value_head(state_context).squeeze(-1)
             
@@ -224,7 +199,7 @@ class SeaEngineRLAgent(SeaEngineAgent):
     def __init__(
         self,
         *,
-        hidden_dim: int = 256,
+        hidden_dim: int = 128,
         learning_rate: float = 3e-4,
         sample_actions: bool = True,
         device: str = "cpu",
@@ -260,8 +235,8 @@ class SeaEngineRLAgent(SeaEngineAgent):
     def forward_tensors(self, state_vector: Sequence[float], action_vectors: Sequence[Sequence[float]]) -> Tuple[torch.Tensor, torch.Tensor]:
         self.ensure_model(len(state_vector))
         assert self.model is not None
-        state_tensor = torch.tensor(state_vector, dtype=torch.float32, device=self.device)
-        action_tensor = torch.tensor(action_vectors, dtype=torch.float32, device=self.device)
+        state_tensor = torch.as_tensor(state_vector, dtype=torch.float32, device=self.device)
+        action_tensor = torch.as_tensor(action_vectors, dtype=torch.float32, device=self.device)
         return self.model(state_tensor, action_tensor)
 
     def compute_policy_output(
@@ -270,7 +245,11 @@ class SeaEngineRLAgent(SeaEngineAgent):
         legal_actions: Sequence[Dict[str, Any]],
     ) -> SeaEngineRLAgentOutput:
         observation = build_observation({**snapshot, "actions": list(legal_actions)}, snapshot.get("active_player"))
-        logits_tensor, value_tensor = self.forward_tensors(observation.state_vector, observation.action_feature_vectors)
+        
+        # 최적화: 추론 시 그래디언트 미계산
+        with torch.no_grad():
+            logits_tensor, value_tensor = self.forward_tensors(observation.state_vector, observation.action_feature_vectors)
+            
         dist = Categorical(logits=logits_tensor)
         chosen_index = int(dist.sample().item()) if self.sample_actions else int(torch.argmax(logits_tensor).item())
         output = SeaEngineRLAgentOutput(
@@ -296,6 +275,61 @@ class SeaEngineRLAgent(SeaEngineAgent):
         output = self.compute_policy_output(snapshot, legal_actions)
         return output.action_index, output.action
 
+    def compute_policy_output_batch(
+        self,
+        state_vectors: List[Sequence[float]],
+        action_feature_vectors_list: List[Sequence[Sequence[float]]],
+        legal_actions_list: List[Sequence[Dict[str, Any]]]
+    ) -> List[SeaEngineRLAgentOutput]:
+        if not state_vectors:
+            return []
+            
+        self.ensure_model(len(state_vectors[0]))
+        batch_size = len(state_vectors)
+        state_tensor = torch.as_tensor(state_vectors, dtype=torch.float32, device=self.device)
+        
+        max_actions = max((len(a) for a in action_feature_vectors_list), default=1)
+        if max_actions == 0: max_actions = 1
+        
+        action_dim = len(action_feature_vectors_list[0][0]) if len(action_feature_vectors_list[0]) > 0 else self.action_dim
+        padded_actions = torch.zeros((batch_size, max_actions, action_dim), dtype=torch.float32, device=self.device)
+        mask = torch.zeros((batch_size, max_actions), dtype=torch.bool, device=self.device)
+        
+        for i, a_vecs in enumerate(action_feature_vectors_list):
+            num_a = len(a_vecs)
+            if num_a > 0:
+                padded_actions[i, :num_a, :] = torch.as_tensor(a_vecs, dtype=torch.float32, device=self.device)
+                mask[i, :num_a] = True
+                
+        with torch.no_grad():
+            logits_tensor, value_tensor = self.model(state_tensor, padded_actions)
+            logits_tensor = logits_tensor.masked_fill(~mask, float('-inf'))
+            
+            dist = Categorical(logits=logits_tensor)
+            if self.sample_actions:
+                chosen_indices = dist.sample()
+            else:
+                chosen_indices = torch.argmax(logits_tensor, dim=1)
+                
+            log_probs = dist.log_prob(chosen_indices)
+            probs = dist.probs
+            
+        outputs = []
+        for i in range(batch_size):
+            idx = int(chosen_indices[i].item())
+            outputs.append(SeaEngineRLAgentOutput(
+                action_index=idx,
+                action=legal_actions_list[i][idx],
+                state_vector=state_vectors[i],
+                action_feature_vectors=action_feature_vectors_list[i],
+                logits=logits_tensor[i].detach().cpu().tolist(),
+                probabilities=probs[i].detach().cpu().tolist(),
+                log_prob=float(log_probs[i].item()),
+                value=float(value_tensor[i].item()),
+            ))
+            
+        return outputs
+
     def evaluate_action_set(
         self,
         state_vector: Sequence[float],
@@ -307,4 +341,51 @@ class SeaEngineRLAgent(SeaEngineAgent):
         action_index_tensor = torch.tensor(chosen_action_index, dtype=torch.long, device=self.device)
         log_prob = dist.log_prob(action_index_tensor)
         entropy = dist.entropy()
+        return log_prob, entropy, value
+
+    def evaluate_action_batch(
+        self,
+        state_vectors: List[Sequence[float]],
+        action_feature_vectors_list: List[Sequence[Sequence[float]]],
+        chosen_action_indices: List[int],
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        batch_size = len(state_vectors)
+        state_tensor = torch.as_tensor(state_vectors, dtype=torch.float32, device=self.device)
+        
+        # Pad action features to form a batched tensor
+        max_actions = max(len(a) for a in action_feature_vectors_list)
+        # fallback for empty action list:
+        if max_actions == 0:
+            max_actions = 1
+            action_dim = 1
+            from RL_AI.SeaEngine.observation import ACTION_FEATURE_DIM
+            action_dim = ACTION_FEATURE_DIM
+        else:
+            action_dim = len(action_feature_vectors_list[0][0])
+            for a in action_feature_vectors_list:
+                if len(a) > 0:
+                    action_dim = len(a[0])
+                    break
+        
+        padded_actions = torch.zeros((batch_size, max_actions, action_dim), dtype=torch.float32, device=self.device)
+        mask = torch.zeros((batch_size, max_actions), dtype=torch.bool, device=self.device)
+        
+        for i, a_vecs in enumerate(action_feature_vectors_list):
+            num_a = len(a_vecs)
+            if num_a > 0:
+                padded_actions[i, :num_a, :] = torch.as_tensor(a_vecs, dtype=torch.float32, device=self.device)
+                mask[i, :num_a] = True
+                
+        # Forward pass on batched inputs
+        logits, value = self.model(state_tensor, padded_actions)
+        
+        # Mask out padded actions by setting their logits to negative infinity
+        logits = logits.masked_fill(~mask, float('-inf'))
+        
+        dist = Categorical(logits=logits)
+        action_index_tensor = torch.tensor(chosen_action_indices, dtype=torch.long, device=self.device)
+        
+        log_prob = dist.log_prob(action_index_tensor)
+        entropy = dist.entropy()
+        
         return log_prob, entropy, value
