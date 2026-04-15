@@ -24,7 +24,7 @@ public class Or_N : IEvent
         
         foreach (Card? e in enemy)
         {
-            if(e == null) continue;
+            if(e.Unit.Hp <= 0) continue;
             CombatUtils.Damage(e, 2, data);
         }
     }
