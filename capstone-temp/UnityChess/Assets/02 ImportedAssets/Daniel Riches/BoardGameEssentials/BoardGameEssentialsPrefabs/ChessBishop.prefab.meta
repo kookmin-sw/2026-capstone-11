@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: a2f8130e872d6a84882d3b7ab00c4379
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 284152
+  packageName: Board Game Essentials - Chess / Checkers / Dice
+  packageVersion: 1.0
+  assetPath: Assets/Daniel Riches/BoardGameEssentials/BoardGameEssentialsPrefabs/ChessBishop.prefab
+  uploadId: 666420
