@@ -79,16 +79,34 @@ class VectorSeaEngineEnv:
         if self.backend not in {"local", "process"}:
             self.backend = "local"
 
-        self.use_threads = os.getenv("SEAENGINE_LOCAL_THREADS", "1") == "1"
-        self.max_workers = int(os.getenv("SEAENGINE_LOCAL_MAX_WORKERS", "0") or "0")
+        # SEAENGINE_LOCAL_THREADS supports:
+        # - boolean style: "0"/"1", "true"/"false"
+        # - integer style: "8" (means enable threads with max_workers=8)
+        local_threads_raw = os.getenv("SEAENGINE_LOCAL_THREADS", "1").strip().lower()
+        parsed_local_threads: Optional[int] = None
+        try:
+            parsed_local_threads = int(local_threads_raw)
+        except Exception:
+            parsed_local_threads = None
+
+        if parsed_local_threads is not None:
+            self.use_threads = parsed_local_threads > 0
+            self.max_workers = parsed_local_threads if parsed_local_threads and parsed_local_threads > 0 else 0
+        else:
+            self.use_threads = local_threads_raw in {"1", "true", "yes", "on"}
+            self.max_workers = 0
+
+        env_max_workers = int(os.getenv("SEAENGINE_LOCAL_MAX_WORKERS", "0") or "0")
+        if env_max_workers > 0:
+            self.max_workers = env_max_workers
 
         self.pipes = []
         self.processes = []
         self._sessions = []
         self._executor: Optional[ThreadPoolExecutor] = None
+        self._executor_workers = 0
         self._waiting_pipes = []
         self._waiting_cmds: List[Tuple[int, tuple]] = []
-        self._last_profile_stats: Dict[str, Dict[str, float]] = {}
 
     def start(self):
         if self.backend == "process":
@@ -109,8 +127,28 @@ class VectorSeaEngineEnv:
             self._sessions.append(session)
 
         if self.use_threads and self.num_envs > 1:
-            workers = self.max_workers if self.max_workers > 0 else self.num_envs
+            cpu = os.cpu_count() or self.num_envs
+            workers = self.max_workers if self.max_workers > 0 else min(self.num_envs, cpu)
+            workers = max(1, workers)
+            self._executor_workers = workers
             self._executor = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="seaenv")
+        else:
+            self._executor_workers = 0
+
+    def describe_parallelism(self) -> Dict[str, Any]:
+        if self.backend == "process":
+            return {
+                "backend": "process",
+                "num_envs": self.num_envs,
+                "workers": len(self.processes) if self.processes else self.num_envs,
+                "threaded": False,
+            }
+        return {
+            "backend": "local",
+            "num_envs": self.num_envs,
+            "threaded": self._executor is not None,
+            "workers": self._executor_workers if self._executor is not None else 1,
+        }
 
     def init_games(self, configs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         if self.backend == "process":
@@ -123,15 +161,12 @@ class VectorSeaEngineEnv:
         if limit == 0:
             return []
 
-        if self._executor is None:
+        if self._executor is None or limit <= 1:
             results = [self._sessions[i].init_game(**configs[i]) for i in range(limit)]
-            self._collect_profile_stats(limit)
             return results
 
         futures = [self._executor.submit(self._sessions[i].init_game, **configs[i]) for i in range(limit)]
-        results = [f.result() for f in futures]
-        self._collect_profile_stats(limit)
-        return results
+        return [f.result() for f in futures]
 
     def step_async(self, cmds: List[Optional[tuple]]):
         if self.backend == "process":
@@ -166,7 +201,7 @@ class VectorSeaEngineEnv:
         if not self._waiting_cmds:
             return res
 
-        if self._executor is None:
+        if self._executor is None or len(self._waiting_cmds) <= 1:
             for i, cmd in self._waiting_cmds:
                 name, args = cmd
                 if name == "apply_action":
@@ -174,7 +209,6 @@ class VectorSeaEngineEnv:
                 elif name == "init_game":
                     res[i] = self._sessions[i].init_game(**args)
             self._waiting_cmds = []
-            self._collect_profile_stats(len(res))
             return res
 
         futures = []
@@ -188,32 +222,7 @@ class VectorSeaEngineEnv:
         for i, fut in futures:
             res[i] = fut.result()
         self._waiting_cmds = []
-        self._collect_profile_stats(len(futures))
         return res
-
-    def _collect_profile_stats(self, limit: int) -> None:
-        if self.backend != "local":
-            return
-        merged: Dict[str, Dict[str, float]] = {}
-        for i in range(min(limit, len(self._sessions))):
-            session = self._sessions[i]
-            drain = getattr(session, "drain_profile_stats", None)
-            if drain is None:
-                continue
-            stats = drain()
-            for key, data in stats.items():
-                bucket = merged.setdefault(key, {"total_sec": 0.0, "count": 0.0})
-                bucket["total_sec"] += float(data.get("total_sec", 0.0))
-                bucket["count"] += float(data.get("count", 0.0))
-        for key, data in merged.items():
-            bucket = self._last_profile_stats.setdefault(key, {"total_sec": 0.0, "count": 0.0})
-            bucket["total_sec"] += data["total_sec"]
-            bucket["count"] += data["count"]
-
-    def drain_profile_stats(self) -> Dict[str, Dict[str, float]]:
-        stats = self._last_profile_stats
-        self._last_profile_stats = {}
-        return stats
 
     def _recv_n(self, count: int) -> List[Dict[str, Any]]:
         res = []
@@ -242,6 +251,7 @@ class VectorSeaEngineEnv:
         if self._executor is not None:
             self._executor.shutdown(wait=True, cancel_futures=False)
             self._executor = None
+            self._executor_workers = 0
         for session in self._sessions:
             try:
                 session.close()

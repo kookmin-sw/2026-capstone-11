@@ -840,14 +840,32 @@ ACTION_FEATURE_DIM = len(
 )
 
 
-def build_observation(snapshot: Dict[str, Any], player_id: Optional[str] = None) -> SeaEngineObservation:
+def build_observation(
+    snapshot: Dict[str, Any],
+    player_id: Optional[str] = None,
+) -> SeaEngineObservation:
+    if snapshot.get("state_vector") is not None and snapshot.get("action_feature_vectors") is not None:
+        state_vector = list(snapshot.get("state_vector", []))
+        return SeaEngineObservation(
+            unit_list=[],
+            hand_list=[],
+            global_vector=list(snapshot.get("global_vector", state_vector[:39])),
+            legal_action_mask=[1 for _ in snapshot.get("actions", [])],
+            state_vector=state_vector,
+            action_feature_vectors=[list(a) for a in snapshot.get("action_feature_vectors", [])],
+        )
+
     player_id = player_id or snapshot.get("active_player", "P1")
     ctx = _build_context(snapshot, player_id)
+
     unit_list: List[Dict[str, Any]] = []
     hand_list: List[Dict[str, Any]] = []
     global_vector = _build_global_vector_ctx(ctx)
+
     board_vector = _build_board_vector_ctx(ctx)
+
     hand_vector = _build_hand_vector_ctx(ctx)
+
     state_vector = global_vector + board_vector + hand_vector
     action_feature_vectors = [_encode_action_features_ctx(ctx, action) for action in ctx.actions]
 

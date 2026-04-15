@@ -12,7 +12,7 @@ import torch
 from torch import nn
 from torch.distributions import Categorical
 
-from RL_AI.SeaEngine.observation import ACTION_FEATURE_DIM, build_observation
+from RL_AI.SeaEngine.observation import ACTION_FEATURE_DIM, SeaEngineObservation, build_observation
 
 
 class SeaEngineAgent(ABC):
@@ -202,14 +202,19 @@ class SeaEngineRLAgent(SeaEngineAgent):
         hidden_dim: int = 128,
         learning_rate: float = 3e-4,
         sample_actions: bool = True,
-        device: str = "cpu",
+        device: str = "auto",
         seed: Optional[int] = None,
     ) -> None:
         super().__init__("rl", seed=seed)
         self.hidden_dim = hidden_dim
         self.learning_rate = learning_rate
         self.sample_actions = sample_actions
-        self.device = torch.device(device)
+        device_name = str(device).strip().lower()
+        if device_name in {"", "auto"}:
+            device_name = "cuda" if torch.cuda.is_available() else "cpu"
+        if device_name in {"gpu", "cuda"} and not torch.cuda.is_available():
+            device_name = "cpu"
+        self.device = torch.device(device_name)
         self.state_dim: Optional[int] = None
         self.action_dim = ACTION_FEATURE_DIM
         self.model: Optional[PPOActorCritic] = None
@@ -244,12 +249,21 @@ class SeaEngineRLAgent(SeaEngineAgent):
         snapshot: Dict[str, Any],
         legal_actions: Sequence[Dict[str, Any]],
     ) -> SeaEngineRLAgentOutput:
-        observation = build_observation({**snapshot, "actions": list(legal_actions)}, snapshot.get("active_player"))
+        if snapshot.get("state_vector") is not None and snapshot.get("action_feature_vectors") is not None:
+            observation = SeaEngineObservation(
+                unit_list=[],
+                hand_list=[],
+                global_vector=list(snapshot.get("global_vector", [])),
+                legal_action_mask=[1 for _ in legal_actions],
+                state_vector=list(snapshot["state_vector"]),
+                action_feature_vectors=[list(a) for a in snapshot["action_feature_vectors"]],
+            )
+        else:
+            observation = build_observation({**snapshot, "actions": list(legal_actions)}, snapshot.get("active_player"))
         
-        # 최적화: 추론 시 그래디언트 미계산
         with torch.no_grad():
             logits_tensor, value_tensor = self.forward_tensors(observation.state_vector, observation.action_feature_vectors)
-            
+
         dist = Categorical(logits=logits_tensor)
         chosen_index = int(dist.sample().item()) if self.sample_actions else int(torch.argmax(logits_tensor).item())
         output = SeaEngineRLAgentOutput(
@@ -279,11 +293,10 @@ class SeaEngineRLAgent(SeaEngineAgent):
         self,
         state_vectors: List[Sequence[float]],
         action_feature_vectors_list: List[Sequence[Sequence[float]]],
-        legal_actions_list: List[Sequence[Dict[str, Any]]]
+        legal_actions_list: List[Sequence[Dict[str, Any]]],
     ) -> List[SeaEngineRLAgentOutput]:
         if not state_vectors:
             return []
-            
         self.ensure_model(len(state_vectors[0]))
         batch_size = len(state_vectors)
         state_tensor = torch.as_tensor(state_vectors, dtype=torch.float32, device=self.device)
@@ -300,19 +313,17 @@ class SeaEngineRLAgent(SeaEngineAgent):
             if num_a > 0:
                 padded_actions[i, :num_a, :] = torch.as_tensor(a_vecs, dtype=torch.float32, device=self.device)
                 mask[i, :num_a] = True
-                
         with torch.no_grad():
             logits_tensor, value_tensor = self.model(state_tensor, padded_actions)
             logits_tensor = logits_tensor.masked_fill(~mask, float('-inf'))
+        dist = Categorical(logits=logits_tensor)
+        if self.sample_actions:
+            chosen_indices = dist.sample()
+        else:
+            chosen_indices = torch.argmax(logits_tensor, dim=1)
             
-            dist = Categorical(logits=logits_tensor)
-            if self.sample_actions:
-                chosen_indices = dist.sample()
-            else:
-                chosen_indices = torch.argmax(logits_tensor, dim=1)
-                
-            log_probs = dist.log_prob(chosen_indices)
-            probs = dist.probs
+        log_probs = dist.log_prob(chosen_indices)
+        probs = dist.probs
             
         outputs = []
         for i in range(batch_size):
@@ -327,7 +338,6 @@ class SeaEngineRLAgent(SeaEngineAgent):
                 log_prob=float(log_probs[i].item()),
                 value=float(value_tensor[i].item()),
             ))
-            
         return outputs
 
     def evaluate_action_set(
@@ -375,17 +385,12 @@ class SeaEngineRLAgent(SeaEngineAgent):
             if num_a > 0:
                 padded_actions[i, :num_a, :] = torch.as_tensor(a_vecs, dtype=torch.float32, device=self.device)
                 mask[i, :num_a] = True
-                
         # Forward pass on batched inputs
         logits, value = self.model(state_tensor, padded_actions)
-        
         # Mask out padded actions by setting their logits to negative infinity
         logits = logits.masked_fill(~mask, float('-inf'))
-        
         dist = Categorical(logits=logits)
         action_index_tensor = torch.tensor(chosen_action_indices, dtype=torch.long, device=self.device)
-        
         log_prob = dist.log_prob(action_index_tensor)
         entropy = dist.entropy()
-        
         return log_prob, entropy, value

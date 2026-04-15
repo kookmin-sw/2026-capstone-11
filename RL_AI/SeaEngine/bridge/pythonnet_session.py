@@ -5,7 +5,6 @@ from __future__ import annotations
 import os
 import json
 import uuid
-import time
 from pathlib import Path
 from typing import Any, Dict, Optional, List
 
@@ -16,6 +15,8 @@ class PythonNetSession:
     _game_type = None
     _card_loader_type = None
     _silent_logger_type = None
+    _rl_exporter_type = None
+    _rl_export_method = None
 
     def __init__(
         self,
@@ -34,9 +35,6 @@ class PythonNetSession:
         self._turn_counter = 1
         self._uid_parse_method = None
         self._loader = None
-        self._profile_enabled = os.getenv("SEAENGINE_PROFILE", "0") == "1"
-        self._timings: Dict[str, float] = {}
-        self._timing_counts: Dict[str, int] = {}
 
     def _candidate_dll_paths(self) -> List[Path]:
         base = self.project_root / "csharp" / "SeaEngine" / "bin"
@@ -99,6 +97,9 @@ class PythonNetSession:
             PythonNetSession._game_type = PythonNetSession._asm.GetType("SeaEngine.Game")
             PythonNetSession._card_loader_type = PythonNetSession._asm.GetType("SeaEngine.CardManager.CardLoader")
             PythonNetSession._silent_logger_type = PythonNetSession._asm.GetType("SeaEngine.Logger.SilentLogger")
+            PythonNetSession._rl_exporter_type = PythonNetSession._asm.GetType("SeaEngine.RL.RlObservationExporter")
+            if PythonNetSession._rl_exporter_type is not None:
+                PythonNetSession._rl_export_method = PythonNetSession._rl_exporter_type.GetMethod("Export")
             uid_type = PythonNetSession._asm.GetType("SeaEngine.Common.Uid")
             if uid_type is None:
                 raise RuntimeError("SeaEngine.Common.Uid type not found in assembly")
@@ -117,26 +118,6 @@ class PythonNetSession:
     def close(self) -> None:
         self._game = None
 
-    def _record_timing(self, key: str, elapsed: float) -> None:
-        if not self._profile_enabled:
-            return
-        self._timings[key] = self._timings.get(key, 0.0) + elapsed
-        self._timing_counts[key] = self._timing_counts.get(key, 0) + 1
-
-    def drain_profile_stats(self) -> Dict[str, Dict[str, float]]:
-        if not self._profile_enabled:
-            return {}
-        stats = {
-            key: {
-                "total_sec": self._timings.get(key, 0.0),
-                "count": float(self._timing_counts.get(key, 0)),
-            }
-            for key in sorted(self._timings.keys())
-        }
-        self._timings.clear()
-        self._timing_counts.clear()
-        return stats
-
     def ping(self) -> Dict[str, Any]:
         return {"message": "pong"}
 
@@ -148,12 +129,13 @@ class PythonNetSession:
         player1_id: str = "P1",
         player2_id: str = "P2",
     ) -> Dict[str, Any]:
-        start_t = time.perf_counter()
         import System
         if not PythonNetSession._clr_initialized:
             self.start()
         if PythonNetSession._game_type is None or PythonNetSession._card_loader_type is None or PythonNetSession._silent_logger_type is None:
             raise RuntimeError("SeaEngine assembly types are not initialized")
+        if PythonNetSession._rl_exporter_type is not None and PythonNetSession._rl_export_method is None:
+            PythonNetSession._rl_export_method = PythonNetSession._rl_exporter_type.GetMethod("Export")
 
         if self._loader is None:
             self._loader = System.Activator.CreateInstance(PythonNetSession._card_loader_type, self.card_data_path)
@@ -167,9 +149,7 @@ class PythonNetSession:
         # Use direct calling instead of Reflection Invoke for idiomatic PythonNet
         self._game.Init(p1_deck, p2_deck)
         self._turn_counter = 1
-        snapshot = self.snapshot()
-        self._record_timing("init_game", time.perf_counter() - start_t)
-        return snapshot
+        return self.snapshot()
 
     def _normalize_deck(self, deck_json: str, is_p1: bool) -> str:
         if deck_json and deck_json.strip():
@@ -186,7 +166,6 @@ class PythonNetSession:
     def apply_action(self, action_uid: str) -> Dict[str, Any]:
         if self._game is None:
             raise RuntimeError("Game not initialized")
-        start_t = time.perf_counter()
         action_uid = str(action_uid)
 
         selected_action = None
@@ -202,13 +181,10 @@ class PythonNetSession:
             raise KeyError(f"Unknown action uid: {action_uid}")
 
         self._game.UseAction(selected_action.Guid)
-        snapshot = self.snapshot()
-        self._record_timing("apply_action", time.perf_counter() - start_t)
-        return snapshot
+        return self.snapshot()
 
     def _build_snapshot(self) -> Dict[str, Any]:
-        start_t = time.perf_counter()
-        data = self._game.Data
+        import System
 
         def _string(value: Any) -> str:
             return "" if value is None else str(value)
@@ -221,6 +197,109 @@ class PythonNetSession:
 
         def _bool(value: Any) -> bool:
             return bool(value)
+
+        def _to_list(value: Any) -> List[Any]:
+            if value is None:
+                return []
+            try:
+                return list(value)
+            except Exception:
+                return []
+
+        def _to_float_list(value: Any) -> List[float]:
+            return [float(v) for v in _to_list(value)]
+
+        def _to_float_matrix(value: Any) -> List[List[float]]:
+            return [_to_float_list(row) for row in _to_list(value)]
+
+        if PythonNetSession._rl_export_method is not None:
+            frame = PythonNetSession._rl_export_method.Invoke(None, [self._game, System.Int32(self._turn_counter)])
+
+            players = []
+            for player in _to_list(getattr(frame, "Players", None)):
+                hand = _to_list(getattr(player, "Hand", None))
+                players.append(
+                    {
+                        "id": _string(getattr(player, "Id", "")),
+                        "hand_count": _int(getattr(player, "HandCount", 0), 0),
+                        "deck_count": _int(getattr(player, "DeckCount", 0), 0),
+                        "trash_count": _int(getattr(player, "TrashCount", 0), 0),
+                        "hand": [
+                            {
+                                "uid": _string(getattr(card, "Uid", "")),
+                                "card_id": _string(getattr(card, "CardId", "")),
+                                "name": _string(getattr(card, "Name", "")),
+                            }
+                            for card in hand
+                        ],
+                    }
+                )
+
+            board = []
+            for card in _to_list(getattr(frame, "Board", None)):
+                board.append(
+                    {
+                        "uid": _string(getattr(card, "Uid", "")),
+                        "card_id": _string(getattr(card, "CardId", "")),
+                        "name": _string(getattr(card, "Name", "")),
+                        "owner": _string(getattr(card, "OwnerId", "")),
+                        "role": _string(getattr(card, "Role", "")),
+                        "atk": _int(getattr(card, "Atk", 0), 0),
+                        "effective_atk": _int(getattr(card, "EffectiveAtk", 0), 0),
+                        "hp": _int(getattr(card, "Hp", 0), 0),
+                        "max_hp": _int(getattr(card, "MaxHp", 0), 0),
+                        "is_placed": _bool(getattr(card, "IsPlaced", False)),
+                        "is_moved": _bool(getattr(card, "IsMoved", False)),
+                        "is_attacked": _bool(getattr(card, "IsAttacked", False)),
+                        "pos_x": _int(getattr(card, "PosX", -1), -1),
+                        "pos_y": _int(getattr(card, "PosY", -1), -1),
+                        "statuses": [
+                            {
+                                "type": _string(getattr(status, "Type", "")),
+                                "value": _int(getattr(status, "Value", 0), 0),
+                                "remaining_turns": 1,
+                            }
+                            for status in _to_list(getattr(card, "Statuses", None))
+                        ],
+                    }
+                )
+
+            actions = []
+            for action in _to_list(getattr(frame, "Actions", None)):
+                actions.append(
+                    {
+                        "uid": _string(getattr(action, "Uid", "")),
+                        "effect_id": _string(getattr(action, "EffectId", "")),
+                        "source": _string(getattr(action, "Source", "")),
+                        "target": {
+                            "type": _string(getattr(action, "TargetType", "None")),
+                            "guid": _string(getattr(action, "TargetGuid", "")),
+                            "guid2": _string(getattr(action, "TargetGuid2", "")),
+                            "pos_x": _int(getattr(action, "PosX", -1), -1),
+                            "pos_y": _int(getattr(action, "PosY", -1), -1),
+                        },
+                    }
+                )
+
+            state_vector = _to_float_list(getattr(frame, "StateVector", None))
+            action_feature_vectors = _to_float_matrix(getattr(frame, "ActionFeatureVectors", None))
+
+            snapshot = {
+                "turn": _int(getattr(frame, "Turn", self._turn_counter), self._turn_counter),
+                "active_player": _string(getattr(frame, "ActivePlayerId", "")),
+                "result": _string(getattr(frame, "Result", "Ongoing")),
+                "winner_id": _string(getattr(frame, "WinnerId", "")),
+                "players": players,
+                "board": board,
+                "actions": actions,
+                "global_vector": state_vector[:39] if len(state_vector) >= 39 else [],
+                "state_vector": state_vector,
+                "action_feature_vectors": action_feature_vectors,
+            }
+            return snapshot
+
+        # Fallback legacy reflection path
+        data = self._game.Data
 
         def _iter_cards(zone: Any) -> List[Any]:
             cards = getattr(zone, "Cards", None)
@@ -332,5 +411,4 @@ class PythonNetSession:
                 }
             )
 
-        self._record_timing("_build_snapshot", time.perf_counter() - start_t)
         return snapshot

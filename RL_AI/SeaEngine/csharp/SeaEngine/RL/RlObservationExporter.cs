@@ -67,7 +67,11 @@ public static class RlObservationExporter
         var playerId = data.ActivePlayerId;
 
         var board = data.Board.Cards.ToArray();
-        var boardByUid = board.ToDictionary(card => card.Guid.ToString(), card => card);
+        // Board snapshots can briefly contain duplicated Uids during state transitions.
+        // Keep the first instance so the exporter stays read-only and never crashes on duplicates.
+        var boardByUid = board
+            .GroupBy(card => card.Guid.ToString())
+            .ToDictionary(group => group.Key, group => group.First());
         var actions = game.Actions.ToArray();
         var actionViews = actions.Select(BuildActionView).ToArray();
         var players = new[] { BuildPlayerView(data.Player1), BuildPlayerView(data.Player2) };

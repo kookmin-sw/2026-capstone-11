@@ -16,7 +16,7 @@ from RL_AI.analysis.reports import build_win_rate_report, save_report
 _VERBOSE_EVAL_MATCH_LOG = os.getenv("SEAENGINE_VERBOSE_EVAL_MATCH_LOG", "0") == "1"
 
 
-def _default_evaluation_report_path(prefix: str = "seaengine_evaluation_report") -> Path:
+def _default_evaluation_report_path(prefix: str = "se_eval") -> Path:
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     return Path(__file__).resolve().parent.parent / "log" / f"{prefix}_{ts}.txt"
 
@@ -38,6 +38,7 @@ def play_evaluation_match(
     player1_deck: str = "",
     player2_deck: str = "",
     max_turns: int = 100,
+    include_history: bool = False,
 ) -> Dict[str, object]:
     owns_session = session is None
     if session is None:
@@ -51,6 +52,7 @@ def play_evaluation_match(
             agents = {"P1": p1_agent, "P2": p2_agent}
             action_type_counts: Counter[str] = Counter()
             card_use_counts: Counter[str] = Counter()
+            history: list[str] = []
             steps = 0
 
             while snapshot["result"] == "Ongoing" and snapshot["turn"] <= max_turns:
@@ -70,6 +72,15 @@ def play_evaluation_match(
                 if effect_id not in {"DefaultMove", "DefaultAttack", "TurnEnd"} and source_card is not None:
                     card_use_counts[str(source_card.get("name", source_card.get("card_id", source_uid)))] += 1
 
+                if include_history:
+                    target = action.get("target", {})
+                    source_name = "" if source_card is None else str(source_card.get("name", source_card.get("card_id", source_uid)))
+                    history.append(
+                        f"T{snapshot['turn']:>3} {active_player} {effect_id} "
+                        f"{source_name} -> {target.get('type', 'None')} "
+                        f"({action['uid']})"
+                    )
+
                 snapshot = session.apply_action(action["uid"])
                 steps += 1
 
@@ -79,6 +90,7 @@ def play_evaluation_match(
                 "final_turn": snapshot["turn"],
                 "action_type_counts": dict(sorted(action_type_counts.items())),
                 "card_use_counts": dict(card_use_counts.most_common()),
+                "history": history if include_history else [],
             }
     finally:
         if owns_session:
@@ -96,6 +108,7 @@ def evaluate_agents(
     max_turns: int = 100,
     report_path: Optional[str] = None,
     progress_callback: Optional[Callable[[int, int, str, str], None]] = None,
+    include_history: bool = False,
 ) -> Dict[str, object]:
     p1_wins = 0
     p2_wins = 0
@@ -104,6 +117,7 @@ def evaluate_agents(
     total_final_turns = 0
     action_type_counts: Counter[str] = Counter()
     card_use_counts: Counter[str] = Counter()
+    histories: list[Dict[str, object]] = []
 
     session = PythonNetSession(card_data_path=card_data_path)
     session.start()
@@ -117,6 +131,7 @@ def evaluate_agents(
                 player1_deck=player1_deck,
                 player2_deck=player2_deck,
                 max_turns=max_turns,
+                include_history=include_history,
             )
             snapshot = result["snapshot"]
             w1, w2, d = _winner_to_counts(str(snapshot["result"]))
@@ -127,6 +142,16 @@ def evaluate_agents(
             total_final_turns += int(result["final_turn"])
             action_type_counts.update(result["action_type_counts"])
             card_use_counts.update(result["card_use_counts"])
+            if include_history:
+                histories.append(
+                    {
+                        "match_index": match_index + 1,
+                        "result": str(snapshot["result"]),
+                        "steps": int(result["steps"]),
+                        "final_turn": int(result["final_turn"]),
+                        "history": list(result["history"]),
+                    }
+                )
             
             if _VERBOSE_EVAL_MATCH_LOG:
                 print(f"  [Match {match_index + 1}/{num_matches}] Result: {snapshot['result']} | Steps: {result['steps']}")
@@ -153,6 +178,8 @@ def evaluate_agents(
         "action_type_counts": dict(sorted(action_type_counts.items())),
         "card_use_counts": dict(card_use_counts.most_common()),
     }
+    if include_history:
+        summary["histories"] = histories
     report_text = build_win_rate_report(summary)
     saved_path = save_report(report_text, _default_evaluation_report_path() if report_path is None else report_path)
     summary["report_path"] = str(saved_path)

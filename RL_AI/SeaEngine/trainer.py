@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import json
-import os
 import random
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from collections import Counter
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 import torch
@@ -17,7 +17,7 @@ from RL_AI.SeaEngine.agents import SeaEngineAgent, SeaEngineGreedyAgent, SeaEngi
 from RL_AI.SeaEngine.bridge.seaengine_session import SeaEngineSession
 from RL_AI.SeaEngine.bridge.vector_env import VectorSeaEngineEnv
 from RL_AI.SeaEngine.evaluator import evaluate_agents
-from RL_AI.SeaEngine.reward import terminal_reward_for_player
+from RL_AI.SeaEngine.reward import dense_reward_from_transition, terminal_reward_for_player
 from RL_AI.analysis.reports import build_win_rate_report
 from RL_AI.training.storage import RolloutBuffer, RolloutStep
 
@@ -91,6 +91,20 @@ class SeaEnginePPOTrainer:
             return opponent_agent
         return SeaEngineRandomAgent(seed=seed)
 
+    def _describe_opponent_pool(self, opponent_pool: Sequence[SeaEngineAgent]) -> str:
+        if not opponent_pool:
+            return "[]"
+        return "[" + ", ".join(agent.name for agent in opponent_pool) + "]"
+
+    def _short_opponent_name(self, name: str) -> str:
+        if name == "random":
+            return "r"
+        if name == "greedy":
+            return "g"
+        if name.startswith("self_ep_"):
+            return "s"
+        return name[:1].lower()
+
     def _extend_buffer(self, dst: RolloutBuffer, src: RolloutBuffer) -> None:
         for step in src.steps:
             dst.add_step(step)
@@ -162,10 +176,19 @@ class SeaEnginePPOTrainer:
                         )
                     )
                     action = output.action
+                    action_effect_id = str(action.get("effect_id", ""))
                 else:
                     _, action = choose_action_with_agent(acting_agent, snapshot)
-
+                    action_effect_id = str(action.get("effect_id", ""))
+                prev_snapshot = snapshot
                 snapshot = session.apply_action(action["uid"])
+                if buffer.steps:
+                    buffer.steps[-1].reward += dense_reward_from_transition(
+                        prev_snapshot,
+                        snapshot,
+                        ai_id=ai_id,
+                        action_effect_id=action_effect_id,
+                    )
                 steps += 1
 
             self._assign_terminal_rewards_by_id(buffer, str(snapshot["result"]), ai_id, snapshot.get("winner_id", ""))
@@ -193,7 +216,7 @@ class SeaEnginePPOTrainer:
         # Draw or Ongoing (terminated by max_turns) is 0.0
         
         last_step = buffer.steps[-1]
-        last_step.reward = reward
+        last_step.reward += reward
         last_step.done = True
 
     def update_from_buffer(self, buffer: RolloutBuffer) -> Dict[str, float]:
@@ -215,7 +238,6 @@ class SeaEnginePPOTrainer:
         policy_loss_total = 0.0
         value_loss_total = 0.0
         entropy_total = 0.0
-        
         batch_size = len(buffer)
         
         for _ in range(self.config.update_epochs):
@@ -236,6 +258,7 @@ class SeaEnginePPOTrainer:
             self.agent.optimizer.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(self.agent.model.parameters(), self.config.max_grad_norm)
+
             self.agent.optimizer.step()
 
             policy_loss_total += float(policy_loss.item())
@@ -254,34 +277,31 @@ class SeaEnginePPOTrainer:
         env: VectorSeaEngineEnv,
         episode_start_idx: int,
         opponent_pool: List[SeaEngineAgent],
+        opponent_schedule: Optional[Sequence[str]] = None,
         card_data_path: Optional[str] = None,
         player1_deck: str = "",
         player2_deck: str = "",
         max_turns: int = 100,
-    ) -> Tuple[List[Dict[str, object]], Dict[str, float]]:
-        
+    ) -> List[Dict[str, object]]:
         num_envs = env.num_envs
-        timings: Dict[str, float] = {
-            "env_init_games_sec": 0.0,
-            "obs_build_sec": 0.0,
-            "opponent_select_sec": 0.0,
-            "policy_forward_sec": 0.0,
-            "env_step_wait_sec": 0.0,
-            "pythonnet_init_game_sec": 0.0,
-            "pythonnet_apply_action_sec": 0.0,
-            "pythonnet_build_snapshot_sec": 0.0,
-        }
         configs = []
         opponents = []
         ai_ids = []
         buffers = [RolloutBuffer() for _ in range(num_envs)]
         step_counts = [0] * num_envs
-        
+        opponent_lookup = {agent.name: agent for agent in opponent_pool}
+
         for i in range(num_envs):
             player1_is_ai = random.choice([True, False])
-            opp = self._resolve_opponent_for_episode(episode_start_idx + i, opponent_pool=opponent_pool)
+            if opponent_schedule is not None and i < len(opponent_schedule):
+                scheduled_name = opponent_schedule[i]
+                opp = opponent_lookup.get(scheduled_name)
+                if opp is None:
+                    opp = self._resolve_opponent_for_episode(episode_start_idx + i, opponent_pool=opponent_pool)
+            else:
+                opp = self._resolve_opponent_for_episode(episode_start_idx + i, opponent_pool=opponent_pool)
             opponents.append(opp)
-            
+
             if player1_deck and player2_deck:
                 p1_d, p2_d = player1_deck, player2_deck
             else:
@@ -290,42 +310,37 @@ class SeaEnginePPOTrainer:
                 opp_deck_type = random.choice(deck_types)
                 p1_d = self.decks[ai_deck_type] if player1_is_ai else self.decks[opp_deck_type]
                 p2_d = self.decks[opp_deck_type] if player1_is_ai else self.decks[ai_deck_type]
-            
+
             configs.append({
                 "player1_deck": p1_d,
                 "player2_deck": p2_d,
                 "player1_id": "AI" if player1_is_ai else "Opponent",
-                "player2_id": "Opponent" if player1_is_ai else "AI"
+                "player2_id": "Opponent" if player1_is_ai else "AI",
             })
             ai_ids.append("AI")
-            
-        init_t0 = time.perf_counter()
+
         snapshots = env.init_games(configs)
-        timings["env_init_games_sec"] += time.perf_counter() - init_t0
-        profile_stats = getattr(env, "drain_profile_stats", None)
-        if profile_stats is not None:
-            for key, data in profile_stats().items():
-                if key == "init_game":
-                    timings["pythonnet_init_game_sec"] += float(data.get("total_sec", 0.0))
-                elif key == "apply_action":
-                    timings["pythonnet_apply_action_sec"] += float(data.get("total_sec", 0.0))
-                elif key == "_build_snapshot":
-                    timings["pythonnet_build_snapshot_sec"] += float(data.get("total_sec", 0.0))
         active_envs = set(range(num_envs))
         results = [None] * num_envs
-        
+
         while active_envs:
             ai_turn_indices = []
             ai_state_vectors = []
             ai_action_feature_vectors = []
             ai_legal_actions = []
-            
             cmds = [None] * num_envs
-            
+            transition_effects: Dict[int, str] = {}
+            prev_snapshots: Dict[int, Dict[str, object]] = {}
+
             for i in list(active_envs):
                 snap = snapshots[i]
                 if snap["result"] != "Ongoing" or snap["turn"] > max_turns:
-                    self._assign_terminal_rewards_by_id(buffers[i], str(snap["result"]), ai_ids[i], snap.get("winner_id", ""))
+                    self._assign_terminal_rewards_by_id(
+                        buffers[i],
+                        str(snap["result"]),
+                        ai_ids[i],
+                        snap.get("winner_id", ""),
+                    )
                     buffers[i].compute_returns_and_advantages(self.config.gamma, self.config.gae_lambda)
                     results[i] = {
                         "buffer": buffers[i],
@@ -333,37 +348,44 @@ class SeaEnginePPOTrainer:
                         "steps": step_counts[i],
                         "final_turn": snap["turn"],
                         "ai_won": snap.get("winner_id") == ai_ids[i],
-                        "opponent_name": opponents[i].name
+                        "opponent_name": opponents[i].name,
                     }
                     active_envs.remove(i)
                     continue
-                    
+
                 legal_actions = snap.get("actions", [])
                 if not legal_actions:
                     cmds[i] = ("apply_action", {"action_uid": ""})
+                    transition_effects[i] = ""
+                    prev_snapshots[i] = snap
                     continue
-                    
+
                 is_ai_turn = snap["active_player"] == ai_ids[i]
                 if is_ai_turn:
-                    obs_t0 = time.perf_counter()
-                    from RL_AI.SeaEngine.observation import build_observation
-                    obs = build_observation({**snap, "actions": list(legal_actions)}, snap.get("active_player"))
-                    timings["obs_build_sec"] += time.perf_counter() - obs_t0
+                    state_vector = snap.get("state_vector")
+                    action_feature_vectors = snap.get("action_feature_vectors")
+                    if state_vector is None or action_feature_vectors is None:
+                        from RL_AI.SeaEngine.observation import build_observation
+                        obs = build_observation({**snap, "actions": list(legal_actions)}, snap.get("active_player"))
+                        state_vector = obs.state_vector
+                        action_feature_vectors = obs.action_feature_vectors
                     ai_turn_indices.append(i)
-                    ai_state_vectors.append(obs.state_vector)
-                    ai_action_feature_vectors.append(obs.action_feature_vectors)
+                    ai_state_vectors.append(state_vector)
+                    ai_action_feature_vectors.append(action_feature_vectors)
                     ai_legal_actions.append(legal_actions)
                 else:
-                    opp_t0 = time.perf_counter()
                     _, action = choose_action_with_agent(opponents[i], snap)
-                    timings["opponent_select_sec"] += time.perf_counter() - opp_t0
                     cmds[i] = ("apply_action", {"action_uid": action["uid"]})
+                    transition_effects[i] = str(action.get("effect_id", ""))
+                    prev_snapshots[i] = snap
                     step_counts[i] += 1
-            
+
             if ai_turn_indices:
-                policy_t0 = time.perf_counter()
-                outputs = self.agent.compute_policy_output_batch(ai_state_vectors, ai_action_feature_vectors, ai_legal_actions)
-                timings["policy_forward_sec"] += time.perf_counter() - policy_t0
+                outputs = self.agent.compute_policy_output_batch(
+                    ai_state_vectors,
+                    ai_action_feature_vectors,
+                    ai_legal_actions,
+                )
                 for idx, out in zip(ai_turn_indices, outputs):
                     buffers[idx].add_step(
                         RolloutStep(
@@ -379,33 +401,32 @@ class SeaEnginePPOTrainer:
                         )
                     )
                     cmds[idx] = ("apply_action", {"action_uid": out.action["uid"]})
+                    transition_effects[idx] = str(out.action.get("effect_id", ""))
+                    prev_snapshots[idx] = snapshots[idx]
                     step_counts[idx] += 1
-            
+
             if active_envs:
-                wait_t0 = time.perf_counter()
                 env.step_async(cmds)
                 new_snapshots = env.step_wait()
-                timings["env_step_wait_sec"] += time.perf_counter() - wait_t0
-                profile_stats = getattr(env, "drain_profile_stats", None)
-                if profile_stats is not None:
-                    for key, data in profile_stats().items():
-                        if key == "init_game":
-                            timings["pythonnet_init_game_sec"] += float(data.get("total_sec", 0.0))
-                        elif key == "apply_action":
-                            timings["pythonnet_apply_action_sec"] += float(data.get("total_sec", 0.0))
-                        elif key == "_build_snapshot":
-                            timings["pythonnet_build_snapshot_sec"] += float(data.get("total_sec", 0.0))
                 for i in active_envs:
                     if i in new_snapshots:
+                        if i in prev_snapshots and buffers[i].steps:
+                            buffers[i].steps[-1].reward += dense_reward_from_transition(
+                                prev_snapshots[i],
+                                new_snapshots[i],
+                                ai_id=ai_ids[i],
+                                action_effect_id=transition_effects.get(i, ""),
+                            )
                         snapshots[i] = new_snapshots[i]
-                    
-        return results, timings
+
+        return results
 
     def train(
         self,
         *,
         num_episodes: int,
         opponent_pool: Optional[List[SeaEngineAgent]] = None,
+        opponent_schedule: Optional[Sequence[str]] = None,
         card_data_path: Optional[str] = None,
         player1_deck: str = "",
         player2_deck: str = "",
@@ -415,6 +436,7 @@ class SeaEnginePPOTrainer:
         log_interval: int = 200, # 200판마다 요약 출력, 0 이하면 비활성화
         progress_callback: Optional[Callable[[int, int, str, Dict[str, object]], None]] = None,
         num_envs: int = 8,
+        episode_offset: int = 0,
     ) -> Dict[str, object]:
         import time
         results = {
@@ -436,29 +458,35 @@ class SeaEnginePPOTrainer:
         start_time = time.time()
         interval_start_time = time.time()
         last_heartbeat_time = start_time
-        profile_enabled = os.getenv("SEAENGINE_PROFILE", "0") == "1"
-        aggregate_timings: Dict[str, float] = {}
-        
+        interval_opponents: Counter[str] = Counter()
         try:
+            parallel_desc = env.describe_parallelism()
             print(f"[*] Starting Training: {num_episodes} episodes | Device: {self.agent.device} | Envs: {num_envs} (PythonNet)")
+            print(
+                f"[*] Parallel: backend={parallel_desc.get('backend')} | "
+                f"threaded={parallel_desc.get('threaded')} | workers={parallel_desc.get('workers')}"
+            )
+            print(f"[*] Opp pool: {self._describe_opponent_pool(opponent_pool)}")
             
             # num_episodes가 num_envs로 나누어 떨어지지 않으면 맞춰서 반복
             for episode_start_idx in range(0, num_episodes, num_envs):
                 actual_num_envs = min(num_envs, num_episodes - episode_start_idx)
                 env.num_envs = actual_num_envs # Adjust if last batch is smaller
+                batch_schedule = None
+                if opponent_schedule is not None:
+                    batch_schedule = list(opponent_schedule[episode_start_idx:episode_start_idx + actual_num_envs])
                 
                 try:
-                    rollouts, batch_timings = self.collect_vector_episodes(
+                    rollouts = self.collect_vector_episodes(
                         env=env,
-                        episode_start_idx=episode_start_idx,
+                        episode_start_idx=episode_offset + episode_start_idx,
                         opponent_pool=opponent_pool,
+                        opponent_schedule=batch_schedule,
                         card_data_path=card_data_path,
                         player1_deck=player1_deck,
                         player2_deck=player2_deck,
                         max_turns=max_turns,
                     )
-                    for key, value in batch_timings.items():
-                        aggregate_timings[key] = aggregate_timings.get(key, 0.0) + float(value)
                 except Exception as e:
                     print(f"  [!] Vector Engine crashed during batch {episode_start_idx}. Restarting envs... ({e})")
                     env.close()
@@ -469,6 +497,7 @@ class SeaEnginePPOTrainer:
                 for rollout in rollouts:
                     self._extend_buffer(pending_buffer, rollout["buffer"])                
                     results["episodes"] += 1
+                    interval_opponents[str(rollout["opponent_name"])] += 1
                     if rollout["ai_won"]: results["wins"] += 1
                     elif "Win" in str(rollout["result"]): results["losses"] += 1
                     else: results["draws"] += 1
@@ -491,14 +520,6 @@ class SeaEnginePPOTrainer:
                         f"[*] Training heartbeat | {done}/{num_episodes} episodes | "
                         f"updates={results['updates']} | speed={speed:.2f} eps/s"
                     )
-                    if profile_enabled and aggregate_timings:
-                        total_profile = sum(aggregate_timings.values()) or 1.0
-                        top = sorted(aggregate_timings.items(), key=lambda kv: kv[1], reverse=True)[:6]
-                        breakdown = " | ".join(
-                            f"{name}={sec:.2f}s ({sec / total_profile * 100:.0f}%)"
-                            for name, sec in top
-                        )
-                        print(f"[*] Profile | {breakdown}")
                     last_heartbeat_time = now
 
                 # 5. Periodic Output (200 episodes)
@@ -507,25 +528,28 @@ class SeaEnginePPOTrainer:
                     fps = log_interval / elapsed if elapsed > 0 else 0
                     win_rate = (results["wins"] / results["episodes"]) * 100
                     loss = results.get("last_update", {}).get("policy_loss", 0.0)
-                    print(f"[Ep {results['episodes']:>5}/{num_episodes}] Win: {win_rate:>4.1f}% | Loss: {loss:>7.4f} | Speed: {fps:>5.1f} eps/s")
-                    if profile_enabled and aggregate_timings:
-                        total_profile = sum(aggregate_timings.values()) or 1.0
-                        top = sorted(aggregate_timings.items(), key=lambda kv: kv[1], reverse=True)[:6]
-                        breakdown = " | ".join(
-                            f"{name}={sec:.2f}s ({sec / total_profile * 100:.0f}%)"
-                            for name, sec in top
-                        )
-                        print(f"[*] Profile | {breakdown}")
+                    opp_summary = ", ".join(
+                        f"{self._short_opponent_name(name)}={count}"
+                        for name, count in sorted(interval_opponents.items())
+                    )
+                    if not opp_summary:
+                        opp_summary = "-"
+                    print(
+                        f"[Ep {results['episodes']:>5}/{num_episodes}] "
+                        f"Win: {win_rate:>4.1f}% | Loss: {loss:>7.4f} | Speed: {fps:>5.1f} eps/s | Opp: {opp_summary}"
+                    )
+                    interval_opponents.clear()
                     interval_start_time = time.time()
 
                 # 6. Periodic Save
-                if results["episodes"] % save_interval < actual_num_envs:
-                    model_path = self.model_dir / f"model_ep_{results['episodes']}.pt"
+                global_episodes = episode_offset + results["episodes"]
+                if global_episodes % save_interval < actual_num_envs:
+                    model_path = self.model_dir / f"model_ep_{global_episodes}.pt"
                     torch.save(self.agent.model.state_dict(), model_path)
                     new_past_self = PastSelfAgent(
                         str(model_path),
                         device=str(self.agent.device),
-                        name=f"self_ep_{results['episodes']}",
+                        name=f"self_ep_{global_episodes}",
                         hidden_dim=self.agent.hidden_dim,
                     )
                     opponent_pool.append(new_past_self)
