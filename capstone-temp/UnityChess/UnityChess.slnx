@@ -1,8 +1,0 @@
-﻿<Solution>
-  <Project Path="Assembly-CSharp.csproj" />
-  <Project Path="UniRx.csproj" />
-  <Project Path="PlayFab.csproj" />
-  <Project Path="PlayFabEditorExtensions.csproj" />
-  <Project Path="UniRx.Examples.csproj" />
-  <Project Path="PlayFabSDKEditor.csproj" />
-</Solution>
