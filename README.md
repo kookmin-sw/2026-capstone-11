@@ -1,4 +1,4 @@
-# 👑 Call of the King: RL_AI (SeaEngine Edition)
+# 👑 Call of the King: RL_AI (SeaEngine Edition) 
 
 `RL_AI`는 C# 기반 보드게임 엔진 **SeaEngine** 위에서 동작하는 최첨단 강화학습 실험 레이어입니다.  
 현재 프로젝트는 단순한 로직 구현을 넘어, **병렬 데이터 수집**과 **비동기 통신**을 통한 학습 가속화 단계에 도달해 있습니다.
