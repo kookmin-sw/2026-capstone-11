@@ -8,12 +8,14 @@ using ui.view.board;
 using UnityEngine.Tilemaps;
 using System.Collections.Generic;
 using core.actions;   // ActionDTO 네임스페이스
+using core.data;    // CardDefinition 네임스페이스
 
 public class TestInit : MonoBehaviour
 {
     [SerializeField] private UnitView unitPrefab;
     [SerializeField] private ChessUIEventBus eventBus;
     [SerializeField] private ChessUIController uiController;
+    [SerializeField] private CardUnitDB db;
 
     public Tilemap tilemap;
 
@@ -28,22 +30,19 @@ public class TestInit : MonoBehaviour
     private void CreateTestUnit()
     {
         var go = Instantiate(unitPrefab);
+        var def = db.Get("Or_R");
 
         var data = new UnitViewData(
             new ViewID(ViewType.Unit, "unit_1"),
             ViewType.Unit,
-            "Test Unit",
-            "Rook",
-            1,
-            3,
-            3,
-            "None",
-            1,
-            new Vector2Int(0, 0),
-            MoveType.Rook
+            "Or_R",
+            def.card.attack,
+            def.card.hp,
+            new Vector2Int(0, 0)
         );
 
         go.Init(data, eventBus);
+        go.SetDefinition(def);
 
         go.transform.position = tilemap.GetCellCenterWorld(
             BoardView.BoardToCell(new Vector2Int(0, 0), true)
@@ -53,22 +52,19 @@ public class TestInit : MonoBehaviour
     private void CreateTestUnit2()
     {
         var go = Instantiate(unitPrefab);
+        var def = db.Get("Cl_L");
 
         var data = new UnitViewData(
             new ViewID(ViewType.Unit, "unit_2"),
             ViewType.Unit,
-            "Test Unit 2",
-            "King",
-            1,
-            3,
-            3,
-            "None",
-            1,
-            new Vector2Int(1, 1),
-            MoveType.King
+            "Cl_L",
+            def.card.attack,
+            def.card.hp,
+            new Vector2Int(1, 1)
         );
 
         go.Init(data, eventBus);
+        go.SetDefinition(def);
 
         go.transform.position = tilemap.GetCellCenterWorld(
             BoardView.BoardToCell(new Vector2Int(1, 1), true)

@@ -5,6 +5,7 @@ using events;
 using events.server;
 using events.client;
 using Game.Network;
+using core.data;
 
 namespace ui.view.unit
 {
@@ -24,42 +25,29 @@ namespace ui.view.unit
     public class UnitViewData : BaseViewData
     {
         // 공통 유닛 정의
-        public string name;
-        public string className;
-        public MoveType moveType;
+        public string cardId;
 
-        // 전투 관련 상태
-        public int attack;
-        public int maxHP;
-        public int currentHP;
-
-        public string traitsDesc; // 특성 설명 텍스트
-        public int unitID;
+        // 동적 상태
+        public int curAttack;
+        public int curHP;
 
         // 보드 위에서의 위치
         public Vector2Int pos;
 
         public UnitViewData(ViewID id,
                             ViewType type,
-                            string name,
-                            string className,
-                            int attack,
-                            int maxHP,
-                            int currentHP,
-                            string traitsDesc,
-                            int unitID,
-                            Vector2Int pos,
-                            MoveType moveType) : base(id, type)
+                            string cardId,
+                            int curAttack,
+                            int curHP,
+                            Vector2Int pos
+                            ) : base(id, type)
         {
-            this.name = name;
-            this.className = className;
-            this.attack = attack;
-            this.maxHP = maxHP;
-            this.currentHP = currentHP;
-            this.traitsDesc = traitsDesc;
-            this.unitID = unitID;
+            this.cardId = cardId;
+
+            this.curAttack = curAttack;
+            this.curHP = curHP;
+
             this.pos = pos;
-            this.moveType = moveType;
         }
     }
 
@@ -79,12 +67,12 @@ namespace ui.view.unit
         // ITargetable 인터페이스 구현
         public TooltipData GetTooltipData()
         {
-            return TooltipBuilder.UnitOnboardTooltip(data);
+            return TooltipBuilder.UnitOnboardTooltip(definition, data);
         }
 
         public void OnSelected()
         {
-            Debug.Log("Unit selected: " + data.name + " id: " + data.unitID);
+            Debug.Log("Unit selected: " + data.cardId);
             
         }
 
@@ -106,7 +94,7 @@ namespace ui.view.unit
 
         private void OnUnitMove(IServerEvents.UnitMoveEvent evt)
         {
-            
+            // TODO: evt에서 이동한 유닛의 ID와 위치를 받아서 해당 유닛 뷰의 위치를 업데이트
         }
     }
 }

@@ -1,6 +1,6 @@
 using entity.targetable;
-using ui.view.card;
 using ui.view.unit;
+using core.data;
 
 namespace ui.tooltip
 {
@@ -9,32 +9,32 @@ namespace ui.tooltip
     /// </summary> 
     public static class TooltipBuilder
     {
-        public static TooltipData UnitCardTooltip(CardViewData data)
+        public static TooltipData UnitCardTooltip(CardDefinition def)
         {
             return new TooltipData(
-                title: data.name,
-                header: $"[유닛/클래스 : {data.className}]\n",
-                description: data.traitsDesc + "\n" +
-                $"공격력: {data.attack} \t 체력: {data.maxHP}\n"
+                title: def.card.name,
+                header: $"[유닛/클래스 : {def.card.unitType}]\n",
+                description: $"[{def.evt.timing}] {def.evt.name}: {def.evt.text}" + "\n" +
+                $"공격력: {def.card.attack} \t 체력: {def.card.hp}\n"
             );
         }
 
-        public static TooltipData SpellCardTooltip(CardViewData data)
+        public static TooltipData SpellCardTooltip(CardDefinition def)
         {
             return new TooltipData(
-                title: data.name,
-                header: $"[스펠/클래스 : {data.className}]\n",
-                description: data.spellDesc + "\n"
+                title: def.card.name,
+                header: $"[스펠/클래스 : {def.card.unitType}]\n",
+                description: $"{def.effect.name}: {def.effect.text}" + "\n"
             );
         }
 
-        public static TooltipData UnitOnboardTooltip(UnitViewData data)
+        public static TooltipData UnitOnboardTooltip(CardDefinition def, UnitViewData data)
         {
             return new TooltipData(
-                title: data.name,
-                header: $"[유닛/클래스 : {data.className}]\n",
-                description: data.traitsDesc + "\n" +
-                $"공격력: {data.attack} \t 체력: {data.currentHP} / {data.maxHP}\n"
+                title: def.card.name,
+                header: $"[유닛/클래스 : {def.card.unitType}]\n",
+                description: $"[{def.evt.timing}] {def.evt.name}: {def.evt.text}" + "\n" +
+                $"공격력: {def.card.attack} \t 체력: {data.curHP} / {def.card.hp}\n"
             );
         }
     }

@@ -11,40 +11,12 @@ namespace ui.view.card
     public class CardViewData : BaseViewData
     {
         // 공통
-        public string name;
-        public string className;
-
-        // 유닛 정의
-        public int attack;
-        public int maxHP;
-        public string traitsDesc; // 특성 설명 텍스트
-
-        // 스펠 정의 (설명 텍스트)
-        public string spellDesc;
-
-        // 비용
-        public int moveCost;
-        public int spellCost;
-
+        public string cardId;
         public CardViewData(ViewID id,
                             ViewType type,
-                            string name,
-                            string className,
-                            int attack,
-                            int maxHP,
-                            string traitsDesc,
-                            string spellDesc,
-                            int moveCost,
-                            int spellCost) : base(id, type)
+                            string cardId) : base(id, type)
         {
-            this.name = name;
-            this.className = className;
-            this.attack = attack;
-            this.maxHP = maxHP;
-            this.traitsDesc = traitsDesc;
-            this.spellDesc = spellDesc;
-            this.moveCost = moveCost;
-            this.spellCost = spellCost;
+            this.cardId = cardId;
         }
     }
 
@@ -81,7 +53,7 @@ namespace ui.view.card
     {
         public override TooltipData GetTooltipData()
         {
-            return TooltipBuilder.UnitCardTooltip(data);
+            return TooltipBuilder.UnitCardTooltip(definition);
         }
     }
 
@@ -92,7 +64,7 @@ namespace ui.view.card
     {
         public override TooltipData GetTooltipData()
         {
-            return TooltipBuilder.SpellCardTooltip(data);
+            return TooltipBuilder.SpellCardTooltip(definition);
         }
     }
 }

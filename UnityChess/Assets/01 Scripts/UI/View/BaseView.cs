@@ -1,5 +1,6 @@
 using events;
 using UnityEngine;
+using core.data;
 
 namespace ui.view
 {
@@ -7,6 +8,7 @@ namespace ui.view
     {
         [SerializeField] protected BaseViewData viewData;
         [SerializeField] protected IEventBus eventBus;
+        [SerializeField] protected CardDefinition definition;
 
         // ViewData 접근 (getter)
         public ViewID Id => viewData.Id;
@@ -25,6 +27,12 @@ namespace ui.view
             {
                 Debug.Log($"BaseView initialized with ID: {Id.UUID}, Type: {Type}");
             }
+        }
+
+        public virtual void SetDefinition(CardDefinition def)
+        {
+            // 유닛 뷰에서 카드 정의를 받아서 초기화하는 용도
+            definition = def;
         }
 
         public abstract void Subscribe();
