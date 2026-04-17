@@ -11,7 +11,7 @@ public partial class Game(CardLoader cardLoader, ILogger logger, string player1I
 {
     [JsonIgnore]
     public readonly CardLoader CardLoader = cardLoader;
-    public readonly GameData Data = new GameData(player1Id, player2Id);
+    public readonly GameData Data = new GameData(player1Id, player2Id, logger);
     [JsonIgnore]
     public readonly ILogger Logger = logger;
     private List<GameAction> _actions = [];

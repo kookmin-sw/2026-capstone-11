@@ -21,6 +21,12 @@ public class SimpleLogger : ILogger
             _builder.AppendLine(card.ToString());
         }
     }
+
+    public void LogEvent(string eventId, string timing, Uid source)
+    {
+        _builder.AppendLine($"Event({eventId}, {timing}) / {source}");
+    }
+
     public void Log(string message, GameData data)
     {
         _builder.AppendLine($"{message}");
