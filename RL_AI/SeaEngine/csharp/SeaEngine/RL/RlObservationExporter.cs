@@ -235,21 +235,24 @@ public static class RlObservationExporter
     private static float[] BuildBoardVector(GameData data, string playerId, Card[] board, Card? ownLeader, Card? enemyLeader)
     {
         var enemyId = playerId == data.Player1.Id ? data.Player2.Id : data.Player1.Id;
-        var ownLx = ownLeader?.Unit.PosX ?? -1;
-        var ownLy = ownLeader?.Unit.PosY ?? -1;
-        var enemyLx = enemyLeader?.Unit.PosX ?? -1;
-        var enemyLy = enemyLeader?.Unit.PosY ?? -1;
+        var mirrorView = ShouldMirrorPerspective(ownLeader, enemyLeader);
+        var ownLx = ViewX(ownLeader?.Unit.PosX ?? -1, mirrorView);
+        var ownLy = ViewY(ownLeader?.Unit.PosY ?? -1);
+        var enemyLx = ViewX(enemyLeader?.Unit.PosX ?? -1, mirrorView);
+        var enemyLy = ViewY(enemyLeader?.Unit.PosY ?? -1);
         var vectors = new List<float>();
-        var cards = board.OrderBy(card => card.Owner.Id)
+        var cards = board.OrderBy(card => card.Owner.Id == playerId ? 0 : 1)
             .ThenBy(card => RoleRank(RoleFromCard(card)))
+            .ThenBy(card => ViewX(card.Unit.PosX, mirrorView))
+            .ThenBy(card => ViewY(card.Unit.PosY))
             .ThenBy(card => card.Guid.ToString())
             .ToArray();
 
         foreach (var card in cards.Take(14))
         {
             var (attackMod, hasMoveLock, hasAttackLock, timedStatusCount) = StatusSummary(card);
-            var cx = card.Unit.PosX;
-            var cy = card.Unit.PosY;
+            var cx = ViewX(card.Unit.PosX, mirrorView);
+            var cy = ViewY(card.Unit.PosY);
             var role = RoleFromCard(card);
             var hp = card.Unit.Hp;
             var maxHp = Math.Max(1, card.Unit.MaxHp);
@@ -262,9 +265,7 @@ public static class RlObservationExporter
             var hasMoveAction = 0.0f;
             var threatensEnemyLeader = enemyLeader != null && Distance(cx, cy, enemyLx, enemyLy) is >= 0 and <= 0.2f ? 1.0f : 0.0f;
             var inCenter = 2 <= cx && cx <= 3 && 2 <= cy && cy <= 3 ? 1.0f : 0.0f;
-            var rowProgress = card.Unit.IsPlaced
-                ? NormalizeRatio(card.Owner.Id == "P1" ? cx : (Board.BoardSize - 1 - cx), Board.BoardSize - 1)
-                : 0.0f;
+            var rowProgress = card.Unit.IsPlaced ? NormalizeRatio(cx, Board.BoardSize - 1) : 0.0f;
 
             vectors.AddRange(new float[]
             {
@@ -345,6 +346,7 @@ public static class RlObservationExporter
         var (_, _, enemyId) = GetPlayers(data, playerId);
         var ownLeader = GetLeaders(board, playerId, enemyId).own;
         var enemyLeader = GetLeaders(board, playerId, enemyId).enemy;
+        var mirrorView = ShouldMirrorPerspective(ownLeader, enemyLeader);
 
         var effectId = action.EffectId;
         var targetType = action.TargetType;
@@ -352,12 +354,12 @@ public static class RlObservationExporter
         var targetCard = (targetType is "Unit" or "Card") && boardByUid.TryGetValue(action.TargetGuid, out var tgt) ? tgt : null;
         var targetCard2 = targetType == "Unit2" && boardByUid.TryGetValue(action.TargetGuid2, out var tgt2) ? tgt2 : null;
 
-        var targetX = action.PosX;
-        var targetY = action.PosY;
-        var sourceX = source?.Unit.PosX ?? -1;
-        var sourceY = source?.Unit.PosY ?? -1;
-        var enemyLx = enemyLeader?.Unit.PosX ?? -1;
-        var enemyLy = enemyLeader?.Unit.PosY ?? -1;
+        var targetX = ViewX(action.PosX, mirrorView);
+        var targetY = ViewY(action.PosY);
+        var sourceX = ViewX(source?.Unit.PosX ?? -1, mirrorView);
+        var sourceY = ViewY(source?.Unit.PosY ?? -1);
+        var enemyLx = ViewX(enemyLeader?.Unit.PosX ?? -1, mirrorView);
+        var enemyLy = ViewY(enemyLeader?.Unit.PosY ?? -1);
 
         var (attackMod, hasMoveLock, hasAttackLock, timedStatusCount) = source != null ? StatusSummary(source) : (0.0f, 0.0f, 0.0f, 0.0f);
         var sourceRole = source != null ? RoleFromCard(source) : "";
@@ -580,6 +582,20 @@ public static class RlObservationExporter
     private static float NormalizeRatio(float value, float scale) => scale == 0 ? 0.0f : value / scale;
 
     private static float NormalizePos(int value) => value < 0 ? -1.0f : value / 5.0f;
+
+    private static bool ShouldMirrorPerspective(Card? ownLeader, Card? enemyLeader)
+    {
+        if (ownLeader is null || enemyLeader is null) return false;
+        return ownLeader.Unit.PosX > enemyLeader.Unit.PosX;
+    }
+
+    private static int ViewX(int value, bool mirrorView)
+    {
+        if (value < 0) return value;
+        return mirrorView ? Board.BoardSize - 1 - value : value;
+    }
+
+    private static int ViewY(int value) => value;
 
     private static float Distance(int x1, int y1, int x2, int y2)
     {

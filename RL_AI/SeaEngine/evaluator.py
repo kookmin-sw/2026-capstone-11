@@ -7,7 +7,7 @@ from collections import Counter
 from contextlib import nullcontext
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 from RL_AI.SeaEngine.action_adapter import choose_action_with_agent
 from RL_AI.SeaEngine.bridge.pythonnet_session import PythonNetSession
@@ -27,6 +27,42 @@ def _winner_to_counts(result: str) -> tuple[int, int, int]:
     if result == "Player2Win":
         return 0, 1, 0
     return 0, 0, 1
+
+
+def _label_code(label: str, *, default: str = "X") -> str:
+    normalized = str(label or "").strip()
+    if not normalized:
+        return default
+    mapping = {
+        "선공": "F",
+        "후공": "S",
+        "First": "F",
+        "Second": "S",
+        "귤": "O",
+        "Orange": "O",
+        "샤를로테": "C",
+        "Charlotte": "C",
+        "Teach": "T",
+        "Balance": "B",
+        "Self": "S",
+        "Greedy": "G",
+        "Random": "R",
+    }
+    if normalized in mapping:
+        return mapping[normalized]
+    for ch in normalized:
+        if ch.isalnum():
+            return ch.upper()
+    return default
+
+
+def _build_game_id(match_context: Optional[Dict[str, Any]], match_index: int) -> str:
+    ctx = match_context or {}
+    side_code = _label_code(str(ctx.get("side", ctx.get("side_label", ""))), default="F")
+    self_code = _label_code(str(ctx.get("self_deck", ctx.get("rl_deck", ctx.get("self_deck_label", "")))), default="X")
+    opp_code = _label_code(str(ctx.get("opp_deck", ctx.get("opp_deck_label", ""))), default="X")
+    mode_code = _label_code(str(ctx.get("mode", ctx.get("mode_label", ""))), default="T")
+    return f"{side_code}{self_code}{opp_code}{mode_code}{match_index}"
 
 
 def play_evaluation_match(
@@ -109,6 +145,7 @@ def evaluate_agents(
     report_path: Optional[str] = None,
     progress_callback: Optional[Callable[[int, int, str, str], None]] = None,
     include_history: bool = False,
+    match_context: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, object]:
     p1_wins = 0
     p2_wins = 0
@@ -143,9 +180,12 @@ def evaluate_agents(
             action_type_counts.update(result["action_type_counts"])
             card_use_counts.update(result["card_use_counts"])
             if include_history:
+                context_copy = dict(match_context or {})
                 histories.append(
                     {
                         "match_index": match_index + 1,
+                        "game_id": _build_game_id(context_copy, match_index + 1),
+                        "match_context": context_copy,
                         "result": str(snapshot["result"]),
                         "steps": int(result["steps"]),
                         "final_turn": int(result["final_turn"]),

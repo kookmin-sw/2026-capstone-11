@@ -32,6 +32,46 @@ def _placed_units(snapshot: Dict[str, Any], owner_id: str) -> int:
     return count
 
 
+def _pawn_progress(snapshot: Dict[str, Any], owner_id: str) -> float:
+    """Return normalized forward progress for placed pawns.
+
+    The current engine does not expose an explicit promotion event in the
+    observation path, so we treat forward progress as the closest proxy for
+    promotion pressure / pawn value.
+    """
+    pawns = 0
+    progress_sum = 0.0
+    for card in snapshot.get("board", []):
+        if str(card.get("owner", "")) != owner_id:
+            continue
+        if str(card.get("role", "")) != "Pawn":
+            continue
+        if not bool(card.get("is_placed", False)):
+            continue
+        x = int(card.get("pos_x", -1))
+        if x < 0:
+            continue
+        pawns += 1
+        if owner_id == "P1":
+            progress_sum += _safe_float(x, 0.0) / 5.0
+        else:
+            progress_sum += (5.0 - _safe_float(x, 0.0)) / 5.0
+    return 0.0 if pawns == 0 else progress_sum / float(pawns)
+
+
+def _pawn_last_rank_count(snapshot: Dict[str, Any], owner_id: str) -> int:
+    count = 0
+    last_rank = 5 if owner_id == "P1" else 0
+    for card in snapshot.get("board", []):
+        if str(card.get("owner", "")) != owner_id:
+            continue
+        if str(card.get("role", "")) != "Pawn":
+            continue
+        if bool(card.get("is_placed", False)) and int(card.get("pos_x", -1)) == last_rank:
+            count += 1
+    return count
+
+
 def _find_enemy_id(snapshot: Dict[str, Any], ai_id: str) -> str:
     for player in snapshot.get("players", []):
         pid = str(player.get("id", ""))
@@ -66,6 +106,14 @@ def dense_reward_from_transition(
     next_ai_units = _placed_units(next_snapshot, ai_id)
     prev_enemy_units = _placed_units(prev_snapshot, enemy_id) if enemy_id else 0
     next_enemy_units = _placed_units(next_snapshot, enemy_id) if enemy_id else 0
+    prev_ai_pawn_progress = _pawn_progress(prev_snapshot, ai_id)
+    next_ai_pawn_progress = _pawn_progress(next_snapshot, ai_id)
+    prev_enemy_pawn_progress = _pawn_progress(prev_snapshot, enemy_id) if enemy_id else 0.0
+    next_enemy_pawn_progress = _pawn_progress(next_snapshot, enemy_id) if enemy_id else 0.0
+    prev_ai_last_rank = _pawn_last_rank_count(prev_snapshot, ai_id)
+    next_ai_last_rank = _pawn_last_rank_count(next_snapshot, ai_id)
+    prev_enemy_last_rank = _pawn_last_rank_count(prev_snapshot, enemy_id) if enemy_id else 0
+    next_enemy_last_rank = _pawn_last_rank_count(next_snapshot, enemy_id) if enemy_id else 0
 
     # Leader pressure matters the most.
     enemy_leader_delta = prev_enemy_leader_hp - next_enemy_leader_hp
@@ -78,6 +126,10 @@ def dense_reward_from_transition(
     reward += 0.08 * enemy_leader_delta
     reward -= 0.10 * ai_leader_delta
     reward += 0.02 * board_delta
+    reward += 0.03 * (next_ai_pawn_progress - prev_ai_pawn_progress)
+    reward -= 0.02 * (next_enemy_pawn_progress - prev_enemy_pawn_progress)
+    reward += 0.02 * (next_ai_last_rank - prev_ai_last_rank)
+    reward -= 0.01 * (next_enemy_last_rank - prev_enemy_last_rank)
 
     if action_effect_id == "DefaultAttack":
         reward += 0.01

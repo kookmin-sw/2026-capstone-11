@@ -80,22 +80,34 @@ class VectorSeaEngineEnv:
             self.backend = "local"
 
         # SEAENGINE_LOCAL_THREADS supports:
-        # - boolean style: "0"/"1", "true"/"false"
-        # - integer style: "8" (means enable threads with max_workers=8)
+        # - "0"/"false"/"off": disable local thread pool
+        # - "1"/"true"/"auto": enable local thread pool with auto worker count
+        # - integer style: "8" (explicit max_workers=8)
         local_threads_raw = os.getenv("SEAENGINE_LOCAL_THREADS", "1").strip().lower()
-        parsed_local_threads: Optional[int] = None
-        try:
-            parsed_local_threads = int(local_threads_raw)
-        except Exception:
-            parsed_local_threads = None
-
-        if parsed_local_threads is not None:
-            self.use_threads = parsed_local_threads > 0
-            self.max_workers = parsed_local_threads if parsed_local_threads and parsed_local_threads > 0 else 0
-        else:
-            self.use_threads = local_threads_raw in {"1", "true", "yes", "on"}
+        self.use_threads = True
+        self.max_workers = 0
+        if local_threads_raw in {"0", "false", "no", "off"}:
+            self.use_threads = False
             self.max_workers = 0
+        elif local_threads_raw in {"1", "true", "yes", "on", "auto", ""}:
+            self.use_threads = True
+            self.max_workers = 0
+        else:
+            parsed_local_threads: Optional[int] = None
+            try:
+                parsed_local_threads = int(local_threads_raw)
+            except Exception:
+                parsed_local_threads = None
+            if parsed_local_threads is not None and parsed_local_threads > 0:
+                self.use_threads = True
+                self.max_workers = parsed_local_threads
+            else:
+                self.use_threads = True
+                self.max_workers = 0
 
+        env_workers = int(os.getenv("SEAENGINE_WORKERS", "0") or "0")
+        if env_workers > 0:
+            self.max_workers = env_workers
         env_max_workers = int(os.getenv("SEAENGINE_LOCAL_MAX_WORKERS", "0") or "0")
         if env_max_workers > 0:
             self.max_workers = env_max_workers
@@ -148,6 +160,7 @@ class VectorSeaEngineEnv:
             "num_envs": self.num_envs,
             "threaded": self._executor is not None,
             "workers": self._executor_workers if self._executor is not None else 1,
+            "worker_scope": "cpu_threadpool_for_pythonnet_calls",
         }
 
     def init_games(self, configs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:

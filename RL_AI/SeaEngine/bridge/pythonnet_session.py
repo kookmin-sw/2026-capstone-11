@@ -5,12 +5,14 @@ from __future__ import annotations
 import os
 import json
 import uuid
+import threading
 from pathlib import Path
 from typing import Any, Dict, Optional, List
 
 class PythonNetSession:
     _clr_initialized = False
     _assembly_loaded = False
+    _init_lock = threading.Lock()
     _asm = None
     _game_type = None
     _card_loader_type = None
@@ -55,65 +57,69 @@ class PythonNetSession:
     def start(self) -> None:
         if PythonNetSession._clr_initialized:
             return
-        
-        import clr_loader
-        from pythonnet import set_runtime
-        import sys
-        
-        # Ensure DLL directory is in sys.path for assembly resolution
-        dll_dir_str = str(self.dll_dir.resolve())
-        if dll_dir_str not in sys.path:
-            sys.path.append(dll_dir_str)
-            
-        try:
-            rt = clr_loader.get_coreclr()
-            set_runtime(rt)
-        except Exception:
-            # Runtime might already be set
-            pass
-            
-        import clr
-        import System
 
-        dll_path = self._resolve_dll_path()
-        self.dll_dir = dll_path.parent
+        with PythonNetSession._init_lock:
+            if PythonNetSession._clr_initialized:
+                return
 
-        # Load Newtonsoft.Json first if present alongside the engine DLL
-        json_path = self.dll_dir / "Newtonsoft.Json.dll"
-        if json_path.exists():
+            import clr_loader
+            from pythonnet import set_runtime
+            import sys
+
+            # Ensure DLL directory is in sys.path for assembly resolution
+            dll_dir_str = str(self.dll_dir.resolve())
+            if dll_dir_str not in sys.path:
+                sys.path.append(dll_dir_str)
+
             try:
-                clr.AddReference("Newtonsoft.Json")
+                rt = clr_loader.get_coreclr()
+                set_runtime(rt)
             except Exception:
-                clr.AddReference(str(json_path))
-
-        if not PythonNetSession._assembly_loaded:
-            # Load the engine assembly directly from disk so PythonNet can reflect over it.
-            PythonNetSession._asm = System.Reflection.Assembly.LoadFrom(str(dll_path))
-            try:
-                clr.AddReference("SeaEngine")
-            except Exception:
-                # Assembly.LoadFrom above is enough for reflection-based usage.
+                # Runtime might already be set
                 pass
-            PythonNetSession._game_type = PythonNetSession._asm.GetType("SeaEngine.Game")
-            PythonNetSession._card_loader_type = PythonNetSession._asm.GetType("SeaEngine.CardManager.CardLoader")
-            PythonNetSession._silent_logger_type = PythonNetSession._asm.GetType("SeaEngine.Logger.SilentLogger")
-            PythonNetSession._rl_exporter_type = PythonNetSession._asm.GetType("SeaEngine.RL.RlObservationExporter")
-            if PythonNetSession._rl_exporter_type is not None:
-                PythonNetSession._rl_export_method = PythonNetSession._rl_exporter_type.GetMethod("Export")
-            uid_type = PythonNetSession._asm.GetType("SeaEngine.Common.Uid")
-            if uid_type is None:
-                raise RuntimeError("SeaEngine.Common.Uid type not found in assembly")
-            self._uid_parse_method = uid_type.GetMethod("Parse")
-            if self._uid_parse_method is None:
-                raise RuntimeError("SeaEngine.Common.Uid.Parse(string) not found")
-            PythonNetSession._assembly_loaded = True
-        else:
-            uid_type = PythonNetSession._asm.GetType("SeaEngine.Common.Uid")
-            self._uid_parse_method = uid_type.GetMethod("Parse")
-            if self._uid_parse_method is None:
-                raise RuntimeError("SeaEngine.Common.Uid.Parse(string) not found")
 
-        PythonNetSession._clr_initialized = True
+            import clr
+            import System
+
+            dll_path = self._resolve_dll_path()
+            self.dll_dir = dll_path.parent
+
+            # Load Newtonsoft.Json first if present alongside the engine DLL
+            json_path = self.dll_dir / "Newtonsoft.Json.dll"
+            if json_path.exists():
+                try:
+                    clr.AddReference("Newtonsoft.Json")
+                except Exception:
+                    clr.AddReference(str(json_path))
+
+            if not PythonNetSession._assembly_loaded:
+                # Load the engine assembly directly from disk so PythonNet can reflect over it.
+                PythonNetSession._asm = System.Reflection.Assembly.LoadFrom(str(dll_path))
+                try:
+                    clr.AddReference("SeaEngine")
+                except Exception:
+                    # Assembly.LoadFrom above is enough for reflection-based usage.
+                    pass
+                PythonNetSession._game_type = PythonNetSession._asm.GetType("SeaEngine.Game")
+                PythonNetSession._card_loader_type = PythonNetSession._asm.GetType("SeaEngine.CardManager.CardLoader")
+                PythonNetSession._silent_logger_type = PythonNetSession._asm.GetType("SeaEngine.Logger.SilentLogger")
+                PythonNetSession._rl_exporter_type = PythonNetSession._asm.GetType("SeaEngine.RL.RlObservationExporter")
+                if PythonNetSession._rl_exporter_type is not None:
+                    PythonNetSession._rl_export_method = PythonNetSession._rl_exporter_type.GetMethod("Export")
+                uid_type = PythonNetSession._asm.GetType("SeaEngine.Common.Uid")
+                if uid_type is None:
+                    raise RuntimeError("SeaEngine.Common.Uid type not found in assembly")
+                self._uid_parse_method = uid_type.GetMethod("Parse")
+                if self._uid_parse_method is None:
+                    raise RuntimeError("SeaEngine.Common.Uid.Parse(string) not found")
+                PythonNetSession._assembly_loaded = True
+            else:
+                uid_type = PythonNetSession._asm.GetType("SeaEngine.Common.Uid")
+                self._uid_parse_method = uid_type.GetMethod("Parse")
+                if self._uid_parse_method is None:
+                    raise RuntimeError("SeaEngine.Common.Uid.Parse(string) not found")
+
+            PythonNetSession._clr_initialized = True
 
     def close(self) -> None:
         self._game = None
@@ -146,7 +152,6 @@ class PythonNetSession:
         p1_deck = self._normalize_deck(player1_deck, True)
         p2_deck = self._normalize_deck(player2_deck, False)
         
-        # Use direct calling instead of Reflection Invoke for idiomatic PythonNet
         self._game.Init(p1_deck, p2_deck)
         self._turn_counter = 1
         return self.snapshot()

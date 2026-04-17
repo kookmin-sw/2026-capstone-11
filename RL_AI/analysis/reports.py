@@ -18,6 +18,10 @@ def build_win_rate_report(summary: Dict[str, object]) -> str:
     p2_name = str(summary.get("p2_agent", "P2"))
     action_type_counts = dict(summary.get("action_type_counts", {}))
     card_use_counts = dict(summary.get("card_use_counts", {}))
+    card_use_total = sum(int(count) for count in card_use_counts.values())
+    total_steps_estimate = episodes * avg_steps
+    card_use_per_match = 0.0 if episodes == 0 else card_use_total / episodes
+    card_use_per_100_steps = 0.0 if total_steps_estimate <= 0 else (card_use_total / total_steps_estimate) * 100.0
 
     def rate(count: int) -> float:
         return 0.0 if episodes == 0 else 100.0 * count / episodes
@@ -41,8 +45,14 @@ def build_win_rate_report(summary: Dict[str, object]) -> str:
     if card_use_counts:
         lines.append("")
         lines.append("[Card Use Counts]")
+        lines.append(
+            f"- total: {card_use_total} "
+            f"({card_use_per_match:.2f}/match, {card_use_per_100_steps:.2f}/100 steps)"
+        )
         for card_name, count in card_use_counts.items():
-            lines.append(f"- {card_name}: {count}")
+            per_match = 0.0 if episodes == 0 else count / episodes
+            per_100_steps = 0.0 if total_steps_estimate <= 0 else (count / total_steps_estimate) * 100.0
+            lines.append(f"- {card_name}: {count} ({per_match:.2f}/match, {per_100_steps:.2f}/100 steps)")
 
     return "\n".join(lines)
 
