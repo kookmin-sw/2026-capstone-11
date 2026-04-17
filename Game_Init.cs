@@ -8,11 +8,12 @@ public partial class Game
 {
     public void Init(string player1Deck, string player2Deck)
     {
+        var cardUidFactory = new UidFactory("C");
         var player1DeckList = ParseDeck(player1Deck);
         var player2DeckList = ParseDeck(player2Deck);
         
-        Data.Init(player1DeckList.Select(id => new Card(CardLoader.GetCard(id), Data.Player1)).ToList(),  
-            player2DeckList.Select(id => new Card(CardLoader.GetCard(id), Data.Player2)).ToList());
+        Data.Init(player1DeckList.Select(id => new Card(CardLoader.GetCard(id), Data.Player1, cardUidFactory)).ToList(),  
+            player2DeckList.Select(id => new Card(CardLoader.GetCard(id), Data.Player2, cardUidFactory)).ToList());
         
         Data.Player1.Deck.Shuffle();
         Data.Player2.Deck.Shuffle();

@@ -2,12 +2,12 @@ using SeaEngine.GameEffectManager;
 
 namespace SeaEngine.Common;
 
-public record GameAction(string EffectId, Uid Source, EffectTarget Target)
+public class GameAction(string effectId, Uid source, EffectTarget target, UidFactory uidFactory)
 {
-    public readonly Uid Guid = new Uid("A");
-    public readonly string EffectId = EffectId;
-    public readonly Uid Source = Source;
-    public readonly EffectTarget Target = Target;
+    public readonly Uid Guid = uidFactory.Next();
+    public readonly string EffectId = effectId;
+    public readonly Uid Source = source;
+    public readonly EffectTarget Target = target;
     
     public override string ToString() => $"{Guid} - {EffectId} - {Source} - {Target}";
 }
