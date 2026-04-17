@@ -53,7 +53,7 @@ public partial class Game
     public void UseAction(Uid actionId)
     {
         var selectedAction = _actions.FirstOrDefault(a => a.Guid == actionId) ?? throw new KeyNotFoundException($"No action with the guid : {actionId}");
-        Logger.Log("UseAction", selectedAction, Data);
+        Logger.LogAction(selectedAction, Data);
         EffectRegistry.Get(selectedAction.EffectId).Apply(selectedAction.Source, selectedAction.Target, Data);
         
         UpdateActions();

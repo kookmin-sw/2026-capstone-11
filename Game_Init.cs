@@ -14,6 +14,8 @@ public partial class Game
         
         Data.Init(player1DeckList.Select(id => new Card(CardLoader.GetCard(id), Data.Player1, cardUidFactory)).ToList(),  
             player2DeckList.Select(id => new Card(CardLoader.GetCard(id), Data.Player2, cardUidFactory)).ToList());
+
+        Logger.LogCards(Data);
         
         Data.Player1.Deck.Shuffle();
         Data.Player2.Deck.Shuffle();
