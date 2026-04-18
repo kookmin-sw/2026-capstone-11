@@ -6,6 +6,7 @@ namespace Game.Network.Service
     public interface IRouteReader
     {
         bool TryRouting(SessionId sessionId, SessionPlayerId playerId, out ConnId id);
+        public int RouteCount {get;}
     }
 
     public interface IRouteWriter : IRouteReader
@@ -16,17 +17,18 @@ namespace Game.Network.Service
 
     public class RoutingMap : IRouteWriter
     {
-        private Dictionary<(SessionId, SessionPlayerId), ConnId> _routingMap = new();
+        private Dictionary<(SessionId, SessionPlayerId), ConnId> _sessionToConnMap = new();
+
+        public int RouteCount => _sessionToConnMap.Count;
 
         public bool TryRouting(SessionId sessionId, SessionPlayerId playerId, out ConnId id)
-            => _routingMap.TryGetValue((sessionId, playerId), out id);
-        
+            => _sessionToConnMap.TryGetValue((sessionId, playerId), out id);
 
         public void AddRoute(SessionId sessionId, SessionPlayerId playerId, ConnId connId)
-            => _routingMap.Add((sessionId, playerId), connId);
+            => _sessionToConnMap.Add((sessionId, playerId), connId);
 
         public bool RemoveRoute(SessionId sessionId, SessionPlayerId playerId, out ConnId id)
-            => _routingMap.Remove((sessionId, playerId), out id);
+            => _sessionToConnMap.Remove((sessionId, playerId), out id);
 
     };
 }

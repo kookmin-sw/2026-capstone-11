@@ -21,6 +21,11 @@ namespace Game.Network
             return _id.GetHashCode();;
         }
 
+        public override string ToString()
+        {
+            return _id.ToString();
+        }
+
         public static bool operator ==(ConnId id_1, ConnId id_2) => id_1.Equals(id_2);
 
         public static bool operator !=(ConnId id_1, ConnId id_2) => !id_1.Equals(id_2);

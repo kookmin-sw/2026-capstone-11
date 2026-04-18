@@ -6,7 +6,7 @@ using Game.Network.Protocol;
 using Game.Network.Service;
 
 public class EnterResponseModule : IServiceModule, INetReceiveEventHandler
-                                , IRequestHandler<PeerEntranceRequest, PeerEntranceResponse>
+                                , IRequestHandler<PeerEntranceReq, PeerEntranceRsp>
 {
     public int HandlerId => NetEventHandlerId.Constant.PeerEntrance;
     private INetAPI _net;
@@ -24,14 +24,19 @@ public class EnterResponseModule : IServiceModule, INetReceiveEventHandler
         context.Net.SetReceiveHandler(this);
     }
 
-    public PeerEntranceResponse Handle(ConnId connId, PeerEntranceRequest request)
+    public PeerEntranceRsp Handle(ConnId connId, PeerEntranceReq request)
     {
         // TODO: PeerInfo 검증
+        if (_other.HasPeer(connId))
+        {
+            return new PeerEntranceRsp(false, _self.connWriter.instance, "Already Entered Peer");
+        }
+
         var newPeer = new Peer(connId, request.Info);
         _other.AddPeer(connId, newPeer);
         _eventPublisher.PublishEnterEvents(newPeer);
 
-        return new PeerEntranceResponse(true, _self.connWriter.instance);
+        return new PeerEntranceRsp(true, _self.connWriter.instance);
     }
 
     public void OnQuery(ConnId connId, int queryNum, byte[] raw)
@@ -39,12 +44,12 @@ public class EnterResponseModule : IServiceModule, INetReceiveEventHandler
         try
         {
             PacketReader reader = new PacketReader(raw);
-            PeerEntranceRequest request = PeerEntranceRequest.Codec.Read(ref reader);
+            PeerEntranceReq request = PeerEntranceReq.Codec.Read(ref reader);
 
             var response = Handle(connId, request);
-            var payload = new byte[PeerEntranceResponse.Codec.GetSize(response)];
+            var payload = new byte[PeerEntranceRsp.Codec.GetSize(response)];
             var writer  = new PacketWriter(payload);
-            PeerEntranceResponse.Codec.Write(ref writer, response);
+            PeerEntranceRsp.Codec.Write(ref writer, response);
 
             _net.Send(NetEventHandlerId.Constant.PeerEntrance, queryNum, connId, payload);
             

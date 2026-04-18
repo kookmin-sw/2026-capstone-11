@@ -29,7 +29,7 @@ namespace Game.Server
             _entrance = new(_net, Events, _router);
         }
 
-        public void QueryPlayer(string playerName, byte[] raw, long expireTimeMs, Action<QueryTaskResult> callBack)
+        public void QueryPlayer(string playerName, byte[] raw, long expireTimeMs, Action<string, QueryTaskResult> callBack)
         {
             if (_router.TryRoute(playerName, out var connId))
             {
@@ -38,7 +38,7 @@ namespace Game.Server
                      connId,
                      raw,
                      expireTimeMs,
-                     (connId, result) => { callBack(result); }
+                     (connId, result) => { callBack(playerName, result); }
                      );
                 return;
             }
@@ -54,6 +54,15 @@ namespace Game.Server
         {
             if (_router.TryRoute(playerName, out var connId))
                 _net.Send(HandlerId, 0, connId, raw);
+        }
+
+        public void Clear()
+        {
+            foreach (var conn in _router.IdList)
+                _net.Disconnect(conn);
+
+            Events.Clear();
+            _router.Clear();
         }
         // Data
         public void OnReceive(ConnId connId, byte[] raw)

@@ -47,7 +47,7 @@ namespace Game.Network
         public Action<SessionPlayerId, byte[]>? OnGetMessage { get; set; }
 
 
-        public bool IsSessionMemberReady => Members.Count() >= _minPlayer;
+        public bool IsSessionMemberReady => Members.Count >= _minPlayer;
 
         public void SendPlayer(SessionPlayerId receiver, byte[] raw) 
             => _port.SendPlayer(_id, receiver, raw);
@@ -67,7 +67,6 @@ namespace Game.Network
         {
             if (Members.Count >= _maxPlayer) 
             { 
-                id = SessionPlayerId.Default;
                 return false;
             }
             _playersInSession.Add(id);

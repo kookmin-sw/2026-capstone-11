@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace Game.Server
 {
     public class SessionEvents
@@ -9,6 +11,17 @@ namespace Game.Server
         public Func<string, byte[], byte[]>? OnGetQuery = null;
         public Action<string, byte[]>? OnGetResponse = null;
         public Action<string, byte[]>? OnGetMessage = null;
+
+        public void Clear()
+        {
+            OnSessionStart = null;
+            OnSessionEnd = null;
+            OnPlayerEnter = null;
+            OnPlayerExit = null;
+            OnGetQuery = null;
+            OnGetResponse = null;
+            OnGetMessage = null;
+        }
     }
 
 }

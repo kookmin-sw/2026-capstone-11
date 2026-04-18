@@ -18,9 +18,13 @@ namespace Game.Network.Service
 
     public class SelfInfo : ISelfWriter
     {
-        private ConnInfo _connInfo = new();
-        private SessionInfo _sessionInfo = new();
-
+        private ConnInfo _connInfo;
+        private SessionInfo _sessionInfo;
+        public SelfInfo(ConnInfo connInfo)
+        {
+            _connInfo = connInfo;
+            _sessionInfo = new();
+        } 
         public IConnInfoReader connInfo => _connInfo;
         public ISessionInfoReader sessionInfo => _sessionInfo;
 

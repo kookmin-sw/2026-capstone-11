@@ -1,3 +1,4 @@
+using System.Formats.Asn1;
 using System.Text;
 using Game.Network;
 using SeaEngine.Common;
@@ -14,6 +15,7 @@ namespace Game.Server.Chess
         private Session _session;
 
         private bool _isGameRunnable;
+        private bool _startClean;
         public ChessGame(Session session)
         {
 
@@ -24,17 +26,22 @@ namespace Game.Server.Chess
 
         public void InitGame(string p1 = "1", string p2 = "2")
         {
-            _seaGame = new(new SeaEngine.CardManager.CardLoader(""), new SimpleLogger(), p1, p2);
+            _seaGame = new(new SeaEngine.CardManager.CardLoader(File.ReadAllLines(Setting.DBPath)), new SimpleLogger(), p1, p2);
             _seaGame.Init(
-                        "[\"Or_L\", \"Or_B\", \"Or_R\", \"Or_N\", \"Or_P\", \"Or_P\", \"Or_P\"]", 
+                        "[\"Or_L\", \"Or_B\", \"Or_R\", \"Or_N\", \"Or_P\", \"Or_P\", \"Or_P\"]",
                         "[\"Cl_L\", \"Cl_B\", \"Cl_R\", \"Cl_N\", \"Cl_P\", \"Cl_P\", \"Cl_P\"]"
                         );
         }
 
         public void Tick(int delta)
         {
+            if (_startClean) CleanGame();
+
             if (_isGameRunnable && _hasSomethingToSend)
             {
+                if (_seaGame.Data.Winner != null)
+                    _startClean = true;
+                
                 _session.BroadCastPlayer(Encoding.UTF8.GetBytes(_seaGame.Serialize()));
 
                 _session.QueryPlayer(
@@ -61,15 +68,38 @@ namespace Game.Server.Chess
         }
         private void ExitPlayer(string name)
         {
-            _players.Remove(name);
+            if (_isGameRunnable)
+            {
+                Log.WriteLog($"[ChessGame] : Player : {name} disconnect while game run. terminate game unsafely");
+                CleanGame();
+            }
+
+            else _players.Remove(name);
         }
 
-        private void QueryCallBack(QueryTaskResult result)
+        private void CleanGame()
         {
-            if (result.IsResponded)
+            _players.Clear();
+            _session.Clear();
+            _isGameRunnable = false;
+            _hasSomethingToSend = false;
+            _startClean = false;
+
+            _session.Events.OnPlayerEnter = EnterPlayer;
+            _session.Events.OnPlayerExit = ExitPlayer;
+        }
+
+        private void QueryCallBack(string playerName, QueryTaskResult result)
+        {
+            if (result.IsResponded && _seaGame.Data.ActivePlayerId == playerName)
             {
                 Uid toAct = Uid.Parse(Encoding.UTF8.GetString(result.AnswerRaw));
-                Log.WriteLog($"[ChessGame] Use Action | Uid: {toAct}");
+
+                var action = _seaGame.Actions.FirstOrDefault(x => x.Guid == toAct);
+
+                if (action == null) throw new InvalidOperationException($"Use of Invalid Action | Uid : {toAct}");
+
+                Log.WriteLog($"[ChessGame] Use Action | {action.ToString()} ");
                 _seaGame.UseAction(toAct);
             }
             else

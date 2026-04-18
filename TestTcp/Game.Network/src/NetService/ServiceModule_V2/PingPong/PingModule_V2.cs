@@ -33,6 +33,8 @@ namespace Game.Network.Service
             if (_lastPingTime < _pingInterval) return;
 
             _lastPingTime = 0;
+            Log.WriteLog("Ping!");
+
 
             var startTime = GameTime.GetNow();
             foreach (var peer in _toRead.ReadPeers())
@@ -54,10 +56,14 @@ namespace Game.Network.Service
                 var end = GameTime.GetNow();
                 pingInfo.currentPingResult = end - startTime;
                 pingInfo.failureCount = _failureCount;
+
+                Log.WriteLog($"[Ping] : Got Ping From {connId} | Result : {pingInfo.currentPingResult}");
             }
             else // result.IsTimeOut 
             {
                 pingInfo.failureCount--;
+
+                Log.WriteLog($"[Ping] : Fail Ping From {connId} | Remain Fail Count : {pingInfo.failureCount}");
             }
         }
     }

@@ -20,6 +20,8 @@ namespace Game.Network.Service
             _other = context.Other;
             _game = context.Games;
             _router = context.Router;
+
+
             _net.SetReceiveHandler(this);
         }
 

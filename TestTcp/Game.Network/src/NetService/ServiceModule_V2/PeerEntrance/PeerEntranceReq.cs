@@ -3,35 +3,35 @@ using Game.Network.Protocol;
 
 namespace Game.Network.Service
 {
-    public class PeerEntranceRequestCodec : IPacketCodec<PeerEntranceRequest>
+    public class PeerEntranceRequestCodec : IPacketCodec<PeerEntranceReq>
     {
-        public int GetSize(PeerEntranceRequest value)
+        public int GetSize(PeerEntranceReq value)
         {
             return ConnInfo.Codec.GetSize(value.Info);
         }
 
-        public void Write(ref PacketWriter writer, PeerEntranceRequest value)
+        public void Write(ref PacketWriter writer, PeerEntranceReq value)
             => ConnInfo.Codec.Write(ref writer, value.Info);
 
-        public PeerEntranceRequest Read(ref PacketReader reader) 
-            => new PeerEntranceRequest(ConnInfo.Codec.Read(ref reader));
+        public PeerEntranceReq Read(ref PacketReader reader) 
+            => new PeerEntranceReq(ConnInfo.Codec.Read(ref reader));
     }
 
 
-    public class PeerEntranceRequest
+    public class PeerEntranceReq
     {
         public static PeerEntranceRequestCodec Codec = new();
         public readonly ConnInfo Info;
-        public PeerEntranceRequest(ConnInfo info)
+        public PeerEntranceReq(ConnInfo info)
         {
             Info = info;
         }
     }
 
 
-    public class PeerEntranceResponseCodec : IPacketCodec<PeerEntranceResponse>
+    public class PeerEntranceResponseCodec : IPacketCodec<PeerEntranceRsp>
     {
-        public int GetSize(PeerEntranceResponse value)
+        public int GetSize(PeerEntranceRsp value)
         {
             return 4 
                     + 4 
@@ -39,22 +39,22 @@ namespace Game.Network.Service
                     + ConnInfo.Codec.GetSize(value.RemotePeerInfo); 
         }
 
-        public void Write(ref PacketWriter writer, PeerEntranceResponse value)
+        public void Write(ref PacketWriter writer, PeerEntranceRsp value)
         {
             writer.WriteInt32((int)value.result);
             writer.WriteString(value.Msg);
             ConnInfo.Codec.Write(ref writer, value.RemotePeerInfo);
         }
-        public PeerEntranceResponse Read(ref PacketReader reader)
+        public PeerEntranceRsp Read(ref PacketReader reader)
         {
-            var result = (PeerEntranceResponse.Result) reader.ReadInt32();
+            var result = (PeerEntranceRsp.Result) reader.ReadInt32();
             string msg = reader.ReadString();
             ConnInfo info = ConnInfo.Codec.Read(ref reader);
-            return new PeerEntranceResponse(result, info, msg);
+            return new PeerEntranceRsp(result, info, msg);
         }
     };
 
-    public class PeerEntranceResponse
+    public class PeerEntranceRsp
     {
         public static PeerEntranceResponseCodec Codec = new();
         public enum Result : int
@@ -66,13 +66,13 @@ namespace Game.Network.Service
         public Result result;
         public string Msg;
         public ConnInfo RemotePeerInfo;
-        public PeerEntranceResponse(bool isSucc, ConnInfo connInfo, string msg = "")
+        public PeerEntranceRsp(bool isSucc, ConnInfo connInfo, string msg = "")
         {
             result = (isSucc) ? Result.Succ : Result.Fail;
             Msg = msg;
             RemotePeerInfo = connInfo;
         }
-        public PeerEntranceResponse(Result r, ConnInfo connInfo, string msg = "")
+        public PeerEntranceRsp(Result r, ConnInfo connInfo, string msg = "")
         {
             result = r;
             Msg= msg;

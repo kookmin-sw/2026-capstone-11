@@ -6,10 +6,12 @@ namespace Game.Network.Service
     public interface IGameReader
     {
         public bool IsSessionActive(SessionId id);
+        public int ActiveSessionCount {get;}
     }
 
     public interface IGameWriter : IGameReader
     {
+        public bool TryGetSession(SessionId id, out Session session);
         public bool TryCreateSession(SessionId id);
         public bool TryEnterPlayer(SessionId sessionId, SessionPlayerId playerId);
         public bool TryExitPlayer(SessionId sessionId, SessionPlayerId playerId);
@@ -22,6 +24,16 @@ namespace Game.Network.Service
         private ISessionBuilder _sessionBuilder;
         private ISessionPort _port;
 
+        public RunningGames(ISessionBuilder builder, ISessionPort port)
+        {
+            _sessionBuilder = builder;
+            _port = port;
+        }
+
+        public int ActiveSessionCount => _activeSession.Count;
+
+        public bool TryGetSession(SessionId id, out Session session)
+            => _activeSession.TryGetValue(id, out session);
         public bool IsSessionActive(SessionId id)
             => _activeSession.ContainsKey(id);
 
@@ -29,7 +41,7 @@ namespace Game.Network.Service
         {
             var session = _sessionBuilder.BuildSession(id);
 
-            if (session == null || !_activeSession.TryAdd(id, session)) 
+            if (session == null || !_activeSession.TryAdd(id, session))
             {
                 return false;
             }

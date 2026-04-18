@@ -1,7 +1,7 @@
 namespace Game.Network.Service
 {
     public class EnterRequestModule : IServiceModule
-                                    , IRequest<PeerEntranceRequest, PeerEntranceResponse>
+                                    , IRequest<PeerEntranceReq, PeerEntranceRsp>
     {
         private INetAPI _net;
         private IHostReader _host;
@@ -10,8 +10,6 @@ namespace Game.Network.Service
         private IServiceEventPublisher _publisher;
 
         private int _enterTimeOutMs;
-        private bool _onRequest = false;
-
 
 
         public void Init(ServiceContext_V2 context_V2)
@@ -25,38 +23,43 @@ namespace Game.Network.Service
             _enterTimeOutMs = context_V2.Opt.helloTimeOutMs;
         }
 
-        public void Request(Action<PeerEntranceResponse> succ, Action<string> fail)
-            => Request(new PeerEntranceRequest(_self.connWriter.instance), succ, fail);
+        public void Request(Action<PeerEntranceRsp> succ, Action<string> fail)
+            => Request(new PeerEntranceReq(_self.connWriter.instance), succ, fail);
 
-        public void Request(PeerEntranceRequest msg, Action<PeerEntranceResponse> succ, Action<string> fail)
+        public void Request(PeerEntranceReq msg, Action<PeerEntranceRsp> succ, Action<string> fail)
         {
-            if (_onRequest) return;
-
-            _onRequest = true;
-            var payload = new byte[PeerEntranceRequest.Codec.GetSize(msg)];
+            var payload = new byte[PeerEntranceReq.Codec.GetSize(msg)];
             var writer = new PacketWriter(payload);
-            PeerEntranceRequest.Codec.Write(ref writer, msg);
+            PeerEntranceReq.Codec.Write(ref writer, msg);
 
             _ = _net.AsyncRequestQuery(NetEventHandlerId.Constant.PeerEntrance, _host.connId, payload, _enterTimeOutMs,
                 (connId, result) => EnterCallBack(connId, result, succ, fail));
         }
 
-        private void EnterCallBack(ConnId connId, QueryTaskResult result, Action<PeerEntranceResponse> succ, Action<string> fail)
+        private void EnterCallBack(ConnId connId, QueryTaskResult result, Action<PeerEntranceRsp> succ, Action<string> fail)
         {
-            if (result.IsCancelled || connId != _host.connId)
+            
+            if (result.IsCancelled)
             {
                 fail.Invoke("QuaryCancelled");
             }
+
             else if (result.IsTimeOut)
             {
                 fail.Invoke("TimeOut");
-            } 
+            }
+
+            else if (connId != _host.connId)
+            {
+                fail.Invoke($"Rsp connId is Different with Host | Host : {_host.connId}, RSPConnId : {connId}");
+            }
+
             else if (result.IsResponded)
             {
                 PacketReader reader = new(result.AnswerRaw);
                 try
                 {
-                    var response = PeerEntranceResponse.Codec.Read(ref reader);
+                    var response = PeerEntranceRsp.Codec.Read(ref reader);
                     if (response.IsSucc)
                     {
                         var newPeer = new Peer(connId, response.RemotePeerInfo);
@@ -73,7 +76,6 @@ namespace Game.Network.Service
                     fail.Invoke("Fail to Process response");
                 }
             }
-            _onRequest = false;
             return;
         }
 

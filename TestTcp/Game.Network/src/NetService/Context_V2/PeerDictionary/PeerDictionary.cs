@@ -6,6 +6,7 @@ namespace Game.Network.Service
     {
         bool TryReadPeer(ConnId connId, out IPeerReader peer);
         List<IPeerReader> ReadPeers();
+        bool HasPeer(ConnId connId); 
     }
 
     public interface IPeerDictWriter : IPeerDictReader
@@ -39,11 +40,17 @@ namespace Game.Network.Service
         private Dictionary<ConnId, Peer> _dictonary = new();
 
         // Reader
+        public bool HasPeer(ConnId connId) 
+            => _dictonary.ContainsKey(connId);
         public bool TryReadPeer(ConnId connId, out IPeerReader reader)
         {
-            bool rtn = _dictonary.TryGetValue(connId, out Peer peer);
-            reader = peer;
-            return rtn;
+            if (_dictonary.TryGetValue(connId, out Peer peer))
+            {
+                reader = peer;
+                return true;
+            }
+            reader = null;
+            return false;
         }
         public List<IPeerReader> ReadPeers()
             => _dictonary.Values.ToList<IPeerReader>();
@@ -63,23 +70,35 @@ namespace Game.Network.Service
 
         public bool TryGetSession(ConnId connId, out ISessionInfoWriter info)
         {
-            bool rtn = _dictonary.TryGetValue(connId, out Peer peer);
-            info = peer.sessionWriter;
-            return rtn;
+            if (_dictonary.TryGetValue(connId, out Peer peer))
+            {
+                info = peer.sessionWriter;
+                return true;
+            }
+            info = null;
+            return false;
         }
 
         public bool TryGetPing(ConnId connId, out PingInfo ping)
         {
-            bool rtn = _dictonary.TryGetValue(connId, out Peer peer);
-            ping = peer.ping;
-            return rtn;
+            if (_dictonary.TryGetValue(connId, out Peer peer))
+            {
+                ping = peer.ping;
+                return true;
+            }
+            ping = null;
+            return false;
         }
 
         public bool TryGetInfo(ConnId connId, out IConnInfoWriter info)
         {
-            bool rtn = _dictonary.TryGetValue(connId, out Peer peer);
-            info = peer.connWriter;
-            return rtn;
+            if (_dictonary.TryGetValue(connId, out Peer peer))
+            {
+                info = peer.connWriter;
+                return true;
+            }
+            info = null;
+            return false;
         }
     }
 
