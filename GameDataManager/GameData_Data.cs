@@ -15,12 +15,11 @@ public partial class GameData
     public Player? Winner;
     public string WinnerId => Winner?.Id ?? "";
     
-    [JsonIgnore]
-    public Player ActivePlayer;
-    [JsonIgnore]
-    public ILogger Logger;
+    [JsonIgnore] public Player ActivePlayer;
+    [JsonIgnore] public readonly ILogger Logger;
     public string ActivePlayerId => ActivePlayer.Id;
     public readonly Board Board = new Board();
+    [JsonIgnore] public int TurnCnt = 0;
 
     public GameData(string player1Id, string player2Id, ILogger logger)
     {

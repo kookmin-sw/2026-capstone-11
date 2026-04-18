@@ -19,6 +19,7 @@ public class TurnEnd : IEffect
         data.TriggerBuffEventToAll("TurnEnd");
         
         data.ActivePlayer = data.Player1 == data.ActivePlayer ? data.Player2 : data.Player1;
+        data.TurnCnt += 1;
         
         data.TriggerEventToAll("TurnStart");
         data.TriggerBuffEventToAll("TurnStart");
