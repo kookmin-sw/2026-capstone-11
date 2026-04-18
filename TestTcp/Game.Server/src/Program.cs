@@ -2,9 +2,14 @@
 using System.IO.Pipelines;
 using System.Net.NetworkInformation;
 using System.Net.Security;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Game.Network;
 using Game.Network.Protocol;
+using Game.Network.Service;
+using Game.Server.Chess;
+using SeaEngine.Common;
+using SeaEngine.Logger;
 
 
 namespace Game.Server
@@ -16,173 +21,87 @@ namespace Game.Server
         {
             Log.SetLogger(Console.WriteLine);
 
-            Console.WriteLine("Server mode : s, Client mode : c.. On New Project");
-            var line = Console.ReadLine();
-            if (line != null && line.Trim().Equals("s", StringComparison.OrdinalIgnoreCase))
+            var server = NetworkManager.CreateNetworkManager(TransferConfig.ServerPortNum, 10);
+            server.Start();
+
+            var opt = new ServiceOption(
+                MaxConnPerService: 2,
+                MaxSessionPerService: 2,
+                HelloTimeOutMs: 3000,
+                PingIntervalMs: 3000,
+                PingTimeOutMs: 2500,
+                PingFailCountToDisconnect: 2 
+            );
+            
+            // var host = new HostService(server, 
+            //                             new DefaultBuilder(), 
+            //                             new DefaultPort(), 
+            //                             "HostServer",
+            //                             "DevID",
+            //                             "DevVersion"
+            //                             , opt);
+
+            Session session = new(server);
+            ChessGame game  = new(session);
+
+            var cts = new CancellationTokenSource();
+
+            var inputTask = Task.Run(() =>
             {
-                var server = NetworkManager.CreateNetworkManager(TransferConfig.ServerPortNum, 10);
-
-                ConnectionInfo selfInfo = new ConnectionInfo(
-                    NetworkType.Dedicated,
-                    ConnectionType.Server,
-                    1,
-                    0,
-                    "Server",
-                    "Develop-0.0.0",
-                    Guid.NewGuid().ToString()
-                );
-
-                var option = new ServiceOption(
-                    MaxConnPerService: 2,
-                    HelloTimeOutMs: 10000,
-                    PingIntervalMs: 5000,
-                    PingTimeOutMs: 4500,
-                    PingFailCountToDisconnect: 3
-                );
-
-                var context = new ServiceContext(selfInfo, option);
-                
-                ServiceHandler service = new ServiceHandler(server, new ByPassAuthenticator(), context);
-                
-                PingModule pingPong = new PingModule(server, context);
-
-                server.SetControlHandler(service);
-
-                server.SetReceiveHandler(ServiceHandler.Id, service);
-                server.SetReceiveHandler(pingPong.HandlerId, pingPong);
-
-
-                server.Start();
-
-
-                Console.WriteLine("q를 입력해 서버 중단");
-
-                var cts = new CancellationTokenSource();
-
-                var inputTask = Task.Run(() =>
+                while (true)
                 {
-                    while (true)
+                    var line = Console.ReadLine();
+                    if (line != null && line.Trim().Equals("q", StringComparison.OrdinalIgnoreCase))
                     {
-                        var line = Console.ReadLine();
-                        if (line != null && line.Trim().Equals("q", StringComparison.OrdinalIgnoreCase))
-                        {
-                            cts.Cancel();
-                            break;
-                        }
-                        else if (line != null && line.Trim().Equals("s", StringComparison.OrdinalIgnoreCase))
-                        {
-                            Log.WriteLog(server.GetNetState());
-                            Log.WriteLog(context.GetState());
-                        }
+                        cts.Cancel();
+                        break;
                     }
-                });
-
-                try
-                {
-                    var stopwatch = new Stopwatch();
-                    long delta = 0;
-
-                    Console.WriteLine("Server Running");
-
-                    while (!cts.IsCancellationRequested)
+                    else if (line != null && line.Trim().Equals("s", StringComparison.OrdinalIgnoreCase))
                     {
-                        stopwatch.Restart();
+                        Log.WriteLog(server.GetNetState());
 
-                        pingPong.Tick(TickTime);
-                        
-                        server.Tick();
-
-                        stopwatch.Stop();
-
-                        delta = stopwatch.ElapsedMilliseconds;
-                        int sleepTime = TickTime - (int)delta;
-                        if (sleepTime > 0) Thread.Sleep(sleepTime);
-
-                        else Log.WriteLog("TickTime over");
+                        // Log.WriteLog("Service State : ");
+                        // Log.WriteLog(host.GetState());
                     }
                 }
-                catch (OperationCanceledException)
-                {
+            });
 
-                }
-                finally
+            try
+            {
+                var stopwatch = new Stopwatch();
+                long delta = 0;
+
+                Console.WriteLine("Server Running");
+
+                while (!cts.IsCancellationRequested)
                 {
-                    await server.StopAsync();
-                    Console.WriteLine("Server stopped.");
+                    stopwatch.Restart();
+
+                    server.Tick();
+                    game.Tick(TickTime);
+                    // host.Tick(TickTime);
+
+                    stopwatch.Stop();
+
+                    delta = stopwatch.ElapsedMilliseconds;
+                    int sleepTime = TickTime - (int)delta;
+                    if (sleepTime > 0) Thread.Sleep(sleepTime);
+
+                    else Log.WriteLog("TickTime over");
                 }
+            }
+            catch (OperationCanceledException)
+            {
+
+            }
+            finally
+            {
+                await server.StopAsync();
+                Console.WriteLine("Server stopped.");
             }
         }
     }
+
 }
 
 
-        //     }
-        //     else if (line != null && line.Trim().Equals("c", StringComparison.OrdinalIgnoreCase))
-        //     {
-        //         var client = NetworkManager.CreateNetworkManager(0, 10);
-        //         // var PingPong = new PingPongHandler(client, 5000);
-        //         // client.SetReceiveHandler(NetEventHandlerId.PingPong, PingPong);
-        //         // client.SetControlHandler(PingPong);
-        //         client.Start();
-        //         await client.ConnectTo(
-        //             TransferConfig.ServerIPAddress,
-        //             TransferConfig.ServerPortNum,
-        //             3000
-        //             );
-
-        //         Console.WriteLine("q를 입력해 클라이언트 중단. 문자를 넣어 전송");
-
-        //         var cts = new CancellationTokenSource();
-
-        //         var inputTask = Task.Run(() =>
-        //         {
-        //              while (true)
-        //             {
-        //                 var line = Console.ReadLine();
-        //                 if (line != null && line.Trim().Equals("q", StringComparison.OrdinalIgnoreCase))
-        //                 {
-        //                     cts.Cancel();
-        //                     break;
-        //                 }
-        //                 else if (line != null && line.Trim().Equals("s", StringComparison.OrdinalIgnoreCase))
-        //                 {
-        //                     Log.WriteLog(client.GetNetState());
-        //                 }
-        //             }
-        //         });
-
-        //         try
-        //         {
-        //             var stopwatch = new Stopwatch();
-        //             long delta = 0;
-
-        //             while (!cts.IsCancellationRequested)
-        //             {
-        //                 stopwatch.Restart();
-
-        //                 client.Tick();
-        //                 //PingPong.Tick(TickTime);
-
-        //                 stopwatch.Stop();
-
-        //                 delta = stopwatch.ElapsedMilliseconds;
-        //                 int sleepTime = TickTime - (int)delta;
-        //                 if (sleepTime > 0) Thread.Sleep(sleepTime);
-
-        //                 else Log.WriteLog("TickTime over");
-
-        //             }
-        //         }
-        //         catch (OperationCanceledException)
-        //         {
-        //         }
-        //         finally
-        //         {
-        //             await client.StopAsync();
-        //             Log.WriteLog("Client Stopped");
-        //         }
-        //     }
-
-        // }
-//     }
-// }

@@ -12,8 +12,13 @@ public class PlayFabAccountManager : MonoBehaviour
 
     public bool IsLoggedIn { get; private set; }
     public string PlayFabId { get; private set; }
-    public string InGameDisplayName {get; private set;}
+    public string InGameDisplayName { get; private set; }
     public string SessionTicket { get; private set; }
+
+
+    public string EntityId { get; private set; }
+    public string EntityType { get; private set; }
+    public string EntityToken { get; private set; }
 
     private void Awake()
     {
@@ -51,6 +56,10 @@ public class PlayFabAccountManager : MonoBehaviour
                 SessionTicket = result.SessionTicket;
                 InGameDisplayName = displayName;
 
+                EntityId = result.EntityToken.Entity.Id;
+                EntityType = result.EntityToken.Entity.Type;
+                EntityToken = result.EntityToken.EntityToken;
+
                 Debug.Log($"[PlayFab] Register success: {PlayFabId}");
                 onSuccess?.Invoke();
             },
@@ -87,6 +96,10 @@ public class PlayFabAccountManager : MonoBehaviour
                 PlayFabId = result.PlayFabId;
                 SessionTicket = result.SessionTicket;
                 InGameDisplayName = result.InfoResultPayload.PlayerProfile.DisplayName;
+
+                EntityId = result.EntityToken.Entity.Id;
+                EntityType = result.EntityToken.Entity.Type;
+                EntityToken = result.EntityToken.EntityToken;
 
                 Debug.Log($"[PlayFab] Login success: {PlayFabId}");
                 onSuccess?.Invoke();

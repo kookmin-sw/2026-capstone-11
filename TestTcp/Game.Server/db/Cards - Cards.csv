@@ -1,0 +1,12 @@
+ID,Name,LeaderID,UnitType,Atk,Hp,EffectID,EventID
+Or_L,귤 공주님,Or_L,L,3,7,,
+Or_B,귤 직장인?,Or_L,B,1,3,,
+Or_N,망상의 기사님,Or_L,N,2,2,,
+Or_R,귤 나무,Or_L,R,1,2,,
+Or_P,귤 요정,Or_L,P,1,1,PawnGeneric,
+,,,,,,,
+Cl_L,샤를로테,Cl_L,L,3,10,,
+Cl_B,바이올렛,Cl_L,B,1,2,,Cl_Blitz
+Cl_N,아이린,Cl_L,N,2,2,,
+Cl_R,릴리아,Cl_L,R,1,3,,Cl_Blitz
+Cl_P,미스티아,Cl_L,P,1,1,PawnGeneric,

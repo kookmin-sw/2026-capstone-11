@@ -12,7 +12,7 @@ namespace Game.Network
         private TcpListener _listener;
         private Task? _acceptLoopTask;
         private CancellationTokenSource? _cts;
-        private ConcurrentDictionary<string, Connection> _connectionDict;
+        private ConcurrentDictionary<ConnId, Connection> _connectionDict;
         private int _maxControlPerTick;
         private int _maxDataPerTick;
 
@@ -23,7 +23,7 @@ namespace Game.Network
             _listener = new TcpListener(IPAddress.Any, portNum);
             _acceptLoopTask = null;
             _cts = null;
-            _connectionDict = new ConcurrentDictionary<string, Connection>();
+            _connectionDict = new ConcurrentDictionary<ConnId, Connection>();
             _maxControlPerTick = maxControlPerTick;
             _maxDataPerTick = maxDataPerTick;
         }
@@ -135,7 +135,7 @@ namespace Game.Network
                     ;
         }
 
-        public bool TryGetConnIdList(int minConnCount, out List<string> connIds)
+        public bool TryGetConnIdList(int minConnCount, out List<ConnId> connIds)
         {
             connIds = new();
 
@@ -148,10 +148,10 @@ namespace Game.Network
             return true;
         }
 
-        public bool IsConnValid(string connId) => _connectionDict.ContainsKey(connId);
+        public bool IsConnValid(ConnId connId) => _connectionDict.ContainsKey(connId);
 
 
-        public async Task<string?> ConnectTo(string ipAddr, int portNum, NetEventQueue q, int expireTimeMs)
+        public async Task<ConnId?> ConnectTo(string ipAddr, int portNum, NetEventQueue q, int expireTimeMs)
         {
             if (_cts == null || _cts.IsCancellationRequested) return null;
 
@@ -165,6 +165,22 @@ namespace Game.Network
 
             return null;
         }
+
+        public async Task<ConnId?> ConnectTo(string ipAddr, int portNum, ConnId connId, NetEventQueue q, int expireTimeMs)
+        {
+            if (_cts == null || _cts.IsCancellationRequested) return null;
+
+            var conn = await Connection.ListenAndCreateConnection(ipAddr, portNum, connId, q, expireTimeMs);
+
+            if (conn != null && _connectionDict.TryAdd(conn.GetConnectionId(), conn))
+            { 
+                conn.Start(); 
+                return conn.GetConnectionId(); 
+            }
+
+            return null;
+        }
+
 
         private async Task AsyncAcceptLoop(CancellationToken ct, NetEventQueue q)
         {
