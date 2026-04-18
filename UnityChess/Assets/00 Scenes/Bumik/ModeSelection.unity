@@ -701,9 +701,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60e38fff0d0db4d0d90445d4c0fcaad5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayFabMatchManager
-  _matchQueueName: TestMatchQueue
-  _giveUpTime: 60
-  _ticketPollingTime: 6
 --- !u!4 &63808211
 Transform:
   m_ObjectHideFlags: 0
@@ -1843,7 +1840,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ModeSelectionSceneMain
   IPaddrInputField: {fileID: 1591910930}
   PortNumInputField: {fileID: 1865270012}
-  gameInitializer: {fileID: 822743211}
+  gameInitializer: {fileID: 822743213}
 --- !u!4 &304439362
 Transform:
   m_ObjectHideFlags: 0
@@ -4202,7 +4199,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 822743212}
-  - component: {fileID: 822743211}
+  - component: {fileID: 822743213}
   m_Layer: 0
   m_Name: GameInitializer
   m_TagString: Untagged
@@ -4210,18 +4207,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &822743211
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 822743210}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 34352195cf916480bb5866e16ae07deb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GameInitializer
 --- !u!4 &822743212
 Transform:
   m_ObjectHideFlags: 0
@@ -4237,6 +4222,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &822743213
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 822743210}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7f88bf9622f44a0db720bd8956583ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameInitializer
 --- !u!1 &860267761
 GameObject:
   m_ObjectHideFlags: 0
@@ -4781,7 +4778,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae51a933eec6f4c33b0892e798a4f8de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Session
-  ConnectionExpireTimeMs: 9999
 --- !u!4 &980049882
 Transform:
   m_ObjectHideFlags: 0

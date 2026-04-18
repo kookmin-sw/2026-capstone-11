@@ -33,16 +33,16 @@ namespace Game.Server
                 PingFailCountToDisconnect: 2 
             );
             
-            var host = new HostService(server, 
-                                        new DefaultBuilder(), 
-                                        new DefaultPort(), 
-                                        "HostServer",
-                                        "DevID",
-                                        "DevVersion"
-                                        , opt);
+            // var host = new HostService(server, 
+            //                             new DefaultBuilder(), 
+            //                             new DefaultPort(), 
+            //                             "HostServer",
+            //                             "DevID",
+            //                             "DevVersion"
+            //                             , opt);
 
-            //Session session = new(server);
-            //ChessGame game  = new(session);
+            Session session = new(server);
+            ChessGame game  = new(session);
 
             var cts = new CancellationTokenSource();
 
@@ -60,8 +60,8 @@ namespace Game.Server
                     {
                         Log.WriteLog(server.GetNetState());
 
-                        Log.WriteLog("Service State : ");
-                        Log.WriteLog(host.GetState());
+                        // Log.WriteLog("Service State : ");
+                        // Log.WriteLog(host.GetState());
                     }
                 }
             });
@@ -78,8 +78,8 @@ namespace Game.Server
                     stopwatch.Restart();
 
                     server.Tick();
-                    //game.Tick((int)delta);
-                    host.Tick(TickTime);
+                    game.Tick(TickTime);
+                    // host.Tick(TickTime);
 
                     stopwatch.Stop();
 
