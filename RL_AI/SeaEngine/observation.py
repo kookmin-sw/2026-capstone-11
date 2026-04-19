@@ -8,6 +8,9 @@ from typing import Any, Dict, List, Optional, Sequence
 BOARD_SIZE = 6
 MAX_BOARD_CARDS = 14
 MAX_HAND_CARDS = 7
+GLOBAL_FEATURE_DIM = 43
+BOARD_TOKEN_DIM = 31
+HAND_TOKEN_DIM = 10
 
 ROLE_ORDER = ["Leader", "Bishop", "Knight", "Rook", "Pawn"]
 ROLE_BY_SUFFIX = {
@@ -463,6 +466,62 @@ def _count_attackers_of_card_ctx(ctx: _SnapshotContext, target_card: Optional[Di
     return attackers
 
 
+def _pawn_progress_ctx(ctx: _SnapshotContext, owner_id: str) -> float:
+    pawns = 0
+    progress_sum = 0.0
+    for card in ctx.board:
+        if card.get("owner") != owner_id:
+            continue
+        if _role_from_card(card) != "Pawn" or not card.get("is_placed"):
+            continue
+        cx = _view_x(int(card.get("pos_x", -1)), ctx.mirror_view)
+        if cx < 0:
+            continue
+        pawns += 1
+        if owner_id == ctx.player_id:
+            progress_sum += _normalize_ratio(float(cx), BOARD_SIZE - 1)
+        else:
+            progress_sum += _normalize_ratio(float((BOARD_SIZE - 1) - cx), BOARD_SIZE - 1)
+    return 0.0 if pawns == 0 else progress_sum / float(pawns)
+
+
+def _pawn_last_rank_count_ctx(ctx: _SnapshotContext, owner_id: str) -> int:
+    count = 0
+    last_rank = BOARD_SIZE - 1 if owner_id == ctx.player_id else 0
+    for card in ctx.board:
+        if card.get("owner") != owner_id:
+            continue
+        if _role_from_card(card) != "Pawn" or not card.get("is_placed"):
+            continue
+        cx = _view_x(int(card.get("pos_x", -1)), ctx.mirror_view)
+        if cx == last_rank:
+            count += 1
+    return count
+
+
+def _pawn_promotion_ready(card: Dict[str, Any], *, mirror_view: bool, owner_is_self: bool) -> float:
+    if _role_from_card(card) != "Pawn" or not card.get("is_placed"):
+        return 0.0
+    cx = _view_x(int(card.get("pos_x", -1)), mirror_view)
+    if cx < 0:
+        return 0.0
+    ready_rank = BOARD_SIZE - 1 if owner_is_self else 0
+    return 1.0 if cx == ready_rank else 0.0
+
+
+def _pawn_promotion_distance(card: Dict[str, Any], *, mirror_view: bool, owner_is_self: bool) -> float:
+    if _role_from_card(card) != "Pawn" or not card.get("is_placed"):
+        return 0.0
+    cx = _view_x(int(card.get("pos_x", -1)), mirror_view)
+    if cx < 0:
+        return 0.0
+    if owner_is_self:
+        remaining = (BOARD_SIZE - 1) - cx
+    else:
+        remaining = cx
+    return _normalize_ratio(float(max(0, remaining)), BOARD_SIZE - 1)
+
+
 def _count_ready_attack_targets_ctx(ctx: _SnapshotContext, card: Dict[str, Any]) -> float:
     if not card.get("is_placed"):
         return 0.0
@@ -524,6 +583,10 @@ def _build_global_vector_ctx(ctx: _SnapshotContext) -> List[float]:
         for card in enemy_board
         if 2 <= int(card.get("pos_x", -1)) <= 3 and 2 <= int(card.get("pos_y", -1)) <= 3
     )
+    own_pawn_progress = _pawn_progress_ctx(ctx, ctx.player_id)
+    enemy_pawn_progress = _pawn_progress_ctx(ctx, ctx.enemy_id)
+    own_pawn_last_rank = float(_pawn_last_rank_count_ctx(ctx, ctx.player_id))
+    enemy_pawn_last_rank = float(_pawn_last_rank_count_ctx(ctx, ctx.enemy_id))
 
     action_counts = {bucket: 0.0 for bucket in EFFECT_BUCKETS}
     for action in ctx.actions:
@@ -567,6 +630,10 @@ def _build_global_vector_ctx(ctx: _SnapshotContext) -> List[float]:
         _normalize_ratio(own_attackers_on_enemy_leader, 6.0),
         _normalize_ratio(center_control_own, 4.0),
         _normalize_ratio(center_control_enemy, 4.0),
+        _normalize_ratio(own_pawn_progress, 1.0),
+        _normalize_ratio(enemy_pawn_progress, 1.0),
+        _normalize_ratio(own_pawn_last_rank, 7.0),
+        _normalize_ratio(enemy_pawn_last_rank, 7.0),
         *[_normalize_ratio(action_counts[bucket], action_total) for bucket in EFFECT_BUCKETS],
     ]
 
@@ -601,6 +668,9 @@ def _build_board_vector_ctx(ctx: _SnapshotContext) -> List[float]:
         row_progress = 0.0
         if card.get("is_placed"):
             row_progress = _normalize_ratio(float(cx), BOARD_SIZE - 1)
+        owner_is_self = card.get("owner") == ctx.player_id
+        promotion_ready = _pawn_promotion_ready(card, mirror_view=ctx.mirror_view, owner_is_self=owner_is_self)
+        promotion_distance = _pawn_promotion_distance(card, mirror_view=ctx.mirror_view, owner_is_self=owner_is_self)
 
         vectors.extend(
             [
@@ -628,13 +698,15 @@ def _build_board_vector_ctx(ctx: _SnapshotContext) -> List[float]:
                 threatens_enemy_leader,
                 in_center,
                 row_progress,
+                promotion_ready,
+                promotion_distance,
                 *_role_one_hot(role),
             ]
         )
 
     missing_slots = MAX_BOARD_CARDS - min(len(cards), MAX_BOARD_CARDS)
     if missing_slots > 0:
-        vectors.extend([0.0] * missing_slots * 29)
+        vectors.extend([0.0] * missing_slots * BOARD_TOKEN_DIM)
     return vectors
 
 
@@ -777,6 +849,9 @@ def _build_board_vector(snapshot: Dict[str, Any], player_id: str) -> List[float]
         row_progress = 0.0
         if card.get("is_placed"):
             row_progress = _normalize_ratio(float(cx), BOARD_SIZE - 1)
+        owner_is_self = card.get("owner") == player_id
+        promotion_ready = _pawn_promotion_ready(card, mirror_view=mirror_view, owner_is_self=owner_is_self)
+        promotion_distance = _pawn_promotion_distance(card, mirror_view=mirror_view, owner_is_self=owner_is_self)
 
         vectors.extend(
             [
@@ -804,13 +879,15 @@ def _build_board_vector(snapshot: Dict[str, Any], player_id: str) -> List[float]
                 threatens_enemy_leader,
                 in_center,
                 row_progress,
+                promotion_ready,
+                promotion_distance,
                 *_role_one_hot(role),
             ]
         )
 
     missing_slots = MAX_BOARD_CARDS - min(len(cards), MAX_BOARD_CARDS)
     if missing_slots > 0:
-        vectors.extend([0.0] * missing_slots * 29)
+        vectors.extend([0.0] * missing_slots * BOARD_TOKEN_DIM)
     return vectors
 
 
@@ -878,7 +955,7 @@ def build_observation(
         return SeaEngineObservation(
             unit_list=[],
             hand_list=[],
-            global_vector=list(snapshot.get("global_vector", state_vector[:39])),
+            global_vector=list(snapshot.get("global_vector", state_vector[:GLOBAL_FEATURE_DIM])),
             legal_action_mask=[1 for _ in snapshot.get("actions", [])],
             state_vector=state_vector,
             action_feature_vectors=[list(a) for a in snapshot.get("action_feature_vectors", [])],
@@ -906,3 +983,16 @@ def build_observation(
         state_vector=state_vector,
         action_feature_vectors=action_feature_vectors,
     )
+
+
+STATE_VECTOR_DIM = len(
+    build_fixed_state_vector(
+        {
+            "players": [],
+            "board": [],
+            "actions": [],
+            "active_player": "P1",
+            "result": "Ongoing",
+        }
+    )
+)

@@ -8,11 +8,10 @@ public class EffectRegistry
 {
     private static EffectRegistry? _instance;
     private Dictionary<string, IEffect> _registry = new Dictionary<string, IEffect>();
-    private static readonly bool _verboseLog = Environment.GetEnvironmentVariable("SEAENGINE_VERBOSE_EFFECT_REGISTRY_LOG") == "1";
 
     private static void Init()
     {
-        if (_verboseLog) Console.WriteLine("Initializing EffectRegistry...");
+        Console.WriteLine("Initializing EffectRegistry...");
         _instance = new EffectRegistry();
     }
 
@@ -23,7 +22,7 @@ public class EffectRegistry
 
         foreach (var type in types)
         {
-            if (_verboseLog) Console.WriteLine("Registering effect " + type.Name);
+            Console.WriteLine("Registering effect " + type.Name);
             var attr = type.GetCustomAttribute<EffectAttribute>();
             if(attr == null) continue;
             var effect = (IEffect?)Activator.CreateInstance(type);

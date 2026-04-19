@@ -1,26 +1,18 @@
 namespace SeaEngine.GameDataManager.Components;
 
-public class Unit
+public class Unit(Card card)
 {
-    public readonly Card Card;
+    public readonly Card Card = card;
 
-    public int Atk;
-    public int MaxHp;
-    public int Hp;
+    public int Atk = card.Data.Atk;
+    public int MaxHp = card.Data.Hp;
+    public int Hp = card.Data.Hp;
 
     public bool IsPlaced = false; // 설치된 유닛인지
     public bool IsMoved = false; // 이번 턴에 기본행동으로 움직였는지
     
     public int PosX = -1;
     public int PosY = -1;
-
-    public Unit(Card card)
-    {
-        Card = card;
-        Atk = card.Data.Atk;
-        MaxHp = card.Data.Hp;
-        Hp = card.Data.Hp;
-    }
 
     public void Place(int x, int y)
     {

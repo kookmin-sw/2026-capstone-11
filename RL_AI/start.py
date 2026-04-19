@@ -18,7 +18,6 @@ import subprocess
 import sys
 import tempfile
 import traceback
-import urllib.request
 import zipfile
 from datetime import datetime
 from pathlib import Path
@@ -89,42 +88,172 @@ def _release_lock(lock_path: Path) -> None:
 
 def _ensure_dotnet() -> str:
     home = Path.home()
-    dotnet_cmd = shutil.which("dotnet")
-    if dotnet_cmd is None:
-        bundled = home / ".dotnet" / ("dotnet.exe" if os.name == "nt" else "dotnet")
-        if bundled.exists():
-            dotnet_cmd = str(bundled)
+    candidates: list[str] = []
+    env_dotnet = os.getenv("DOTNET_CMD", "").strip()
+    if env_dotnet:
+        candidates.append(env_dotnet)
+    for env_root_name in ("DOTNET_ROOT", "DOTNET_ROOT_X64"):
+        env_root = os.getenv(env_root_name, "").strip()
+        if env_root:
+            root_candidate = str(Path(env_root) / ("dotnet.exe" if os.name == "nt" else "dotnet"))
+            if root_candidate not in candidates:
+                candidates.append(root_candidate)
+    for candidate in [
+        shutil.which("dotnet"),
+        "/usr/bin/dotnet",
+        "/usr/share/dotnet/dotnet",
+        str(home / ".dotnet" / ("dotnet.exe" if os.name == "nt" else "dotnet")),
+    ]:
+        if candidate and candidate not in candidates:
+            candidates.append(candidate)
 
-    if dotnet_cmd is None:
-        install_script = home / "dotnet-install.sh"
-        urllib.request.urlretrieve("https://dot.net/v1/dotnet-install.sh", install_script)
-        subprocess.run(
-            ["bash", str(install_script), "--channel", "10.0", "--install-dir", str(home / ".dotnet")],
-            check=True,
-        )
-        dotnet_cmd = str(home / ".dotnet" / ("dotnet.exe" if os.name == "nt" else "dotnet"))
+    for dotnet_cmd in candidates:
+        try:
+            info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
+            print(info.stdout)
+            return dotnet_cmd
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            continue
 
-    info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
-    print(info.stdout)
-    return dotnet_cmd
+    print(
+        "[!] No usable dotnet command found. Tried: "
+        + ", ".join(candidates or ["<none>"])
+        + "."
+    )
+    return ""
+
+
+def _has_engine_binary() -> bool:
+    home = Path.home()
+    candidates = [
+        home / "RL_AI" / "SeaEngine" / "csharp" / "SeaEngine" / "bin" / "Release" / "net10.0" / "SeaEngine.dll",
+        home / "RL_AI" / "SeaEngine" / "csharp" / "SeaEngine" / "bin" / "Debug" / "net10.0" / "SeaEngine.dll",
+    ]
+    return any(path.exists() for path in candidates)
+
+
+def _module_is_under_dir(module_name: str, base_dir: Path) -> bool:
+    spec = importlib.util.find_spec(module_name)
+    if spec is None:
+        return False
+    locations: list[str] = []
+    if spec.origin:
+        locations.append(spec.origin)
+    if spec.submodule_search_locations:
+        locations.extend(list(spec.submodule_search_locations))
+    base = base_dir.resolve()
+    for location in locations:
+        try:
+            if base in Path(location).resolve().parents or Path(location).resolve() == base:
+                return True
+        except Exception:
+            continue
+    return False
+
+
+def _python_candidate_paths() -> list[str]:
+    home = Path.home()
+    candidates: list[str] = []
+    for candidate in [
+        os.getenv("PYTHON_CMD", "").strip(),
+        sys.executable,
+        "/opt/python/bin/python",
+        "/usr/bin/python3.12",
+        "/usr/bin/python3",
+        str(home / ".local" / "bin" / "python"),
+    ]:
+        if candidate and candidate not in candidates and Path(candidate).exists():
+            candidates.append(candidate)
+    return candidates
+
+
+def _probe_core_python_deps(python_cmd: str) -> tuple[bool, str]:
+    probe_code = (
+        "import torch, numpy, setuptools; "
+        "print(torch.__version__); "
+        "print(numpy.__version__); "
+        "print(setuptools.__version__); "
+        "print(torch.cuda.is_available())"
+    )
+    env = os.environ.copy()
+    completed = subprocess.run(
+        [python_cmd, "-c", probe_code],
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        cwd=str(Path.home()),
+        env=env,
+    )
+    if completed.returncode == 0:
+        return True, completed.stdout.strip()
+    return False, (completed.stdout + completed.stderr).strip()
+
+
+def _probe_extra_python_deps(python_cmd: str) -> tuple[bool, str]:
+    probe_code = "import pythonnet, clr_loader; print('pythonnet ok')"
+    env = os.environ.copy()
+    completed = subprocess.run(
+        [python_cmd, "-c", probe_code],
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        cwd=str(Path.home()),
+        env=env,
+    )
+    if completed.returncode == 0:
+        return True, completed.stdout.strip()
+    return False, (completed.stdout + completed.stderr).strip()
 
 
 def _ensure_python_deps() -> None:
-    deps_dir = Path.home() / ".rl_ai_deps"
+    python_cmd = None
+    core_probe_output = ""
+    for candidate in _python_candidate_paths():
+        ok, probe_output = _probe_core_python_deps(candidate)
+        if ok:
+            python_cmd = candidate
+            core_probe_output = probe_output
+            break
+    if python_cmd is None:
+        raise RuntimeError(
+            "Core Python deps (torch/numpy/setuptools) are unavailable in the current environment. "
+            "Please free disk space or point to a working Python environment."
+        )
+
+    deps_dir = Path(tempfile.gettempdir()) / "rl_ai_deps"
     deps_dir.mkdir(parents=True, exist_ok=True)
     if str(deps_dir) not in sys.path:
         sys.path.insert(0, str(deps_dir))
 
-    required = ["torch", "numpy", "pytest", "pythonnet", "clr_loader"]
-    missing = [pkg for pkg in required if importlib.util.find_spec(pkg) is None]
+    if core_probe_output:
+        print(core_probe_output)
+
+    extra_ok, extra_output = _probe_extra_python_deps(python_cmd)
+    if extra_ok:
+        if extra_output:
+            print(extra_output)
+        return
+    required = ["pythonnet", "clr_loader"]
+
+    missing = [pkg for pkg in required if not _module_is_under_dir(pkg, deps_dir)]
 
     if missing:
+        pip_cache_dir = deps_dir / ".pip-cache"
+        pip_cache_dir.mkdir(parents=True, exist_ok=True)
+        env = os.environ.copy()
+        env["PYTHONNOUSERSITE"] = "1"
+        env["PIP_CACHE_DIR"] = str(pip_cache_dir)
+        env["TMPDIR"] = str(deps_dir)
         completed = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "-q", "--target", str(deps_dir), *missing],
+            [python_cmd, "-m", "pip", "install", "-q", "--upgrade", "--force-reinstall", "--target", str(deps_dir), *missing],
             check=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
+            cwd=str(deps_dir),
+            env=env,
         )
         if completed.returncode != 0:
             if completed.stdout:
@@ -133,6 +262,8 @@ def _ensure_python_deps() -> None:
                 print(completed.stderr)
             raise RuntimeError(f"pip install failed with exit code {completed.returncode}")
 
+    if str(deps_dir) not in sys.path:
+        sys.path.insert(0, str(deps_dir))
     import numpy
     import setuptools
     import torch
@@ -195,12 +326,15 @@ def _prepare_project_dir() -> None:
 
 
 def _build_csharp(dotnet_cmd: str) -> None:
+    if not dotnet_cmd:
+        if _has_engine_binary():
+            print("[!] dotnet unavailable; using existing SeaEngine.dll without rebuilding.")
+            return
+        raise RuntimeError("dotnet is unavailable and no prebuilt SeaEngine.dll was found.")
     home = Path.home()
     project_root = home / "RL_AI" / "SeaEngine" / "csharp"
-    cli_csproj = project_root / "SeaEngineCli" / "SeaEngineCli.csproj"
     engine_csproj = project_root / "SeaEngine" / "SeaEngine.csproj"
 
-    subprocess.run([dotnet_cmd, "build", str(cli_csproj), "-c", "Debug", "-v", "q"], check=True)
     subprocess.run([dotnet_cmd, "build", str(engine_csproj), "-c", "Release", "-v", "q"], check=True)
     print("SeaEngine build ok")
 
@@ -242,9 +376,9 @@ def _run_train_eval(
             del sys.modules[module_name]
     importlib.invalidate_caches()
 
-    from RL_AI.SeaEngine import trainer as seaengine_trainer_module
+    from RL_AI.training import trainer as seaengine_trainer_module
     from RL_AI.SeaEngine.bridge import pythonnet_session as pythonnet_session_module
-    from RL_AI.SeaEngine.experiment import run_train_eval_experiment
+    from RL_AI.training import run_train_eval_experiment
 
     print(f"trainer source: {seaengine_trainer_module.__file__}")
     print(f"pythonnet source: {pythonnet_session_module.__file__}")
@@ -306,7 +440,7 @@ def main() -> int:
     print("[*] start.py launched")
     print(f"[*] pid={os.getpid()}")
     print(
-        f"[*] args: eval_matches={args.eval_matches}, train_episodes={args.train_episodes}, "
+        f"[*] args: eval_matches_per_combo={args.eval_matches} (total {args.eval_matches * 8}), train_episodes={args.train_episodes}, "
         f"max_turns={args.max_turns}, update_interval={args.update_interval}, seed={args.seed}, "
         f"skip_unzip={args.skip_unzip}, skip_build={args.skip_build}"
     )

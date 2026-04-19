@@ -1,7 +1,7 @@
 # Call of the King: RL_AI
 
 `RL_AI`는 C# 게임 엔진 `SeaEngine`을 Python 강화학습 루프와 연결해,
-자기 자신과의 대전, random/greedy 상대, 밸런싱 분석, 서버 접속형 AI 플레이까지
+자기 자신과의 대전, random/greedy 상대, 밸런싱 분석, 편향 진단, 서버 접속형 AI 플레이까지
 하나의 흐름으로 묶는 프로젝트다.
 
 이 프로젝트의 목표는 단순히 random/greedy를 이기는 모델이 아니라,
@@ -13,20 +13,26 @@
 
 ```text
 RL_AI/start.py
-  -> RL_AI/SeaEngine/experiment.py
-  -> RL_AI/SeaEngine/trainer.py
+  -> RL_AI/training/experiment.py
+  -> RL_AI/training/trainer.py
   -> RL_AI/SeaEngine/bridge/vector_env.py
   -> RL_AI/SeaEngine/bridge/pythonnet_session.py
   -> RL_AI/SeaEngine/csharp/SeaEngine
 
 RL_AI/make_balance.py
-  -> RL_AI/SeaEngine/experiment.py
-  -> RL_AI/SeaEngine/evaluator.py
+  -> RL_AI/training/experiment.py
+  -> RL_AI/training/evaluator.py
+  -> RL_AI/SeaEngine/bridge/pythonnet_session.py
+
+RL_AI/bias_check.py
+  -> RL_AI/training/experiment.py
+  -> RL_AI/training/evaluator.py
+  -> RL_AI/SeaEngine/observation.py
   -> RL_AI/SeaEngine/bridge/pythonnet_session.py
 
 RL_AI/server_ai_client.py
   -> RL_AI/server_protocol.py
-  -> RL_AI/SeaEngine/agents.py
+  -> RL_AI/agents/seaengine_agents.py
   -> RL_AI/SeaEngine/action_adapter.py
   -> server JSON packet
 ```
@@ -37,6 +43,8 @@ RL_AI/server_ai_client.py
 - 평가와 분석은 checkpoint별로 side/deck breakdown, 행동 패턴, 기보(history)를 남긴다.
 - 서버 플레이는 TCP app-level packet 형식의 JSON 상태를 읽어서 action Uid를 응답한다.
 - 로그와 산출물은 `log/`, `models/` 아래에 남기고, 실행별 zip으로 묶는다.
+- `SeaEngine/`에는 엔진과 직접 맞닿는 브리지와 관찰/액션 변환만 남기고,
+  agent와 training 로직은 각각 `RL_AI/agents/`, `RL_AI/training/`으로 분리했다.
 
 ---
 
@@ -44,7 +52,7 @@ RL_AI/server_ai_client.py
 
 ### 1. 학습 파이프라인
 
-`start.py`는 전체 학습과 checkpoint 평가를 담당한다.
+`start.py`는 전체 학습과 체크포인트 평가를 담당한다.
 
 흐름은 다음과 같다.
 
@@ -52,11 +60,25 @@ RL_AI/server_ai_client.py
 2. `~/RL_AI` 작업 디렉터리를 압축 해제한다.
 3. C# 빌드와 PythonNet 초기화를 수행한다.
 4. `SeaEnginePPOTrainer`로 학습을 진행한다.
-5. 학습 전 random/greedy 평가를 수행한다.
-6. 학습을 10,000 episodes 정도 돌린다.
-7. checkpoint마다 평가를 수행한다.
-8. 학습 후 random/greedy 평가를 수행한다.
-9. 결과 로그와 모델을 zip으로 묶는다.
+5. 학습 전 `random` / `greedy` 평가를 8개 조합 기준으로 각각 50판씩 수행한다.
+   - `random` 8조합 x 50판 = 400판
+   - `greedy` 8조합 x 50판 = 400판
+   - 합계 800판
+6. 학습을 10,000 episodes 돌린다.
+7. 1,000 에피소드마다 checkpoint를 저장하고, `1,000 ~ 9,000` 구간의 checkpoint마다 `greedy` 기준 8개 조합 평가를 수행한다.
+   - 각 checkpoint마다 8조합 x 50판 = 400판
+8. 마지막 10,000 에피소드 checkpoint에서는 추가 checkpoint 평가를 하지 않는다.
+9. 학습 후 `random` / `greedy` 평가를 8개 조합 기준으로 각각 50판씩 수행한다.
+   - `random` 8조합 x 50판 = 400판
+   - `greedy` 8조합 x 50판 = 400판
+   - 합계 800판
+10. 결과 로그와 모델을 zip으로 묶는다.
+
+여기서 말하는 **8개 조합**은 다음 축의 조합이다.
+
+- 선공 / 후공
+- 내 덱: 귤 / 샤를로테
+- 상대 덱: 귤 / 샤를로테
 
 학습은 random, greedy, 최근 self-play를 섞는 커리큘럼이다.
 
@@ -73,12 +95,12 @@ RL_AI/server_ai_client.py
 
 기본적으로는:
 
-- `model vs model` self-play
+- `RL vs RL` self-play
 - 총 2000판
-- 8개 조합
-  - 귤 / 샤를로테
+- 8개 조합 x 250판씩
   - 선공 / 후공
-  - 같은 덱 / 다른 덱
+  - 내 덱: 귤 / 샤를로테
+  - 상대 덱: 귤 / 샤를로테
 
 이 평가에서는 평균 승률만 보지 않는다.
 
@@ -93,7 +115,31 @@ RL_AI/server_ai_client.py
 
 를 함께 본다.
 
-### 3. 서버 접속형 AI 플레이어
+### 3. 편향 진단 파이프라인
+
+`bias_check.py`는 학습이 아니라 모델/표현/대칭성/체크포인트 편향을 분리해서 보는 진단 도구다.
+
+기본적으로 다음을 돌린다.
+
+- `random/random`
+- `greedy/greedy`
+- `RL/RL`
+- canonical/raw 비교
+- mirror agreement
+- checkpoint side gap
+
+기본 총판수는 `4800`이다.
+
+- `random/random`: 8개 조합 x 50
+- `greedy/greedy`: 8개 조합 x 50
+- `RL/RL`: 8개 조합 x 50
+- canonical/raw: 각 8개 조합 x 50
+- mirror agreement: 각 8개 조합 x 50
+- checkpoint side gap: 2000 / 4000 / 6000 / 8000 / 10000 checkpoint만 8개 조합 x 50
+
+체크포인트 side gap은 최신 모델 zip에서 episode가 2000, 4000, 6000, 8000, 10000인 파일만 선택한다.
+
+### 4. 서버 접속형 AI 플레이어
 
 `server_ai_client.py`는 게임 서버가 JSON으로 보내는 상태를 읽어서
 AI가 action Uid를 응답하는 TCP 클라이언트다.
@@ -119,7 +165,9 @@ AI가 action Uid를 응답하는 TCP 클라이언트다.
 - 선공 vs 후공
 - 귤 vs 샤를로테
 - 같은 덱 vs 다른 덱
-- 카드 사용 패턴
+- canonical vs raw
+- mirror agreement
+- card use patterns
 - 오프닝 루틴
 - history 기보
 
@@ -148,12 +196,39 @@ AI가 action Uid를 응답하는 TCP 클라이언트다.
 
 ---
 
-## 최근 상태 요약
+## 이번 런에서 보여준 표 및 해석
+
+### `start.py`
+
+1. 학습 전 vs Random, Greedy 8조합 승률 및 정보 전체
+2. 학습 후 vs Random, Greedy 8조합 승률 및 정보 전체
+3. 체크포인트별 vs Random, Greedy 8조합 승률 및 정보 전체
+4. 학습 후 vs Random, Greedy 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석
+
+### `make_balance.py`
+
+1. `RL vs RL` 8조합 승률 및 정보 전체
+2. 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석
+
+### `bias_check.py`
+
+1. `random vs random` 8조합 승률 및 정보 전체
+2. `random vs random` 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석
+3. `greedy vs greedy` 8조합 승률 및 정보 전체
+4. `greedy vs greedy` 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석
+5. `RL vs RL` 8조합 승률 및 정보 전체
+6. `RL vs RL` 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석
+7. `ablation canonical / raw` 8조합 승률 및 정보 전체 비교
+8. `mirror canonical / raw` 8조합 승률 및 정보 전체 비교
+9. 체크포인트 5개별 선/후공 8조합 승률 및 정보 전체
+10. 체크포인트 5개 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석
+
+### 이번 런의 요약
 
 최근 모델은 random/greedy에 대해 매우 강해졌고,
 self-play balance도 예전처럼 붕괴하지는 않는다.
 
-예시로 최근 balance에서는 다음이 관찰됐다.
+예시로 최근 분석에서는 다음이 관찰됐다.
 
 - overall self-play가 거의 50% 근처
 - draw가 크게 감소
@@ -191,6 +266,12 @@ self-play balance도 예전처럼 붕괴하지는 않는다.
 - `~/make_balance.log`
 - `~/RL_AI/log/make_balance_latest.zip`
 
+### `bias_check.py` 실행 후
+
+- `~/bias_check.log`
+- `~/RL_AI/log/bias_check_YYYYMMDD_HHMMSS.txt`
+- `~/RL_AI/log/bias_check_log_YYYYMMDD_HHMMSS.zip`
+
 ---
 
 ## `start.py` 실행 방법
@@ -202,7 +283,7 @@ self-play balance도 예전처럼 붕괴하지는 않는다.
 기본 실행:
 
 ```bash
-nohup python -u ~/start.py > /dev/null 2>&1 &
+nohup bash -lc 'cd ~ && python -u ~/start.py' > ~/start.log 2>&1 &
 ```
 
 자주 쓰는 옵션:
@@ -219,7 +300,7 @@ python -u ~/start.py \
 옵션 설명:
 
 - `--eval-matches`
-  - 학습 전/후 평가 판수
+  - 학습 전/후 평가 판수 per combo
   - 기본값: `50`
 - `--train-episodes`
   - 총 학습 에피소드 수
@@ -247,8 +328,11 @@ python -u ~/start.py \
 - C# 빌드
 - PythonNet 초기화
 - 학습
-- checkpoint 평가
+- before/after 8개 조합 평가
+- 1000~9000 checkpoint의 greedy-only 8개 조합 평가
 - 모델 zip / 로그 zip 정리
+
+DLPC에서 홈 디렉터리 wrapper를 쓴다면 동일하게 `~/start.py`를 실행하면 된다.
 
 ---
 
@@ -261,7 +345,7 @@ python -u ~/start.py \
 기본 실행:
 
 ```bash
-nohup python -u ~/make_balance.py > /dev/null 2>&1 &
+nohup bash -lc 'cd ~ && python -u ~/make_balance.py' > ~/make_balance.log 2>&1 &
 ```
 
 자주 쓰는 옵션:
@@ -302,6 +386,87 @@ python -u ~/make_balance.py \
 2. `~/RL_AI/models/*.zip` 중 최신 파일
 3. zip 안의 `model_ep_10000.pt`
 4. 없으면 zip 안의 최신 `.pt`
+
+`make_balance.py`는 현재 다음을 고정으로 평가한다.
+
+- self-play
+- 8개 조합 x 250판
+- 총 2000판
+
+DLPC에서 홈 디렉터리 wrapper를 쓴다면 동일하게 `~/make_balance.py`를 실행하면 된다.
+
+---
+
+## `bias_check.py` 실행 방법
+
+파일:
+
+- [RL_AI/bias_check.py](RL_AI/bias_check.py)
+
+기본 실행:
+
+```bash
+nohup bash -lc 'cd ~ && python -u ~/bias_check.py' > ~/bias_check.log 2>&1 &
+```
+
+자주 쓰는 옵션:
+
+```bash
+python -u ~/bias_check.py \
+  --total-matches 400 \
+  --ablation-matches 400 \
+  --mirror-matches 400 \
+  --checkpoint-matches 400 \
+  --seed 7 \
+  --device auto
+```
+
+옵션 설명:
+
+- `--model-path`
+  - 분석할 모델 파일
+  - `.pt` 또는 `.zip` 가능
+- `--total-matches`
+  - random/random, greedy/greedy, RL/RL 각 suite의 총 판수
+  - 기본값: `400`
+- `--ablation-matches`
+  - canonical/raw 비교용 총 판수
+  - 기본값: `400`
+- `--mirror-matches`
+  - mirror agreement 측정용 총 판수
+  - 기본값: `400`
+- `--checkpoint-matches`
+  - checkpoint side gap 측정용 총 판수
+  - 기본값: `400`
+- `--checkpoint-limit`
+  - checkpoint 개수 제한
+  - 기본값: `0` (전체)
+- `--parallel-workers`
+  - bias task 병렬 프로세스 수
+  - 기본값: `0`이면 auto
+- `--seed`
+  - 난수 시드
+  - 기본값: `7`
+- `--device`
+  - `auto`, `cpu`, `cuda`
+- `--skip-unzip`
+  - `RL_AI.zip` 압축 해제를 건너뜀
+- `--skip-build`
+  - C# 빌드를 건너뜀
+- `--log-file`
+  - 외부 로그 파일 경로를 직접 지정
+
+`bias_check.py`는 다음을 자동으로 처리한다.
+
+- 최신 모델 zip/pt 자동 탐색
+- 5개 checkpoint만 추출
+  - 2000 / 4000 / 6000 / 8000 / 10000
+- random/random, greedy/greedy, RL/RL 평가
+- canonical/raw 비교
+- mirror agreement 측정
+- checkpoint side gap 측정
+- 최종 report txt 생성
+- bias_check log txt zip 생성
 
 ---
 
@@ -378,14 +543,10 @@ python -m RL_AI.server_ai_client 127.0.0.1 9000 --mode rl --model-path ~/RL_AI/m
 - `steps`
 - `final_turn`
 - history
+- engine log
 
-향후 서버 이벤트 로깅이 붙으면 다음처럼 확장하기 좋다.
-
-- match start / end
-- event trace
-- promotion trace
-- card summon / destroy
-- turn start / end
+`bias_check.py`와 balance 분석은 `SimpleLogger` 기반의 엔진 로그까지 history에 붙여 저장한다.
+학습 중 rollout은 무음 logger를 사용하고, 학습 후 평가/분석은 `SimpleLogger`를 사용한다.
 
 이 프로젝트는 앞으로도 평균 승률만이 아니라,
 기보와 이벤트를 통해 “왜 그렇게 됐는지”를 같이 보는 방향을 유지한다.
@@ -395,8 +556,7 @@ python -m RL_AI.server_ai_client 127.0.0.1 9000 --mode rl --model-path ~/RL_AI/m
 ## 현재 남은 과제
 
 1. 오프닝 루틴 반복을 더 줄이기
-2. 프로모션을 더 명시적으로 학습시키기
+2. 프로모션 관련 feature와 reward의 균형을 더 다듬기
 3. 낮은 사용 카드의 의미를 함께 보기
 4. side/deck 편향을 더 정교하게 분해하기
 5. 서버 이벤트 로깅과 RL history를 더 자연스럽게 연결하기
-

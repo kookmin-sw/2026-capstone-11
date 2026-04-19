@@ -205,7 +205,7 @@ def _zip_new_txt_logs(run_start_ts: float) -> Path | None:
         print("no new txt logs to zip")
         return None
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    zip_path = log_dir / f"log_{ts}.zip"
+    zip_path = log_dir / f"make_balance_log_{ts}.zip"
     with zipfile.ZipFile(zip_path, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
         for p in new_logs:
             zf.write(p, arcname=p.name)
@@ -247,8 +247,8 @@ def _run_balance(
             del sys.modules[module_name]
     importlib.invalidate_caches()
 
-    from RL_AI.SeaEngine import experiment as seaengine_experiment_module
-    from RL_AI.SeaEngine.experiment import run_saved_model_balance_experiment
+    from RL_AI.training import experiment as seaengine_experiment_module
+    from RL_AI.training import run_saved_model_balance_experiment
 
     print(f"experiment source: {seaengine_experiment_module.__file__}")
     print(f"using model: {model_path}")

@@ -12,7 +12,9 @@ public class RuleTurnStart : IEvent
     public void Apply(Uid source, GameData data)
     {
         data.DrawCard(data.ActivePlayer, 3);
-
+        
+        if (data.TurnCnt == 0) return;
+        
         var myUnits = data.Board.Cards.Where(c => c.Owner == data.ActivePlayer);
         foreach (var unit in myUnits)
         {

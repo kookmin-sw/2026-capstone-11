@@ -12,7 +12,13 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Sequence
 
 from RL_AI.SeaEngine.action_adapter import choose_action_with_agent
-from RL_AI.SeaEngine.agents import SeaEngineGreedyAgent, SeaEngineRandomAgent, SeaEngineRLAgent
+from RL_AI.agents import (
+    SeaEngineGreedyAgent,
+    SeaEngineRandomAgent,
+    SeaEngineRLAgent,
+    load_state_dict_flexible,
+)
+from RL_AI.SeaEngine.observation import STATE_VECTOR_DIM
 from RL_AI.server_protocol import (
     FLAG_NONE,
     FLAG_QUERY,
@@ -199,13 +205,13 @@ def _load_rl_agent(*, model_path: str, device: str = "auto", seed: Optional[int]
     if device == "auto":
         resolved_device = "cuda" if torch.cuda.is_available() else "cpu"
     agent = SeaEngineRLAgent(seed=seed, device=resolved_device, sample_actions=False)
-    agent.ensure_model(state_dim=515)
+    agent.ensure_model(state_dim=STATE_VECTOR_DIM)
     assert agent.model is not None
     model_file = Path(model_path)
     if model_file.suffix.lower() == ".zip":
         model_file = _extract_zip_model(model_file)
     state_dict = torch.load(model_file, map_location=agent.device)
-    agent.model.load_state_dict(state_dict, strict=True)
+    load_state_dict_flexible(agent.model, state_dict)
     agent.model.eval()
     return agent
 

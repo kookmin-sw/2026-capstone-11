@@ -3,6 +3,7 @@ using SeaEngine.Common;
 using SeaEngine.GameDataManager.Components;
 using SeaEngine.GameDataManager.Converters;
 using SeaEngine.GameEventManager;
+using SeaEngine.Logger;
 
 namespace SeaEngine.GameDataManager;
 
@@ -14,13 +15,15 @@ public partial class GameData
     public Player? Winner;
     public string WinnerId => Winner?.Id ?? "";
     
-    [JsonIgnore]
-    public Player ActivePlayer;
+    [JsonIgnore] public Player ActivePlayer;
+    [JsonIgnore] public readonly ILogger Logger;
     public string ActivePlayerId => ActivePlayer.Id;
     public readonly Board Board = new Board();
+    [JsonIgnore] public int TurnCnt = 0;
 
-    public GameData(string player1Id, string player2Id)
+    public GameData(string player1Id, string player2Id, ILogger logger)
     {
+        Logger = logger;
         Player1 = new Player(player1Id);
         Player2 = new Player(player2Id);
         ActivePlayer = Player1;
@@ -49,6 +52,7 @@ public partial class GameData
 
     public void TriggerEvent(string eventId, string timing, Uid source)
     {
+        Logger.LogEvent(eventId, timing, source);
         EventRegistry.GetEvent(timing, eventId)?.Apply(source, this);
     }
 
