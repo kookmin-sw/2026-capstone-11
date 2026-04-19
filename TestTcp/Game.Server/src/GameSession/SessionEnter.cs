@@ -23,6 +23,11 @@ namespace Game.Server
 
         public void OnReceive(ConnId connId, byte[] raw)
         {
+        }
+
+        public void OnRespond(ConnId connId, int queryNum, byte[] raw) { }
+        public void OnQuery(ConnId connId, int queryNum, byte[] raw)
+        {
             string name = Encoding.UTF8.GetString(raw);
             if (String.IsNullOrEmpty(name))
             {
@@ -36,11 +41,8 @@ namespace Game.Server
                 return;
             }
             _events.OnPlayerEnter?.Invoke(name);
-        }
-        public void OnRespond(ConnId connId, int queryNum, byte[] raw) { }
-        public void OnQuery(ConnId connId, int queryNum, byte[] raw)
-        {
+
+            _net.Send(NetEventHandlerId.Constant.PeerEntrance, queryNum, connId, Encoding.UTF8.GetBytes("Accepted"));
         }
     }
-
 }

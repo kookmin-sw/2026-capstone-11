@@ -21,16 +21,11 @@ public class NetworkTestSceneMain : MonoBehaviour
         queryPopUp.Init();
         charManager.InitGrid();
 
-        manager.Session.SetName(GameInitializer.Instance.Data.PlayerName);
+        //manager.Session.SetName(GameInitializer.Instance.Data.PlayerName);
         manager.Session.Events.OnGetQuery = queryPopUp.PopScreen;
         manager.Session.Events.OnConnectHello = () => {Debug.Log("OnHello!");};
         manager.Session.Events.OnDisconnectUnsafe = () => {Debug.Log("DisconnectUnsafe!");};
         manager.Session.Events.OnMessageReceive = (raw) => {charManager.RenderBoard(Encoding.UTF8.GetString(raw));};
-
-
-
-
-        manager.Session.StartSession(GameInitializer.Instance.Data.IpAddr, GameInitializer.Instance.Data.PortNum);
     }
 
     void Update() {}

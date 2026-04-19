@@ -12,7 +12,6 @@ public class ClientSession : INetEventHandler
 
     private long ConnectionExpireTimeMs = 9999;
 
-    private string _name = "1";
 
 
     private ConnId _host = ConnId.Default();
@@ -25,21 +24,62 @@ public class ClientSession : INetEventHandler
         NetworkManagerUnity.Instance.Net.SetReceiveHandler(this);
     }
 
-    public void SetName(string name) {if (!String.IsNullOrEmpty(name)) _name = name;}
 
-    public void StartSession(string ipAddr, int portNum)
+    public void EnterSession(string name, Action<byte[]> succ, Action<string> fail)
     {
-        _ = NetworkManagerUnity.Instance.Net.ConnectTo(ipAddr, portNum, ConnectionExpireTimeMs);
+        _ = NetworkManagerUnity.Instance.Net.AsyncRequestQuery(
+            NetEventHandlerId.Constant.PeerEntrance,
+            _host,
+            Encoding.UTF8.GetBytes(name),
+            10000,
+            (connId, result) => { if (result.IsResponded) succ.Invoke(result.AnswerRaw); else fail.Invoke("failed"); }
+            );
     }
 
-    public void OnReceive(ConnId connId, byte[] raw)
+    public void Query(byte[] raw, long expireMs, Action<QueryTaskResult> callback)
     {
-        _events.OnMessageReceive?.Invoke(raw);
+        _ = NetworkManagerUnity.Instance.Net.AsyncRequestQuery(
+            NetEventHandlerId.Constant.GameMessage,
+            _host,
+            raw, 
+            expireMs,
+            (connId, result) => { callback.Invoke(result); }
+            );
+    }
+    public void QueryDataRegister(byte[] raw, long expireMs, Action<QueryTaskResult> callback)
+    {
+        _ = NetworkManagerUnity.Instance.Net.AsyncRequestQuery(
+            NetEventHandlerId.Constant.GameDataRegister,
+            _host,
+            raw, 
+            expireMs,
+            (connId, result) => { callback.Invoke(result); }
+            );
+    }
+    public void QueryReady(byte[] raw, long expireMs, Action<QueryTaskResult> callback)
+    {
+        _ = NetworkManagerUnity.Instance.Net.AsyncRequestQuery(
+            NetEventHandlerId.Constant.GameReady,
+            _host,
+            raw, 
+            expireMs,
+            (connId, result) => { callback.Invoke(result); }
+            );
     }
 
     public void Answer(int queryNum, byte[] raw)
     {
         NetworkManagerUnity.Instance.Net.Send(NetEventHandlerId.Constant.GameMessage, queryNum, _host, raw);
+    }
+
+    public void Send(int queryNum, byte[] raw)
+    {
+        NetworkManagerUnity.Instance.Net.Send(NetEventHandlerId.Constant.GameMessage, 0, _host, raw);
+    }
+
+    public void OnReceive(ConnId connId, byte[] raw)
+    {
+        _events.OnMessageReceive?.Invoke(raw);
     }
 
     public void OnQuery(ConnId connId, int queryNum, byte[] raw)
@@ -56,7 +96,6 @@ public class ClientSession : INetEventHandler
     public void OnHello(ConnId connId, byte[] raw)
     {
         _host = connId;
-        NetworkManagerUnity.Instance.Net.Send(NetEventHandlerId.Constant.PeerEntrance, 0, connId, Encoding.UTF8.GetBytes(_name));
         _events.OnConnectHello?.Invoke();
 
     }

@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9fd4471c7ab9211bba71819f295981f9, type: 3}
+  m_Script: {fileID: 11500000, guid: e0f9a9d8f9f0d4f4b9c0a04b98ec048a, type: 3}
   m_Name: CardUnitDB
   m_EditorClassIdentifier: Assembly-CSharp::core.data.CardUnitDB
   cards:
@@ -137,7 +137,7 @@ MonoBehaviour:
       \uC874\uC7AC\uD55C\uB2E4\uBA74 \uD134 \uC885\uB8CC\uC2DC\uAE4C\uC9C0 \uACF5\uACA9\uB825\uC744
       +1 \uC5BB\uC2B5\uB2C8\uB2E4. \uC774\uB3D9\uBC94\uC704 \uB0B4 \uC801\uC744 \uBAA8\uB450
       \uACF5\uACA9\uD569\uB2C8\uB2E4."
-  - effectId: Or_N
+  - effectId: Cl_N
     name: "\uC5BC\uC74C \uCE7C\uB0A0"
     text: "\uC774\uB3D9\uBC94\uC704 \uB0B4 \uC801\uC744 \uD558\uB098 \uC120\uD0DD\uD574
       \uACF5\uACA9\uD569\uB2C8\uB2E4. \uACF5\uACA9\uBC1B\uC740 \uC801\uC740 \uB2E4\uC74C

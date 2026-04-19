@@ -102,25 +102,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 20258329590332241}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d3bf0fe9ede233947a0b98c798e9f076, type: 3}
+  m_Script: {fileID: 11500000, guid: 0e58ba99420fd4050b96270bb064f3ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ui.view.unit.UnitView
   definition:
     card:
-      cardId: 
+      cardId: Or_L
       name: 
       leaderId: 
       unitType: 
       attack: 0
       hp: 0
-      effectId: 
-      eventId: 
+      effectId: 0A
+      eventId: 0A
     effect:
-      effectId: 
+      effectId: 0A
       name: 
       text: 
     evt:
-      eventId: 
+      eventId: 0A
       name: 
       timing: 
       text: 

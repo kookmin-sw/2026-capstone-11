@@ -57,6 +57,9 @@ namespace ui.view.unit
         public override void Init(BaseViewData baseData, IEventBus eventBus)
         {
             base.Init(baseData, eventBus);
+
+            Debug.Log(baseData.ToString());
+
             data = (UnitViewData)baseData;
 
             // 유닛 뷰에게 필요한 이벤트 구독

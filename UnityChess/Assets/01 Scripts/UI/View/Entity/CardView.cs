@@ -38,6 +38,7 @@ namespace ui.view.card
         public override void Init(BaseViewData baseData, IEventBus eventBus)
         {
             base.Init(baseData, eventBus);
+
             data = (CardViewData)baseData;
         }
 

@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 5620289041033481847}
   - component: {fileID: 5473389214408634354}
   - component: {fileID: 8482432280364969472}
-  - component: {fileID: 8571353090491861354}
+  - component: {fileID: 4337110292180920910}
   m_Layer: 5
   m_Name: Cl_L
   m_TagString: Untagged
@@ -76,7 +76,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &8571353090491861354
+--- !u!114 &4337110292180920910
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -85,7 +85,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1487831780718665694}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 78b3020a5eff34847bf978f00efd751a, type: 3}
+  m_Script: {fileID: 11500000, guid: 1d68fe785a442422190a08e5cc1af601, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ui.view.card.CardView
   definition:

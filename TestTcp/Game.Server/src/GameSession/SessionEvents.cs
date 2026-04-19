@@ -1,11 +1,12 @@
 using System.Runtime.InteropServices;
+using Game.Network.Service;
 
 namespace Game.Server
 {
     public class SessionEvents
     {
-        public Action? OnSessionStart = null;
-        public Action? OnSessionEnd = null;
+        public Func<string, SimpleReq, SimpleRsp>? OnSessionPlayerDataUpdate = null;
+        public Func<string, SimpleReq, SimpleRsp>? OnSessionPlayerReady = null;
         public Action<string>? OnPlayerEnter = null;
         public Action<string>? OnPlayerExit = null;
         public Func<string, byte[], byte[]>? OnGetQuery = null;
@@ -14,8 +15,8 @@ namespace Game.Server
 
         public void Clear()
         {
-            OnSessionStart = null;
-            OnSessionEnd = null;
+            OnSessionPlayerDataUpdate = null;
+            OnSessionPlayerReady = null;
             OnPlayerEnter = null;
             OnPlayerExit = null;
             OnGetQuery = null;
