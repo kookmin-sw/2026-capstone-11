@@ -347,6 +347,7 @@ namespace Core.StateManagement
             if (string.IsNullOrWhiteSpace(state.owner))
                 throw new ArgumentException("owner is empty", nameof(state));
 
+            // 일부 게임 상황에서 이부분이 오류를 일으킴
             // if (state.curHp < 0)
             //     throw new ArgumentException("curHp must be >= 0", nameof(state));
 

@@ -69,6 +69,7 @@ namespace Core.StateManagement
                 }
             }
 
+            // 누가 이기면 여기서 터져요.
             if (turnEndAction == null)
                 throw new InvalidOperationException("[GameStateStore] TurnEnd action is missing.");
         }

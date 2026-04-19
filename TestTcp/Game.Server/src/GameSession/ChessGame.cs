@@ -121,6 +121,8 @@ namespace Game.Server.Chess
             {
                 _session.BroadCastPlayer(Encoding.UTF8.GetBytes(_seaGame.Serialize()));
 
+                if (_seaGame.Data.Winner != null) {_hasSomethingToSend = false; return;}
+
                 _session.QueryPlayer(
                     _seaGame.Data.ActivePlayer.Id,
                     Encoding.UTF8.GetBytes(_seaGame.Serialize()),
