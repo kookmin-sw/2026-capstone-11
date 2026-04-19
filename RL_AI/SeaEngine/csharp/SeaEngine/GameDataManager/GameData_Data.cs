@@ -52,8 +52,10 @@ public partial class GameData
 
     public void TriggerEvent(string eventId, string timing, Uid source)
     {
-        Logger.LogEvent(eventId, timing, source);
-        EventRegistry.GetEvent(timing, eventId)?.Apply(source, this);
+        if (EventRegistry.GetEvent(timing, eventId)?.Apply(source, this) ?? false)
+        {
+            Logger.LogEvent(eventId, timing, source);
+        }
     }
 
     public void TriggerEventToAll(string timing)

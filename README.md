@@ -48,7 +48,76 @@ RL_AI/server_ai_client.py
 
 ---
 
+## 실험 순서
+
+### `<start.py>`
+
+학습 전 RL vs random/greedy 8개 조합 50판씩 -> 총 800판  
+1~1000판 학습(상대는 커리큘럼에 따라 횟수 다를 수 있음, 정확히 같은 횟수는 기본은 반반이지만 커리큘럼에 따라 조금씩 보정)  
+체크포인트 저장  
+체크포인트별 평가 400판(greedy 상대로만 8개 조합 50판씩 -> 400판)  
+1001~2000판 학습(1~1000판과 동일)  
+...  
+9001~10000판 학습(1~1000판과 동일)  
+체크포인트 저장  
+10000판 학습 완료 후에는 체크포인트별 평가는 하지 않음 -> 학습 후 random/greedy로 대  
+학습 후 RL vs random/greedy 8개 조합 50판씩 -> 총 800판  
+총 15200판
+
+### `<make_balance.py>`
+
+학습된 RL vs 학습된 RL, 8개 조합 250판씩  
+총 2000판
+
+### `<bias_check.py>`
+
+random/random 8개 조합 50판씩 -> 400판  
+greedy/greedy 8개 조합 50판씩 -> 400판  
+RL/RL 8개 조합 50판씩 -> 400판  
+canonical/raw 비교 8개 조합 50판씩 -> 800판  
+mirror agreement 8개 조합 50판씩 -> 800판  
+checkpoint별 side gap -> 5개 체크포인트(2000, 4000, ..., 10000판) 8개 조합 50판씩 -> 2000판  
+총 4800판
+
+---
+
+## 분석 방법
+
+### `<start.py>`
+
+1. 학습 전 vs Random, Greedy 8조합 승률 및 정보 전체  
+2. 학습 후 vs Random, Greedy 8조합 승률 및 정보 전체  
+3. 체크포인트별 vs Random, Greedy 8조합 승률 및 정보 전체  
+4. 학습 후 vs Random, Greedy 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석
+
+### `<make_balance.py>`
+
+1. RL vs RL 8조합 승률 및 정보 전체  
+2. 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석
+
+### `<bias_check.py>`
+
+1. random vs random 8조합 승률 및 정보 전체  
+2. random vs random 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석  
+3. greedy vs greedy 8조합 승률 및 정보 전체  
+4. greedy vs greedy 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석  
+5. RL vs RL 8조합 승률 및 정보 전체  
+6. RL vs RL 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석  
+7. ablation canonical / raw 8조합 승률 및 정보 전체 비교  
+8. mirror canonical / raw 8조합 승률 및 정보 전체 비교  
+9. 체크포인트 5개별 선/후공 8조합 승률 및 정보 전체  
+10. 체크포인트 5개 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석
+
+---
+
 ## 지금까지 한 일의 큰 줄기
+
+`RL_AI`는 C# 게임 엔진 `SeaEngine`을 Python 강화학습 루프와 연결해,
+자기 자신과의 대전, random/greedy 상대, 밸런싱 분석, 편향 진단, 서버 접속형 AI 플레이까지
+하나의 흐름으로 묶는 프로젝트다.
+
+이 프로젝트의 목표는 단순히 random/greedy를 이기는 모델이 아니라,
+선공/후공, 귤/샤를로테, 같은 덱/다른 덱 같은 조건이 바뀌어도 강한 범용 정책을 만드는 것이다.
 
 ### 1. 학습 파이프라인
 
@@ -61,17 +130,10 @@ RL_AI/server_ai_client.py
 3. C# 빌드와 PythonNet 초기화를 수행한다.
 4. `SeaEnginePPOTrainer`로 학습을 진행한다.
 5. 학습 전 `random` / `greedy` 평가를 8개 조합 기준으로 각각 50판씩 수행한다.
-   - `random` 8조합 x 50판 = 400판
-   - `greedy` 8조합 x 50판 = 400판
-   - 합계 800판
 6. 학습을 10,000 episodes 돌린다.
 7. 1,000 에피소드마다 checkpoint를 저장하고, `1,000 ~ 9,000` 구간의 checkpoint마다 `greedy` 기준 8개 조합 평가를 수행한다.
-   - 각 checkpoint마다 8조합 x 50판 = 400판
 8. 마지막 10,000 에피소드 checkpoint에서는 추가 checkpoint 평가를 하지 않는다.
 9. 학습 후 `random` / `greedy` 평가를 8개 조합 기준으로 각각 50판씩 수행한다.
-   - `random` 8조합 x 50판 = 400판
-   - `greedy` 8조합 x 50판 = 400판
-   - 합계 800판
 10. 결과 로그와 모델을 zip으로 묶는다.
 
 여기서 말하는 **8개 조합**은 다음 축의 조합이다.

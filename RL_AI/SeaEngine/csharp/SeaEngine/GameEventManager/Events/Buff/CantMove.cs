@@ -10,7 +10,7 @@ public class CantMove : IEvent
 
     public string Timing => "TurnStart";
 
-    public void Apply(Uid source, GameData data)
+    public bool Apply(Uid source, GameData data)
     {
         var unit = data.GetCardById(source).Unit;
         unit.IsMoved = true;
@@ -19,5 +19,6 @@ public class CantMove : IEvent
         {
             unit.RemoveBuff("CantMove");
         }
+        return true;
     }
 }
