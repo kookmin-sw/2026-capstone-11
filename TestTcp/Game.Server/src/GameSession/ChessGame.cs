@@ -12,7 +12,7 @@ namespace Game.Server.Chess
 {
     public class ChessGame
     {
-        private enum GameState {WaitForPlayer, Starting, Running, Stopped }
+        private enum GameState { WaitForPlayer, Starting, Running, Stopped }
 
         public enum PlayerState { Entered, Prepare, Ready, Playing }
 
@@ -39,8 +39,8 @@ namespace Game.Server.Chess
 
         private int _cleanCountDown = 0;
         private int _startCountDown = 0;
-        private const int TimeToStartClean = 500;
-        private const int TimeToStartRunning = 500;
+        private const int TimeToStartClean = 5000;
+        private const int TimeToStartRunning = 5000;
 
         public ChessGame(Session session)
         {
@@ -51,10 +51,10 @@ namespace Game.Server.Chess
             _session.Events.OnPlayerExit = ExitPlayer;
             _session.Events.OnSessionPlayerDataUpdate = HandleUserDataUpdate;
             _session.Events.OnSessionPlayerReady = HandleUserReady;
-            
+
         }
 
-        public void InitGame(string p1 = "1", string p2 = "2", 
+        public void InitGame(string p1 = "1", string p2 = "2",
                             string d1 = "[\"Or_L\", \"Or_B\", \"Or_R\", \"Or_N\", \"Or_P\", \"Or_P\", \"Or_P\"]",
                             string d2 = "[\"Cl_L\", \"Cl_B\", \"Cl_R\", \"Cl_N\", \"Cl_P\", \"Cl_P\", \"Cl_P\"]")
         {
@@ -108,7 +108,7 @@ namespace Game.Server.Chess
             }
         }
 
-        public void WaitTick() {}
+        public void WaitTick() { }
 
         public void StartingTick(int delta)
         {
@@ -121,7 +121,7 @@ namespace Game.Server.Chess
             {
                 _session.BroadCastPlayer(Encoding.UTF8.GetBytes(_seaGame.Serialize()));
 
-                if (_seaGame.Data.Winner != null) {_hasSomethingToSend = false; return;}
+                if (_seaGame.Data.Winner != null) { _hasSomethingToSend = false; return; }
 
                 _session.QueryPlayer(
                     _seaGame.Data.ActivePlayer.Id,
@@ -171,8 +171,11 @@ namespace Game.Server.Chess
         {
             _players.Clear();
             _session.Clear();
-      
+
             _hasSomethingToSend = false;
+
+            _cleanCountDown = 0;
+            _startCountDown = 0;
 
             _session.Events.OnPlayerEnter = EnterPlayer;
             _session.Events.OnPlayerExit = ExitPlayer;
@@ -224,7 +227,7 @@ namespace Game.Server.Chess
             Log.WriteLog($"[ChessGame] :  Player-{name} Ready");
 
             return SimpleRsp.Accepted("Player Now Ready");
-        }  
+        }
 
 
     }
