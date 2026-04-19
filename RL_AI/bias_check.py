@@ -651,8 +651,6 @@ def _measure_mirror_agreement(
     result_rows: list[Dict[str, Any]] = []
     total_states = 0
     total_agree = 0
-    progress_start = time.time()
-
     session = PythonNetSession(card_data_path=card_data_path)
     session.start()
     try:
@@ -664,6 +662,7 @@ def _measure_mirror_agreement(
             agent.name = f"{label}_mir"
             agreement = 0
             states = 0
+            scenario_start = time.time()
             for _ in range(matches):
                 snapshot = session.init_game(
                     player1_deck=str(scenario["p1_deck"]),
@@ -679,17 +678,21 @@ def _measure_mirror_agreement(
                     if str(orig_action.get("uid", "")) == str(mirrored_action.get("uid", "")):
                         agreement += 1
                     states += 1
-                    if states % 100 == 0:
-                        elapsed = max(1e-9, time.time() - progress_start)
+                    if states == 1 or states % 500 == 0:
+                        elapsed = max(1e-9, time.time() - scenario_start)
                         print(
                             f"[*] mirror/{label} progress: states={states} "
-                            f"states/s={states / elapsed:.2f} | agree={agreement}"
+                            f"states/s={states / elapsed:.2f} | agree={agreement}",
+                            flush=True,
                         )
                     snapshot = session.apply_action(str(orig_action.get("uid", "")))
             total_states += states
             total_agree += agreement
-            elapsed = max(1e-9, time.time() - progress_start)
-            print(f"[*] mirror/{label} scenario done: {scenario['label']} | states/s={states / elapsed:.2f}")
+            elapsed = max(1e-9, time.time() - scenario_start)
+            print(
+                f"[*] mirror/{label} scenario done: {scenario['label']} | states/s={states / elapsed:.2f}",
+                flush=True,
+            )
             result_rows.append(
                 {
                     "label": str(scenario["label"]),
@@ -731,7 +734,7 @@ def _run_same_policy_suite(
         task_name=f"suite/{label}",
         total_units=total_matches,
         unit_label="eps/s",
-        interval=max(1, total_matches // 8),
+        interval=max(1, total_matches // 4),
     )
     for idx, scenario in enumerate(scenarios):
         matches = per + (1 if idx < rem else 0)
@@ -889,6 +892,7 @@ def _save_history_report(
     history_limit: Optional[int] = None,
 ) -> Optional[Path]:
     from RL_AI.analysis.reports import build_win_rate_report, save_report
+    from RL_AI.training.experiment import _format_match_history
 
     histories = list(summary.get("histories", []))
     if not histories:
@@ -999,14 +1003,15 @@ def _make_speed_progress_callback(
     start = time.time()
 
     def _callback(current: int, total: int, result: str, matchup: str) -> None:
-        should_print = current >= total or current % max(1, interval) == 0
+        should_print = current == 1 or current >= total or current % max(1, interval) == 0
         if not should_print:
             return
         elapsed = max(1e-9, time.time() - start)
         speed = current / elapsed
         print(
             f"[*] {task_name} progress: {current}/{total_units or total} {unit_label}={speed:.2f} | "
-            f"last={result} | matchup={matchup}"
+            f"last={result} | matchup={matchup}",
+            flush=True,
         )
 
     return _callback
