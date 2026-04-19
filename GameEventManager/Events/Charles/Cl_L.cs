@@ -11,7 +11,7 @@ public class Cl_L : IEvent
     public string Id => "Cl_L";
     public string Timing => "TurnStart";
 
-    public void Apply(Uid source, GameData data)
+    public bool Apply(Uid source, GameData data)
     {
         var card = data.GetCardById(source);
         if (data.GetMoveArea(card)
@@ -21,6 +21,9 @@ public class Cl_L : IEvent
             .Any(p => p?.Data.UnitType == UnitType.Knight))
         {
             CombatUtils.Heal(card, 2, data);
+            return true;
         }
+
+        return false;
     }
 }

@@ -11,10 +11,11 @@ public class TempAtk : IEvent
 
     public string Timing => "TurnEnd";
 
-    public void Apply(Uid source, GameData data)
+    public bool Apply(Uid source, GameData data)
     {
         var cur = data.GetCardById(source).Unit;
         cur.Atk -= cur.Buffs["TempAtk"];
         cur.RemoveBuff("TempAtk");
+        return true;
     }
 }

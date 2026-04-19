@@ -12,7 +12,7 @@ public class Or_R : IEvent
     public string Id => "Or_R";
     public string Timing => "TurnEnd";
 
-    public void Apply(Uid source, GameData data)
+    public bool Apply(Uid source, GameData data)
     {
         var card = data.GetCardById(source);
         var enemy = data.GetMoveArea(card)
@@ -22,8 +22,8 @@ public class Or_R : IEvent
 
         foreach (var e in enemy)
         {
-            if(e == null) continue;
             CombatUtils.Attack(card, e, data);
         }
+        return true;
     }
 }

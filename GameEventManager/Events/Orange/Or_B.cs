@@ -12,10 +12,11 @@ public class Or_B : IEvent
     public string Id => "Or_B";
     public string Timing => "OnDestroy";
 
-    public void Apply(Uid source, GameData data)
+    public bool Apply(Uid source, GameData data)
     {
         var leader = data.Board.Cards
             .First(c => c.Owner == data.GetCardById(source).Owner && c.Data.UnitType == UnitType.Leader);
         CombatUtils.Heal(leader, 2, data);
+        return true;
     }
 }
