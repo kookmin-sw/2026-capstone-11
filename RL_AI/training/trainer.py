@@ -25,6 +25,7 @@ from RL_AI.SeaEngine.bridge.seaengine_session import SeaEngineSession
 from RL_AI.SeaEngine.bridge.vector_env import VectorSeaEngineEnv
 from RL_AI.training.evaluator import evaluate_agents
 from RL_AI.training.reward import dense_reward_from_transition, terminal_reward_for_player
+from RL_AI.training.start_state import classify_deficit_mode, meets_deficit_target
 from RL_AI.analysis.reports import build_win_rate_report
 from RL_AI.training.storage import RolloutBuffer, RolloutStep
 
@@ -314,6 +315,7 @@ class SeaEnginePPOTrainer:
         episode_start_idx: int,
         opponent_pool: List[SeaEngineAgent],
         opponent_schedule: Optional[Sequence[str]] = None,
+        start_mode_schedule: Optional[Sequence[str]] = None,
         card_data_path: Optional[str] = None,
         player1_deck: str = "",
         player2_deck: str = "",
@@ -366,6 +368,75 @@ class SeaEnginePPOTrainer:
             ai_ids.append("AI")
 
         snapshots = env.init_games(configs)
+        start_mode_lookup = {}
+        if start_mode_schedule is not None:
+            for i in range(num_envs):
+                if i < len(start_mode_schedule):
+                    start_mode_lookup[i] = str(start_mode_schedule[i] or "normal").strip().lower()
+                else:
+                    start_mode_lookup[i] = "normal"
+        else:
+            for i in range(num_envs):
+                start_mode_lookup[i] = "normal"
+
+        burnin_turn_limits = {"normal": 0, "slight": 2, "heavy": 4}
+        burnin_actions = [0] * num_envs
+        burnin_turn_ends = [0] * num_envs
+        burnin_done = [start_mode_lookup[i] == "normal" for i in range(num_envs)]
+        burnin_actual_modes = ["normal"] * num_envs
+        burnin_focus_agent = SeaEngineRandomAgent(seed=episode_start_idx + 13001)
+        burnin_enemy_agent = SeaEngineGreedyAgent(seed=episode_start_idx + 13002)
+
+        while not all(burnin_done):
+            cmds = [None] * num_envs
+            progressed = False
+            for i in range(num_envs):
+                if burnin_done[i]:
+                    continue
+                snap = snapshots[i]
+                if snap["result"] != "Ongoing":
+                    burnin_done[i] = True
+                    continue
+                mode = start_mode_lookup.get(i, "normal")
+                limit = burnin_turn_limits.get(mode, 0)
+                if limit <= 0:
+                    burnin_done[i] = True
+                    continue
+                if burnin_turn_ends[i] >= limit:
+                    burnin_done[i] = True
+                    continue
+                actual_mode = classify_deficit_mode(snap, "AI")
+                if meets_deficit_target(actual_mode, mode) and burnin_actions[i] > 0:
+                    burnin_done[i] = True
+                    continue
+                legal_actions = snap.get("actions", [])
+                if not legal_actions:
+                    burnin_done[i] = True
+                    continue
+                acting_agent = burnin_focus_agent if snap["active_player"] == "AI" else burnin_enemy_agent
+                _, action = choose_action_with_agent(acting_agent, snap)
+                cmds[i] = ("apply_action", {"action_uid": action["uid"]})
+                burnin_actions[i] += 1
+                if str(action.get("effect_id", "")) == "TurnEnd":
+                    burnin_turn_ends[i] += 1
+                progressed = True
+            if not progressed:
+                break
+            env.step_async(cmds)
+            new_snapshots = env.step_wait()
+            for i in range(num_envs):
+                if i in new_snapshots:
+                    snapshots[i] = new_snapshots[i]
+                    if snapshots[i]["result"] != "Ongoing":
+                        burnin_done[i] = True
+                if not burnin_done[i]:
+                    mode = start_mode_lookup.get(i, "normal")
+                    limit = burnin_turn_limits.get(mode, 0)
+                    if burnin_turn_ends[i] >= limit:
+                        burnin_done[i] = True
+                if burnin_done[i]:
+                    burnin_actual_modes[i] = classify_deficit_mode(snapshots[i], "AI")
+
         active_envs = set(range(num_envs))
         results = [None] * num_envs
 
@@ -396,6 +467,8 @@ class SeaEnginePPOTrainer:
                         "final_turn": snap["turn"],
                         "ai_won": snap.get("winner_id") == ai_ids[i],
                         "opponent_name": opponents[i].name,
+                        "start_mode_requested": start_mode_lookup.get(i, "normal"),
+                        "start_mode_actual": burnin_actual_modes[i],
                     }
                     active_envs.remove(i)
                     continue
@@ -488,6 +561,7 @@ class SeaEnginePPOTrainer:
         num_episodes: int,
         opponent_pool: Optional[List[SeaEngineAgent]] = None,
         opponent_schedule: Optional[Sequence[str]] = None,
+        start_mode_schedule: Optional[Sequence[str]] = None,
         card_data_path: Optional[str] = None,
         player1_deck: str = "",
         player2_deck: str = "",
@@ -507,6 +581,7 @@ class SeaEnginePPOTrainer:
             "updates": 0,
             "opponents": [],
             "opponent_stats": {},
+            "start_mode_stats": {},
         }
         
         if opponent_pool is None:
@@ -519,6 +594,8 @@ class SeaEnginePPOTrainer:
         
         interval_opponents: Counter[str] = Counter()
         opponent_outcomes_total: Dict[str, Counter[str]] = defaultdict(Counter)
+        requested_start_modes_total: Counter[str] = Counter()
+        actual_start_modes_total: Counter[str] = Counter()
         try:
             parallel_desc = env.describe_parallelism()
             print(f"[*] Starting Training: {num_episodes} episodes | Device: {self.agent.device} | Envs: {num_envs} (PythonNet)")
@@ -545,6 +622,11 @@ class SeaEnginePPOTrainer:
                         episode_start_idx=episode_offset + episode_start_idx,
                         opponent_pool=opponent_pool,
                         opponent_schedule=batch_schedule,
+                        start_mode_schedule=(
+                            None
+                            if start_mode_schedule is None
+                            else list(start_mode_schedule[episode_start_idx:episode_start_idx + actual_num_envs])
+                        ),
                         card_data_path=card_data_path,
                         player1_deck=player1_deck,
                         player2_deck=player2_deck,
@@ -563,6 +645,8 @@ class SeaEnginePPOTrainer:
                     results["episodes"] += 1
                     opp_name = str(rollout["opponent_name"])
                     interval_opponents[opp_name] += 1
+                    requested_start_modes_total[str(rollout.get("start_mode_requested", "normal"))] += 1
+                    actual_start_modes_total[str(rollout.get("start_mode_actual", "normal"))] += 1
                     if rollout["ai_won"]:
                         results["wins"] += 1
                         opponent_outcomes_total[opp_name]["wins"] += 1
@@ -633,6 +717,10 @@ class SeaEnginePPOTrainer:
                 ),
             }
             for name, counter in sorted(opponent_outcomes_total.items())
+        }
+        results["start_mode_stats"] = {
+            "requested": dict(sorted(requested_start_modes_total.items())),
+            "actual": dict(sorted(actual_start_modes_total.items())),
         }
         return results
 

@@ -4,8 +4,8 @@
 This script keeps the environment bootstrap from start.py locally, while
 running focused experiments for:
   - random/random, greedy/greedy, RL/RL self-play comparisons
-  - canonical-view ablation
-  - mirror agreement measurement
+  - normalized vs raw performance comparison
+  - normalized-raw agreement measurement
   - checkpoint-by-checkpoint side-gap tracking
 
 It intentionally does not modify start.py.
@@ -678,10 +678,10 @@ def _measure_mirror_agreement(
                     if str(orig_action.get("uid", "")) == str(mirrored_action.get("uid", "")):
                         agreement += 1
                     states += 1
-                    if states == 1 or states % 500 == 0:
+                    if states == 1 or states % 1000 == 0:
                         elapsed = max(1e-9, time.time() - scenario_start)
                         print(
-                            f"[*] mirror/{label} progress: states={states} "
+                            f"[*] normalize_raw_agree/{label} progress: states={states} "
                             f"states/s={states / elapsed:.2f} | agree={agreement}",
                             flush=True,
                         )
@@ -690,7 +690,7 @@ def _measure_mirror_agreement(
             total_agree += agreement
             elapsed = max(1e-9, time.time() - scenario_start)
             print(
-                f"[*] mirror/{label} scenario done: {scenario['label']} | states/s={states / elapsed:.2f}",
+                f"[*] normalize_raw_agree/{label} scenario done: {scenario['label']} | states/s={states / elapsed:.2f}",
                 flush=True,
             )
             result_rows.append(
@@ -722,7 +722,7 @@ def _run_same_policy_suite(
     max_turns: int,
     seed: Optional[int],
     include_history: bool = False,
-    history_limit: Optional[int] = None,
+    start_mode: str = "normal",
 ) -> Dict[str, Any]:
     from RL_AI.training import evaluate_agents
 
@@ -734,7 +734,7 @@ def _run_same_policy_suite(
         task_name=f"suite/{label}",
         total_units=total_matches,
         unit_label="eps/s",
-        interval=max(1, total_matches // 4),
+        interval=max(1, total_matches // 2),
     )
     for idx, scenario in enumerate(scenarios):
         matches = per + (1 if idx < rem else 0)
@@ -757,7 +757,6 @@ def _run_same_policy_suite(
             max_turns=max_turns,
             report_path=str(scenario_report_path),
             include_history=include_history,
-            history_limit=history_limit,
             match_context={
                 "mode_label": label,
                 "side_label": str(scenario["side_name"]),
@@ -766,6 +765,8 @@ def _run_same_policy_suite(
                 "relation_label": str(scenario["relation_name"]),
             },
             progress_callback=progress_callback,
+            start_mode=start_mode,
+            start_focus_player="P1" if bool(scenario["self_is_p1"]) else "P2",
         )
         p1_wins = int(summary["p1_wins"])
         p2_wins = int(summary["p2_wins"])
@@ -800,7 +801,6 @@ def _run_same_policy_suite(
                 title=f"Bias Check {label} / {scenario['label']} Histories",
                 summary=summary,
                 report_path=history_path,
-                history_limit=history_limit,
             )
             if saved_history_path is not None:
                 results[-1]["history_path"] = str(saved_history_path)
@@ -889,7 +889,6 @@ def _save_history_report(
     title: str,
     summary: Dict[str, Any],
     report_path: Path,
-    history_limit: Optional[int] = None,
 ) -> Optional[Path]:
     from RL_AI.analysis.reports import build_win_rate_report, save_report
     from RL_AI.training.experiment import _format_match_history
@@ -897,8 +896,6 @@ def _save_history_report(
     histories = list(summary.get("histories", []))
     if not histories:
         return None
-    if history_limit is not None and history_limit >= 0:
-        histories = histories[:history_limit]
     lines = [
         f"=== {title} ===",
         f"report={summary.get('report_path', '')}",
@@ -1063,8 +1060,6 @@ def _run_bias_task(task: Dict[str, Any]) -> Dict[str, Any]:
     if task_kind == "same_policy":
         total_matches = int(task["total_matches"])
         include_history = bool(task.get("include_history", False))
-        history_limit = task.get("history_limit")
-        history_limit_int = None if history_limit is None else int(history_limit)
         agent_kind = str(task["agent_kind"])
         if agent_kind in {"random", "greedy"}:
             agent_factory = _make_basic_agent_factory(agent_kind, device=device)
@@ -1088,7 +1083,7 @@ def _run_bias_task(task: Dict[str, Any]) -> Dict[str, Any]:
             max_turns=max_turns,
             seed=seed,
             include_history=include_history,
-            history_limit=history_limit_int,
+            start_mode=str(task.get("start_mode", "normal")),
         )
         return {
             "task_name": task_name,
@@ -1123,8 +1118,6 @@ def _run_bias_task(task: Dict[str, Any]) -> Dict[str, Any]:
     if task_kind == "checkpoint":
         total_matches = int(task["total_matches"])
         include_history = bool(task.get("include_history", True))
-        history_limit = task.get("history_limit")
-        history_limit_int = None if history_limit is None else int(history_limit)
         model_path = Path(task["model_path"])
         state_dict = _load_state_dict(model_path)
         agent_factory = _make_rl_agent_factory(
@@ -1140,7 +1133,6 @@ def _run_bias_task(task: Dict[str, Any]) -> Dict[str, Any]:
             max_turns=max_turns,
             seed=seed,
             include_history=include_history,
-            history_limit=history_limit_int,
         )
         return {
             "task_name": task_name,
@@ -1155,8 +1147,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run SeaEngine bias / symmetry checks")
     parser.add_argument("--model-path", type=str, default="", help="Saved model .pt or .zip; defaults to latest model archive")
     parser.add_argument("--total-matches", type=int, default=400, help="Total matches per same-policy suite (across 8 combos)")
-    parser.add_argument("--ablation-matches", type=int, default=400, help="Total matches for canonical/raw ablation suite")
-    parser.add_argument("--mirror-matches", type=int, default=400, help="Total matches for mirror agreement measurement")
+    parser.add_argument("--ablation-matches", type=int, default=400, help="Total matches for normalized vs raw performance suite")
+    parser.add_argument("--mirror-matches", type=int, default=400, help="Total matches for normalized-raw agreement measurement")
     parser.add_argument("--checkpoint-matches", type=int, default=400, help="Total matches per checkpoint side-gap suite")
     parser.add_argument("--checkpoint-limit", type=int, default=0, help="Limit number of checkpoint files (0 = all)")
     parser.add_argument("--parallel-workers", type=int, default=0, help="Number of process workers for bias suites (0 = auto)")
@@ -1245,7 +1237,6 @@ def main() -> int:
                 "seed": args.seed,
                 "device": device,
                 "include_history": True,
-                "history_limit": 5,
             },
             {
                 "task_name": "greedy_greedy",
@@ -1258,7 +1249,6 @@ def main() -> int:
                 "seed": args.seed + 100,
                 "device": device,
                 "include_history": True,
-                "history_limit": 5,
             },
             {
                 "task_name": "rl_family",
@@ -1273,12 +1263,93 @@ def main() -> int:
                 "seed": args.seed + 200,
                 "device": device,
                 "include_history": True,
-                "history_limit": 5,
             },
             {
-                "task_name": "ablation_canonical",
+                "task_name": "random_slight_deficit",
                 "kind": "same_policy",
-                "label": "rl_canonical",
+                "label": "random_slight",
+                "agent_kind": "random",
+                "start_mode": "slight",
+                "total_matches": args.total_matches,
+                "card_data_path": None,
+                "max_turns": 100,
+                "seed": args.seed + 210,
+                "device": device,
+                "include_history": True,
+            },
+            {
+                "task_name": "random_heavy_deficit",
+                "kind": "same_policy",
+                "label": "random_heavy",
+                "agent_kind": "random",
+                "start_mode": "heavy",
+                "total_matches": args.total_matches,
+                "card_data_path": None,
+                "max_turns": 100,
+                "seed": args.seed + 220,
+                "device": device,
+                "include_history": True,
+            },
+            {
+                "task_name": "greedy_slight_deficit",
+                "kind": "same_policy",
+                "label": "greedy_slight",
+                "agent_kind": "greedy",
+                "start_mode": "slight",
+                "total_matches": args.total_matches,
+                "card_data_path": None,
+                "max_turns": 100,
+                "seed": args.seed + 310,
+                "device": device,
+                "include_history": True,
+            },
+            {
+                "task_name": "greedy_heavy_deficit",
+                "kind": "same_policy",
+                "label": "greedy_heavy",
+                "agent_kind": "greedy",
+                "start_mode": "heavy",
+                "total_matches": args.total_matches,
+                "card_data_path": None,
+                "max_turns": 100,
+                "seed": args.seed + 320,
+                "device": device,
+                "include_history": True,
+            },
+            {
+                "task_name": "rl_slight_deficit",
+                "kind": "same_policy",
+                "label": "rl_slight",
+                "agent_kind": "rl",
+                "observation_mode": "python_canonical",
+                "start_mode": "slight",
+                "model_path": str(current_model_path),
+                "total_matches": args.total_matches,
+                "card_data_path": None,
+                "max_turns": 100,
+                "seed": args.seed + 410,
+                "device": device,
+                "include_history": True,
+            },
+            {
+                "task_name": "rl_heavy_deficit",
+                "kind": "same_policy",
+                "label": "rl_heavy",
+                "agent_kind": "rl",
+                "observation_mode": "python_canonical",
+                "start_mode": "heavy",
+                "model_path": str(current_model_path),
+                "total_matches": args.total_matches,
+                "card_data_path": None,
+                "max_turns": 100,
+                "seed": args.seed + 420,
+                "device": device,
+                "include_history": True,
+            },
+            {
+                "task_name": "normalized_vs_raw_canonical",
+                "kind": "same_policy",
+                "label": "normalize_canonical",
                 "agent_kind": "rl",
                 "observation_mode": "python_canonical",
                 "model_path": str(current_model_path),
@@ -1290,9 +1361,9 @@ def main() -> int:
                 "include_history": False,
             },
             {
-                "task_name": "ablation_raw",
+                "task_name": "normalized_vs_raw_raw",
                 "kind": "same_policy",
-                "label": "rl_raw",
+                "label": "normalize_raw",
                 "agent_kind": "rl",
                 "observation_mode": "python_raw",
                 "model_path": str(current_model_path),
@@ -1304,9 +1375,9 @@ def main() -> int:
                 "include_history": False,
             },
             {
-                "task_name": "mirror_canonical",
+                "task_name": "normalize_raw_agree_canonical",
                 "kind": "mirror",
-                "label": "rl_canonical",
+                "label": "normalize_canonical",
                 "observation_mode": "python_canonical",
                 "model_path": str(current_model_path),
                 "total_matches": args.mirror_matches,
@@ -1316,9 +1387,9 @@ def main() -> int:
                 "device": device,
             },
             {
-                "task_name": "mirror_raw",
+                "task_name": "normalize_raw_agree_raw",
                 "kind": "mirror",
-                "label": "rl_raw",
+                "label": "normalize_raw",
                 "observation_mode": "python_raw",
                 "model_path": str(current_model_path),
                 "total_matches": args.mirror_matches,
@@ -1346,7 +1417,6 @@ def main() -> int:
                     "episode": _episode_from_name(ckpt_path),
                     "checkpoint_path": str(ckpt_path),
                     "include_history": True,
-                    "history_limit": 5,
                 }
             )
 
@@ -1368,12 +1438,20 @@ def main() -> int:
         family_runs: list[Tuple[str, Dict[str, Any]]] = [
             ("random/random", task_results["random_random"]),
             ("greedy/greedy", task_results["greedy_greedy"]),
-            ("RL/RL canonical", task_results["rl_family"]),
+            ("RL/RL", task_results["rl_family"]),
         ]
-        ablation_canonical = task_results["ablation_canonical"]
-        ablation_raw = task_results["ablation_raw"]
-        mirror_canonical = task_results["mirror_canonical"]
-        mirror_raw = task_results["mirror_raw"]
+        weak_start_runs: list[Tuple[str, Dict[str, Any]]] = [
+            ("random/slight deficit", task_results["random_slight_deficit"]),
+            ("random/heavy deficit", task_results["random_heavy_deficit"]),
+            ("greedy/slight deficit", task_results["greedy_slight_deficit"]),
+            ("greedy/heavy deficit", task_results["greedy_heavy_deficit"]),
+            ("RL/slight deficit", task_results["rl_slight_deficit"]),
+            ("RL/heavy deficit", task_results["rl_heavy_deficit"]),
+        ]
+        normalized_vs_raw_canonical = task_results["normalized_vs_raw_canonical"]
+        normalized_vs_raw_raw = task_results["normalized_vs_raw_raw"]
+        normalize_raw_agree_canonical = task_results["normalize_raw_agree_canonical"]
+        normalize_raw_agree_raw = task_results["normalize_raw_agree_raw"]
 
         checkpoint_rows: list[Dict[str, Any]] = []
         for task in task_specs:
@@ -1402,7 +1480,7 @@ def main() -> int:
             f"seed={args.seed}",
             f"device={device}",
             "",
-            "NOTE: RL suites below rebuild Python observations so canonical/raw view can be isolated cleanly.",
+            "NOTE: RL suites below rebuild Python observations so normalized/raw view can be isolated cleanly.",
             "",
             "=== Family Comparisons ===",
         ]
@@ -1412,16 +1490,26 @@ def main() -> int:
 
         report_lines.extend(
             [
-                "=== Canonical View Ablation ===",
-                _format_suite_report("RL canonical", ablation_canonical),
+                "=== Weak Start Scenarios ===",
                 "",
-                _format_suite_report("RL raw", ablation_raw),
+            ]
+        )
+        for title, suite in weak_start_runs:
+            report_lines.append(_format_suite_report(title, suite))
+            report_lines.append("")
+
+        report_lines.extend(
+            [
+                "=== 정규화 vs raw 성능 비교 ===",
+                _format_suite_report("normalize canonical", normalized_vs_raw_canonical),
                 "",
-                "=== Mirror Agreement ===",
-                f"canonical: states={mirror_canonical['states']}, agree={mirror_canonical['agreement']}, "
-                f"agreement_rate={mirror_canonical['agreement_rate']:.2f}%",
-                f"raw: states={mirror_raw['states']}, agree={mirror_raw['agreement']}, "
-                f"agreement_rate={mirror_raw['agreement_rate']:.2f}%",
+                _format_suite_report("normalize raw", normalized_vs_raw_raw),
+                "",
+                "=== 정규화-raw 일치율 ===",
+                f"canonical: states={normalize_raw_agree_canonical['states']}, agree={normalize_raw_agree_canonical['agreement']}, "
+                f"agreement_rate={normalize_raw_agree_canonical['agreement_rate']:.2f}%",
+                f"raw: states={normalize_raw_agree_raw['states']}, agree={normalize_raw_agree_raw['agreement']}, "
+                f"agreement_rate={normalize_raw_agree_raw['agreement_rate']:.2f}%",
                 "",
                 "=== Checkpoint Side Gap ===",
             ]

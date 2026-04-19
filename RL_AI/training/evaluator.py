@@ -12,6 +12,7 @@ from typing import Any, Callable, Dict, Optional
 from RL_AI.SeaEngine.action_adapter import choose_action_with_agent
 from RL_AI.SeaEngine.bridge.pythonnet_session import PythonNetSession
 from RL_AI.analysis.reports import build_win_rate_report, save_report
+from RL_AI.training.start_state import burn_in_to_deficit_mode
 
 _VERBOSE_EVAL_MATCH_LOG = os.getenv("SEAENGINE_VERBOSE_EVAL_MATCH_LOG", "0") == "1"
 
@@ -76,6 +77,8 @@ def play_evaluation_match(
     max_turns: int = 100,
     include_history: bool = False,
     logger_mode: str = "simple",
+    start_mode: str = "normal",
+    start_focus_player: str = "P1",
 ) -> Dict[str, object]:
     owns_session = session is None
     if session is None:
@@ -86,6 +89,18 @@ def play_evaluation_match(
     try:
         with p1_context, p2_context:
             snapshot = session.init_game(player1_deck=player1_deck, player2_deck=player2_deck, logger_mode=logger_mode)
+            if str(start_mode or "normal").strip().lower() != "normal":
+                from RL_AI.agents import SeaEngineGreedyAgent, SeaEngineRandomAgent
+
+                warmup_focus = SeaEngineRandomAgent(seed=0)
+                warmup_enemy = SeaEngineGreedyAgent(seed=1)
+                snapshot, _ = burn_in_to_deficit_mode(
+                    session,
+                    focus_player_id=start_focus_player,
+                    target_mode=start_mode,
+                    focus_agent=warmup_focus,
+                    enemy_agent=warmup_enemy,
+                )
             agents = {"P1": p1_agent, "P2": p2_agent}
             action_type_counts: Counter[str] = Counter()
             card_use_counts: Counter[str] = Counter()
@@ -129,7 +144,7 @@ def play_evaluation_match(
                 "action_type_counts": dict(sorted(action_type_counts.items())),
                 "card_use_counts": dict(card_use_counts.most_common()),
                 "history": history if include_history else [],
-                "engine_log": engine_log,
+                "engine_log": "",
             }
     finally:
         if owns_session:
@@ -151,6 +166,8 @@ def evaluate_agents(
     history_limit: Optional[int] = None,
     match_context: Optional[Dict[str, Any]] = None,
     logger_mode: str = "simple",
+    start_mode: str = "normal",
+    start_focus_player: str = "P1",
 ) -> Dict[str, object]:
     p1_wins = 0
     p2_wins = 0
@@ -176,6 +193,8 @@ def evaluate_agents(
                 max_turns=max_turns,
                 include_history=capture_history,
                 logger_mode=logger_mode,
+                start_mode=start_mode,
+                start_focus_player=start_focus_player,
             )
             snapshot = result["snapshot"]
             w1, w2, d = _winner_to_counts(str(snapshot["result"]))
@@ -197,7 +216,6 @@ def evaluate_agents(
                         "steps": int(result["steps"]),
                         "final_turn": int(result["final_turn"]),
                         "history": list(result["history"]),
-                        "engine_log": str(result.get("engine_log", "") or ""),
                     }
                 )
             
@@ -227,8 +245,88 @@ def evaluate_agents(
         "card_use_counts": dict(card_use_counts.most_common()),
     }
     if include_history:
-        summary["histories"] = histories
+        desired_history_total = history_limit
+        if desired_history_total is None:
+            desired_history_total = max(1, round(num_matches / 5))
+        summary["histories"] = _select_representative_histories(histories, desired_history_total)
     report_text = build_win_rate_report(summary)
     saved_path = save_report(report_text, _default_evaluation_report_path() if report_path is None else report_path)
     summary["report_path"] = str(saved_path)
     return summary
+
+
+def _select_representative_histories(
+    histories: list[Dict[str, object]],
+    desired_total: Optional[int],
+) -> list[Dict[str, object]]:
+    if not histories:
+        return []
+    if desired_total is None or desired_total <= 0:
+        return list(histories)
+    if desired_total >= len(histories):
+        return list(histories)
+
+    grouped: Dict[str, list[Dict[str, object]]] = {}
+    for item in histories:
+        grouped.setdefault(str(item.get("result", "")), []).append(item)
+
+    non_empty = [key for key, items in grouped.items() if items]
+    target_total = max(int(desired_total), len(non_empty))
+    target_total = min(target_total, len(histories))
+
+    raw_targets: Dict[str, float] = {}
+    base_targets: Dict[str, int] = {}
+    remainders: list[tuple[float, str]] = []
+    for key, items in grouped.items():
+        if not items:
+            continue
+        exact = target_total * (len(items) / len(histories))
+        raw_targets[key] = exact
+        base = int(exact)
+        if base <= 0:
+            base = 1
+        base_targets[key] = min(base, len(items))
+        remainders.append((exact - int(exact), key))
+
+    allocated = sum(base_targets.values())
+    if allocated < target_total:
+        for _, key in sorted(remainders, key=lambda pair: (-pair[0], pair[1])):
+            if allocated >= target_total:
+                break
+            if base_targets[key] >= len(grouped[key]):
+                continue
+            base_targets[key] += 1
+            allocated += 1
+    elif allocated > target_total:
+        for _, key in sorted(remainders, key=lambda pair: (pair[0], pair[1])):
+            if allocated <= target_total:
+                break
+            if base_targets[key] <= 1:
+                continue
+            base_targets[key] -= 1
+            allocated -= 1
+
+    selected: list[Dict[str, object]] = []
+    for key, items in grouped.items():
+        quota = min(base_targets.get(key, 0), len(items))
+        if quota <= 0:
+            continue
+        if quota >= len(items):
+            selected.extend(items)
+            continue
+        if quota == 1:
+            indices = [0]
+        else:
+            step = (len(items) - 1) / float(quota - 1)
+            indices = sorted({int(round(i * step)) for i in range(quota)})
+            while len(indices) < quota:
+                for idx in range(len(items)):
+                    if idx not in indices:
+                        indices.append(idx)
+                        if len(indices) >= quota:
+                            break
+            indices = sorted(indices[:quota])
+        selected.extend(items[idx] for idx in indices)
+
+    selected.sort(key=lambda item: int(item.get("match_index", 0)))
+    return selected

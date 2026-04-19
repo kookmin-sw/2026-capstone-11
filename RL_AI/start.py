@@ -388,6 +388,7 @@ def _run_train_eval(
         train_episodes=train_episodes,
         max_turns=max_turns,
         update_interval=update_interval,
+        checkpoint_interval=2000,
         seed=seed,
         resume_model_path=resume_model_path or None,
         resume_episodes_completed=resume_episodes_completed if resume_model_path else None,
@@ -440,7 +441,7 @@ def main() -> int:
     print("[*] start.py launched")
     print(f"[*] pid={os.getpid()}")
     print(
-        f"[*] args: eval_matches_per_combo={args.eval_matches} (total {args.eval_matches * 8}), train_episodes={args.train_episodes}, "
+        f"[*] args: eval_matches_per_combo={args.eval_matches} (total {args.eval_matches * 24}), train_episodes={args.train_episodes}, "
         f"max_turns={args.max_turns}, update_interval={args.update_interval}, seed={args.seed}, "
         f"skip_unzip={args.skip_unzip}, skip_build={args.skip_build}"
     )

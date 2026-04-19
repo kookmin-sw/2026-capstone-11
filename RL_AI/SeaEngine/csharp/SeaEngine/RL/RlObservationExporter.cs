@@ -237,14 +237,14 @@ public static class RlObservationExporter
         var enemyId = playerId == data.Player1.Id ? data.Player2.Id : data.Player1.Id;
         var mirrorView = ShouldMirrorPerspective(ownLeader, enemyLeader);
         var ownLx = ViewX(ownLeader?.Unit.PosX ?? -1, mirrorView);
-        var ownLy = ViewY(ownLeader?.Unit.PosY ?? -1);
+        var ownLy = ViewY(ownLeader?.Unit.PosY ?? -1, mirrorView);
         var enemyLx = ViewX(enemyLeader?.Unit.PosX ?? -1, mirrorView);
-        var enemyLy = ViewY(enemyLeader?.Unit.PosY ?? -1);
+        var enemyLy = ViewY(enemyLeader?.Unit.PosY ?? -1, mirrorView);
         var vectors = new List<float>();
         var cards = board.OrderBy(card => card.Owner.Id == playerId ? 0 : 1)
             .ThenBy(card => RoleRank(RoleFromCard(card)))
             .ThenBy(card => ViewX(card.Unit.PosX, mirrorView))
-            .ThenBy(card => ViewY(card.Unit.PosY))
+            .ThenBy(card => ViewY(card.Unit.PosY, mirrorView))
             .ThenBy(card => card.Guid.ToString())
             .ToArray();
 
@@ -252,7 +252,7 @@ public static class RlObservationExporter
         {
             var (attackMod, hasMoveLock, hasAttackLock, timedStatusCount) = StatusSummary(card);
             var cx = ViewX(card.Unit.PosX, mirrorView);
-            var cy = ViewY(card.Unit.PosY);
+            var cy = ViewY(card.Unit.PosY, mirrorView);
             var role = RoleFromCard(card);
             var hp = card.Unit.Hp;
             var maxHp = Math.Max(1, card.Unit.MaxHp);
@@ -355,11 +355,11 @@ public static class RlObservationExporter
         var targetCard2 = targetType == "Unit2" && boardByUid.TryGetValue(action.TargetGuid2, out var tgt2) ? tgt2 : null;
 
         var targetX = ViewX(action.PosX, mirrorView);
-        var targetY = ViewY(action.PosY);
+        var targetY = ViewY(action.PosY, mirrorView);
         var sourceX = ViewX(source?.Unit.PosX ?? -1, mirrorView);
-        var sourceY = ViewY(source?.Unit.PosY ?? -1);
+        var sourceY = ViewY(source?.Unit.PosY ?? -1, mirrorView);
         var enemyLx = ViewX(enemyLeader?.Unit.PosX ?? -1, mirrorView);
-        var enemyLy = ViewY(enemyLeader?.Unit.PosY ?? -1);
+        var enemyLy = ViewY(enemyLeader?.Unit.PosY ?? -1, mirrorView);
 
         var (attackMod, hasMoveLock, hasAttackLock, timedStatusCount) = source != null ? StatusSummary(source) : (0.0f, 0.0f, 0.0f, 0.0f);
         var sourceRole = source != null ? RoleFromCard(source) : "";
@@ -595,7 +595,11 @@ public static class RlObservationExporter
         return mirrorView ? Board.BoardSize - 1 - value : value;
     }
 
-    private static int ViewY(int value) => value;
+    private static int ViewY(int value, bool mirrorView)
+    {
+        if (value < 0) return value;
+        return mirrorView ? Board.BoardSize - 1 - value : value;
+    }
 
     private static float Distance(int x1, int y1, int x2, int y2)
     {

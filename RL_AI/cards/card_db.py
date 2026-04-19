@@ -82,6 +82,34 @@ def _resolve_module_relative(path: str | Path) -> Path:
     return (MODULE_DIR / p).resolve()
 
 
+def _infer_world_from_legacy_row(row: Dict[str, str]) -> int:
+    legacy_id = _normalize_text(row.get("ID"))
+    leader_id = _normalize_text(row.get("LeaderID"))
+    for token in (leader_id, legacy_id):
+        if token.startswith("Or_") or token.startswith("Or"):
+            return 2
+        if token.startswith("Cl_") or token.startswith("Cl"):
+            return 3
+        if token.startswith("Default") or token.startswith("Base"):
+            return 1
+    return _normalize_int(row.get("World"), 0)
+
+
+def _legacy_role_from_unit_type(value: Any) -> int:
+    unit_type = _normalize_text(value).upper()
+    mapping = {
+        "L": Role.LEADER,
+        "B": Role.BISHOP,
+        "N": Role.KNIGHT,
+        "R": Role.ROOK,
+        "P": Role.PAWN,
+    }
+    role = mapping.get(unit_type)
+    if role is None:
+        raise ValueError(f"Unsupported legacy UnitType: {value}")
+    return int(role)
+
+
 def _contains_any(text: str, keywords: List[str]) -> bool:
     return any(k in text for k in keywords)
 
@@ -252,15 +280,15 @@ def _read_table_rows(card_data_path: Path) -> List[Dict[str, str]]:
 
     header_index = None
     for idx, row in enumerate(rows):
-        if row and _normalize_text(row[0]) == "CardID":
+        if row and _normalize_text(row[0]) == "ID":
             header_index = idx
             break
 
     if header_index is None:
-        raise ValueError("Could not find header row starting with 'CardID' in card data file.")
+        raise ValueError("Could not find header row starting with 'ID' in card data file.")
 
     headers = [_normalize_text(cell) for cell in rows[header_index]]
-    required_headers = ["CardID", "Name", "World", "Role", "Attack", "Life", "TextCondition", "EffectName", "Effect"]
+    required_headers = ["ID", "Name", "LeaderID", "UnitType", "Atk", "Hp"]
     missing = [h for h in required_headers if h not in headers]
     if missing:
         raise ValueError(f"Missing required headers: {missing}")
@@ -271,7 +299,7 @@ def _read_table_rows(card_data_path: Path) -> List[Dict[str, str]]:
             continue
         padded = list(row) + [""] * max(0, len(headers) - len(row))
         row_dict = {headers[i]: padded[i] for i in range(len(headers)) if headers[i]}
-        if not _normalize_text(row_dict.get("CardID", "")):
+        if not _normalize_text(row_dict.get("ID", "")):
             continue
         out.append(row_dict)
     return out
@@ -283,28 +311,35 @@ def load_card_list(card_data_path: str | Path = "./Cards.csv") -> List[CardDefin
 
     cards: List[CardDefinition] = []
     for row in rows:
-        text = _normalize_text(row.get("Text") or row.get("EventText"))
-        effect = _normalize_text(row.get("Effect"))
-        raw_card_id = _normalize_text(row.get("CardID"))
+        raw_card_id = _normalize_text(row.get("ID"))
         canonical_card_id = CARD_ID_ALIASES.get(raw_card_id, raw_card_id)
+        effect_id = _normalize_text(row.get("EffectID"))
+        event_id = _normalize_text(row.get("EventID"))
+        if not effect_id:
+            effect_id = "PawnGeneric" if _normalize_text(row.get("UnitType")).upper() == "P" else canonical_card_id
+        if not event_id:
+            event_id = canonical_card_id
+        role_value = _legacy_role_from_unit_type(row.get("UnitType"))
+        if role_value == int(Role.PAWN) and effect_id == "":
+            effect_id = "PawnGeneric"
         cards.append(CardDefinition(
             card_id=canonical_card_id,
             name=_normalize_text(row.get("Name")),
-            world=_normalize_int(row.get("World")),
-            role=Role.from_value(row.get("Role")),
-            attack=_normalize_int(row.get("Attack")),
-            life=_normalize_int(row.get("Life")),
-            text_condition=TextCondition.from_value(row.get("TextCondition")),
-            text_name=_normalize_text(row.get("TextName") or row.get("EventName")),
-            text=text,
-            effect_name=_normalize_text(row.get("EffectName")),
-            effect=effect,
-            effect_id=_normalize_text(row.get("EffectID")) or canonical_card_id,
-            event_id=_normalize_text(row.get("EventID")) or canonical_card_id,
-            text_flags=extract_effect_flags(text),
-            effect_flags=extract_effect_flags(effect),
-            text_target_schema=classify_target_schema(text),
-            effect_target_schema=classify_target_schema(effect),
+            world=_infer_world_from_legacy_row(row),
+            role=Role(role_value),
+            attack=_normalize_int(row.get("Atk")),
+            life=_normalize_int(row.get("Hp")),
+            text_condition=TextCondition.ALWAYS,
+            text_name="",
+            text="",
+            effect_name=effect_id,
+            effect="",
+            effect_id=effect_id,
+            event_id=event_id,
+            text_flags=extract_effect_flags(""),
+            effect_flags=extract_effect_flags(""),
+            text_target_schema=classify_target_schema(""),
+            effect_target_schema=classify_target_schema(""),
         ))
     return cards
 

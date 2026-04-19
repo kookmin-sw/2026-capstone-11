@@ -70,8 +70,10 @@ def _view_x(value: int, mirror_view: bool) -> int:
     return (BOARD_SIZE - 1 - value) if mirror_view else value
 
 
-def _view_y(value: int) -> int:
-    return value
+def _view_y(value: int, mirror_view: bool) -> int:
+    if value < 0:
+        return value
+    return (BOARD_SIZE - 1 - value) if mirror_view else value
 
 
 def _should_mirror_view(own_leader: Optional[Dict[str, Any]], enemy_leader: Optional[Dict[str, Any]]) -> bool:
@@ -229,7 +231,7 @@ def _sorted_board_cards(snapshot: Dict[str, Any], player_id: str, mirror_view: b
             0 if card.get("owner") == player_id else 1,
             role_rank.get(_role_from_card(card), 99),
             _view_x(int(card.get("pos_x", -1)), mirror_view),
-            _view_y(int(card.get("pos_y", -1))),
+            _view_y(int(card.get("pos_y", -1)), mirror_view),
             card.get("uid", ""),
         ),
     )
@@ -642,16 +644,16 @@ def _build_board_vector_ctx(ctx: _SnapshotContext) -> List[float]:
     own_leader = ctx.own_leader
     enemy_leader = ctx.enemy_leader
     own_lx = _view_x(int(own_leader.get("pos_x", -1)), ctx.mirror_view) if own_leader else -1
-    own_ly = _view_y(int(own_leader.get("pos_y", -1))) if own_leader else -1
+    own_ly = _view_y(int(own_leader.get("pos_y", -1)), ctx.mirror_view) if own_leader else -1
     enemy_lx = _view_x(int(enemy_leader.get("pos_x", -1)), ctx.mirror_view) if enemy_leader else -1
-    enemy_ly = _view_y(int(enemy_leader.get("pos_y", -1))) if enemy_leader else -1
+    enemy_ly = _view_y(int(enemy_leader.get("pos_y", -1)), ctx.mirror_view) if enemy_leader else -1
 
     vectors: List[float] = []
     cards = _sorted_board_cards(ctx.snapshot, ctx.player_id, ctx.mirror_view)
     for card in cards[:MAX_BOARD_CARDS]:
         attack_mod, has_move_lock, has_attack_lock, timed_status_count = _status_summary_ctx(card)
         cx = _view_x(int(card.get("pos_x", -1)), ctx.mirror_view)
-        cy = _view_y(int(card.get("pos_y", -1)))
+        cy = _view_y(int(card.get("pos_y", -1)), ctx.mirror_view)
         role = _role_from_card(card)
         hp = float(card.get("hp", 0.0))
         max_hp = max(1.0, float(card.get("max_hp", 1.0)))
@@ -750,11 +752,11 @@ def _encode_action_features_ctx(ctx: _SnapshotContext, action: Dict[str, Any]) -
     target_card2 = ctx.board_by_uid.get(str(target.get("guid2", ""))) if target_type == "Unit2" else None
 
     target_x = _view_x(int(target.get("pos_x", -1)), ctx.mirror_view)
-    target_y = _view_y(int(target.get("pos_y", -1)))
+    target_y = _view_y(int(target.get("pos_y", -1)), ctx.mirror_view)
     source_x = _view_x(int(source.get("pos_x", -1)), ctx.mirror_view) if source else -1
-    source_y = _view_y(int(source.get("pos_y", -1))) if source else -1
+    source_y = _view_y(int(source.get("pos_y", -1)), ctx.mirror_view) if source else -1
     enemy_lx = _view_x(int(ctx.enemy_leader.get("pos_x", -1)), ctx.mirror_view) if ctx.enemy_leader else -1
-    enemy_ly = _view_y(int(ctx.enemy_leader.get("pos_y", -1))) if ctx.enemy_leader else -1
+    enemy_ly = _view_y(int(ctx.enemy_leader.get("pos_y", -1)), ctx.mirror_view) if ctx.enemy_leader else -1
 
     attack_mod, has_move_lock, has_attack_lock, timed_status_count = _status_summary_ctx(source) if source else (0.0, 0.0, 0.0, 0.0)
     source_role = _role_from_card(source or {})
@@ -822,9 +824,9 @@ def _build_board_vector(snapshot: Dict[str, Any], player_id: str) -> List[float]
     own_leader, enemy_leader = _get_leaders(snapshot, player_id, enemy_id)
     mirror_view = _should_mirror_view(own_leader, enemy_leader)
     own_lx = _view_x(int(own_leader.get("pos_x", -1)), mirror_view) if own_leader else -1
-    own_ly = _view_y(int(own_leader.get("pos_y", -1))) if own_leader else -1
+    own_ly = _view_y(int(own_leader.get("pos_y", -1)), mirror_view) if own_leader else -1
     enemy_lx = _view_x(int(enemy_leader.get("pos_x", -1)), mirror_view) if enemy_leader else -1
-    enemy_ly = _view_y(int(enemy_leader.get("pos_y", -1))) if enemy_leader else -1
+    enemy_ly = _view_y(int(enemy_leader.get("pos_y", -1)), mirror_view) if enemy_leader else -1
     action_map = _actions_by_source(snapshot)
 
     vectors: List[float] = []
@@ -832,7 +834,7 @@ def _build_board_vector(snapshot: Dict[str, Any], player_id: str) -> List[float]
     for card in cards[:MAX_BOARD_CARDS]:
         attack_mod, has_move_lock, has_attack_lock, timed_status_count = _status_summary(card)
         cx = _view_x(int(card.get("pos_x", -1)), mirror_view)
-        cy = _view_y(int(card.get("pos_y", -1)))
+        cy = _view_y(int(card.get("pos_y", -1)), mirror_view)
         role = _role_from_card(card)
         hp = float(card.get("hp", 0.0))
         max_hp = max(1.0, float(card.get("max_hp", 1.0)))
