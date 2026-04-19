@@ -13,15 +13,10 @@ using UnityEngine;
 using UnityEngine.Purchasing;
 using UnityEngine.SceneManagement;
 
-public class WaitForCallback : CustomYieldInstruction
-{
-    bool _done = false;
-    public override bool keepWaiting => !_done;
-    public void Complete() => _done = true;
-}
 
 
-public class ModeSelectionSceneMain : MonoBehaviour
+
+public class DedicateModeStarter : MonoBehaviour
 {
 
 

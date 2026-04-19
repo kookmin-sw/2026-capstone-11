@@ -347,8 +347,8 @@ namespace Core.StateManagement
             if (string.IsNullOrWhiteSpace(state.owner))
                 throw new ArgumentException("owner is empty", nameof(state));
 
-            if (state.curHp < 0)
-                throw new ArgumentException("curHp must be >= 0", nameof(state));
+            // if (state.curHp < 0)
+            //     throw new ArgumentException("curHp must be >= 0", nameof(state));
 
             if (state.maxHp < 0)
                 throw new ArgumentException("maxHp must be >= 0", nameof(state));

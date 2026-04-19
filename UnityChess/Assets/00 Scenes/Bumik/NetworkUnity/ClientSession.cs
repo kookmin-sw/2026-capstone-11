@@ -17,6 +17,7 @@ public class ClientSession : INetEventHandler
     private ConnId _host = ConnId.Default();
     private SessionEvents _events = new();
     public SessionEvents Events => _events;
+    public ConnId Host => _host;
 
     public ClientSession()
     {
