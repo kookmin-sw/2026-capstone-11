@@ -13,7 +13,7 @@ public class ObserverModeStarter : MonoBehaviour
     [Header("Ref to UI Input")]
     [SerializeField] private TMP_InputField IPaddrInputField;
     [SerializeField] private TMP_InputField PortNumInputField;
-    [SerializeField] private TMP_InputField ObserverKeyInputField;
+    [SerializeField] private string ObserverKey;
 
     [Header("Game Scene Load")]
     [SerializeField] private NetworkManagerUnity netManager;
@@ -97,7 +97,7 @@ public class ObserverModeStarter : MonoBehaviour
         var wait = new WaitForCallback();
         _ = netManager.Net.AsyncRequestQuery(NetEventHandlerId.Constant.ObserverEnter, 
             netManager.Session.Host, 
-            Encoding.UTF8.GetBytes(ObserverKeyInputField.text),
+            Encoding.UTF8.GetBytes(ObserverKey),
             10000,
             (connId, result) =>
             {
