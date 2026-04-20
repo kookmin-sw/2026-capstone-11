@@ -174,6 +174,12 @@ public static class RlObservationExporter
         float ownAttackersOnEnemyLeader = enemyLeader is null ? 0.0f : CountAttackersOfCard(board, enemyLeader);
         float centerControlOwn = ownBoard.Count(card => 2 <= card.Unit.PosX && card.Unit.PosX <= 3 && 2 <= card.Unit.PosY && card.Unit.PosY <= 3);
         float centerControlEnemy = enemyBoard.Count(card => 2 <= card.Unit.PosX && card.Unit.PosX <= 3 && 2 <= card.Unit.PosY && card.Unit.PosY <= 3);
+        float ownPawnProgress = CountPawnProgress(data, board, playerId);
+        float enemyPawnProgress = CountPawnProgress(data, board, enemyId);
+        float ownPawnLastRank = CountPawnLastRank(data, board, playerId);
+        float enemyPawnLastRank = CountPawnLastRank(data, board, enemyId);
+        var ownSpecialEffectFeatures = CountSpecialEffectFeatures(data, board, playerId);
+        var enemySpecialEffectFeatures = CountSpecialEffectFeatures(data, board, enemyId);
 
         var actionCounts = EffectBuckets.ToDictionary(bucket => bucket, _ => 0.0f);
         foreach (var action in actions)
@@ -222,7 +228,13 @@ public static class RlObservationExporter
             NormalizeRatio(ownAttackersOnEnemyLeader, 6.0f),
             NormalizeRatio(centerControlOwn, 4.0f),
             NormalizeRatio(centerControlEnemy, 4.0f),
+            NormalizeRatio(ownPawnProgress, 1.0f),
+            NormalizeRatio(enemyPawnProgress, 1.0f),
+            NormalizeRatio(ownPawnLastRank, 7.0f),
+            NormalizeRatio(enemyPawnLastRank, 7.0f),
         });
+        resultVector.AddRange(ownSpecialEffectFeatures);
+        resultVector.AddRange(enemySpecialEffectFeatures);
         resultVector.AddRange(EffectBuckets.Select(bucket => NormalizeRatio(actionCounts[bucket], actionTotal)));
 
         var boardVector = BuildBoardVector(data, playerId, board, ownLeader, enemyLeader);
@@ -542,6 +554,103 @@ public static class RlObservationExporter
     }
 
     private static float CountEnemyNeighbors(Card[] board, Card card) => CountReadyAttackTargets(board, card);
+
+    private static float CountPawnProgress(GameData data, Card[] board, string ownerId)
+    {
+        var pawns = 0.0f;
+        var progressSum = 0.0f;
+        var ownerIsPlayer1 = ownerId == data.Player1.Id;
+        foreach (var card in board)
+        {
+            if (card.Owner.Id != ownerId) continue;
+            if (RoleFromCard(card) != "Pawn" || !card.Unit.IsPlaced) continue;
+            if (card.Unit.PosX < 0) continue;
+            pawns += 1.0f;
+            progressSum += ownerIsPlayer1
+                ? NormalizeRatio(card.Unit.PosX, Board.BoardSize - 1)
+                : NormalizeRatio((Board.BoardSize - 1) - card.Unit.PosX, Board.BoardSize - 1);
+        }
+        return pawns == 0.0f ? 0.0f : progressSum / pawns;
+    }
+
+    private static float CountPawnLastRank(GameData data, Card[] board, string ownerId)
+    {
+        var ownerIsPlayer1 = ownerId == data.Player1.Id;
+        var lastRank = ownerIsPlayer1 ? Board.BoardSize - 1 : 0;
+        var count = 0.0f;
+        foreach (var card in board)
+        {
+            if (card.Owner.Id != ownerId) continue;
+            if (RoleFromCard(card) != "Pawn" || !card.Unit.IsPlaced) continue;
+            if (card.Unit.PosX == lastRank) count += 1.0f;
+        }
+        return count;
+    }
+
+    private static float[] CountSpecialEffectFeatures(GameData data, Card[] board, string ownerId)
+    {
+        var enemyId = ownerId == data.Player1.Id ? data.Player2.Id : data.Player1.Id;
+        var enemyZone = ownerId == data.Player1.Id ? Board.BoardSize - 1 : 0;
+        var enemyCards = board
+            .Where(card => card.Unit.IsPlaced && card.Owner.Id == enemyId)
+            .ToArray();
+        var enemyPositions = enemyCards
+            .Select(card => (card.Unit.PosX, card.Unit.PosY))
+            .ToHashSet();
+
+        float orNCount = 0.0f;
+        float orNBestEnemyCount = 0.0f;
+        float orNChainReady = 0.0f;
+        float clBCount = 0.0f;
+        float clBBestEnemyCount = 0.0f;
+        float clPCount = 0.0f;
+        float clPReady = 0.0f;
+
+        foreach (var card in board)
+        {
+            if (!card.Unit.IsPlaced || card.Owner.Id != ownerId) continue;
+            var cardId = card.Data.Id;
+            var area = data.GetMoveArea(card);
+            var enemyCount = area.Count(pos => enemyPositions.Contains(pos));
+
+            if (cardId == "Or_N")
+            {
+                orNCount += 1.0f;
+                orNBestEnemyCount = Math.Max(orNBestEnemyCount, enemyCount);
+                var attack = card.Unit.Atk + (card.Unit.Buffs.TryGetValue("TempAtk", out var atkBuff) ? atkBuff : 0);
+                var killableInArea = enemyCards.Any(enemy =>
+                    area.Contains((enemy.Unit.PosX, enemy.Unit.PosY)) && enemy.Unit.Hp > 0 && enemy.Unit.Hp <= attack);
+                if (enemyCount >= 2.0f && killableInArea)
+                {
+                    orNChainReady += 1.0f;
+                }
+            }
+            else if (cardId == "Cl_B")
+            {
+                clBCount += 1.0f;
+                clBBestEnemyCount = Math.Max(clBBestEnemyCount, enemyCount);
+            }
+            else if (cardId == "Cl_P")
+            {
+                clPCount += 1.0f;
+                if (card.Unit.PosX == enemyZone)
+                {
+                    clPReady += 1.0f;
+                }
+            }
+        }
+
+        return new[]
+        {
+            NormalizeRatio(orNCount, 7.0f),
+            NormalizeRatio(orNBestEnemyCount, 6.0f),
+            NormalizeRatio(orNChainReady, 7.0f),
+            NormalizeRatio(clBCount, 7.0f),
+            NormalizeRatio(clBBestEnemyCount, 6.0f),
+            NormalizeRatio(clPCount, 7.0f),
+            NormalizeRatio(clPReady, 7.0f),
+        };
+    }
 
     private static (float attackMod, float hasMoveLock, float hasAttackLock, float timedStatusCount) StatusSummary(Card card)
     {

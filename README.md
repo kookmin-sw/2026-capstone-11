@@ -55,9 +55,9 @@ RL_AI/server_ai_client.py
 학습 전 RL vs random/greedy/자기자신 8개 조합 50판씩 -> 총 1200판  
 1~2000판 학습(상대는 커리큘럼에 따라 횟수 다를 수 있음, 정확히 같은 횟수는 기본은 반반이지만 커리큘럼에 따라 조금씩 보정. 불리한 상태도 학습하기 위해 다음 비율을 사용)
 
-- 1~2000판: `normal 80% / slight 15% / heavy 5%`
-- 2001~6000판: `normal 70% / slight 20% / heavy 10%`
-- 6001~10000판: `normal 60% / slight 25% / heavy 15%`
+- 1~2000판: `normal 70% / slight 20% / heavy 10%`
+- 2001~6000판: `normal 50% / slight 25% / heavy 25%`
+- 6001~10000판: `normal 40% / slight 25% / heavy 35%`
 
 정의는 다음과 같다.
 
@@ -73,9 +73,9 @@ RL_AI/server_ai_client.py
 
 체크포인트 저장  
 체크포인트별 평가 800판(greedy/자기자신 상대로 8개 조합 50판씩)  
-2001~4000판 학습(1~2000판과 동일)  
+2001~4000판 학습(12000판과 동일)  
 ...  
-8001~10000판 학습(1~2000판과 동일)  
+8001~10000판 학습(12000판과 동일)  
 체크포인트 저장  
 10000판 학습 완료 후에는 체크포인트별 평가는 하지 않음 -> 학습 후 random/greedy/자기자신으로 대응  
 학습 후 RL vs random/greedy/자기자신 8개 조합 50판씩 -> 총 1200판  
@@ -102,10 +102,10 @@ random/greedy/RL 각각 slight deficit / heavy deficit 8조합 50판씩 -> 2400�
 
 ### `<start.py>`
 
-1. 학습 전 vs Random, Greedy 8조합 승률 및 정보 전체  
-2. 학습 후 vs Random, Greedy 8조합 승률 및 정보 전체  
+1. 학습 전 vs Random, Greedy, 자기자신 8조합 승률 및 정보 전체  
+2. 학습 후 vs Random, Greedy, 자기자신 8조합 승률 및 정보 전체  
 3. 체크포인트별 vs Random, Greedy, 자기자신 8조합 승률 및 정보 전체  
-4. 학습 후 vs Random, Greedy 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석
+4. 학습 후 vs Random, Greedy, 자기자신 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석
 
 ### `<make_balance.py>`
 
@@ -161,9 +161,9 @@ random/greedy/RL 각각 slight deficit / heavy deficit 8조합 50판씩 -> 2400�
 
 학습은 random, greedy, 최근 self-play를 섞는 커리큘럼이다.
 
-- 초반: random 중심이지만 greedy와 self-play도 함께 섞음
-- 중반: random + greedy + 최근 self-play + 불리한 시작 상태를 조금씩 섞음
-- 후반: random + greedy + 최근 self-play + 불리한 시작 상태 비중을 더 늘림
+- 초반: `normal 70% / slight 20% / heavy 10%`
+- 중반: `normal 50% / slight 25% / heavy 25%`
+- 후반: `normal 40% / slight 25% / heavy 35%`
 
 중요한 점은 greedy-heavy fine-tuning이 아니라,
 균형과 범용성을 유지하면서 강한 정책을 만드는 것이다.
@@ -277,10 +277,10 @@ AI가 action Uid를 응답하는 TCP 클라이언트다.
 
 ### `start.py`
 
-1. 학습 전 vs Random, Greedy 8조합 승률 및 정보 전체
-2. 학습 후 vs Random, Greedy 8조합 승률 및 정보 전체
-3. 체크포인트별 vs Random, Greedy 8조합 승률 및 정보 전체
-4. 학습 후 vs Random, Greedy 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석
+1. 학습 전 vs Random, Greedy, 자기자신 8조합 승률 및 정보 전체
+2. 학습 후 vs Random, Greedy, 자기자신 8조합 승률 및 정보 전체
+3. 체크포인트별 vs Random, Greedy, 자기자신 8조합 승률 및 정보 전체
+4. 학습 후 vs Random, Greedy, 자기자신 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석
 
 ### `make_balance.py`
 
@@ -307,13 +307,25 @@ self-play balance도 예전처럼 붕괴하지는 않는다.
 
 예시로 최근 분석에서는 다음이 관찰됐다.
 
-- overall self-play가 거의 50% 근처
-- draw가 크게 감소
-- 평균 step과 final turn이 줄어듦
-- 한쪽 조합에서 완전히 무너지는 모습은 크게 완화됨
-- normalize 관찰은 raw보다 대칭성이 좋다.
-- raw는 때때로 약간 더 높은 승률을 보여도 일관성은 떨어진다.
-- 불리한 시작 상태를 섞으면 뒤진 판에서 버티는 능력을 따로 측정하고 개선할 수 있다.
+마지막 실행에 대한 로그 분석입니다.
+
+start.py 관련 로그 -> 학습 전후 성능 비교(vs random, greedy, 과거의 자기자신 성능 지표)
+- 학습 이후 확실히 승률이 오른다. vs greedy는 58.8% 승률을 보인다. 매우 불리한 상태에서 시작해도 57.0% 이긴다.
+- 대신 4000판 학습한 자기자신한테는 30%도 못 이기는 이상한 결과도 있다.
+- 선공의 첫 턴 이동 불가 제약이 있음에도 오히려 선/후공 차이가 더 커졌다.
+- 전처럼 후공/샤를/다른 덱으로 했을 때도 100% 진다는 건 이제 없고 random에게는 이제 모든 경우의 수에서 크게 이긴다.
+- 다만 greedy에게는 후공/샤를/다른 덱으로 했을 때 여전히 밀린다.
+
+make_balance.py 관련 로그 -> 밸런스 지표(vs 학습 완료된 자기자신)
+- 이쪽도 이제 100:0으로 지는 건 없다. 대신 여전히 편차는 많이 크다.
+- 특이사항으로는 후공/샤를/같은 덱 승률이 후공/샤를/다른 덱 승률보다 낮아졌다.
+
+bias_check.py 관련 로그 -> 덱, 선/후공 승률 차이, P2를 P1 시점으로 정규화했을 때와 안 했을 때의 차이
+- random vs random, greedy vs greedy, RL vs RL 모두 8개 조합(선/후공, 나 귤/샤를, 상대 귤/샤를)의 승률 차이가 비슷하다.
+- 근데 다 불규칙하다는 점이 비슷하다.
+- RL vs RL은 불리한 상태로 시작하나 동일하게 시작하나 비슷한 결과가 나온다는 게 이번에 큰 발전이다.
+- 이에 반해 random vs random, greedy vs greedy는 덱별 승률이 좀 더 뒤죽박죽이다. 즉 RL vs RL의 승률 일관성이 생겼다고 볼 수 있다.
+- 시점 normalize와 raw의 승률, 일치율을 확인해봤을 때 raw가 특정 조합에 더 극단적으로 치우치고, normalize는 완만하다. normalize 쓰는 게 더 낫다.
 
 즉, 지금 모델은:
 

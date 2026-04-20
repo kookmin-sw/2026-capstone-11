@@ -86,6 +86,22 @@ def _release_lock(lock_path: Path) -> None:
         pass
 
 
+def _dotnet_root_from_cmd(dotnet_cmd: str) -> str:
+    try:
+        info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
+        for line in info.stdout.splitlines():
+            if "Base Path:" in line:
+                base_path = line.split("Base Path:", 1)[1].strip()
+                base_dir = Path(base_path).resolve().parents[1]
+                return str(base_dir)
+    except Exception:
+        pass
+    cmd_path = Path(dotnet_cmd).resolve()
+    if cmd_path.parent.name == "bin" and cmd_path.parent.parent.name:
+        return str(cmd_path.parent.parent)
+    return str(cmd_path.parent)
+
+
 def _ensure_dotnet() -> str:
     home = Path.home()
     candidates: list[str] = []
@@ -114,6 +130,38 @@ def _ensure_dotnet() -> str:
             return dotnet_cmd
         except (subprocess.CalledProcessError, FileNotFoundError):
             continue
+
+    if os.name != "nt":
+        install_steps = [
+            ["sudo", "apt", "update"],
+            ["sudo", "apt", "install", "-y", "dotnet-sdk-10.0"],
+        ]
+        for step in install_steps:
+            try:
+                completed = subprocess.run(
+                    step,
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                    env={**os.environ, "DEBIAN_FRONTEND": "noninteractive"},
+                )
+                if completed.stdout:
+                    print(completed.stdout)
+                if completed.stderr:
+                    print(completed.stderr)
+                if completed.returncode != 0:
+                    raise RuntimeError(f"{' '.join(step)} failed with exit code {completed.returncode}")
+            except Exception as exc:
+                print(f"[!] dotnet auto-install step failed: {' '.join(step)} :: {exc}")
+                break
+
+        for dotnet_cmd in candidates:
+            try:
+                info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
+                print(info.stdout)
+                return dotnet_cmd
+            except (subprocess.CalledProcessError, FileNotFoundError):
+                continue
 
     print(
         "[!] No usable dotnet command found. Tried: "
@@ -367,9 +415,11 @@ def _run_train_eval(
             dotnet_cmd = str(fallback)
     if dotnet_cmd:
         os.environ["DOTNET_CMD"] = dotnet_cmd
-        dotnet_root = str(Path(dotnet_cmd).resolve().parent)
-        os.environ.setdefault("DOTNET_ROOT", dotnet_root)
-        os.environ.setdefault("DOTNET_ROOT_X64", dotnet_root)
+        dotnet_root = _dotnet_root_from_cmd(dotnet_cmd)
+        os.environ["DOTNET_ROOT"] = dotnet_root
+        os.environ["DOTNET_ROOT_X64"] = dotnet_root
+        print(f"[*] dotnet command: {dotnet_cmd}")
+        print(f"[*] dotnet root: {dotnet_root}")
 
     for module_name in list(sys.modules):
         if module_name == "RL_AI" or module_name.startswith("RL_AI."):
@@ -393,21 +443,37 @@ def _run_train_eval(
         resume_model_path=resume_model_path or None,
         resume_episodes_completed=resume_episodes_completed if resume_model_path else None,
         resume_skip_pre_eval=resume_skip_pre_eval,
+        summary_report_path=str(Path.home() / "RL_AI" / "log" / "start_summary.txt"),
     )
 
     latest_log_zip = _publish_latest_artifact(
         result.get("log_zip_path"),
         Path.home() / "RL_AI" / "log" / "start_latest.zip",
     )
+    summary_copy = _publish_latest_artifact(
+        result.get("summary_report_path"),
+        Path.home() / "RL_AI" / "log" / "start_summary.txt",
+    )
+    histories_copy = _publish_latest_artifact(
+        result.get("log_zip_path"),
+        Path.home() / "RL_AI" / "log" / "start_histories.zip",
+    )
     latest_model_zip = _publish_latest_artifact(
         result.get("model_zip_path"),
         Path.home() / "RL_AI" / "models" / "start_latest.zip",
+    )
+    model_copy = _publish_latest_artifact(
+        result.get("model_zip_path"),
+        Path.home() / "RL_AI" / "models" / "start_model.zip",
     )
 
     print("=== SeaEngine Train/Eval Experiment ===")
     print(result["train"])
     print(f"artifact log zip: {latest_log_zip}")
+    print(f"artifact summary: {summary_copy}")
+    print(f"artifact histories: {histories_copy}")
     print(f"artifact model zip: {latest_model_zip}")
+    print(f"artifact model alias: {model_copy}")
 
 
 def main() -> int:

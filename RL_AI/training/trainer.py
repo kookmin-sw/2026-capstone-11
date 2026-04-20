@@ -25,7 +25,12 @@ from RL_AI.SeaEngine.bridge.seaengine_session import SeaEngineSession
 from RL_AI.SeaEngine.bridge.vector_env import VectorSeaEngineEnv
 from RL_AI.training.evaluator import evaluate_agents
 from RL_AI.training.reward import dense_reward_from_transition, terminal_reward_for_player
-from RL_AI.training.start_state import classify_deficit_mode, meets_deficit_target
+from RL_AI.training.start_state import (
+    build_burnin_agents,
+    classify_deficit_mode,
+    meets_deficit_target,
+    sample_burnin_profile,
+)
 from RL_AI.analysis.reports import build_win_rate_report
 from RL_AI.training.storage import RolloutBuffer, RolloutStep
 
@@ -322,8 +327,8 @@ class SeaEnginePPOTrainer:
         max_turns: int = 100,
     ) -> Dict[str, object]:
         num_envs = env.num_envs
-        opening_noise_turns = max(0, int(os.getenv("SEAENGINE_OPENING_NOISE_TURNS", "2")))
-        opening_noise_prob = float(os.getenv("SEAENGINE_OPENING_NOISE_PROB", "0.12"))
+        opening_noise_turns = max(0, int(os.getenv("SEAENGINE_OPENING_NOISE_TURNS", "4")))
+        opening_noise_prob = float(os.getenv("SEAENGINE_OPENING_NOISE_PROB", "0.25"))
         configs = []
         opponents = []
         ai_ids = []
@@ -379,13 +384,27 @@ class SeaEnginePPOTrainer:
             for i in range(num_envs):
                 start_mode_lookup[i] = "normal"
 
-        burnin_turn_limits = {"normal": 0, "slight": 2, "heavy": 4}
+        burnin_turn_limits = {"normal": 0, "slight": 3, "heavy": 5}
         burnin_actions = [0] * num_envs
         burnin_turn_ends = [0] * num_envs
         burnin_done = [start_mode_lookup[i] == "normal" for i in range(num_envs)]
         burnin_actual_modes = ["normal"] * num_envs
-        burnin_focus_agent = SeaEngineRandomAgent(seed=episode_start_idx + 13001)
-        burnin_enemy_agent = SeaEngineGreedyAgent(seed=episode_start_idx + 13002)
+        burnin_profiles = ["fixed"] * num_envs
+        burnin_profile_counts: Counter[str] = Counter()
+        burnin_focus_agents = [SeaEngineRandomAgent(seed=episode_start_idx + 13001 + i) for i in range(num_envs)]
+        burnin_enemy_agents = [SeaEngineGreedyAgent(seed=episode_start_idx + 13002 + i) for i in range(num_envs)]
+        for i in range(num_envs):
+            mode = start_mode_lookup[i]
+            if mode == "normal":
+                profile = "fixed"
+            else:
+                profile = sample_burnin_profile(mode, seed=episode_start_idx + 13011 + i)
+            burnin_profiles[i] = profile
+            burnin_profile_counts[profile] += 1
+            if profile != "fixed":
+                focus_agent, enemy_agent = build_burnin_agents(profile, seed=episode_start_idx + 13021 + i)
+                burnin_focus_agents[i] = focus_agent
+                burnin_enemy_agents[i] = enemy_agent
 
         while not all(burnin_done):
             cmds = [None] * num_envs
@@ -413,7 +432,7 @@ class SeaEnginePPOTrainer:
                 if not legal_actions:
                     burnin_done[i] = True
                     continue
-                acting_agent = burnin_focus_agent if snap["active_player"] == "AI" else burnin_enemy_agent
+                acting_agent = burnin_focus_agents[i] if snap["active_player"] == "AI" else burnin_enemy_agents[i]
                 _, action = choose_action_with_agent(acting_agent, snap)
                 cmds[i] = ("apply_action", {"action_uid": action["uid"]})
                 burnin_actions[i] += 1
@@ -463,13 +482,14 @@ class SeaEnginePPOTrainer:
                     results[i] = {
                         "buffer": buffers[i],
                         "result": snap["result"],
-                        "steps": step_counts[i],
-                        "final_turn": snap["turn"],
-                        "ai_won": snap.get("winner_id") == ai_ids[i],
-                        "opponent_name": opponents[i].name,
-                        "start_mode_requested": start_mode_lookup.get(i, "normal"),
-                        "start_mode_actual": burnin_actual_modes[i],
-                    }
+                    "steps": step_counts[i],
+                    "final_turn": snap["turn"],
+                    "ai_won": snap.get("winner_id") == ai_ids[i],
+                    "opponent_name": opponents[i].name,
+                    "start_mode_requested": start_mode_lookup.get(i, "normal"),
+                    "start_mode_actual": burnin_actual_modes[i],
+                    "burnin_profile": burnin_profiles[i],
+                }
                     active_envs.remove(i)
                     continue
 
@@ -553,7 +573,10 @@ class SeaEnginePPOTrainer:
                             )
                         snapshots[i] = new_snapshots[i]
 
-        return {"results": results}
+        return {
+            "results": results,
+            "burnin_profile_stats": dict(sorted(burnin_profile_counts.items())),
+        }
 
     def train(
         self,
@@ -596,6 +619,7 @@ class SeaEnginePPOTrainer:
         opponent_outcomes_total: Dict[str, Counter[str]] = defaultdict(Counter)
         requested_start_modes_total: Counter[str] = Counter()
         actual_start_modes_total: Counter[str] = Counter()
+        burnin_profile_counts_total: Counter[str] = Counter()
         try:
             parallel_desc = env.describe_parallelism()
             print(f"[*] Starting Training: {num_episodes} episodes | Device: {self.agent.device} | Envs: {num_envs} (PythonNet)")
@@ -633,6 +657,9 @@ class SeaEnginePPOTrainer:
                         max_turns=max_turns,
                     )
                     rollouts = list(collect_pack.get("results", []))
+                    burnin_profile_counts_total.update(
+                        Counter({str(k): int(v) for k, v in dict(collect_pack.get("burnin_profile_stats", {})).items()})
+                    )
                 except Exception as e:
                     print(f"  [!] Vector Engine crashed during batch {episode_start_idx}. Restarting envs... ({e})")
                     env.close()
@@ -722,6 +749,7 @@ class SeaEnginePPOTrainer:
             "requested": dict(sorted(requested_start_modes_total.items())),
             "actual": dict(sorted(actual_start_modes_total.items())),
         }
+        results["burnin_profile_stats"] = dict(sorted(burnin_profile_counts_total.items()))
         return results
 
     def build_default_opponent_pool(self, *, seed: Optional[int] = None) -> List[SeaEngineAgent]:

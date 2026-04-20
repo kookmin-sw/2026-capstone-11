@@ -79,6 +79,8 @@ def _resolve_module_relative(path: str | Path) -> Path:
     p = Path(path)
     if p.is_absolute():
         return p
+    if p.exists():
+        return p.resolve()
     return (MODULE_DIR / p).resolve()
 
 
@@ -295,7 +297,7 @@ def _read_table_rows(card_data_path: Path) -> List[Dict[str, str]]:
 
     out: List[Dict[str, str]] = []
     for row in rows[header_index + 1:]:
-        if not row:
+        if not row or not any(_normalize_text(cell) for cell in row):
             continue
         padded = list(row) + [""] * max(0, len(headers) - len(row))
         row_dict = {headers[i]: padded[i] for i in range(len(headers)) if headers[i]}

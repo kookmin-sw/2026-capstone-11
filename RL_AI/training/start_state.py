@@ -2,9 +2,11 @@ from __future__ import annotations
 
 """Helpers for curriculum warm-start states and deficit classification."""
 
+import random
 from typing import Any, Dict, Optional, Tuple
 
 from RL_AI.SeaEngine.action_adapter import choose_action_with_agent
+from RL_AI.agents import SeaEngineGreedyAgent, SeaEngineRandomAgent
 
 _DEFICIT_ORDER = {"normal": 0, "slight": 1, "heavy": 2}
 
@@ -71,6 +73,34 @@ def _mode_rank(mode: str) -> int:
     return _DEFICIT_ORDER.get(str(mode).strip().lower(), 0)
 
 
+def sample_burnin_profile(target_mode: str, *, seed: Optional[int] = None) -> str:
+    normalized_mode = str(target_mode or "normal").strip().lower()
+    if normalized_mode == "normal":
+        return "fixed"
+    rng = random.Random(seed)
+    if normalized_mode == "heavy":
+        profiles = ["gr", "rg", "gg", "rr"]
+        weights = [0.35, 0.25, 0.20, 0.20]
+    else:
+        profiles = ["rg", "gr", "rr", "gg"]
+        weights = [0.35, 0.25, 0.25, 0.15]
+    return rng.choices(profiles, weights=weights, k=1)[0]
+
+
+def build_burnin_agents(profile: str, *, seed: Optional[int] = None) -> Tuple[Any, Any]:
+    normalized = str(profile or "fixed").strip().lower()
+    rng_seed = 0 if seed is None else int(seed)
+    if normalized == "rg":
+        return SeaEngineRandomAgent(seed=rng_seed), SeaEngineGreedyAgent(seed=rng_seed + 1)
+    if normalized == "gr":
+        return SeaEngineGreedyAgent(seed=rng_seed), SeaEngineRandomAgent(seed=rng_seed + 1)
+    if normalized == "rr":
+        return SeaEngineRandomAgent(seed=rng_seed), SeaEngineRandomAgent(seed=rng_seed + 1)
+    if normalized == "gg":
+        return SeaEngineGreedyAgent(seed=rng_seed), SeaEngineGreedyAgent(seed=rng_seed + 1)
+    return SeaEngineRandomAgent(seed=rng_seed), SeaEngineGreedyAgent(seed=rng_seed + 1)
+
+
 def meets_deficit_target(actual_mode: str, target_mode: str) -> bool:
     return _mode_rank(actual_mode) >= _mode_rank(target_mode)
 
@@ -82,6 +112,8 @@ def burn_in_to_deficit_mode(
     target_mode: str,
     focus_agent,
     enemy_agent,
+    burnin_profile: str = "fixed",
+    burnin_seed: Optional[int] = None,
     max_actions: int = 48,
     max_turn_ends: int = 4,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
@@ -100,6 +132,10 @@ def burn_in_to_deficit_mode(
 
     burnin_actions = 0
     burnin_turn_ends = 0
+    profile = str(burnin_profile or "fixed").strip().lower()
+    if profile != "fixed":
+        profile = sample_burnin_profile(target_mode_normalized, seed=burnin_seed)
+        focus_agent, enemy_agent = build_burnin_agents(profile, seed=burnin_seed)
     while snapshot.get("result") == "Ongoing" and burnin_actions < max_actions and burnin_turn_ends < max_turn_ends:
         actual_mode = classify_deficit_mode(snapshot, focus_player_id)
         if meets_deficit_target(actual_mode, target_mode_normalized) and burnin_actions > 0:

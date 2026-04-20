@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Sequence
 BOARD_SIZE = 6
 MAX_BOARD_CARDS = 14
 MAX_HAND_CARDS = 7
-GLOBAL_FEATURE_DIM = 43
+GLOBAL_FEATURE_DIM = 57
 BOARD_TOKEN_DIM = 31
 HAND_TOKEN_DIM = 10
 
@@ -367,6 +367,10 @@ def _build_global_vector(snapshot: Dict[str, Any], player_id: str) -> List[float
         for card in enemy_board
         if 2 <= int(card.get("pos_x", -1)) <= 3 and 2 <= int(card.get("pos_y", -1)) <= 3
     )
+    own_pawn_progress = _pawn_progress(snapshot, player_id)
+    enemy_pawn_progress = _pawn_progress(snapshot, enemy_id)
+    own_pawn_last_rank = float(_pawn_last_rank_count(snapshot, player_id))
+    enemy_pawn_last_rank = float(_pawn_last_rank_count(snapshot, enemy_id))
 
     action_counts = {bucket: 0.0 for bucket in EFFECT_BUCKETS}
     actions = snapshot.get("actions", [])
@@ -411,6 +415,12 @@ def _build_global_vector(snapshot: Dict[str, Any], player_id: str) -> List[float
         _normalize_ratio(own_attackers_on_enemy_leader, 6.0),
         _normalize_ratio(center_control_own, 4.0),
         _normalize_ratio(center_control_enemy, 4.0),
+        _normalize_ratio(own_pawn_progress, 1.0),
+        _normalize_ratio(enemy_pawn_progress, 1.0),
+        _normalize_ratio(own_pawn_last_rank, 7.0),
+        _normalize_ratio(enemy_pawn_last_rank, 7.0),
+        *_special_effect_features(snapshot, player_id),
+        *_special_effect_features(snapshot, enemy_id),
         *[_normalize_ratio(action_counts[bucket], action_total) for bucket in EFFECT_BUCKETS],
     ]
 
@@ -445,6 +455,154 @@ def _count_actions_ctx(ctx: _SnapshotContext, effect_id: str) -> float:
         if str(action.get("effect_id", "")) == effect_id:
             count += 1.0
     return count
+
+
+def _card_id(card: Dict[str, Any]) -> str:
+    return str(card.get("card_id", card.get("id", card.get("name", ""))))
+
+
+def _player1_id(snapshot: Dict[str, Any]) -> str:
+    players = snapshot.get("players", [])
+    if not players:
+        return ""
+    return str(players[0].get("id", ""))
+
+
+def _player2_id(snapshot: Dict[str, Any]) -> str:
+    players = snapshot.get("players", [])
+    if len(players) < 2:
+        return ""
+    return str(players[1].get("id", ""))
+
+
+def _move_area_for_card(card: Dict[str, Any]) -> set[tuple[int, int]]:
+    x = int(card.get("pos_x", -1))
+    y = int(card.get("pos_y", -1))
+    if x < 0 or y < 0:
+        return set()
+    role = _role_from_card(card)
+    cells: set[tuple[int, int]] = set()
+    if role == "Leader":
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                if dx == 0 and dy == 0:
+                    continue
+                nx = x + dx
+                ny = y + dy
+                if 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE:
+                    cells.add((nx, ny))
+    elif role == "Knight":
+        for dx, dy in ((2, -1), (2, 1), (1, -2), (1, 2), (-1, -2), (-1, 2), (-2, -1), (-2, 1)):
+            nx = x + dx
+            ny = y + dy
+            if 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE:
+                cells.add((nx, ny))
+    elif role in {"Bishop", "Queen"}:
+        for dx, dy in ((-1, -1), (-1, 1), (1, 1), (1, -1)):
+            cx, cy = x, y
+            while True:
+                cx += dx
+                cy += dy
+                if not (0 <= cx < BOARD_SIZE and 0 <= cy < BOARD_SIZE):
+                    break
+                cells.add((cx, cy))
+    return cells
+
+
+def _pawn_progress(snapshot: Dict[str, Any], owner_id: str) -> float:
+    pawns = 0
+    progress_sum = 0.0
+    p1_id = _player1_id(snapshot)
+    for card in snapshot.get("board", []):
+        if str(card.get("owner", "")) != owner_id:
+            continue
+        if _role_from_card(card) != "Pawn" or not bool(card.get("is_placed", False)):
+            continue
+        x = int(card.get("pos_x", -1))
+        if x < 0:
+            continue
+        pawns += 1
+        if owner_id == p1_id:
+            progress_sum += _normalize_ratio(float(x), BOARD_SIZE - 1)
+        else:
+            progress_sum += _normalize_ratio(float((BOARD_SIZE - 1) - x), BOARD_SIZE - 1)
+    return 0.0 if pawns == 0 else progress_sum / float(pawns)
+
+
+def _pawn_last_rank_count(snapshot: Dict[str, Any], owner_id: str) -> int:
+    p1_id = _player1_id(snapshot)
+    last_rank = BOARD_SIZE - 1 if owner_id == p1_id else 0
+    count = 0
+    for card in snapshot.get("board", []):
+        if str(card.get("owner", "")) != owner_id:
+            continue
+        if _role_from_card(card) != "Pawn" or not bool(card.get("is_placed", False)):
+            continue
+        if int(card.get("pos_x", -1)) == last_rank:
+            count += 1
+    return count
+
+
+def _special_effect_features(snapshot: Dict[str, Any], owner_id: str) -> List[float]:
+    enemy_id = next((str(player.get("id", "")) for player in snapshot.get("players", []) if str(player.get("id", "")) != owner_id), "")
+    if not enemy_id:
+        return [0.0] * 7
+
+    p1_id = _player1_id(snapshot)
+    enemy_zone = BOARD_SIZE - 1 if owner_id == p1_id else 0
+    enemy_positions = {
+        (int(card.get("pos_x", -1)), int(card.get("pos_y", -1)))
+        for card in snapshot.get("board", [])
+        if str(card.get("owner", "")) == enemy_id and bool(card.get("is_placed", False))
+    }
+    enemy_cards = [
+        card
+        for card in snapshot.get("board", [])
+        if str(card.get("owner", "")) == enemy_id and bool(card.get("is_placed", False))
+    ]
+
+    or_n_count = 0.0
+    or_n_best_enemy_count = 0.0
+    or_n_chain_ready = 0.0
+    cl_b_count = 0.0
+    cl_b_best_enemy_count = 0.0
+    cl_p_count = 0.0
+    cl_p_ready = 0.0
+
+    for card in snapshot.get("board", []):
+        if str(card.get("owner", "")) != owner_id or not bool(card.get("is_placed", False)):
+            continue
+        card_id = _card_id(card)
+        area = _move_area_for_card(card)
+        enemy_count = sum(1.0 for pos in area if pos in enemy_positions)
+        if card_id == "Or_N":
+            or_n_count += 1.0
+            or_n_best_enemy_count = max(or_n_best_enemy_count, enemy_count)
+            attack = float(card.get("effective_atk", card.get("atk", 0.0)))
+            killable_in_area = any(
+                float(enemy.get("hp", 0.0)) <= attack
+                for enemy in enemy_cards
+                if (int(enemy.get("pos_x", -1)), int(enemy.get("pos_y", -1))) in area
+            )
+            if enemy_count >= 2.0 and killable_in_area:
+                or_n_chain_ready += 1.0
+        elif card_id == "Cl_B":
+            cl_b_count += 1.0
+            cl_b_best_enemy_count = max(cl_b_best_enemy_count, enemy_count)
+        elif card_id == "Cl_P":
+            cl_p_count += 1.0
+            if int(card.get("pos_x", -1)) == enemy_zone:
+                cl_p_ready += 1.0
+
+    return [
+        _normalize_ratio(or_n_count, 7.0),
+        _normalize_ratio(or_n_best_enemy_count, 6.0),
+        _normalize_ratio(or_n_chain_ready, 7.0),
+        _normalize_ratio(cl_b_count, 7.0),
+        _normalize_ratio(cl_b_best_enemy_count, 6.0),
+        _normalize_ratio(cl_p_count, 7.0),
+        _normalize_ratio(cl_p_ready, 7.0),
+    ]
 
 
 def _count_attackers_of_card_ctx(ctx: _SnapshotContext, target_card: Optional[Dict[str, Any]]) -> float:
@@ -636,6 +794,8 @@ def _build_global_vector_ctx(ctx: _SnapshotContext) -> List[float]:
         _normalize_ratio(enemy_pawn_progress, 1.0),
         _normalize_ratio(own_pawn_last_rank, 7.0),
         _normalize_ratio(enemy_pawn_last_rank, 7.0),
+        *_special_effect_features(ctx.snapshot, ctx.player_id),
+        *_special_effect_features(ctx.snapshot, ctx.enemy_id),
         *[_normalize_ratio(action_counts[bucket], action_total) for bucket in EFFECT_BUCKETS],
     ]
 

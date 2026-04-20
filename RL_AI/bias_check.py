@@ -59,6 +59,45 @@ def _setup_logger(log_file: Path) -> None:
     print(f"[*] log file: {log_file}")
 
 
+def _install_dotnet_sdk() -> None:
+    if os.name == "nt":
+        return
+    install_steps = [
+        ["sudo", "apt", "update"],
+        ["sudo", "apt", "install", "-y", "dotnet-sdk-10.0"],
+    ]
+    for step in install_steps:
+        completed = subprocess.run(
+            step,
+            check=False,
+            capture_output=True,
+            text=True,
+            env={**os.environ, "DEBIAN_FRONTEND": "noninteractive"},
+        )
+        if completed.stdout:
+            print(completed.stdout)
+        if completed.stderr:
+            print(completed.stderr)
+        if completed.returncode != 0:
+            print(f"[!] dotnet auto-install step failed: {' '.join(step)} :: exit {completed.returncode}")
+            break
+
+
+def _dotnet_root_from_cmd(dotnet_cmd: str) -> str:
+    try:
+        info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
+        for line in info.stdout.splitlines():
+            if "Base Path:" in line:
+                base_path = line.split("Base Path:", 1)[1].strip()
+                return str(Path(base_path).resolve().parents[1])
+    except Exception:
+        pass
+    cmd_path = Path(dotnet_cmd).resolve()
+    if cmd_path.parent.name == "bin" and cmd_path.parent.parent.name:
+        return str(cmd_path.parent.parent)
+    return str(cmd_path.parent)
+
+
 def _ensure_dotnet() -> str:
     home = Path.home()
     candidates: list[str] = []
@@ -80,6 +119,15 @@ def _ensure_dotnet() -> str:
         if candidate and candidate not in candidates:
             candidates.append(candidate)
 
+    for dotnet_cmd in candidates:
+        try:
+            info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
+            print(info.stdout)
+            return dotnet_cmd
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            continue
+
+    _install_dotnet_sdk()
     for dotnet_cmd in candidates:
         try:
             info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
@@ -361,9 +409,11 @@ def _configure_runtime_env() -> str:
             dotnet_cmd = str(fallback)
     if dotnet_cmd:
         os.environ["DOTNET_CMD"] = dotnet_cmd
-        dotnet_root = str(Path(dotnet_cmd).resolve().parent)
-        os.environ.setdefault("DOTNET_ROOT", dotnet_root)
-        os.environ.setdefault("DOTNET_ROOT_X64", dotnet_root)
+        dotnet_root = _dotnet_root_from_cmd(dotnet_cmd)
+        os.environ["DOTNET_ROOT"] = dotnet_root
+        os.environ["DOTNET_ROOT_X64"] = dotnet_root
+        print(f"[*] dotnet command: {dotnet_cmd}")
+        print(f"[*] dotnet root: {dotnet_root}")
     return dotnet_cmd or "dotnet"
 
 
@@ -642,6 +692,7 @@ def _measure_mirror_agreement(
     max_turns: int,
     seed: Optional[int],
     label: str,
+    scenario_workers: int = 1,
 ) -> Dict[str, Any]:
     from RL_AI.SeaEngine.bridge.pythonnet_session import PythonNetSession
 
@@ -651,18 +702,25 @@ def _measure_mirror_agreement(
     result_rows: list[Dict[str, Any]] = []
     total_states = 0
     total_agree = 0
-    session = PythonNetSession(card_data_path=card_data_path)
-    session.start()
-    try:
-        for idx, scenario in enumerate(scenarios):
-            matches = per + (1 if idx < rem else 0)
-            if matches <= 0:
-                continue
-            agent = agent_factory((seed or 0) + 9000 + idx)
-            agent.name = f"{label}_mir"
-            agreement = 0
-            states = 0
-            scenario_start = time.time()
+    scenario_worker_count = max(1, int(scenario_workers or 1))
+
+    def _run_single_scenario(idx: int, scenario: Dict[str, Any], matches: int) -> Dict[str, Any]:
+        if matches <= 0:
+            return {
+                "index": idx,
+                "label": str(scenario["label"]),
+                "states": 0,
+                "agreement": 0,
+                "agreement_rate": 0.0,
+            }
+        agent = agent_factory((seed or 0) + 9000 + idx)
+        agent.name = f"{label}_mir"
+        agreement = 0
+        states = 0
+        scenario_start = time.time()
+        session = PythonNetSession(card_data_path=card_data_path)
+        session.start()
+        try:
             for _ in range(matches):
                 snapshot = session.init_game(
                     player1_deck=str(scenario["p1_deck"]),
@@ -686,23 +744,44 @@ def _measure_mirror_agreement(
                             flush=True,
                         )
                     snapshot = session.apply_action(str(orig_action.get("uid", "")))
-            total_states += states
-            total_agree += agreement
-            elapsed = max(1e-9, time.time() - scenario_start)
-            print(
-                f"[*] normalize_raw_agree/{label} scenario done: {scenario['label']} | states/s={states / elapsed:.2f}",
-                flush=True,
-            )
-            result_rows.append(
-                {
-                    "label": str(scenario["label"]),
-                    "states": states,
-                    "agreement": agreement,
-                    "agreement_rate": _human_rate(agreement, states),
-                }
-            )
-    finally:
-        session.close()
+        finally:
+            session.close()
+        elapsed = max(1e-9, time.time() - scenario_start)
+        print(
+            f"[*] normalize_raw_agree/{label} scenario done: {scenario['label']} | states/s={states / elapsed:.2f}",
+            flush=True,
+        )
+        return {
+            "index": idx,
+            "label": str(scenario["label"]),
+            "states": states,
+            "agreement": agreement,
+            "agreement_rate": _human_rate(agreement, states),
+        }
+
+    if scenario_worker_count > 1:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=scenario_worker_count, thread_name_prefix=f"bias-mir-{label}") as executor:
+            futures = []
+            for idx, scenario in enumerate(scenarios):
+                matches = per + (1 if idx < rem else 0)
+                if matches <= 0:
+                    continue
+                futures.append(executor.submit(_run_single_scenario, idx, scenario, matches))
+            rows = [future.result() for future in concurrent.futures.as_completed(futures)]
+            rows.sort(key=lambda row: int(row["index"]))
+            for row in rows:
+                total_states += int(row["states"])
+                total_agree += int(row["agreement"])
+                result_rows.append({k: v for k, v in row.items() if k != "index"})
+    else:
+        for idx, scenario in enumerate(scenarios):
+            matches = per + (1 if idx < rem else 0)
+            if matches <= 0:
+                continue
+            row = _run_single_scenario(idx, scenario, matches)
+            total_states += int(row["states"])
+            total_agree += int(row["agreement"])
+            result_rows.append({k: v for k, v in row.items() if k != "index"})
 
     return {
         "label": label,
@@ -723,6 +802,8 @@ def _run_same_policy_suite(
     seed: Optional[int],
     include_history: bool = False,
     start_mode: str = "normal",
+    burnin_profile: str = "fixed",
+    scenario_workers: int = 1,
 ) -> Dict[str, Any]:
     from RL_AI.training import evaluate_agents
 
@@ -730,16 +811,9 @@ def _run_same_policy_suite(
     per = total_matches // len(scenarios)
     rem = total_matches % len(scenarios)
     results: list[Dict[str, Any]] = []
-    progress_callback = _make_speed_progress_callback(
-        task_name=f"suite/{label}",
-        total_units=total_matches,
-        unit_label="eps/s",
-        interval=max(1, total_matches // 2),
-    )
-    for idx, scenario in enumerate(scenarios):
-        matches = per + (1 if idx < rem else 0)
-        if matches <= 0:
-            continue
+    scenario_worker_count = max(1, int(scenario_workers or 1))
+
+    def _run_single_scenario(idx: int, scenario: Dict[str, Any], matches: int) -> Dict[str, Any]:
         p1_agent = agent_factory((seed or 0) + idx * 2 + 1)
         p2_agent = agent_factory((seed or 0) + idx * 2 + 2)
         p1_agent.name = f"{label}_p1"
@@ -747,6 +821,12 @@ def _run_same_policy_suite(
 
         print(f"[*] Suite {label}: {scenario['label']} | n={matches}")
         scenario_report_path = _scenario_report_path("bias_check_eval", idx + 1, str(scenario["label"]))
+        progress_callback = _make_speed_progress_callback(
+            task_name=f"suite/{label}/{scenario['label']}",
+            total_units=matches,
+            unit_label="eps/s",
+            interval=max(1, matches // 2),
+        )
         summary = evaluate_agents(
             p1_agent,
             p2_agent,
@@ -767,6 +847,7 @@ def _run_same_policy_suite(
             progress_callback=progress_callback,
             start_mode=start_mode,
             start_focus_player="P1" if bool(scenario["self_is_p1"]) else "P2",
+            burnin_profile=burnin_profile,
         )
         p1_wins = int(summary["p1_wins"])
         p2_wins = int(summary["p2_wins"])
@@ -774,26 +855,25 @@ def _run_same_policy_suite(
         episodes = int(summary["episodes"])
         wr = _human_rate(p1_wins, episodes)
         opp_wr = _human_rate(p2_wins, episodes)
-        results.append(
-            {
-                "label": str(scenario["label"]),
-                "side_name": str(scenario["side_name"]),
-                "self_deck_name": str(scenario["self_deck_name"]),
-                "opp_deck_name": str(scenario["opp_deck_name"]),
-                "relation_name": str(scenario["relation_name"]),
-                "matches": episodes,
-                "self_wins": p1_wins if bool(scenario["self_is_p1"]) else p2_wins,
-                "opp_wins": p2_wins if bool(scenario["self_is_p1"]) else p1_wins,
-                "draws": draws,
-                "win_rate_percent": wr if bool(scenario["self_is_p1"]) else opp_wr,
-                "avg_steps": float(summary["avg_steps"]),
-                "avg_final_turn": float(summary["avg_final_turn"]),
-                "action_type_counts": dict(summary.get("action_type_counts", {})),
-                "card_use_counts": dict(summary.get("card_use_counts", {})),
-                "report_path": str(summary.get("report_path", "")),
-                "history_path": None,
-            }
-        )
+        row = {
+            "index": idx,
+            "label": str(scenario["label"]),
+            "side_name": str(scenario["side_name"]),
+            "self_deck_name": str(scenario["self_deck_name"]),
+            "opp_deck_name": str(scenario["opp_deck_name"]),
+            "relation_name": str(scenario["relation_name"]),
+            "matches": episodes,
+            "self_wins": p1_wins if bool(scenario["self_is_p1"]) else p2_wins,
+            "opp_wins": p2_wins if bool(scenario["self_is_p1"]) else p1_wins,
+            "draws": draws,
+            "win_rate_percent": wr if bool(scenario["self_is_p1"]) else opp_wr,
+            "avg_steps": float(summary["avg_steps"]),
+            "avg_final_turn": float(summary["avg_final_turn"]),
+            "action_type_counts": dict(summary.get("action_type_counts", {})),
+            "card_use_counts": dict(summary.get("card_use_counts", {})),
+            "report_path": str(summary.get("report_path", "")),
+            "history_path": None,
+        }
 
         if include_history:
             history_path = scenario_report_path.with_name(f"{scenario_report_path.stem}_hist.txt")
@@ -803,7 +883,28 @@ def _run_same_policy_suite(
                 report_path=history_path,
             )
             if saved_history_path is not None:
-                results[-1]["history_path"] = str(saved_history_path)
+                row["history_path"] = str(saved_history_path)
+        return row
+
+    if scenario_worker_count > 1:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=scenario_worker_count, thread_name_prefix=f"bias-suite-{label}") as executor:
+            futures = []
+            for idx, scenario in enumerate(scenarios):
+                matches = per + (1 if idx < rem else 0)
+                if matches <= 0:
+                    continue
+                futures.append(executor.submit(_run_single_scenario, idx, scenario, matches))
+            rows = [future.result() for future in concurrent.futures.as_completed(futures)]
+            rows.sort(key=lambda row: int(row["index"]))
+            for row in rows:
+                results.append({k: v for k, v in row.items() if k != "index"})
+    else:
+        for idx, scenario in enumerate(scenarios):
+            matches = per + (1 if idx < rem else 0)
+            if matches <= 0:
+                continue
+            row = _run_single_scenario(idx, scenario, matches)
+            results.append({k: v for k, v in row.items() if k != "index"})
 
     aggregate = _summarize_scenario_results(results)
     first_avg = 0.0
@@ -1014,6 +1115,10 @@ def _make_speed_progress_callback(
     return _callback
 
 
+def _default_scenario_workers() -> int:
+    return max(1, min(8, os.cpu_count() or 1))
+
+
 def _resolve_checkpoint_paths(extracted_paths: Sequence[Path], checkpoint_limit: int) -> list[Path]:
     checkpoints = sorted(
         [p for p in extracted_paths if p.is_file() and p.name.startswith("model_ep_") and p.suffix == ".pt"],
@@ -1060,6 +1165,7 @@ def _run_bias_task(task: Dict[str, Any]) -> Dict[str, Any]:
     if task_kind == "same_policy":
         total_matches = int(task["total_matches"])
         include_history = bool(task.get("include_history", False))
+        scenario_workers = int(task.get("scenario_workers", 1))
         agent_kind = str(task["agent_kind"])
         if agent_kind in {"random", "greedy"}:
             agent_factory = _make_basic_agent_factory(agent_kind, device=device)
@@ -1084,6 +1190,8 @@ def _run_bias_task(task: Dict[str, Any]) -> Dict[str, Any]:
             seed=seed,
             include_history=include_history,
             start_mode=str(task.get("start_mode", "normal")),
+            burnin_profile=str(task.get("burnin_profile", "fixed")),
+            scenario_workers=scenario_workers,
         )
         return {
             "task_name": task_name,
@@ -1094,6 +1202,7 @@ def _run_bias_task(task: Dict[str, Any]) -> Dict[str, Any]:
     if task_kind == "mirror":
         total_matches = int(task["total_matches"])
         observation_mode = str(task.get("observation_mode", "python_canonical"))
+        scenario_workers = int(task.get("scenario_workers", 1))
         model_path = Path(task["model_path"])
         state_dict = _load_state_dict(model_path)
         agent_factory = _make_rl_agent_factory(
@@ -1108,6 +1217,7 @@ def _run_bias_task(task: Dict[str, Any]) -> Dict[str, Any]:
             max_turns=max_turns,
             seed=seed,
             label=label,
+            scenario_workers=scenario_workers,
         )
         return {
             "task_name": task_name,
@@ -1118,6 +1228,7 @@ def _run_bias_task(task: Dict[str, Any]) -> Dict[str, Any]:
     if task_kind == "checkpoint":
         total_matches = int(task["total_matches"])
         include_history = bool(task.get("include_history", True))
+        scenario_workers = int(task.get("scenario_workers", 1))
         model_path = Path(task["model_path"])
         state_dict = _load_state_dict(model_path)
         agent_factory = _make_rl_agent_factory(
@@ -1133,6 +1244,7 @@ def _run_bias_task(task: Dict[str, Any]) -> Dict[str, Any]:
             max_turns=max_turns,
             seed=seed,
             include_history=include_history,
+            scenario_workers=scenario_workers,
         )
         return {
             "task_name": task_name,
@@ -1152,6 +1264,7 @@ def main() -> int:
     parser.add_argument("--checkpoint-matches", type=int, default=400, help="Total matches per checkpoint side-gap suite")
     parser.add_argument("--checkpoint-limit", type=int, default=0, help="Limit number of checkpoint files (0 = all)")
     parser.add_argument("--parallel-workers", type=int, default=0, help="Number of process workers for bias suites (0 = auto)")
+    parser.add_argument("--scenario-workers", type=int, default=0, help="Number of scenario workers inside each suite (0 = auto)")
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--device", type=str, default="auto")
     parser.add_argument("--skip-unzip", action="store_true")
@@ -1177,7 +1290,7 @@ def main() -> int:
         f"[*] args: model_path={args.model_path or '<latest>'}, total_matches={args.total_matches}, "
         f"ablation_matches={args.ablation_matches}, mirror_matches={args.mirror_matches}, "
         f"checkpoint_matches={args.checkpoint_matches}, checkpoint_limit={args.checkpoint_limit}, "
-        f"parallel_workers={args.parallel_workers}, seed={args.seed}, device={args.device}, "
+        f"parallel_workers={args.parallel_workers}, scenario_workers={args.scenario_workers}, seed={args.seed}, device={args.device}, "
         f"skip_unzip={args.skip_unzip}, skip_build={args.skip_build}"
     )
 
@@ -1224,6 +1337,9 @@ def main() -> int:
         device = _resolve_device(args.device)
         parallel_workers = args.parallel_workers if args.parallel_workers > 0 else (2 if device == "cuda" else 4)
         parallel_workers = max(1, min(parallel_workers, 8))
+        scenario_workers = args.scenario_workers if args.scenario_workers > 0 else _default_scenario_workers()
+        scenario_workers = max(1, min(scenario_workers, 8))
+        print(f"[*] resolved parallel_workers={parallel_workers} | scenario_workers={scenario_workers}")
 
         task_specs: list[Dict[str, Any]] = [
             {
@@ -1236,6 +1352,7 @@ def main() -> int:
                 "max_turns": 100,
                 "seed": args.seed,
                 "device": device,
+                "scenario_workers": scenario_workers,
                 "include_history": True,
             },
             {
@@ -1248,6 +1365,7 @@ def main() -> int:
                 "max_turns": 100,
                 "seed": args.seed + 100,
                 "device": device,
+                "scenario_workers": scenario_workers,
                 "include_history": True,
             },
             {
@@ -1262,6 +1380,7 @@ def main() -> int:
                 "max_turns": 100,
                 "seed": args.seed + 200,
                 "device": device,
+                "scenario_workers": scenario_workers,
                 "include_history": True,
             },
             {
@@ -1270,11 +1389,13 @@ def main() -> int:
                 "label": "random_slight",
                 "agent_kind": "random",
                 "start_mode": "slight",
+                "burnin_profile": "mixed",
                 "total_matches": args.total_matches,
                 "card_data_path": None,
                 "max_turns": 100,
                 "seed": args.seed + 210,
                 "device": device,
+                "scenario_workers": scenario_workers,
                 "include_history": True,
             },
             {
@@ -1283,11 +1404,13 @@ def main() -> int:
                 "label": "random_heavy",
                 "agent_kind": "random",
                 "start_mode": "heavy",
+                "burnin_profile": "mixed",
                 "total_matches": args.total_matches,
                 "card_data_path": None,
                 "max_turns": 100,
                 "seed": args.seed + 220,
                 "device": device,
+                "scenario_workers": scenario_workers,
                 "include_history": True,
             },
             {
@@ -1296,11 +1419,13 @@ def main() -> int:
                 "label": "greedy_slight",
                 "agent_kind": "greedy",
                 "start_mode": "slight",
+                "burnin_profile": "mixed",
                 "total_matches": args.total_matches,
                 "card_data_path": None,
                 "max_turns": 100,
                 "seed": args.seed + 310,
                 "device": device,
+                "scenario_workers": scenario_workers,
                 "include_history": True,
             },
             {
@@ -1309,11 +1434,13 @@ def main() -> int:
                 "label": "greedy_heavy",
                 "agent_kind": "greedy",
                 "start_mode": "heavy",
+                "burnin_profile": "mixed",
                 "total_matches": args.total_matches,
                 "card_data_path": None,
                 "max_turns": 100,
                 "seed": args.seed + 320,
                 "device": device,
+                "scenario_workers": scenario_workers,
                 "include_history": True,
             },
             {
@@ -1323,12 +1450,14 @@ def main() -> int:
                 "agent_kind": "rl",
                 "observation_mode": "python_canonical",
                 "start_mode": "slight",
+                "burnin_profile": "mixed",
                 "model_path": str(current_model_path),
                 "total_matches": args.total_matches,
                 "card_data_path": None,
                 "max_turns": 100,
                 "seed": args.seed + 410,
                 "device": device,
+                "scenario_workers": scenario_workers,
                 "include_history": True,
             },
             {
@@ -1338,12 +1467,14 @@ def main() -> int:
                 "agent_kind": "rl",
                 "observation_mode": "python_canonical",
                 "start_mode": "heavy",
+                "burnin_profile": "mixed",
                 "model_path": str(current_model_path),
                 "total_matches": args.total_matches,
                 "card_data_path": None,
                 "max_turns": 100,
                 "seed": args.seed + 420,
                 "device": device,
+                "scenario_workers": scenario_workers,
                 "include_history": True,
             },
             {
@@ -1358,6 +1489,7 @@ def main() -> int:
                 "max_turns": 100,
                 "seed": args.seed + 101,
                 "device": device,
+                "scenario_workers": scenario_workers,
                 "include_history": False,
             },
             {
@@ -1372,6 +1504,7 @@ def main() -> int:
                 "max_turns": 100,
                 "seed": args.seed + 202,
                 "device": device,
+                "scenario_workers": scenario_workers,
                 "include_history": False,
             },
             {
@@ -1385,6 +1518,7 @@ def main() -> int:
                 "max_turns": 100,
                 "seed": args.seed + 303,
                 "device": device,
+                "scenario_workers": scenario_workers,
             },
             {
                 "task_name": "normalize_raw_agree_raw",
@@ -1397,6 +1531,7 @@ def main() -> int:
                 "max_turns": 100,
                 "seed": args.seed + 404,
                 "device": device,
+                "scenario_workers": scenario_workers,
             },
         ]
 
@@ -1414,6 +1549,7 @@ def main() -> int:
                     "max_turns": 100,
                     "seed": args.seed + 5000 + ckpt_idx,
                     "device": device,
+                    "scenario_workers": scenario_workers,
                     "episode": _episode_from_name(ckpt_path),
                     "checkpoint_path": str(ckpt_path),
                     "include_history": True,
@@ -1527,10 +1663,17 @@ def main() -> int:
         report_text = "\n".join(report_lines).rstrip() + "\n"
         report_path = save_report(report_text, Path.home() / "RL_AI" / "log" / f"bias_check_{ts}.txt")
         zip_path = _zip_bias_text_logs(run_started_wall)
+        summary_alias = Path.home() / "RL_AI" / "log" / "bias_check_summary.txt"
+        histories_alias = Path.home() / "RL_AI" / "log" / "bias_check_histories.zip"
+        shutil.copy2(report_path, summary_alias)
+        if zip_path is not None:
+            shutil.copy2(zip_path, histories_alias)
 
         print(f"[*] bias report saved: {report_path}")
+        print(f"[*] bias summary alias: {summary_alias}")
         if zip_path is not None:
             print(f"[*] bias log archive: {zip_path}")
+            print(f"[*] bias histories alias: {histories_alias}")
         print(report_text)
         print("[*] bias_check.py finished successfully")
         return 0

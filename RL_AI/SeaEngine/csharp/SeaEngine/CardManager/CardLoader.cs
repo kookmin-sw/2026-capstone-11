@@ -16,10 +16,19 @@ public class CardLoader
         
         for (int i = 1; i < cardData.Length; i++)
         {
-            string[] data = cardData[i].Split(',');
-            if (data[0] == "")
+            var line = cardData[i]?.Trim();
+            if (string.IsNullOrWhiteSpace(line))
             {
                 continue;
+            }
+            string[] data = line.Split(',');
+            if (data.Length < 6 || string.IsNullOrWhiteSpace(data[0]))
+            {
+                continue;
+            }
+            for (var j = 0; j < data.Length; j++)
+            {
+                data[j] = data[j].Trim();
             }
             UnitType unitType = data[3] switch
             {
@@ -28,9 +37,11 @@ public class CardLoader
                 "P" => UnitType.Pawn,
                 "B" => UnitType.Bishop,
                 "N" => UnitType.Knight,
-                _ => throw new Exception($"Unknown card type: {data[0]}")
+                _ => throw new Exception($"Unknown card type: {data[3]} ({data[0]})")
             };
-            ;
+
+            var effectId = data.Length > 6 && !string.IsNullOrWhiteSpace(data[6]) ? data[6] : null;
+            var eventId = data.Length > 7 && !string.IsNullOrWhiteSpace(data[7]) ? data[7] : null;
             _cards.Add(data[0], new CardData(
                     data[0],
                     data[1],
@@ -38,8 +49,8 @@ public class CardLoader
                     unitType, 
                     int.Parse(data[4]),
                     int.Parse(data[5]),
-                    data[6] == "" ? null : data[6],
-                    data[7] == "" ? null : data[7]
+                    effectId,
+                    eventId
                 ));
             Console.WriteLine($"{_cards[data[0]].Id} loaded");
         }

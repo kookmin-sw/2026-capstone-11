@@ -20,6 +20,10 @@ public class Unit(Card card)
         {
             throw new ArgumentOutOfRangeException($"Place Out of range({Card.Guid})");
         }
+        Atk = Card.Data.Atk;
+        MaxHp = Card.Data.Hp;
+        Hp = Card.Data.Hp;
+        Buffs.Clear();
         IsPlaced = true;
         PosX = x;
         PosY = y;

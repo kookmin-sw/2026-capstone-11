@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
+from RL_AI.SeaEngine.observation import BOARD_SIZE
+
 DRAW_BASE_PENALTY = -0.08
 DRAW_TURN_PENALTY = 0.0006
 ONGOING_BASE_PENALTY = -0.12
@@ -43,6 +45,186 @@ def _placed_units(snapshot: Dict[str, Any], owner_id: str) -> int:
     return count
 
 
+def _hand_count(snapshot: Dict[str, Any], owner_id: str) -> int:
+    for player in snapshot.get("players", []):
+        if str(player.get("id", "")) == owner_id:
+            return len(list(player.get("hand", [])))
+    return 0
+
+
+def _own_cards(snapshot: Dict[str, Any], owner_id: str) -> list[Dict[str, Any]]:
+    cards: list[Dict[str, Any]] = []
+    for card in snapshot.get("board", []):
+        if str(card.get("owner", "")) == owner_id:
+            cards.append(card)
+    for player in snapshot.get("players", []):
+        if str(player.get("id", "")) != owner_id:
+            continue
+        for card in player.get("hand", []):
+            if isinstance(card, dict):
+                cards.append(card)
+    return cards
+
+
+def _leader_card(snapshot: Dict[str, Any], owner_id: str) -> Dict[str, Any] | None:
+    for card in snapshot.get("board", []):
+        if str(card.get("owner", "")) != owner_id:
+            continue
+        if str(card.get("role", "")) == "Leader":
+            return card
+    return None
+
+
+def _card_role(card: Dict[str, Any]) -> str:
+    role = str(card.get("role", "")).strip()
+    if role:
+        return role
+    card_id = str(card.get("card_id", card.get("id", "")))
+    suffix = card_id.split("_")[-1].strip()[-1:] if card_id else ""
+    mapping = {"L": "Leader", "B": "Bishop", "N": "Knight", "R": "Rook", "P": "Pawn"}
+    return mapping.get(suffix, "")
+
+
+def _card_id(card: Dict[str, Any]) -> str:
+    return str(card.get("card_id", card.get("id", card.get("name", ""))))
+
+
+def _move_area_for_card(card: Dict[str, Any]) -> set[tuple[int, int]]:
+    x = int(card.get("pos_x", -1))
+    y = int(card.get("pos_y", -1))
+    if x < 0 or y < 0:
+        return set()
+    role = _card_role(card)
+    cells: set[tuple[int, int]] = set()
+    if role == "Leader":
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                if dx == 0 and dy == 0:
+                    continue
+                nx = x + dx
+                ny = y + dy
+                if 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE:
+                    cells.add((nx, ny))
+    elif role == "Knight":
+        for dx, dy in ((2, -1), (2, 1), (1, -2), (1, 2), (-1, -2), (-1, 2), (-2, -1), (-2, 1)):
+            nx = x + dx
+            ny = y + dy
+            if 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE:
+                cells.add((nx, ny))
+    elif role in {"Bishop", "Queen"}:
+        for dx, dy in ((-1, -1), (-1, 1), (1, 1), (1, -1)):
+            cx, cy = x, y
+            while True:
+                cx += dx
+                cy += dy
+                if not (0 <= cx < BOARD_SIZE and 0 <= cy < BOARD_SIZE):
+                    break
+                cells.add((cx, cy))
+    return cells
+
+
+def _leader_support_score(snapshot: Dict[str, Any], owner_id: str) -> int:
+    leader = _leader_card(snapshot, owner_id)
+    if leader is None:
+        return 0
+    area = _move_area_for_card(leader)
+    support = 0
+    for card in snapshot.get("board", []):
+        if str(card.get("owner", "")) != owner_id:
+            continue
+        if not bool(card.get("is_placed", False)):
+            continue
+        if _card_role(card) in {"Knight", "Bishop"} and (int(card.get("pos_x", -1)), int(card.get("pos_y", -1))) in area:
+            support += 1
+    return support
+
+
+def _leader_forward_progress(snapshot: Dict[str, Any], owner_id: str) -> float:
+    leader = _leader_card(snapshot, owner_id)
+    if leader is None:
+        return 0.0
+    x = int(leader.get("pos_x", -1))
+    if x < 0:
+        return 0.0
+    if owner_id == "P1":
+        return x / float(BOARD_SIZE - 1)
+    return float((BOARD_SIZE - 1) - x) / float(BOARD_SIZE - 1)
+
+
+def _bishop_multi_attack_opportunity(snapshot: Dict[str, Any], owner_id: str) -> int:
+    enemy_id = _find_enemy_id(snapshot, owner_id)
+    if not enemy_id:
+        return 0
+    enemy_positions = {
+        (int(card.get("pos_x", -1)), int(card.get("pos_y", -1)))
+        for card in snapshot.get("board", [])
+        if str(card.get("owner", "")) == enemy_id and bool(card.get("is_placed", False))
+    }
+    best = 0
+    for card in snapshot.get("board", []):
+        if str(card.get("owner", "")) != owner_id:
+            continue
+        if not bool(card.get("is_placed", False)):
+            continue
+        if _card_role(card) != "Bishop":
+            continue
+        area = _move_area_for_card(card)
+        hit_count = sum(1 for pos in area if pos in enemy_positions)
+        if hit_count > best:
+            best = hit_count
+    return best
+
+
+def _or_n_chain_opportunity(snapshot: Dict[str, Any], owner_id: str) -> int:
+    enemy_id = _find_enemy_id(snapshot, owner_id)
+    if not enemy_id:
+        return 0
+    enemy_positions = {
+        (int(card.get("pos_x", -1)), int(card.get("pos_y", -1)))
+        for card in snapshot.get("board", [])
+        if str(card.get("owner", "")) == enemy_id and bool(card.get("is_placed", False))
+    }
+    enemy_cards = [
+        card
+        for card in snapshot.get("board", [])
+        if str(card.get("owner", "")) == enemy_id and bool(card.get("is_placed", False))
+    ]
+    best = 0
+    for card in snapshot.get("board", []):
+        if str(card.get("owner", "")) != owner_id:
+            continue
+        if not bool(card.get("is_placed", False)):
+            continue
+        if _card_id(card) != "Or_N":
+            continue
+        area = _move_area_for_card(card)
+        hit_count = sum(1 for pos in area if pos in enemy_positions)
+        if hit_count < 2:
+            continue
+        attack = _safe_float(card.get("effective_atk", card.get("atk", 0.0)), 0.0)
+        if any(_safe_float(enemy.get("hp", 0.0), 0.0) <= attack for enemy in enemy_cards if (int(enemy.get("pos_x", -1)), int(enemy.get("pos_y", -1))) in area):
+            if hit_count > best:
+                best = hit_count
+    return best
+
+
+def _pawn_last_rank_count(snapshot: Dict[str, Any], owner_id: str) -> int:
+    count = 0
+    last_rank = 5 if owner_id == "P1" else 0
+    for card in snapshot.get("board", []):
+        if str(card.get("owner", "")) != owner_id:
+            continue
+        if str(card.get("role", "")) != "Pawn":
+            continue
+        if bool(card.get("is_placed", False)) and int(card.get("pos_x", -1)) == last_rank:
+            count += 1
+    return count
+
+
+def _is_charlotte_side(snapshot: Dict[str, Any], owner_id: str) -> bool:
+    return any(_card_id(card).startswith("Cl_") for card in _own_cards(snapshot, owner_id))
+
+
 def _pawn_progress(snapshot: Dict[str, Any], owner_id: str) -> float:
     """Return normalized forward progress for placed pawns."""
     pawns = 0
@@ -65,19 +247,6 @@ def _pawn_progress(snapshot: Dict[str, Any], owner_id: str) -> float:
     return 0.0 if pawns == 0 else progress_sum / float(pawns)
 
 
-def _pawn_last_rank_count(snapshot: Dict[str, Any], owner_id: str) -> int:
-    count = 0
-    last_rank = 5 if owner_id == "P1" else 0
-    for card in snapshot.get("board", []):
-        if str(card.get("owner", "")) != owner_id:
-            continue
-        if str(card.get("role", "")) != "Pawn":
-            continue
-        if bool(card.get("is_placed", False)) and int(card.get("pos_x", -1)) == last_rank:
-            count += 1
-    return count
-
-
 def _find_enemy_id(snapshot: Dict[str, Any], ai_id: str) -> str:
     for player in snapshot.get("players", []):
         pid = str(player.get("id", ""))
@@ -88,6 +257,21 @@ def _find_enemy_id(snapshot: Dict[str, Any], ai_id: str) -> str:
         if owner != ai_id:
             return owner
     return ""
+
+
+def _advantage_score(snapshot: Dict[str, Any], ai_id: str) -> float:
+    enemy_id = _find_enemy_id(snapshot, ai_id)
+    ai_hp = _leader_hp(snapshot, ai_id)
+    enemy_hp = _leader_hp(snapshot, enemy_id) if enemy_id else 0.0
+    ai_units = float(_placed_units(snapshot, ai_id))
+    enemy_units = float(_placed_units(snapshot, enemy_id)) if enemy_id else 0.0
+    ai_hand = float(_hand_count(snapshot, ai_id))
+    enemy_hand = float(_hand_count(snapshot, enemy_id)) if enemy_id else 0.0
+    return (
+        0.12 * (ai_hp - enemy_hp)
+        + 0.06 * (ai_units - enemy_units)
+        + 0.03 * (ai_hand - enemy_hand)
+    )
 
 
 def _clip(value: float, lo: float, hi: float) -> float:
@@ -131,6 +315,46 @@ def dense_reward_from_transition(
         reward += 0.005
     elif action_effect_id == "TurnEnd":
         reward -= 0.005
+
+    prev_advantage = _advantage_score(prev_snapshot, ai_id)
+    next_advantage = _advantage_score(next_snapshot, ai_id)
+    if prev_advantage < 0.0:
+        improvement = next_advantage - prev_advantage
+        reward += _clip(0.04 * improvement, -0.04, 0.05)
+        if next_advantage > prev_advantage:
+            reward += 0.01
+        if prev_advantage < -1.0 and next_advantage >= 0.0:
+            reward += 0.04
+    elif next_advantage < prev_advantage:
+        reward -= _clip(0.01 * (prev_advantage - next_advantage), 0.0, 0.02)
+
+    if _is_charlotte_side(next_snapshot, ai_id) or _is_charlotte_side(prev_snapshot, ai_id):
+        prev_support = _leader_support_score(prev_snapshot, ai_id)
+        next_support = _leader_support_score(next_snapshot, ai_id)
+        support_delta = next_support - prev_support
+        reward += _clip(0.008 * float(support_delta), -0.02, 0.02)
+
+        prev_progress = _leader_forward_progress(prev_snapshot, ai_id)
+        next_progress = _leader_forward_progress(next_snapshot, ai_id)
+        if int(next_snapshot.get("turn", 0)) <= 6 and next_support == 0 and next_progress > 0.50:
+            reward -= 0.015
+        elif next_progress > prev_progress and next_support == 0:
+            reward -= 0.005
+
+        if action_effect_id == "Cl_B":
+            bishop_hits = _bishop_multi_attack_opportunity(prev_snapshot, ai_id)
+            if bishop_hits > 0:
+                reward += _clip(0.006 * float(bishop_hits), 0.0, 0.03)
+
+    if action_effect_id == "Or_N":
+        chain_potential = _or_n_chain_opportunity(prev_snapshot, ai_id)
+        if chain_potential > 0:
+            reward += _clip(0.004 * float(chain_potential), 0.0, 0.025)
+
+    prev_pawn_last_rank = _pawn_last_rank_count(prev_snapshot, ai_id)
+    next_pawn_last_rank = _pawn_last_rank_count(next_snapshot, ai_id)
+    if next_pawn_last_rank > prev_pawn_last_rank:
+        reward += _clip(0.01 * float(next_pawn_last_rank - prev_pawn_last_rank), 0.0, 0.03)
 
     progress_signal = (
         abs(0.08 * enemy_leader_delta)

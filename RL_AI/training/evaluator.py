@@ -79,6 +79,8 @@ def play_evaluation_match(
     logger_mode: str = "simple",
     start_mode: str = "normal",
     start_focus_player: str = "P1",
+    burnin_profile: str = "fixed",
+    burnin_seed: Optional[int] = None,
 ) -> Dict[str, object]:
     owns_session = session is None
     if session is None:
@@ -100,6 +102,8 @@ def play_evaluation_match(
                     target_mode=start_mode,
                     focus_agent=warmup_focus,
                     enemy_agent=warmup_enemy,
+                    burnin_profile=burnin_profile,
+                    burnin_seed=burnin_seed,
                 )
             agents = {"P1": p1_agent, "P2": p2_agent}
             action_type_counts: Counter[str] = Counter()
@@ -168,6 +172,8 @@ def evaluate_agents(
     logger_mode: str = "simple",
     start_mode: str = "normal",
     start_focus_player: str = "P1",
+    burnin_profile: str = "fixed",
+    burnin_seed: Optional[int] = None,
 ) -> Dict[str, object]:
     p1_wins = 0
     p2_wins = 0
@@ -195,6 +201,8 @@ def evaluate_agents(
                 logger_mode=logger_mode,
                 start_mode=start_mode,
                 start_focus_player=start_focus_player,
+                burnin_profile=burnin_profile,
+                burnin_seed=burnin_seed,
             )
             snapshot = result["snapshot"]
             w1, w2, d = _winner_to_counts(str(snapshot["result"]))

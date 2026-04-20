@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from datetime import datetime
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -7,6 +8,7 @@ import json
 import os
 import random
 import threading
+import re
 from pathlib import Path
 import time
 import zipfile
@@ -131,6 +133,14 @@ def _zip_new_model_files(
         for model_file in model_files:
             zf.write(model_file, arcname=model_file.name)
     return zip_path
+
+
+def _episode_from_name(path: Path) -> int:
+    stem = path.stem
+    match = re.search(r"model_ep_(\d+)$", stem)
+    if match:
+        return int(match.group(1))
+    return -1
 
 
 def _progress_print_interval(total: int) -> int:
@@ -345,6 +355,27 @@ def _resolve_device(device: Optional[str]) -> str:
     return requested
 
 
+def _default_scenario_workers() -> int:
+    env_workers = os.getenv("SEAENGINE_SCENARIO_WORKERS", "").strip()
+    if env_workers:
+        try:
+            return max(1, int(env_workers))
+        except Exception:
+            pass
+    cpu = os.cpu_count() or 1
+    return max(1, min(8, cpu))
+
+
+def _clone_agent_for_eval(agent: SeaEngineAgent) -> SeaEngineAgent:
+    clone = copy.deepcopy(agent)
+    if hasattr(clone, "sample_actions"):
+        try:
+            setattr(clone, "sample_actions", False)
+        except Exception:
+            pass
+    return clone
+
+
 def _format_match_history(match_history: Dict[str, object]) -> str:
     context = dict(match_history.get("match_context", {}) or {})
     game_id = str(match_history.get("game_id", "")).strip()
@@ -435,6 +466,9 @@ def _run_8combo_opponent_eval_suite(
     max_turns: int,
     scenario_report_prefix: str = "se_eval",
     checkpoint_episodes: Optional[int] = None,
+    start_mode: str = "normal",
+    burnin_profile: str = "fixed",
+    scenario_workers: int = 1,
 ) -> Dict[str, object]:
     deck_pairs = [
         ("귤", trainer.decks["Orange"]),
@@ -452,6 +486,152 @@ def _run_8combo_opponent_eval_suite(
     action_type_counts: Counter[str] = Counter()
     card_use_counts: Counter[str] = Counter()
     combined_histories: list[Dict[str, object]] = []
+    scenario_worker_count = max(1, int(scenario_workers or 1))
+    parallel_scenarios = scenario_worker_count > 1
+
+    def _run_single_scenario(
+        idx: int,
+        rl_deck_name: str,
+        rl_deck: str,
+        side_name: str,
+        rl_is_p1: bool,
+        relation_name: str,
+        use_same_deck: bool,
+        scenario_matches: int,
+    ) -> Dict[str, object]:
+        other_deck_name, other_deck = deck_pairs[1] if rl_deck_name == deck_pairs[0][0] else deck_pairs[0]
+        opp_deck = rl_deck if use_same_deck else other_deck
+        if rl_is_p1:
+            p1_agent, p2_agent = _clone_agent_for_eval(rl_agent), _clone_agent_for_eval(opponent_agent)
+            p1_deck, p2_deck = rl_deck, opp_deck
+        else:
+            p1_agent, p2_agent = _clone_agent_for_eval(opponent_agent), _clone_agent_for_eval(rl_agent)
+            p1_deck, p2_deck = opp_deck, rl_deck
+
+        scenario_label = f"{opponent_label}/{rl_deck_name}/{side_name}/{relation_name}"
+        scenario_report_path = _scenario_report_path(label=scenario_label, report_path=None, prefix=scenario_report_prefix)
+        summary = evaluate_agents(
+            p1_agent,
+            p2_agent,
+            num_matches=scenario_matches,
+            report_path=str(scenario_report_path),
+            card_data_path=card_data_path,
+            player1_deck=p1_deck,
+            player2_deck=p2_deck,
+            max_turns=max_turns,
+            include_history=True,
+            match_context={
+                "mode_label": opponent_label,
+                "side_label": side_name,
+                "self_deck_label": rl_deck_name,
+                "opp_deck_label": other_deck_name,
+                "relation_label": relation_name,
+            },
+            start_mode=start_mode,
+            start_focus_player="P1" if rl_is_p1 else "P2",
+            burnin_profile=burnin_profile,
+        )
+        rl_wins = int(summary["p1_wins"] if rl_is_p1 else summary["p2_wins"])
+        opp_wins = int(summary["p2_wins"] if rl_is_p1 else summary["p1_wins"])
+        histories = list(summary.get("histories", []))
+        history_slug = _combo_slug(opponent_label, rl_deck_name, side_name, relation_name)
+        if checkpoint_episodes is None:
+            history_path = history_root / f"{history_tag}_{history_slug}_hist.txt"
+        else:
+            history_path = history_root / f"se_ckpt_{checkpoint_episodes}_{history_slug}_hist.txt"
+        history_lines = [
+            f"=== {suite_title} History ===",
+            f"combo={scenario_label}",
+            f"episodes={scenario_matches}",
+            f"rl_deck={rl_deck_name}",
+            f"side={side_name}",
+            f"relation={relation_name}",
+            f"report={summary['report_path']}",
+            "",
+            build_win_rate_report(summary),
+            "",
+        ]
+        for match_history in histories:
+            history_lines.append(_format_match_history(match_history))
+            history_lines.append("")
+        save_report("\n".join(history_lines).rstrip() + "\n", history_path)
+        return {
+            "index": idx,
+            "label": scenario_label,
+            "episodes": scenario_matches,
+            "rl_wins": rl_wins,
+            "opp_wins": opp_wins,
+            "draws": int(summary["draws"]),
+            "avg_steps": float(summary["avg_steps"]),
+            "avg_final_turn": float(summary["avg_final_turn"]),
+            "action_type_counts": dict(summary.get("action_type_counts", {})),
+            "card_use_counts": dict(summary.get("card_use_counts", {})),
+            "report_path": summary["report_path"],
+            "history_path": str(history_path),
+            "histories": histories,
+        }
+
+    if parallel_scenarios:
+        with ThreadPoolExecutor(max_workers=scenario_worker_count, thread_name_prefix="se-eval") as executor:
+            futures = []
+            for idx, rl_deck_name in enumerate([deck_pairs[0][0], deck_pairs[1][0]]):
+                rl_deck = deck_pairs[0][1] if rl_deck_name == deck_pairs[0][0] else deck_pairs[1][1]
+                for side_name, rl_is_p1 in [("선공", True), ("후공", False)]:
+                    for relation_name, use_same_deck in [("같은 덱", True), ("다른 덱", False)]:
+                        scenario_matches = num_matches_per_combo
+                        if scenario_matches <= 0:
+                            continue
+                        futures.append(
+                            executor.submit(
+                                _run_single_scenario,
+                                len(futures),
+                                rl_deck_name,
+                                rl_deck,
+                                side_name,
+                                rl_is_p1,
+                                relation_name,
+                                use_same_deck,
+                                scenario_matches,
+                            )
+                        )
+            combo_results = [fut.result() for fut in as_completed(futures)]
+            combo_results.sort(key=lambda item: int(item["index"]))
+            for row in combo_results:
+                histories = list(row.get("histories", []))
+                total_episodes += int(row["episodes"])
+                total_rl_wins += int(row["rl_wins"])
+                total_opp_wins += int(row["opp_wins"])
+                total_draws += int(row["draws"])
+                total_steps_weighted_sum += float(row["avg_steps"]) * float(row["episodes"])
+                total_turns_weighted_sum += float(row["avg_final_turn"]) * float(row["episodes"])
+                action_type_counts.update({str(k): int(v) for k, v in dict(row.get("action_type_counts", {})).items()})
+                card_use_counts.update({str(k): int(v) for k, v in dict(row.get("card_use_counts", {})).items()})
+                combined_histories.extend(histories)
+                suite_lines.append(
+                    f"- {row['label']}: rl={row['rl_wins']}, opp={row['opp_wins']}, d={row['draws']}, "
+                    f"avg_steps={float(row['avg_steps']):.1f}, avg_turn={float(row['avg_final_turn']):.1f}, "
+                    f"report={row['report_path']}, hist={row['history_path']}"
+                )
+
+        history_summary = {
+            "episodes": total_episodes,
+            "p1_agent": rl_agent.name,
+            "p2_agent": opponent_agent.name,
+            "p1_wins": total_rl_wins,
+            "p2_wins": total_opp_wins,
+            "draws": total_draws,
+            "avg_steps": 0.0 if total_episodes == 0 else total_steps_weighted_sum / total_episodes,
+            "avg_final_turn": 0.0 if total_episodes == 0 else total_turns_weighted_sum / total_episodes,
+            "action_type_counts": dict(sorted(action_type_counts.items())),
+            "card_use_counts": dict(card_use_counts.most_common()),
+            "histories": combined_histories,
+            "report_path": "",
+        }
+        return {
+            "results": combo_results,
+            "text": "\n".join(suite_lines),
+            "history_summary": history_summary,
+        }
 
     for rl_deck_name, rl_deck in deck_pairs:
         other_deck_name, other_deck = deck_pairs[1] if rl_deck_name == deck_pairs[0][0] else deck_pairs[0]
@@ -484,6 +664,9 @@ def _run_8combo_opponent_eval_suite(
                         "opp_deck_label": other_deck_name,
                         "relation_label": relation_name,
                     },
+                    start_mode=start_mode,
+                    start_focus_player="P1" if rl_is_p1 else "P2",
+                    burnin_profile=burnin_profile,
                 )
                 rl_wins = int(summary["p1_wins"] if rl_is_p1 else summary["p2_wins"])
                 opp_wins = int(summary["p2_wins"] if rl_is_p1 else summary["p1_wins"])
@@ -896,6 +1079,7 @@ def run_train_eval_experiment(
     resume_model_path: Optional[str] = None,
     resume_episodes_completed: Optional[int] = None,
     resume_skip_pre_eval: bool = False,
+    summary_report_path: Optional[str] = None,
 ) -> Dict[str, object]:
     artifact_start_wall = time.time()
     resolved_device = _resolve_device(device)
@@ -933,6 +1117,7 @@ def run_train_eval_experiment(
     if num_envs is None:
         cpu = os.cpu_count() or 8
         num_envs = max(8, min(24, cpu))
+    scenario_workers = _default_scenario_workers()
 
     checkpoint_interval = max(1, checkpoint_interval)
     save_interval = max(1, save_interval)
@@ -971,6 +1156,7 @@ def run_train_eval_experiment(
         f"device={resolved_device} | "
         f"train_max_turns={train_max_turns} | train_update_interval={train_update_interval} | "
         f"fast_pool={fast_pool_enabled} | save_interval={save_interval} | checkpoint_interval={checkpoint_interval} | "
+        f"scenario_workers={scenario_workers} | "
         f"checkpoint_eval_per_combo={checkpoint_eval_matches} (per suite total {checkpoint_eval_matches * 8}, all checkpoint suites total {checkpoint_eval_matches * 16})"
     )
     print(f"[*] Opp plan total: {_format_plan_counts(training_opponent_counts)}")
@@ -978,6 +1164,40 @@ def run_train_eval_experiment(
         plan_end = min(train_episodes, plan_start + checkpoint_interval)
         plan_counts = Counter(training_opponent_schedule[plan_start:plan_end])
         print(f"[*] Opp plan {plan_start + 1}~{plan_end}: {_format_plan_counts(plan_counts)}")
+
+    summary_snapshot_path = Path(summary_report_path) if summary_report_path else None
+
+    def _write_summary_snapshot(stage: str, extra_lines: Optional[list[str]] = None) -> None:
+        if summary_snapshot_path is None:
+            return
+        lines = [
+            "=== SeaEngine Train/Eval Experiment (Running) ===",
+            f"stage={stage}",
+            f"device={resolved_device}",
+            f"train_episodes={train_episodes}",
+            f"eval_matches={eval_matches}",
+            f"max_turns={max_turns}",
+            f"update_interval={update_interval}",
+            f"opponent_pool={[agent.name for agent in opponent_pool]}",
+            f"resume_model_path={resume_model_path or ''}",
+            "",
+        ]
+        if extra_lines:
+            lines.extend(extra_lines)
+        try:
+            save_report("\n".join(lines).rstrip() + "\n", summary_snapshot_path)
+        except Exception as exc:
+            print(f"[!] failed to update start summary snapshot: {exc}")
+
+    _write_summary_snapshot(
+        "initialized",
+        [
+            "before_training=pending",
+            "training=pending",
+            "after_training=pending",
+            "",
+        ],
+    )
 
     def log_eval_progress(stage: str):
         if not _verbose_experiment_logs():
@@ -1065,6 +1285,7 @@ def run_train_eval_experiment(
             card_data_path=card_data_path,
             max_turns=max_turns,
             scenario_report_prefix="se_before_random",
+            scenario_workers=scenario_workers,
         )
         before_random = before_random_suite["history_summary"]
         before_random_history_path = None
@@ -1076,6 +1297,14 @@ def run_train_eval_experiment(
             )
             if before_random_history_path is not None:
                 before_random["report_path"] = str(before_random_history_path)
+        _write_summary_snapshot(
+            "before_random_done",
+            [
+                "before_training=random done",
+                f"before_random={before_random['report_path']}",
+                "",
+            ],
+        )
 
         print(f"[*] Evaluating before training vs greedy across 8 combos ({eval_matches} each)...")
         before_greedy_suite = _run_8combo_opponent_eval_suite(
@@ -1089,6 +1318,7 @@ def run_train_eval_experiment(
             card_data_path=card_data_path,
             max_turns=max_turns,
             scenario_report_prefix="se_before_greedy",
+            scenario_workers=scenario_workers,
         )
         before_greedy = before_greedy_suite["history_summary"]
         before_greedy_history_path = None
@@ -1100,6 +1330,15 @@ def run_train_eval_experiment(
             )
             if before_greedy_history_path is not None:
                 before_greedy["report_path"] = str(before_greedy_history_path)
+        _write_summary_snapshot(
+            "before_greedy_done",
+            [
+                "before_training=greedy done",
+                f"before_random={before_random['report_path']}",
+                f"before_greedy={before_greedy['report_path']}",
+                "",
+            ],
+        )
 
         print(f"[*] Evaluating before training vs self across 8 combos ({eval_matches} each)...")
         before_self_suite = _run_8combo_opponent_eval_suite(
@@ -1113,6 +1352,7 @@ def run_train_eval_experiment(
             card_data_path=card_data_path,
             max_turns=max_turns,
             scenario_report_prefix="se_before_self",
+            scenario_workers=scenario_workers,
         )
         before_self = before_self_suite["history_summary"]
         before_self_history_path = None
@@ -1124,6 +1364,16 @@ def run_train_eval_experiment(
             )
             if before_self_history_path is not None:
                 before_self["report_path"] = str(before_self_history_path)
+        _write_summary_snapshot(
+            "before_self_done",
+            [
+                "before_training=self done",
+                f"before_random={before_random['report_path']}",
+                f"before_greedy={before_greedy['report_path']}",
+                f"before_self={before_self['report_path']}",
+                "",
+            ],
+        )
 
     print("[*] Training starts...")
     checkpoints: list[Dict[str, object]] = []
@@ -1191,6 +1441,7 @@ def run_train_eval_experiment(
                 card_data_path=card_data_path,
                 max_turns=max_turns,
                 scenario_report_prefix="se_ckpt",
+                scenario_workers=scenario_workers,
             )
             self_suite = _run_8combo_opponent_eval_suite(
                 trainer=trainer,
@@ -1204,6 +1455,7 @@ def run_train_eval_experiment(
                 card_data_path=card_data_path,
                 max_turns=max_turns,
                 scenario_report_prefix="se_ckpt_self",
+                scenario_workers=scenario_workers,
             )
             checkpoint_text = "\n".join(
                 [
@@ -1288,6 +1540,7 @@ def run_train_eval_experiment(
         card_data_path=card_data_path,
         max_turns=max_turns,
         scenario_report_prefix="se_after_random",
+        scenario_workers=scenario_workers,
     )
     after_random = after_random_suite["history_summary"]
     after_random_history_path = None
@@ -1298,7 +1551,8 @@ def run_train_eval_experiment(
             summary=after_random,
         )
         if after_random_history_path is not None:
-                after_random["report_path"] = str(after_random_history_path)
+            after_random["report_path"] = str(after_random_history_path)
+    _write_summary_snapshot("after_random_done", [f"after_random={after_random['report_path']}", ""])
 
     print(f"[*] Evaluating after training vs greedy across 8 combos ({eval_matches} each)...")
     after_greedy_suite = _run_8combo_opponent_eval_suite(
@@ -1312,6 +1566,7 @@ def run_train_eval_experiment(
         card_data_path=card_data_path,
         max_turns=max_turns,
         scenario_report_prefix="se_after_greedy",
+        scenario_workers=scenario_workers,
     )
     after_greedy = after_greedy_suite["history_summary"]
     after_greedy_history_path = None
@@ -1323,6 +1578,10 @@ def run_train_eval_experiment(
         )
         if after_greedy_history_path is not None:
             after_greedy["report_path"] = str(after_greedy_history_path)
+    _write_summary_snapshot(
+        "after_greedy_done",
+        [f"after_random={after_random['report_path']}", f"after_greedy={after_greedy['report_path']}", ""],
+    )
 
     print(f"[*] Evaluating after training vs self across 8 combos ({eval_matches} each)...")
     after_self_suite = _run_8combo_opponent_eval_suite(
@@ -1336,6 +1595,7 @@ def run_train_eval_experiment(
         card_data_path=card_data_path,
         max_turns=max_turns,
         scenario_report_prefix="se_after_self",
+        scenario_workers=scenario_workers,
     )
     after_self = after_self_suite["history_summary"]
     after_self_history_path = None
@@ -1347,6 +1607,122 @@ def run_train_eval_experiment(
         )
         if after_self_history_path is not None:
             after_self["report_path"] = str(after_self_history_path)
+    _write_summary_snapshot(
+        "after_self_done",
+        [
+            f"after_random={after_random['report_path']}",
+            f"after_greedy={after_greedy['report_path']}",
+            f"after_self={after_self['report_path']}",
+            "",
+        ],
+    )
+
+    comeback_eval_matches = max(20, eval_matches // 2)
+    print(f"[*] Evaluating comeback vs greedy across 8 combos ({comeback_eval_matches} each, slight/heavy)...")
+    after_greedy_slight_suite = _run_8combo_opponent_eval_suite(
+        trainer=trainer,
+        rl_agent=learning_agent,
+        opponent_agent=SeaEngineGreedyAgent(seed=_seed_with_offset(seed, 606)),
+        opponent_label="greedy",
+        suite_title="After Training vs Greedy (Slight Deficit)",
+        history_tag="se_evalhist_after_greedy_slight",
+        num_matches_per_combo=comeback_eval_matches,
+        card_data_path=card_data_path,
+        max_turns=max_turns,
+        scenario_report_prefix="se_after_greedy_slight",
+        start_mode="slight",
+        burnin_profile="mixed",
+        scenario_workers=scenario_workers,
+    )
+    after_greedy_slight = after_greedy_slight_suite["history_summary"]
+    after_greedy_slight_history_path = None
+    if include_eval_history:
+        after_greedy_slight_history_path = _save_history_report(
+            prefix="se_evalhist_after_greedy_slight",
+            title="After Training vs Greedy (Slight Deficit) Histories",
+            summary=after_greedy_slight,
+        )
+        if after_greedy_slight_history_path is not None:
+            after_greedy_slight["report_path"] = str(after_greedy_slight_history_path)
+
+    after_greedy_heavy_suite = _run_8combo_opponent_eval_suite(
+        trainer=trainer,
+        rl_agent=learning_agent,
+        opponent_agent=SeaEngineGreedyAgent(seed=_seed_with_offset(seed, 607)),
+        opponent_label="greedy",
+        suite_title="After Training vs Greedy (Heavy Deficit)",
+        history_tag="se_evalhist_after_greedy_heavy",
+        num_matches_per_combo=comeback_eval_matches,
+        card_data_path=card_data_path,
+        max_turns=max_turns,
+        scenario_report_prefix="se_after_greedy_heavy",
+        start_mode="heavy",
+        burnin_profile="mixed",
+        scenario_workers=scenario_workers,
+    )
+    after_greedy_heavy = after_greedy_heavy_suite["history_summary"]
+    after_greedy_heavy_history_path = None
+    if include_eval_history:
+        after_greedy_heavy_history_path = _save_history_report(
+            prefix="se_evalhist_after_greedy_heavy",
+            title="After Training vs Greedy (Heavy Deficit) Histories",
+            summary=after_greedy_heavy,
+        )
+        if after_greedy_heavy_history_path is not None:
+            after_greedy_heavy["report_path"] = str(after_greedy_heavy_history_path)
+
+    print(f"[*] Evaluating comeback vs self across 8 combos ({comeback_eval_matches} each, slight/heavy)...")
+    after_self_slight_suite = _run_8combo_opponent_eval_suite(
+        trainer=trainer,
+        rl_agent=learning_agent,
+        opponent_agent=learning_agent,
+        opponent_label="self",
+        suite_title="After Training vs Self (Slight Deficit)",
+        history_tag="se_evalhist_after_self_slight",
+        num_matches_per_combo=comeback_eval_matches,
+        card_data_path=card_data_path,
+        max_turns=max_turns,
+        scenario_report_prefix="se_after_self_slight",
+        start_mode="slight",
+        burnin_profile="mixed",
+        scenario_workers=scenario_workers,
+    )
+    after_self_slight = after_self_slight_suite["history_summary"]
+    after_self_slight_history_path = None
+    if include_eval_history:
+        after_self_slight_history_path = _save_history_report(
+            prefix="se_evalhist_after_self_slight",
+            title="After Training vs Self (Slight Deficit) Histories",
+            summary=after_self_slight,
+        )
+        if after_self_slight_history_path is not None:
+            after_self_slight["report_path"] = str(after_self_slight_history_path)
+
+    after_self_heavy_suite = _run_8combo_opponent_eval_suite(
+        trainer=trainer,
+        rl_agent=learning_agent,
+        opponent_agent=learning_agent,
+        opponent_label="self",
+        suite_title="After Training vs Self (Heavy Deficit)",
+        history_tag="se_evalhist_after_self_heavy",
+        num_matches_per_combo=comeback_eval_matches,
+        card_data_path=card_data_path,
+        max_turns=max_turns,
+        scenario_report_prefix="se_after_self_heavy",
+        start_mode="heavy",
+        burnin_profile="mixed",
+        scenario_workers=scenario_workers,
+    )
+    after_self_heavy = after_self_heavy_suite["history_summary"]
+    after_self_heavy_history_path = None
+    if include_eval_history:
+        after_self_heavy_history_path = _save_history_report(
+            prefix="se_evalhist_after_self_heavy",
+            title="After Training vs Self (Heavy Deficit) Histories",
+            summary=after_self_heavy,
+        )
+        if after_self_heavy_history_path is not None:
+            after_self_heavy["report_path"] = str(after_self_heavy_history_path)
     report_lines = [
         "=== SeaEngine Train/Eval Experiment ===",
         f"train_episodes={train_episodes}",
@@ -1390,10 +1766,49 @@ def run_train_eval_experiment(
         f"report={after_self['report_path']}",
         f"history={None if after_self_history_path is None else str(after_self_history_path)}",
         build_win_rate_report(after_self),
+        "",
+        "=== After Training vs Greedy (Slight Deficit) ===",
+        f"report={after_greedy_slight['report_path']}",
+        f"history={None if after_greedy_slight_history_path is None else str(after_greedy_slight_history_path)}",
+        build_win_rate_report(after_greedy_slight),
+        "",
+        "=== After Training vs Greedy (Heavy Deficit) ===",
+        f"report={after_greedy_heavy['report_path']}",
+        f"history={None if after_greedy_heavy_history_path is None else str(after_greedy_heavy_history_path)}",
+        build_win_rate_report(after_greedy_heavy),
+        "",
+        "=== After Training vs Self (Slight Deficit) ===",
+        f"report={after_self_slight['report_path']}",
+        f"history={None if after_self_slight_history_path is None else str(after_self_slight_history_path)}",
+        build_win_rate_report(after_self_slight),
+        "",
+        "=== After Training vs Self (Heavy Deficit) ===",
+        f"report={after_self_heavy['report_path']}",
+        f"history={None if after_self_heavy_history_path is None else str(after_self_heavy_history_path)}",
+        build_win_rate_report(after_self_heavy),
     ]
 
     report_text = "\n".join(report_lines)
     saved_path = save_report(report_text, _default_report_path() if report_path is None else report_path)
+    if summary_snapshot_path is not None:
+        _write_summary_snapshot(
+            "final",
+            [
+                "before_random_done",
+                "before_greedy_done",
+                "before_self_done",
+                "training_done",
+                "after_random_done",
+                "after_greedy_done",
+                "after_self_done",
+                "after_greedy_slight_done",
+                "after_greedy_heavy_done",
+                "after_self_slight_done",
+                "after_self_heavy_done",
+                f"final_report={saved_path}",
+                "",
+            ],
+        )
     zipped_logs = _zip_new_log_txt_files(
         since_timestamp=artifact_start_wall,
         output_path=_default_log_zip_path("start_log"),
@@ -1421,9 +1836,17 @@ def run_train_eval_experiment(
         "after_random": after_random,
         "after_greedy": after_greedy,
         "after_self": after_self,
+        "after_greedy_slight": after_greedy_slight,
+        "after_greedy_heavy": after_greedy_heavy,
+        "after_self_slight": after_self_slight,
+        "after_self_heavy": after_self_heavy,
         "after_random_history_path": None if after_random_history_path is None else str(after_random_history_path),
         "after_greedy_history_path": None if after_greedy_history_path is None else str(after_greedy_history_path),
         "after_self_history_path": None if after_self_history_path is None else str(after_self_history_path),
+        "after_greedy_slight_history_path": None if after_greedy_slight_history_path is None else str(after_greedy_slight_history_path),
+        "after_greedy_heavy_history_path": None if after_greedy_heavy_history_path is None else str(after_greedy_heavy_history_path),
+        "after_self_slight_history_path": None if after_self_slight_history_path is None else str(after_self_slight_history_path),
+        "after_self_heavy_history_path": None if after_self_heavy_history_path is None else str(after_self_heavy_history_path),
         "checkpoints": checkpoints,
         "report_text": report_text,
         "report_path": str(saved_path),

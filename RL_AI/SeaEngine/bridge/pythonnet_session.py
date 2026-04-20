@@ -6,10 +6,12 @@ import os
 import json
 import uuid
 import threading
+import ctypes
 from pathlib import Path
 from typing import Any, Dict, Optional, List
 
 from RL_AI.cards.card_db import Role, load_card_list
+from RL_AI.SeaEngine.observation import GLOBAL_FEATURE_DIM
 
 class PythonNetSession:
     _clr_initialized = False
@@ -72,6 +74,60 @@ class PythonNetSession:
                 return candidates[-1]
         return None
 
+    def _candidate_dotnet_roots(self) -> List[Path]:
+        candidates: List[Path] = []
+        env_root = os.environ.get("DOTNET_ROOT") or os.environ.get("DOTNET_ROOT_X64")
+        if env_root:
+            candidates.append(Path(env_root))
+        candidates.extend(
+            [
+                Path.home() / ".dotnet",
+                Path("/usr/share/dotnet"),
+                Path("/usr/lib/dotnet"),
+                Path("/usr/lib64/dotnet"),
+                Path("/usr/local/share/dotnet"),
+                Path("/usr/local/lib/dotnet"),
+                Path("/opt/microsoft/dotnet"),
+                Path("/opt/dotnet"),
+                Path("/usr/lib/x86_64-linux-gnu/dotnet"),
+                Path("/snap/dotnet-sdk/current"),
+            ]
+        )
+        unique: List[Path] = []
+        seen = set()
+        for path in candidates:
+            resolved = path.expanduser()
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            unique.append(resolved)
+        return unique
+
+    def _resolve_dotnet_root(self) -> Optional[Path]:
+        for candidate in self._candidate_dotnet_roots():
+            if self._is_usable_dotnet_root(candidate):
+                return candidate
+        return None
+
+    @staticmethod
+    def _is_usable_dotnet_root(root: Path) -> bool:
+        shared = root / "shared" / "Microsoft.NETCore.App"
+        hostfxr_dir = root / "host" / "fxr"
+        hostfxr_libs = sorted(hostfxr_dir.glob("*/libhostfxr.so"))
+        if not (shared.exists() and any(shared.iterdir()) and hostfxr_libs):
+            return False
+        for hostfxr_lib in hostfxr_libs[::-1]:
+            try:
+                ctypes.CDLL(str(hostfxr_lib))
+                return True
+            except OSError:
+                continue
+        return False
+
+    def _resolve_runtime_config(self, dll_path: Path) -> Optional[Path]:
+        runtime_config = dll_path.with_suffix(".runtimeconfig.json")
+        return runtime_config if runtime_config.exists() else None
+
     def start(self) -> None:
         if PythonNetSession._clr_initialized:
             return
@@ -90,11 +146,41 @@ class PythonNetSession:
                 sys.path.append(dll_dir_str)
 
             try:
-                rt = clr_loader.get_coreclr()
-                set_runtime(rt)
-            except Exception:
-                # Runtime might already be set
-                pass
+                dll_path = self._resolve_dll_path()
+                dotnet_root = self._resolve_dotnet_root()
+                runtime_config = self._resolve_runtime_config(dll_path)
+                if dotnet_root is None:
+                    checked = ", ".join(str(path) for path in self._candidate_dotnet_roots())
+                    # Let clr_loader / hostfxr perform its own discovery when a
+                    # standard runtime is installed but not found by our local scan.
+                    # We still report the candidate set to make debugging explicit.
+                    print(f"[!] No local .NET runtime root matched. Checked: {checked or '<none>'}")
+                else:
+                    os.environ["DOTNET_ROOT"] = str(dotnet_root)
+                    os.environ["DOTNET_ROOT_X64"] = str(dotnet_root)
+                    print(f"[*] pythonnet dotnet root: {dotnet_root}")
+                os.environ["PYTHONNET_RUNTIME"] = "coreclr"
+                if runtime_config is not None:
+                    print(f"[*] pythonnet runtime config: {runtime_config}")
+                rt = clr_loader.get_coreclr(
+                    runtime_config=str(runtime_config) if runtime_config is not None else None,
+                    dotnet_root=str(dotnet_root) if dotnet_root is not None else None,
+                )
+                try:
+                    set_runtime(rt)
+                except RuntimeError as runtime_exc:
+                    runtime_msg = str(runtime_exc)
+                    if "already been loaded" not in runtime_msg:
+                        raise
+                    # Another thread in the same process may have initialized the
+                    # runtime milliseconds earlier. Treat that as success and move on.
+                    print("[*] pythonnet runtime already initialized in this process")
+            except Exception as exc:
+                raise RuntimeError(
+                    "Failed to initialize the .NET runtime for PythonNet. "
+                    "Check that a usable Microsoft.NETCore.App runtime is installed "
+                    "and that DOTNET_ROOT points to its root directory."
+                ) from exc
 
             import clr
             import System
@@ -530,7 +616,7 @@ class PythonNetSession:
                 "players": players,
                 "board": board,
                 "actions": actions,
-                "global_vector": state_vector[:43] if len(state_vector) >= 43 else [],
+                "global_vector": state_vector[:GLOBAL_FEATURE_DIM] if len(state_vector) >= GLOBAL_FEATURE_DIM else [],
                 "state_vector": state_vector,
                 "action_feature_vectors": action_feature_vectors,
             }

@@ -49,6 +49,49 @@ def _setup_logger(log_file: Path) -> None:
     print(f"[*] log file: {log_file}")
 
 
+def _install_dotnet_sdk() -> None:
+    if os.name == "nt":
+        return
+    install_steps = [
+        ["sudo", "apt", "update"],
+        ["sudo", "apt", "install", "-y", "dotnet-sdk-10.0"],
+    ]
+    for step in install_steps:
+        completed = subprocess.run(
+            step,
+            check=False,
+            capture_output=True,
+            text=True,
+            env={**os.environ, "DEBIAN_FRONTEND": "noninteractive"},
+        )
+        if completed.stdout:
+            print(completed.stdout)
+        if completed.stderr:
+            print(completed.stderr)
+        if completed.returncode != 0:
+            print(f"[!] dotnet auto-install step failed: {' '.join(step)} :: exit {completed.returncode}")
+            break
+
+
+def _dotnet_root_from_cmd(dotnet_cmd: str) -> str:
+    try:
+        info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
+        for line in info.stdout.splitlines():
+            if "Base Path:" in line:
+                base_path = line.split("Base Path:", 1)[1].strip()
+                return str(Path(base_path).resolve().parents[1])
+    except Exception:
+        pass
+    cmd_path = Path(dotnet_cmd).resolve()
+    if cmd_path.parent.name == "bin" and cmd_path.parent.parent.name:
+        return str(cmd_path.parent.parent)
+    return str(cmd_path.parent)
+
+
+def _default_scenario_workers() -> int:
+    return max(1, min(8, os.cpu_count() or 1))
+
+
 def _publish_latest_artifact(src_path: str | Path | None, dst_path: Path) -> str | None:
     if not src_path:
         return None
@@ -236,11 +279,20 @@ def _run_balance(
         fallback = home / ".dotnet" / ("dotnet.exe" if os.name == "nt" else "dotnet")
         if fallback.exists():
             dotnet_cmd = str(fallback)
+    if not dotnet_cmd:
+        _install_dotnet_sdk()
+        dotnet_cmd = which("dotnet")
+        if dotnet_cmd is None:
+            fallback = home / ".dotnet" / ("dotnet.exe" if os.name == "nt" else "dotnet")
+            if fallback.exists():
+                dotnet_cmd = str(fallback)
     if dotnet_cmd:
         os.environ["DOTNET_CMD"] = dotnet_cmd
-        dotnet_root = str(Path(dotnet_cmd).resolve().parent)
-        os.environ.setdefault("DOTNET_ROOT", dotnet_root)
-        os.environ.setdefault("DOTNET_ROOT_X64", dotnet_root)
+        dotnet_root = _dotnet_root_from_cmd(dotnet_cmd)
+        os.environ["DOTNET_ROOT"] = dotnet_root
+        os.environ["DOTNET_ROOT_X64"] = dotnet_root
+        print(f"[*] dotnet command: {dotnet_cmd}")
+        print(f"[*] dotnet root: {dotnet_root}")
 
     for module_name in list(sys.modules):
         if module_name == "RL_AI" or module_name.startswith("RL_AI."):
@@ -287,11 +339,16 @@ def _run_balance(
         scenario_workers=scenario_workers,
     )
 
+    summary_copy = _publish_latest_artifact(
+        result.get("summary_report_path"),
+        Path.home() / "RL_AI" / "log" / "make_balance_summary.txt",
+    )
     print("=== SeaEngine Balance Experiment ===")
     total_elapsed = max(1e-9, time.perf_counter() - run_started_at)
     total_speed = total_matches / total_elapsed if total_matches > 0 else 0.0
     print(f"avg speed: {total_speed:.2f} eps/s")
     print(result["aggregate"])
+    print(f"artifact summary: {summary_copy}")
 
 
 def main() -> int:
@@ -302,7 +359,7 @@ def main() -> int:
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--device", type=str, default="auto")
     parser.add_argument("--progress-interval", type=int, default=50)
-    parser.add_argument("--scenario-workers", type=int, default=4)
+    parser.add_argument("--scenario-workers", type=int, default=0)
     parser.add_argument("--log-file", type=str, default="")
     args = parser.parse_args()
 
@@ -323,6 +380,8 @@ def main() -> int:
         f"progress_interval={args.progress_interval}, scenario_workers={args.scenario_workers}"
     )
 
+    scenario_workers = args.scenario_workers if args.scenario_workers > 0 else _default_scenario_workers()
+    print(f"[*] resolved scenario_workers={scenario_workers}")
     model_path = _resolve_model_path(args.model_path)
     print(f"[*] resolved model: {model_path}")
     run_start_ts = datetime.now().timestamp()
@@ -333,14 +392,19 @@ def main() -> int:
         seed=args.seed,
         device=args.device,
         progress_interval=args.progress_interval,
-        scenario_workers=max(1, int(args.scenario_workers)),
+        scenario_workers=scenario_workers,
     )
     log_zip_path = _zip_new_txt_logs(run_start_ts)
     latest_log_zip = _publish_latest_artifact(
         log_zip_path,
         Path.home() / "RL_AI" / "log" / "make_balance_latest.zip",
     )
+    histories_copy = _publish_latest_artifact(
+        log_zip_path,
+        Path.home() / "RL_AI" / "log" / "make_balance_histories.zip",
+    )
     print(f"artifact log zip: {latest_log_zip}")
+    print(f"artifact histories: {histories_copy}")
     print("[*] make_balance.py finished successfully")
     return 0
 
