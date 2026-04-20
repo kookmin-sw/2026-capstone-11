@@ -79,7 +79,9 @@ namespace Core.DTO
         [JsonProperty("MaxHp")]
         public int MaxHp;
 
-        [JsonProperty("Buff")]
+        // Bumik : 버프 관련 스냅샷이 로직과 달라 일단 Ingore 처리
+        //[JsonProperty("Buff")]
+        [JsonIgnore]
         public List<BuffDTO> Buff;
     }
 

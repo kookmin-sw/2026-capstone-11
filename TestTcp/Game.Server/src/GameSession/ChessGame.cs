@@ -58,7 +58,7 @@ namespace Game.Server.Chess
                             string d1 = "[\"Or_L\", \"Or_B\", \"Or_R\", \"Or_N\", \"Or_P\", \"Or_P\", \"Or_P\"]",
                             string d2 = "[\"Cl_L\", \"Cl_B\", \"Cl_R\", \"Cl_N\", \"Cl_P\", \"Cl_P\", \"Cl_P\"]")
         {
-            _seaGame = new(new SeaEngine.CardManager.CardLoader(File.ReadAllLines(Setting.DBPath)), new SimpleLogger(), p1, p2);
+            _seaGame = new(new SeaEngine.CardManager.CardLoader(File.ReadAllLines(Setting.DBPath)), new SimpleLogger("Dev"), p1, p2);
             _seaGame.Init(d1, d2);
             _hasSomethingToSend = true;
         }
@@ -92,7 +92,9 @@ namespace Game.Server.Chess
 
                     if (_seaGame.Data.Winner != null)
                     {
-                        Log.WriteLog($"[ChessGame] : {_seaGame.Data.WinnerId} Win ! | Start Clean Game");
+                        var winner = _players.FirstOrDefault(x => x.Name == _seaGame.Data.WinnerId);
+                        if (winner == null) throw new InvalidOperationException("Winnder Cant Found");
+                        Log.WriteLog($"[ChessGame] : Player-{winner.Name} / Deck-{winner.Deck} Win ! | Start Clean Game");
                         _session.BroadCastPlayer(Encoding.UTF8.GetBytes(_seaGame.Serialize()));
                         gameState = GameState.Stopped;
                     }
