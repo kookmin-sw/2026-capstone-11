@@ -24,6 +24,7 @@ public class Unit(Card card)
         Atk = card.Data.Atk;
         MaxHp = card.Data.Hp;
         Hp = card.Data.Hp;
+        Buffs.Clear();
         
         IsPlaced = true;
         PosX = x;
