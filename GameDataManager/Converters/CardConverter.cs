@@ -36,14 +36,18 @@ public class CardConverter : JsonConverter<Card>
         writer.WriteValue(value.Unit.MaxHp);
         
         writer.WritePropertyName("Buff");
-        writer.WriteStartObject();
+        writer.WriteStartArray();
         foreach (var keyValuePair in value.Unit.Buffs)
         {
-            writer.WritePropertyName(keyValuePair.Key);
+            writer.WriteStartObject();
+            writer.WritePropertyName("id");
+            writer.WriteValue(keyValuePair.Key);
+            writer.WritePropertyName("Amount");
             writer.WriteValue(keyValuePair.Value);
+            writer.WriteEndObject();
         }
-        writer.WriteEndObject();
-        
+        writer.WriteEndArray();
+
         writer.WriteEndObject();
     }
 
