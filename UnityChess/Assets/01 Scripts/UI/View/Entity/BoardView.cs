@@ -13,6 +13,8 @@ namespace ui.view.board
         public GameObject boardParent;
 
         public const int SIZE = 6;
+        public const int ORIGIN_X = -2;
+        public const int ORIGIN_Y = -2;
 
         public Tilemap tilemap;
         public TileBase highlightTile;
@@ -45,21 +47,33 @@ namespace ui.view.board
         // 보드 좌표로부터 타일맵 셀 좌표 계산
         public static Vector3Int BoardToCell(Vector2Int boardPos, bool isP1 = true)
         {
-            int x = isP1 ? boardPos.x - (SIZE / 2) : -boardPos.x + (SIZE / 2);
-            int y = isP1 ? boardPos.y - (SIZE / 2) : -boardPos.y + (SIZE / 2);
+            int bx = boardPos.y + ORIGIN_X; // x, y 스왑
+            int by = boardPos.x + ORIGIN_Y; // x, y 스왑
+            
+            if (!isP1)
+            {
+                bx = (SIZE - 1) - bx;
+                by = (SIZE - 1) - by;
+            }
 
-            Debug.Log($"BoardToCell: Board({boardPos.x}, {boardPos.y}) -> Cell({x}, {y})");
-            return new Vector3Int(x, y, 2);
+            Debug.Log($"BoardToCell: Board({boardPos.x}, {boardPos.y}) -> Cell({bx}, {by})");
+            return new Vector3Int(bx-1, by-1, 2);
         }
 
         // 타일맵 셀 좌표로부터 보드 좌표 계산
         public static Vector2Int CellToBoard(Vector3Int cellPos, bool isP1 = true)
         {
-            int x = isP1 ? cellPos.x + (SIZE / 2) - 1 : -cellPos.x + (SIZE / 2);
-            int y = isP1 ? cellPos.y + (SIZE / 2) - 1 : -cellPos.y + (SIZE / 2);
+            int bx = cellPos.x - ORIGIN_X;
+            int by = cellPos.y - ORIGIN_Y;
 
-            Debug.Log($"CellToBoard: Cell({cellPos.x}, {cellPos.y}) -> Board({x}, {y})");
-            return new Vector2Int(x, y);
+            if (!isP1)
+            {
+                bx = (SIZE - 1) - bx;
+                by = (SIZE - 1) - by;
+            }
+
+            Debug.Log($"CellToBoard: Cell({cellPos.x}, {cellPos.y}) -> Board({by}, {bx})");
+            return new Vector2Int(by, bx);
         }
     }
 }

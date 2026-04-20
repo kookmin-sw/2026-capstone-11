@@ -53,8 +53,7 @@ namespace Core.StateManagement
     public class EffectState
     {
         public EntityID id;
-        public int value;
-        public int duration;
+        public int amount;
     }
 
     /// <summary>
@@ -299,8 +298,7 @@ namespace Core.StateManagement
                 result.Add(new EffectState
                 {
                     id = new EntityID(buff.Id),
-                    value = buff.Value,
-                    duration = buff.Duration
+                    amount = buff.Amount,
                 });
             }
 

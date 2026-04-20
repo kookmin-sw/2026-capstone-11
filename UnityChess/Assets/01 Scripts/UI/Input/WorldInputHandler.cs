@@ -7,7 +7,7 @@ using events.client;
 using ui.view.unit;
 using ui.view.board;
 
-public class WorldInputHandler : MonoBehaviour
+public class WorldInputHandler : MonoBehaviour, IInputHandler
 {
     [SerializeField] private Camera cam;
     // 보드의 타일맵
@@ -39,7 +39,7 @@ public class WorldInputHandler : MonoBehaviour
         HandleHover();
     }
 
-    private void HandleClick()
+    public void HandleClick()
     {
         var worldPos = cam.ScreenToWorldPoint(Input.mousePosition);
         worldPos.z = 0;
@@ -72,7 +72,7 @@ public class WorldInputHandler : MonoBehaviour
         eventBus.Publish(new IClientEvents.EmptySelectedEvent());
     }
 
-    private void HandleHover()
+    public void HandleHover()
     {
         Vector2 pos = cam.ScreenToWorldPoint(Input.mousePosition);
         var hit = Physics2D.Raycast(pos, Vector2.zero, 0f, hoverableLayer);

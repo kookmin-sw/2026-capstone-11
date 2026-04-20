@@ -7,6 +7,7 @@ using events.ui;
 using ui.view.board;
 using Core;
 using Core.StateManagement;
+using events.server;
 
 public enum SelectionState
 {
@@ -65,6 +66,7 @@ public class ChessUIController : MonoBehaviour
 
         eventBus.Subscribe<IClientEvents.UnitSelectedEvent>(OnUnitSelected);
         eventBus.Subscribe<IClientEvents.CellSelectedEvent>(OnCellSelected);
+        eventBus.Subscribe<IClientEvents.CardSelectedEvent>(OnCardSelected);
         eventBus.Subscribe<IClientEvents.EmptySelectedEvent>(OnEmptySelected);
 
         ResetSelectionAndHighlights();
@@ -78,6 +80,7 @@ public class ChessUIController : MonoBehaviour
 
         eventBus.Unsubscribe<IClientEvents.UnitSelectedEvent>(OnUnitSelected);
         eventBus.Unsubscribe<IClientEvents.CellSelectedEvent>(OnCellSelected);
+        eventBus.Unsubscribe<IClientEvents.CardSelectedEvent>(OnCardSelected);
         eventBus.Unsubscribe<IClientEvents.EmptySelectedEvent>(OnEmptySelected);
     }
 
@@ -99,13 +102,22 @@ public class ChessUIController : MonoBehaviour
         Debug.Log($"[ChessUIController] Unit selected: {clickedUid}");
 
         // source가 이미 선택된 상태에서 entity target을 고르는 단계라면
-        // 이번 클릭은 source 재선택이 아니라 target 선택으로 해석한다.
+        // 이번 클릭은 source 재선택이 아니라 target 선택으로 해석한다
         if (state == SelectionState.SelectingEntityTargets && !string.IsNullOrWhiteSpace(selectedSourceUid))
         {
             TrySelectEntityTarget(clickedUid);
             return;
         }
 
+        TrySelectSource(clickedUid);
+    }
+
+    private void OnCardSelected(IClientEvents.CardSelectedEvent evt)
+    {
+        string clickedUid = evt.CardUUID;
+        Debug.Log($"[ChessUIController] Card selected: {clickedUid}");
+
+        // 카드 선택은 항상 source 선택으로 해석한다
         TrySelectSource(clickedUid);
     }
 
@@ -375,10 +387,6 @@ public class ChessUIController : MonoBehaviour
     {
         Debug.Log($"[ChessUIController] Submit Action UID: {actionUid}");
 
-        // TODO:
-        // 실제 네트워크 전송 또는 client command event 발행으로 교체.
-        //
-        // 예시:
-        // eventBus.Publish(new ClientActionConfirmedEvent(actionUid));
+        NetworkEventBus.Instance.Publish(new IServerEvents.ReplyQueryEvent { actionId = actionUid });
     }
 }

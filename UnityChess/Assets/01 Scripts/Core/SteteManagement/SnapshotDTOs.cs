@@ -88,12 +88,9 @@ namespace Core.DTO
     {
         [JsonProperty("Id")]
         public string Id;
-
-        [JsonProperty("Value")]
-        public int Value;
-
-        [JsonProperty("Duration")]
-        public int Duration;
+        
+        [JsonProperty("Amount")]
+        public int Amount;
     }
 
     [Serializable]
