@@ -40,6 +40,8 @@ public class ChessUIController : MonoBehaviour
     private readonly List<EntityID> selectedTargetIds = new();
     private readonly HashSet<string> validTargetCandidateIds = new(StringComparer.Ordinal);
 
+    private bool isInputLocked;
+    
     private void Start()
     {
         Init();
@@ -98,6 +100,8 @@ public class ChessUIController : MonoBehaviour
     // BoardView에서 직접 호출하기 위한 진입점
     private void OnUnitSelected(IClientEvents.UnitSelectedEvent evt)
     {
+        if (isInputLocked) return;
+
         string clickedUid = evt.UnitUUID;
         Debug.Log($"[ChessUIController] Unit selected: {clickedUid}");
 
@@ -114,6 +118,8 @@ public class ChessUIController : MonoBehaviour
 
     private void OnCardSelected(IClientEvents.CardSelectedEvent evt)
     {
+        if (isInputLocked) return;
+
         string clickedUid = evt.CardUUID;
         Debug.Log($"[ChessUIController] Card selected: {clickedUid}");
 
@@ -330,6 +336,8 @@ public class ChessUIController : MonoBehaviour
 
     private void OnCellSelected(IClientEvents.CellSelectedEvent evt)
     {
+        if (isInputLocked) return;
+
         Debug.Log($"[ChessUIController] Cell selected at: {evt.Pos}");
 
         if (state != SelectionState.SelectingCellTarget)
@@ -355,6 +363,8 @@ public class ChessUIController : MonoBehaviour
 
     private void OnEmptySelected(IClientEvents.EmptySelectedEvent evt)
     {
+        if (isInputLocked) return;
+
         Debug.Log("[ChessUIController] Empty space selected");
         ResetSelectionAndHighlights();
     }
@@ -388,5 +398,18 @@ public class ChessUIController : MonoBehaviour
         Debug.Log($"[ChessUIController] Submit Action UID: {actionUid}");
 
         NetworkEventBus.Instance.Publish(new IServerEvents.ReplyQueryEvent { actionId = actionUid });
+    }
+
+    public void SetInputLocked(bool locked)
+    {
+        isInputLocked = locked;
+
+        if (locked)
+        {
+            ResetSelectionAndHighlights();
+            state = SelectionState.Locked;
+        }
+        else 
+            state = SelectionState.None;
     }
 }

@@ -8,6 +8,7 @@ using Core.StateManagement;
 using Core.DTO;
 using core.UI;
 using System.Linq;
+using UI.HUD;
 
 namespace Core
 {
@@ -15,6 +16,7 @@ namespace Core
     {
         [SerializeField] private GameStateStore gameStateStore;
         [SerializeField] private ViewFactory viewFactory;
+        [SerializeField] private ChessHUDController hudController;
         [SerializeField] private ChessUIEventBus eventBus;
         
         // View가 생성될 때의 부모 transform
@@ -124,6 +126,12 @@ namespace Core
                 localPlayerId: gameStateStore.Players.Keys.First(), // TODO: 실제 local player ID로 변경 필요
                 boardParent: boardParent,
                 handParent: handParent, 
+                isLocalPlayerP1: true
+            );
+
+            hudController.RefreshHUD(
+                localPlayerId: gameStateStore.Players.Keys.First(), // TODO: 실제 local player
+                playerNames: gameStateStore.Players.Values.Select(p => p.playerId).ToArray(),
                 isLocalPlayerP1: true
             );
 

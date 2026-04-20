@@ -18,8 +18,8 @@ public class TestInit : MonoBehaviour
     [SerializeField] private Transform handParent;
 
     [Header("Expectation")]
-    [SerializeField] private string expectedActivePlayerId = "Player1";
-    [SerializeField] private string localPlayerId = "Player1";
+    [SerializeField] private string expectedActivePlayerId = "Midori";
+    [SerializeField] private string localPlayerId = "Midori";
     [SerializeField] private int expectedPlacedUnitCount = 2;
     [SerializeField] private int expectedHandCount = 3;
 

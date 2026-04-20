@@ -7252,8 +7252,8 @@ MonoBehaviour:
   stateStore: {fileID: 252991396}
   boardView: {fileID: 427112746}
   handParent: {fileID: 454696266}
-  expectedActivePlayerId: Player1
-  localPlayerId: Player1
+  expectedActivePlayerId: Midori
+  localPlayerId: Midori
   expectedPlacedUnitCount: 2
   expectedHandCount: 3
 --- !u!4 &1141082426
@@ -7971,6 +7971,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::core.ChessGameManager
   gameStateStore: {fileID: 252991396}
   viewFactory: {fileID: 1306483364}
+  hudController: {fileID: 1826855864}
   eventBus: {fileID: 64190383}
   boardParent: {fileID: 427112741}
   handParent: {fileID: 454696266}
@@ -8802,6 +8803,7 @@ GameObject:
   - component: {fileID: 1826855862}
   - component: {fileID: 1826855861}
   - component: {fileID: 1826855860}
+  - component: {fileID: 1826855864}
   m_Layer: 5
   m_Name: HUD Canvas
   m_TagString: Untagged
@@ -8896,6 +8898,29 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1826855864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1826855859}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91a07762a031bb789bf591dc31fc08a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.HUD.ChessHUDController
+  gameManager: {fileID: 1470376623}
+  uiController: {fileID: 1157191416}
+  turnText: {fileID: 650406390}
+  turnIndicators:
+  - {fileID: 686115936}
+  - {fileID: 1129234140}
+  turnEndButton: {fileID: 788997071}
+  playerText:
+  - {fileID: 102093994}
+  - {fileID: 1942703222}
+  localPlayerId: Player1
 --- !u!1 &1942703220
 GameObject:
   m_ObjectHideFlags: 0
