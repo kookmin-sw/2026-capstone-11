@@ -7,8 +7,6 @@ public class GameInitParam : MonoBehaviour
     [Header ("Game Session Data")]
     public string Player1Name;
     public string Player1Deck;
-    public string Player2Name;
-    public string Player2Deck;
 
 
     [Header ("Network Data")]
