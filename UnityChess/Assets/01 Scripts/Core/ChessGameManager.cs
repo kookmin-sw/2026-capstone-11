@@ -27,6 +27,14 @@ namespace Core
         public GameStateStore State => gameStateStore;
 
         // 스냅샷 수신 시에 StateStore에 적용하기 위해 위임
+        public void InitSnapshotJson(string json, string localPlayerId)
+        {
+            gameStateStore.LocalPlayerId = localPlayerId;
+
+            gameStateStore.ApplySnapshotJson(json);
+            PublishSnapshotRefreshed();
+        }
+        
         public void ApplySnapshotJson(string json)
         {
             gameStateStore.ApplySnapshotJson(json);
@@ -123,16 +131,16 @@ namespace Core
         {
             viewFactory.RebuildFromState(
                 state: gameStateStore,
-                localPlayerId: gameStateStore.Players.Keys.First(), // TODO: 실제 local player ID로 변경 필요
+                localPlayerId: gameStateStore.LocalPlayerId,
                 boardParent: boardParent,
                 handParent: handParent, 
-                isLocalPlayerP1: true
+                isLocalPlayerP1: gameStateStore.IsLocalPlayer()
             );
 
             hudController.RefreshHUD(
-                localPlayerId: gameStateStore.Players.Keys.First(), // TODO: 실제 local player
+                localPlayerId: gameStateStore.LocalPlayerId, // TODO: 실제 local player
                 playerNames: gameStateStore.Players.Values.Select(p => p.playerId).ToArray(),
-                isLocalPlayerP1: true
+                isLocalPlayerP1: gameStateStore.IsLocalPlayer()
             );
             //eventBus.Publish(new SnapshotRefreshedEvent());
         }
