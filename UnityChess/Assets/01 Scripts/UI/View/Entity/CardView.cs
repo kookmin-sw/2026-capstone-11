@@ -1,5 +1,7 @@
+using System;
 using entity.targetable;
 using events;
+using events.client;
 using ui.tooltip;
 using UnityEngine;
 
@@ -38,31 +40,43 @@ namespace ui.view.card
         public override void Init(BaseViewData baseData, IEventBus eventBus)
         {
             base.Init(baseData, eventBus);
-
             data = (CardViewData)baseData;
         }
 
         public TooltipData GetTooltipData()
         {
             // 시점에 따라 유닛 카드 또는 스펠 카드 툴팁을 반환
-            if (data.visualType == VisualType.UnitCard)
-            {
-                return TooltipBuilder.UnitCardTooltip(definition);
-            }
-            else // VisualType.SpellCard
-            {
-                return TooltipBuilder.SpellCardTooltip(definition);
-            }
+            // if (data.visualType == VisualType.UnitCard)
+            // {
+            //     return TooltipBuilder.UnitCardTooltip(definition);
+            // }
+            // else // VisualType.SpellCard
+            // {
+            //     return TooltipBuilder.SpellCardTooltip(definition);
+            // }
+
+            // 유닛과 효과 설명을 함께 표시하는 카드 툴팁 (후보)
+            return TooltipBuilder.CadTooltip(definition);
+        }
+
+        public void OnSelected()
+        {
+            Debug.Log("Card selected: " + data.cardId);
         }
 
         public override void Subscribe()
         {
-            
+            eventBus.Subscribe<IClientEvents.CardSelectedEvent>(OnSelected);
+        }
+
+        private void OnSelected(IClientEvents.CardSelectedEvent @event)
+        {
+            throw new NotImplementedException();
         }
 
         public override void UnSubscribe()
         {
-            
+            eventBus.Unsubscribe<IClientEvents.CardSelectedEvent>(OnSelected);
         }
     }
 }

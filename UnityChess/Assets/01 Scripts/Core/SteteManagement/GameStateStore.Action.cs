@@ -68,8 +68,8 @@ namespace Core.StateManagement
                     noTargetActionBySource[action.source] = action;
                 }
             }
-
-            // Bumik : 누가 이기면 여기서 터져요.
+        
+            // 승리 이벤트 발생 시 에러 발생
             if (turnEndAction == null)
                 throw new InvalidOperationException("[GameStateStore] TurnEnd action is missing.");
         }

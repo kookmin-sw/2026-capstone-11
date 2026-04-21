@@ -7,6 +7,14 @@ namespace events.server
 {
     public interface IServerEvents
     {
+        /// <summary>
+        /// 서버로 쿼리 응답을 보낼 때 사용하는 이벤트
+        /// </summary>
+        public class ReplyQueryEvent : IBaseEvent
+        {
+            public string actionId;    
+        }
+
         // 유닛 관련 이벤트
         /// <summary>
         /// 유닛 소환 이벤트

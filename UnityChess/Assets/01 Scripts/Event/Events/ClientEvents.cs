@@ -1,6 +1,7 @@
 using UnityEngine;
 using entity.targetable;
 using ui.view.unit;
+using ui.view.card;
 
 /// <summary>
 /// 사용자의 입력과 관련된 클라이언트측 이벤트 타입을 정의
@@ -18,6 +19,17 @@ namespace events.client
 
             public UnitView Unit { get; set; }
             public string UnitUUID => Unit.Id.UUID;
+        }
+
+        public class CardSelectedEvent : IBaseEvent
+        {
+            public CardSelectedEvent(CardView card)
+            {
+                Card = card;
+            }
+
+            public CardView Card { get; set; }
+            public string CardUUID => Card.Id.UUID;
         }
 
         public class CellSelectedEvent : IBaseEvent

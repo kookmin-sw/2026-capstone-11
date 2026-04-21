@@ -8,6 +8,7 @@ using ui.view.board;
 using ui.view.card;
 using ui.view.unit;
 using Core.StateManagement;
+using Game.Network;
 
 namespace core.UI
 {
@@ -139,6 +140,7 @@ namespace core.UI
                     var boardView = boardParent.GetComponent<BoardView>();
                     var cell = BoardView.BoardToCell(unit.position, isLocalPlayerP1);
                     var worldPos = boardView.tilemap.GetCellCenterWorld(cell);
+                    
                     mb.transform.position = worldPos;
                 }
             }
