@@ -12,9 +12,9 @@ public class Or_N : IEffect
 
     public List<EffectTarget> GetTargets(Uid source, GameData data)
     {
-        return data.GetMoveArea(data.GetCardById(source))
-            .Where(p => !data.Board.IsEmptyCell(p.Item1, p.Item2) && 
-                        data.Board.GetCardByPos(p.Item1, p.Item2)!.Owner != data.GetCardById(source).Owner)
+        var card = data.GetCardById(source);
+        return data.GetMoveArea(card)
+            .Where(p => !data.Board.IsEmptyCell(p.Item1, p.Item2) && data.Board.GetCardByPos(p.Item1, p.Item2)!.Owner != card.Owner)
             .Select(p => EffectTarget.Unit(data.Board.GetCardByPos(p.Item1, p.Item2)!.Guid))
             .ToList();
     }

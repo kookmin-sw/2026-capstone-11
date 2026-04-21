@@ -16,6 +16,21 @@ from google.protobuf.json_format import MessageToDict
 from RL_AI.protos import seaengine_pb2, seaengine_pb2_grpc
 
 
+def _dotnet_root_from_cmd(dotnet_cmd: str) -> str:
+    try:
+        info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
+        for line in info.stdout.splitlines():
+            if "Base Path:" in line:
+                base_path = line.split("Base Path:", 1)[1].strip()
+                return str(Path(base_path).resolve().parents[1])
+    except Exception:
+        pass
+    cmd_path = Path(dotnet_cmd).resolve()
+    if cmd_path.parent.name == "bin" and cmd_path.parent.parent.name:
+        return str(cmd_path.parent.parent)
+    return str(cmd_path.parent)
+
+
 class SeaEngineSession:
     def __init__(
         self,
@@ -47,7 +62,7 @@ class SeaEngineSession:
             (Path.home() / ".dotnet_cli_home").resolve()
         )
         launch_cmd = self._build_launch_command(resolved_dotnet)
-        dotnet_root = Path(resolved_dotnet).resolve().parent if resolved_dotnet else None
+        dotnet_root = _dotnet_root_from_cmd(resolved_dotnet) if resolved_dotnet else None
         
         env = {
             **os.environ,
@@ -55,8 +70,8 @@ class SeaEngineSession:
             "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1",
         }
         if dotnet_root is not None:
-            env.setdefault("DOTNET_ROOT", str(dotnet_root))
-            env.setdefault("DOTNET_ROOT_X64", str(dotnet_root))
+            env["DOTNET_ROOT"] = str(dotnet_root)
+            env["DOTNET_ROOT_X64"] = str(dotnet_root)
 
         # 서버 프로세스 실행
         self._proc = subprocess.Popen(
@@ -146,6 +161,7 @@ class SeaEngineSession:
         player2_deck: str = "",
         player1_id: str = "P1",
         player2_id: str = "P2",
+        logger_mode: str = "simple",
     ) -> Dict[str, Any]:
         if not self._stub: raise RuntimeError("Session not started")
         request = seaengine_pb2.InitRequest(
