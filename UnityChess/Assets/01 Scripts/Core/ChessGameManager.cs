@@ -134,7 +134,6 @@ namespace Core
                 playerNames: gameStateStore.Players.Values.Select(p => p.playerId).ToArray(),
                 isLocalPlayerP1: true
             );
-
             //eventBus.Publish(new SnapshotRefreshedEvent());
         }
 

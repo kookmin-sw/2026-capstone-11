@@ -140,7 +140,7 @@ namespace core.UI
                     var boardView = boardParent.GetComponent<BoardView>();
                     var cell = BoardView.BoardToCell(unit.position, isLocalPlayerP1);
                     var worldPos = boardView.tilemap.GetCellCenterWorld(cell);
-                    Debug.Log(boardView.tilemap.GetCellCenterWorld(cell));
+                    
                     mb.transform.position = worldPos;
                 }
             }

@@ -54,6 +54,7 @@ namespace Core.StateManagement
     {
         public EntityID id;
         public int amount;
+
     }
 
     /// <summary>
@@ -223,15 +224,12 @@ namespace Core.StateManagement
             RebuildBoardIndex();
 
             ActivePlayerId = snapshot.Data.ActivePlayerId ?? string.Empty;
-            Debug.Log($"[GameStateStore] ActivePlayerId set to: {ActivePlayerId}");
-
             ApplyActions(snapshot.Actions);
         }
 
         private void ApplyPlayers(GameSnapshotDataDTO data)
         {
             Debug.Log($"[GameStateStore] Applying players. Player1: {data.Player1?.Id}, Player2: {data.Player2?.Id}");
-
             AddOrReplacePlayer(new PlayerState(data.Player1?.Id ?? "Player1")
             {
                 hand = ToEntityIdList(data.Player1?.Hand),
@@ -347,9 +345,6 @@ namespace Core.StateManagement
 
             if (string.IsNullOrWhiteSpace(state.owner))
                 throw new ArgumentException("owner is empty", nameof(state));
-
-            if (state.curHp < 0)
-                throw new ArgumentException("curHp must be >= 0", nameof(state));
 
             if (state.maxHp < 0)
                 throw new ArgumentException("maxHp must be >= 0", nameof(state));

@@ -12,7 +12,7 @@ public static class CombatUtils
 
     public static bool Damage(Card target, int amount, GameData data)
     {
-        if (amount <= 0 || target.Unit.Hp <= 0) return false;
+        if (amount <= 0) return false;
         target.Unit.Hp -= amount;
         if (target.Unit.Hp > 0) return false;
         

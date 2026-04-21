@@ -5,17 +5,27 @@ from __future__ import annotations
 import os
 import json
 import uuid
-import time
+import threading
+import ctypes
 from pathlib import Path
 from typing import Any, Dict, Optional, List
+
+from RL_AI.cards.card_db import Role, load_card_list
+from RL_AI.SeaEngine.observation import GLOBAL_FEATURE_DIM
 
 class PythonNetSession:
     _clr_initialized = False
     _assembly_loaded = False
+    _init_lock = threading.Lock()
     _asm = None
     _game_type = None
     _card_loader_type = None
+    _simple_logger_type = None
     _silent_logger_type = None
+    _logger_interface_type = None
+    _logger_requires_game_id = False
+    _rl_exporter_type = None
+    _rl_export_method = None
 
     def __init__(
         self,
@@ -31,12 +41,11 @@ class PythonNetSession:
             else (self.project_root.parent / "cards" / "Cards.csv").resolve()
         )
         self._game = None
+        self._logger = None
+        self._logger_mode = "silent"
         self._turn_counter = 1
         self._uid_parse_method = None
         self._loader = None
-        self._profile_enabled = os.getenv("SEAENGINE_PROFILE", "0") == "1"
-        self._timings: Dict[str, float] = {}
-        self._timing_counts: Dict[str, int] = {}
 
     def _candidate_dll_paths(self) -> List[Path]:
         base = self.project_root / "csharp" / "SeaEngine" / "bin"
@@ -54,88 +63,184 @@ class PythonNetSession:
             + ", ".join(str(path) for path in self._candidate_dll_paths())
         )
 
+    def _resolve_newtonsoft_json_path(self) -> Optional[Path]:
+        direct_path = self.dll_dir / "Newtonsoft.Json.dll"
+        if direct_path.exists():
+            return direct_path
+        nuget_root = Path.home() / ".nuget" / "packages" / "newtonsoft.json"
+        if nuget_root.exists():
+            candidates = sorted(nuget_root.glob("*/lib/**/Newtonsoft.Json.dll"))
+            if candidates:
+                return candidates[-1]
+        return None
+
+    def _candidate_dotnet_roots(self) -> List[Path]:
+        candidates: List[Path] = []
+        env_root = os.environ.get("DOTNET_ROOT") or os.environ.get("DOTNET_ROOT_X64")
+        if env_root:
+            candidates.append(Path(env_root))
+        candidates.extend(
+            [
+                Path.home() / ".dotnet",
+                Path("/usr/share/dotnet"),
+                Path("/usr/lib/dotnet"),
+                Path("/usr/lib64/dotnet"),
+                Path("/usr/local/share/dotnet"),
+                Path("/usr/local/lib/dotnet"),
+                Path("/opt/microsoft/dotnet"),
+                Path("/opt/dotnet"),
+                Path("/usr/lib/x86_64-linux-gnu/dotnet"),
+                Path("/snap/dotnet-sdk/current"),
+            ]
+        )
+        unique: List[Path] = []
+        seen = set()
+        for path in candidates:
+            resolved = path.expanduser()
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            unique.append(resolved)
+        return unique
+
+    def _resolve_dotnet_root(self) -> Optional[Path]:
+        for candidate in self._candidate_dotnet_roots():
+            if self._is_usable_dotnet_root(candidate):
+                return candidate
+        return None
+
+    @staticmethod
+    def _is_usable_dotnet_root(root: Path) -> bool:
+        shared = root / "shared" / "Microsoft.NETCore.App"
+        hostfxr_dir = root / "host" / "fxr"
+        hostfxr_libs = sorted(hostfxr_dir.glob("*/libhostfxr.so"))
+        if not (shared.exists() and any(shared.iterdir()) and hostfxr_libs):
+            return False
+        for hostfxr_lib in hostfxr_libs[::-1]:
+            try:
+                ctypes.CDLL(str(hostfxr_lib))
+                return True
+            except OSError:
+                continue
+        return False
+
+    def _resolve_runtime_config(self, dll_path: Path) -> Optional[Path]:
+        runtime_config = dll_path.with_suffix(".runtimeconfig.json")
+        return runtime_config if runtime_config.exists() else None
+
     def start(self) -> None:
         if PythonNetSession._clr_initialized:
             return
-        
-        import clr_loader
-        from pythonnet import set_runtime
-        import sys
-        
-        # Ensure DLL directory is in sys.path for assembly resolution
-        dll_dir_str = str(self.dll_dir.resolve())
-        if dll_dir_str not in sys.path:
-            sys.path.append(dll_dir_str)
-            
-        try:
-            rt = clr_loader.get_coreclr()
-            set_runtime(rt)
-        except Exception:
-            # Runtime might already be set
-            pass
-            
-        import clr
-        import System
 
-        dll_path = self._resolve_dll_path()
-        self.dll_dir = dll_path.parent
+        with PythonNetSession._init_lock:
+            if PythonNetSession._clr_initialized:
+                return
 
-        # Load Newtonsoft.Json first if present alongside the engine DLL
-        json_path = self.dll_dir / "Newtonsoft.Json.dll"
-        if json_path.exists():
+            import clr_loader
+            from pythonnet import set_runtime
+            import sys
+
+            # Ensure DLL directory is in sys.path for assembly resolution
+            dll_dir_str = str(self.dll_dir.resolve())
+            if dll_dir_str not in sys.path:
+                sys.path.append(dll_dir_str)
+
             try:
-                clr.AddReference("Newtonsoft.Json")
-            except Exception:
-                clr.AddReference(str(json_path))
+                dll_path = self._resolve_dll_path()
+                dotnet_root = self._resolve_dotnet_root()
+                runtime_config = self._resolve_runtime_config(dll_path)
+                if dotnet_root is None:
+                    checked = ", ".join(str(path) for path in self._candidate_dotnet_roots())
+                    # Let clr_loader / hostfxr perform its own discovery when a
+                    # standard runtime is installed but not found by our local scan.
+                    # We still report the candidate set to make debugging explicit.
+                    print(f"[!] No local .NET runtime root matched. Checked: {checked or '<none>'}")
+                else:
+                    os.environ["DOTNET_ROOT"] = str(dotnet_root)
+                    os.environ["DOTNET_ROOT_X64"] = str(dotnet_root)
+                    print(f"[*] pythonnet dotnet root: {dotnet_root}")
+                os.environ["PYTHONNET_RUNTIME"] = "coreclr"
+                if runtime_config is not None:
+                    print(f"[*] pythonnet runtime config: {runtime_config}")
+                rt = clr_loader.get_coreclr(
+                    runtime_config=str(runtime_config) if runtime_config is not None else None,
+                    dotnet_root=str(dotnet_root) if dotnet_root is not None else None,
+                )
+                try:
+                    set_runtime(rt)
+                except RuntimeError as runtime_exc:
+                    runtime_msg = str(runtime_exc)
+                    if "already been loaded" not in runtime_msg:
+                        raise
+                    # Another thread in the same process may have initialized the
+                    # runtime milliseconds earlier. Treat that as success and move on.
+                    print("[*] pythonnet runtime already initialized in this process")
+            except Exception as exc:
+                raise RuntimeError(
+                    "Failed to initialize the .NET runtime for PythonNet. "
+                    "Check that a usable Microsoft.NETCore.App runtime is installed "
+                    "and that DOTNET_ROOT points to its root directory."
+                ) from exc
 
-        if not PythonNetSession._assembly_loaded:
-            # Load the engine assembly directly from disk so PythonNet can reflect over it.
-            PythonNetSession._asm = System.Reflection.Assembly.LoadFrom(str(dll_path))
-            try:
-                clr.AddReference("SeaEngine")
-            except Exception:
-                # Assembly.LoadFrom above is enough for reflection-based usage.
-                pass
-            PythonNetSession._game_type = PythonNetSession._asm.GetType("SeaEngine.Game")
-            PythonNetSession._card_loader_type = PythonNetSession._asm.GetType("SeaEngine.CardManager.CardLoader")
-            PythonNetSession._silent_logger_type = PythonNetSession._asm.GetType("SeaEngine.Logger.SilentLogger")
-            uid_type = PythonNetSession._asm.GetType("SeaEngine.Common.Uid")
-            if uid_type is None:
-                raise RuntimeError("SeaEngine.Common.Uid type not found in assembly")
-            self._uid_parse_method = uid_type.GetMethod("Parse")
-            if self._uid_parse_method is None:
-                raise RuntimeError("SeaEngine.Common.Uid.Parse(string) not found")
-            PythonNetSession._assembly_loaded = True
-        else:
-            uid_type = PythonNetSession._asm.GetType("SeaEngine.Common.Uid")
-            self._uid_parse_method = uid_type.GetMethod("Parse")
-            if self._uid_parse_method is None:
-                raise RuntimeError("SeaEngine.Common.Uid.Parse(string) not found")
+            import clr
+            import System
 
-        PythonNetSession._clr_initialized = True
+            dll_path = self._resolve_dll_path()
+            self.dll_dir = dll_path.parent
+
+            # Load Newtonsoft.Json only when we can resolve a concrete file path.
+            # Some environments do not have a globally resolvable assembly name,
+            # so loading by path is more reliable than AddReference("name").
+            json_path = self._resolve_newtonsoft_json_path()
+            if json_path is not None and json_path.exists():
+                try:
+                    System.Reflection.Assembly.LoadFrom(str(json_path))
+                except Exception:
+                    try:
+                        clr.AddReference(str(json_path))
+                    except Exception:
+                        # Newtonsoft is optional for the bridge path we use here.
+                        pass
+
+            if not PythonNetSession._assembly_loaded:
+                # Load the engine assembly directly from disk so PythonNet can reflect over it.
+                PythonNetSession._asm = System.Reflection.Assembly.LoadFrom(str(dll_path))
+                try:
+                    clr.AddReference("SeaEngine")
+                except Exception:
+                    # Assembly.LoadFrom above is enough for reflection-based usage.
+                    pass
+                PythonNetSession._game_type = PythonNetSession._asm.GetType("SeaEngine.Game")
+                PythonNetSession._card_loader_type = PythonNetSession._asm.GetType("SeaEngine.CardManager.CardLoader")
+                PythonNetSession._simple_logger_type = PythonNetSession._asm.GetType("SeaEngine.Logger.SimpleLogger")
+                PythonNetSession._logger_interface_type = PythonNetSession._asm.GetType("SeaEngine.Logger.ILogger")
+                if PythonNetSession._simple_logger_type is None:
+                    raise RuntimeError("SeaEngine.Logger.SimpleLogger type not found in assembly")
+                if PythonNetSession._logger_interface_type is None:
+                    raise RuntimeError("SeaEngine.Logger.ILogger type not found in assembly")
+                PythonNetSession._logger_requires_game_id = True
+                PythonNetSession._rl_exporter_type = PythonNetSession._asm.GetType("SeaEngine.RL.RlObservationExporter")
+                if PythonNetSession._rl_exporter_type is not None:
+                    PythonNetSession._rl_export_method = PythonNetSession._rl_exporter_type.GetMethod("Export")
+                uid_type = PythonNetSession._asm.GetType("SeaEngine.Common.Uid")
+                if uid_type is None:
+                    raise RuntimeError("SeaEngine.Common.Uid type not found in assembly")
+                self._uid_parse_method = uid_type.GetMethod("Parse")
+                if self._uid_parse_method is None:
+                    raise RuntimeError("SeaEngine.Common.Uid.Parse(string) not found")
+                PythonNetSession._assembly_loaded = True
+            else:
+                uid_type = PythonNetSession._asm.GetType("SeaEngine.Common.Uid")
+                self._uid_parse_method = uid_type.GetMethod("Parse")
+                if self._uid_parse_method is None:
+                    raise RuntimeError("SeaEngine.Common.Uid.Parse(string) not found")
+
+            PythonNetSession._clr_initialized = True
 
     def close(self) -> None:
         self._game = None
-
-    def _record_timing(self, key: str, elapsed: float) -> None:
-        if not self._profile_enabled:
-            return
-        self._timings[key] = self._timings.get(key, 0.0) + elapsed
-        self._timing_counts[key] = self._timing_counts.get(key, 0) + 1
-
-    def drain_profile_stats(self) -> Dict[str, Dict[str, float]]:
-        if not self._profile_enabled:
-            return {}
-        stats = {
-            key: {
-                "total_sec": self._timings.get(key, 0.0),
-                "count": float(self._timing_counts.get(key, 0)),
-            }
-            for key in sorted(self._timings.keys())
-        }
-        self._timings.clear()
-        self._timing_counts.clear()
-        return stats
+        self._logger = None
+        self._logger_mode = "silent"
 
     def ping(self) -> Dict[str, Any]:
         return {"message": "pong"}
@@ -147,29 +252,112 @@ class PythonNetSession:
         player2_deck: str = "",
         player1_id: str = "P1",
         player2_id: str = "P2",
+        logger_mode: str = "silent",
     ) -> Dict[str, Any]:
-        start_t = time.perf_counter()
         import System
         if not PythonNetSession._clr_initialized:
             self.start()
-        if PythonNetSession._game_type is None or PythonNetSession._card_loader_type is None or PythonNetSession._silent_logger_type is None:
+        if PythonNetSession._game_type is None or PythonNetSession._card_loader_type is None:
             raise RuntimeError("SeaEngine assembly types are not initialized")
+        if PythonNetSession._simple_logger_type is None or PythonNetSession._logger_interface_type is None:
+            raise RuntimeError("SeaEngine logger types are not initialized")
+        if PythonNetSession._rl_exporter_type is not None and PythonNetSession._rl_export_method is None:
+            PythonNetSession._rl_export_method = PythonNetSession._rl_exporter_type.GetMethod("Export")
 
         if self._loader is None:
-            self._loader = System.Activator.CreateInstance(PythonNetSession._card_loader_type, self.card_data_path)
-        logger = System.Activator.CreateInstance(PythonNetSession._silent_logger_type)
+            self._loader = self._create_card_loader()
+        mode = str(logger_mode or "silent").strip().lower()
+        if mode == "simple":
+            logger = System.Activator.CreateInstance(PythonNetSession._simple_logger_type, f"py_{uuid.uuid4().hex[:12]}")
+        else:
+            logger = self._create_silent_logger()
+            mode = "silent"
+        self._logger_mode = mode
+        self._logger = logger
 
         self._game = System.Activator.CreateInstance(PythonNetSession._game_type, self._loader, logger, player1_id, player2_id)
         
         p1_deck = self._normalize_deck(player1_deck, True)
         p2_deck = self._normalize_deck(player2_deck, False)
         
-        # Use direct calling instead of Reflection Invoke for idiomatic PythonNet
         self._game.Init(p1_deck, p2_deck)
         self._turn_counter = 1
-        snapshot = self.snapshot()
-        self._record_timing("init_game", time.perf_counter() - start_t)
-        return snapshot
+        return self.snapshot()
+
+    def consume_engine_log(self) -> Optional[str]:
+        if self._logger is None or self._logger_mode != "simple":
+            return None
+        try:
+            end_logging = getattr(self._logger, "EndLogging", None)
+            if callable(end_logging):
+                return str(end_logging())
+        except Exception:
+            return None
+        finally:
+            self._logger = None
+            self._logger_mode = "silent"
+        return None
+
+    def _create_silent_logger(self):
+        import System
+        import clr
+
+        if PythonNetSession._silent_logger_type is None:
+            logger_iface = PythonNetSession._logger_interface_type
+            if logger_iface is None:
+                raise RuntimeError("SeaEngine.Logger.ILogger type not found in assembly")
+
+            assembly_name = System.Reflection.AssemblyName("RL_AI_PythonSilentLogger")
+            assembly_builder = System.Reflection.Emit.AssemblyBuilder.DefineDynamicAssembly(
+                assembly_name,
+                System.Reflection.Emit.AssemblyBuilderAccess.Run,
+            )
+            module_builder = assembly_builder.DefineDynamicModule("MainModule")
+            type_builder = module_builder.DefineType(
+                "RL_AI.SeaEngine.PythonSilentLogger",
+                System.Reflection.TypeAttributes.Public
+                | System.Reflection.TypeAttributes.Sealed
+                | System.Reflection.TypeAttributes.Class,
+            )
+            type_builder.AddInterfaceImplementation(logger_iface)
+
+            method_specs = [
+                ("LogAction", ["SeaEngine.Common.GameAction", "SeaEngine.GameDataManager.GameData"]),
+                ("LogCards", ["SeaEngine.GameDataManager.GameData"]),
+                ("LogEvent", ["System.String", "System.String", "SeaEngine.Common.Uid"]),
+                ("Log", ["System.String", "SeaEngine.GameDataManager.GameData"]),
+            ]
+            for method_name, param_type_names in method_specs:
+                iface_method = logger_iface.GetMethod(method_name)
+                if iface_method is None:
+                    raise RuntimeError(f"ILogger method not found: {method_name}")
+                param_types = []
+                for type_name in param_type_names:
+                    if type_name == "System.String":
+                        param_types.append(System.String)
+                    else:
+                        param_type = PythonNetSession._asm.GetType(type_name)
+                        if param_type is None:
+                            raise RuntimeError(f"Type not found for silent logger: {type_name}")
+                        param_types.append(param_type)
+                method_builder = type_builder.DefineMethod(
+                    method_name,
+                    System.Reflection.MethodAttributes.Public
+                    | System.Reflection.MethodAttributes.Virtual
+                    | System.Reflection.MethodAttributes.HideBySig
+                    | System.Reflection.MethodAttributes.NewSlot
+                    | System.Reflection.MethodAttributes.Final
+                    | System.Reflection.MethodAttributes.SpecialName,
+                    System.Void,
+                    param_types,
+                )
+                il = method_builder.GetILGenerator()
+                il.Emit(System.Reflection.Emit.OpCodes.Ret)
+                type_builder.DefineMethodOverride(method_builder, iface_method)
+
+            PythonNetSession._silent_logger_type = type_builder.CreateType()
+
+        return System.Activator.CreateInstance(PythonNetSession._silent_logger_type)
 
     def _normalize_deck(self, deck_json: str, is_p1: bool) -> str:
         if deck_json and deck_json.strip():
@@ -177,6 +365,122 @@ class PythonNetSession:
         fallback = ["Or_L", "Or_B", "Or_N", "Or_R", "Or_P", "Or_P", "Or_P"] if is_p1 else ["Cl_L", "Cl_B", "Cl_N", "Cl_R", "Cl_P", "Cl_P", "Cl_P"]
         import json
         return json.dumps(fallback)
+
+    def _build_card_loader_lines(self) -> List[str]:
+        cards = load_card_list(self.card_data_path)
+        leader_by_world: Dict[int, str] = {}
+        for card in cards:
+            if card.role == Role.LEADER and card.world not in leader_by_world:
+                leader_by_world[card.world] = card.card_id
+
+        role_to_unit_type = {
+            Role.LEADER: "L",
+            Role.ROOK: "R",
+            Role.KNIGHT: "N",
+            Role.BISHOP: "B",
+            Role.PAWN: "P",
+        }
+
+        lines = ["ID,Name,LeaderID,UnitType,Atk,Hp,EffectID,EventID"]
+        for card in sorted(cards, key=lambda c: (c.world, int(c.role), c.card_id)):
+            unit_type = role_to_unit_type.get(card.role)
+            if unit_type is None:
+                raise ValueError(f"Unsupported card role: {card.role}")
+            leader_id = leader_by_world.get(card.world, card.card_id)
+            lines.append(
+                ",".join(
+                    [
+                        card.card_id,
+                        card.name,
+                        leader_id,
+                        unit_type,
+                        str(card.attack),
+                        str(card.life),
+                        card.effect_id or card.card_id,
+                        card.event_id or card.card_id,
+                    ]
+                )
+            )
+        return lines
+
+    def _create_card_loader(self):
+        import System
+        from System.Runtime.Serialization import FormatterServices
+
+        cards = load_card_list(self.card_data_path)
+        loader = FormatterServices.GetUninitializedObject(PythonNetSession._card_loader_type)
+        cards_field = PythonNetSession._card_loader_type.GetField(
+            "_cards",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
+        )
+        if cards_field is None:
+            raise RuntimeError("SeaEngine.CardManager.CardLoader._cards field not found")
+
+        unit_type_enum = PythonNetSession._asm.GetType("SeaEngine.Common.UnitType")
+        if unit_type_enum is None:
+            raise RuntimeError("SeaEngine.Common.UnitType type not found in assembly")
+
+        role_to_unit_type = {
+            Role.LEADER: "Leader",
+            Role.ROOK: "Rook",
+            Role.KNIGHT: "Knight",
+            Role.BISHOP: "Bishop",
+            Role.PAWN: "Pawn",
+        }
+        leader_by_world: Dict[int, str] = {}
+        for card in cards:
+            if card.role == Role.LEADER and card.world not in leader_by_world:
+                leader_by_world[card.world] = card.card_id
+
+        carddata_type = PythonNetSession._asm.GetType("SeaEngine.CardManager.CardData")
+        if carddata_type is None:
+            raise RuntimeError("SeaEngine.CardManager.CardData type not found in assembly")
+        dict_type = System.Collections.Generic.Dictionary[System.String, carddata_type]
+        card_dict = dict_type()
+
+        for card in cards:
+            unit_type_name = role_to_unit_type.get(card.role)
+            if unit_type_name is None:
+                raise ValueError(f"Unsupported card role: {card.role}")
+            leader_id = leader_by_world.get(card.world, card.card_id)
+            unit_type = System.Enum.Parse(unit_type_enum, unit_type_name)
+            effect_id = "PawnGeneric" if card.role == Role.PAWN else card.card_id
+            card_data = FormatterServices.GetUninitializedObject(carddata_type)
+            for field_name, value in {
+                "<Id>k__BackingField": System.String(card.card_id),
+                "<Name>k__BackingField": System.String(card.name),
+                "<LeaderId>k__BackingField": System.String(leader_id),
+                "<UnitType>k__BackingField": unit_type,
+                "<Atk>k__BackingField": System.Int32(int(card.attack)),
+                "<Hp>k__BackingField": System.Int32(int(card.life)),
+                "EffectId": System.String(effect_id),
+                "EventId": System.String(card.event_id or card.card_id),
+            }.items():
+                field = carddata_type.GetField(
+                    field_name,
+                    System.Reflection.BindingFlags.Public
+                    | System.Reflection.BindingFlags.NonPublic
+                    | System.Reflection.BindingFlags.Instance,
+                )
+                if field is None:
+                    raise RuntimeError(f"SeaEngine.CardManager.CardData.{field_name} field not found")
+                field.SetValue(card_data, value)
+            card_dict.Add(card.card_id, card_data)
+
+        cards_field.SetValue(loader, card_dict)
+        return loader
+
+    def _attach_python_observation(self, snapshot: Dict[str, Any]) -> Dict[str, Any]:
+        from RL_AI.SeaEngine import observation as obs_mod
+
+        raw_snapshot = dict(snapshot)
+        raw_snapshot["state_vector"] = None
+        raw_snapshot["action_feature_vectors"] = None
+        observation = obs_mod.build_observation(raw_snapshot, raw_snapshot.get("active_player"))
+        snapshot["global_vector"] = list(observation.global_vector)
+        snapshot["state_vector"] = list(observation.state_vector)
+        snapshot["action_feature_vectors"] = [list(a) for a in observation.action_feature_vectors]
+        return snapshot
 
     def snapshot(self) -> Dict[str, Any]:
         if self._game is None:
@@ -186,7 +490,6 @@ class PythonNetSession:
     def apply_action(self, action_uid: str) -> Dict[str, Any]:
         if self._game is None:
             raise RuntimeError("Game not initialized")
-        start_t = time.perf_counter()
         action_uid = str(action_uid)
 
         selected_action = None
@@ -202,13 +505,10 @@ class PythonNetSession:
             raise KeyError(f"Unknown action uid: {action_uid}")
 
         self._game.UseAction(selected_action.Guid)
-        snapshot = self.snapshot()
-        self._record_timing("apply_action", time.perf_counter() - start_t)
-        return snapshot
+        return self.snapshot()
 
     def _build_snapshot(self) -> Dict[str, Any]:
-        start_t = time.perf_counter()
-        data = self._game.Data
+        import System
 
         def _string(value: Any) -> str:
             return "" if value is None else str(value)
@@ -221,6 +521,109 @@ class PythonNetSession:
 
         def _bool(value: Any) -> bool:
             return bool(value)
+
+        def _to_list(value: Any) -> List[Any]:
+            if value is None:
+                return []
+            try:
+                return list(value)
+            except Exception:
+                return []
+
+        def _to_float_list(value: Any) -> List[float]:
+            return [float(v) for v in _to_list(value)]
+
+        def _to_float_matrix(value: Any) -> List[List[float]]:
+            return [_to_float_list(row) for row in _to_list(value)]
+
+        if PythonNetSession._rl_export_method is not None:
+            frame = PythonNetSession._rl_export_method.Invoke(None, [self._game, System.Int32(self._turn_counter)])
+
+            players = []
+            for player in _to_list(getattr(frame, "Players", None)):
+                hand = _to_list(getattr(player, "Hand", None))
+                players.append(
+                    {
+                        "id": _string(getattr(player, "Id", "")),
+                        "hand_count": _int(getattr(player, "HandCount", 0), 0),
+                        "deck_count": _int(getattr(player, "DeckCount", 0), 0),
+                        "trash_count": _int(getattr(player, "TrashCount", 0), 0),
+                        "hand": [
+                            {
+                                "uid": _string(getattr(card, "Uid", "")),
+                                "card_id": _string(getattr(card, "CardId", "")),
+                                "name": _string(getattr(card, "Name", "")),
+                            }
+                            for card in hand
+                        ],
+                    }
+                )
+
+            board = []
+            for card in _to_list(getattr(frame, "Board", None)):
+                board.append(
+                    {
+                        "uid": _string(getattr(card, "Uid", "")),
+                        "card_id": _string(getattr(card, "CardId", "")),
+                        "name": _string(getattr(card, "Name", "")),
+                        "owner": _string(getattr(card, "OwnerId", "")),
+                        "role": _string(getattr(card, "Role", "")),
+                        "atk": _int(getattr(card, "Atk", 0), 0),
+                        "effective_atk": _int(getattr(card, "EffectiveAtk", 0), 0),
+                        "hp": _int(getattr(card, "Hp", 0), 0),
+                        "max_hp": _int(getattr(card, "MaxHp", 0), 0),
+                        "is_placed": _bool(getattr(card, "IsPlaced", False)),
+                        "is_moved": _bool(getattr(card, "IsMoved", False)),
+                        "is_attacked": _bool(getattr(card, "IsAttacked", False)),
+                        "pos_x": _int(getattr(card, "PosX", -1), -1),
+                        "pos_y": _int(getattr(card, "PosY", -1), -1),
+                        "statuses": [
+                            {
+                                "type": _string(getattr(status, "Type", "")),
+                                "value": _int(getattr(status, "Value", 0), 0),
+                                "remaining_turns": 1,
+                            }
+                            for status in _to_list(getattr(card, "Statuses", None))
+                        ],
+                    }
+                )
+
+            actions = []
+            for action in _to_list(getattr(frame, "Actions", None)):
+                actions.append(
+                    {
+                        "uid": _string(getattr(action, "Uid", "")),
+                        "effect_id": _string(getattr(action, "EffectId", "")),
+                        "source": _string(getattr(action, "Source", "")),
+                        "target": {
+                            "type": _string(getattr(action, "TargetType", "None")),
+                            "guid": _string(getattr(action, "TargetGuid", "")),
+                            "guid2": _string(getattr(action, "TargetGuid2", "")),
+                            "pos_x": _int(getattr(action, "PosX", -1), -1),
+                            "pos_y": _int(getattr(action, "PosY", -1), -1),
+                        },
+                    }
+                )
+
+            state_vector = _to_float_list(getattr(frame, "StateVector", None))
+            action_feature_vectors = _to_float_matrix(getattr(frame, "ActionFeatureVectors", None))
+
+            snapshot = {
+                "turn": _int(getattr(frame, "Turn", self._turn_counter), self._turn_counter),
+                "active_player": _string(getattr(frame, "ActivePlayerId", "")),
+                "result": _string(getattr(frame, "Result", "Ongoing")),
+                "winner_id": _string(getattr(frame, "WinnerId", "")),
+                "players": players,
+                "board": board,
+                "actions": actions,
+                "global_vector": state_vector[:GLOBAL_FEATURE_DIM] if len(state_vector) >= GLOBAL_FEATURE_DIM else [],
+                "state_vector": state_vector,
+                "action_feature_vectors": action_feature_vectors,
+            }
+            return self._attach_python_observation(snapshot)
+
+        # Fallback legacy reflection path
+        data = self._game.Data
 
         def _iter_cards(zone: Any) -> List[Any]:
             cards = getattr(zone, "Cards", None)
@@ -332,5 +735,4 @@ class PythonNetSession:
                 }
             )
 
-        self._record_timing("_build_snapshot", time.perf_counter() - start_t)
-        return snapshot
+        return self._attach_python_observation(snapshot)

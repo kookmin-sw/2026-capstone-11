@@ -14,7 +14,7 @@ public class Cl_P : IEvent
     public string Id => "Cl_P";
     public string Timing => "TurnStart";
 
-    public void Apply(Uid source, GameData data)
+    public bool Apply(Uid source, GameData data)
     {
         var card = data.GetCardById(source);
         var enemyZone = card.Owner == data.Player1 ? 5 : 0;
@@ -24,8 +24,9 @@ public class Cl_P : IEvent
             {
                 if (enemy.Unit.IsPlaced) CombatUtils.Damage(enemy, 2, data);
             }
+            CombatUtils.Damage(card, 100, data);
+            return true;
         }
-
-        CombatUtils.Damage(card, 100, data);
+        return false;
     }
 }

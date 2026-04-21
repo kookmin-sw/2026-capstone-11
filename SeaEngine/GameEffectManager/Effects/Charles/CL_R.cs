@@ -31,7 +31,11 @@ public class Cl_R : IEffect
         
         zone.RemoveCard(card);
 
-        CombatUtils.Attack(card, defender, data);
+        if (CombatUtils.Attack(card, defender, data))
+        {
+            owner.Trash.AddCard(card);
+            return;
+        }
         
         int dx = Math.Sign(defender.Unit.PosX - card.Unit.PosX);
         int dy = Math.Sign(defender.Unit.PosY - card.Unit.PosY);

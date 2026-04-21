@@ -12,7 +12,7 @@ public class Cl_Blitz : IEvent
     public string Id => "Cl_Blitz";
     public string Timing => "TurnStart";
 
-    public void Apply(Uid source, GameData data)
+    public bool Apply(Uid source, GameData data)
     {
         var card = data.GetCardById(source);
         if (data.GetMoveArea(card)
@@ -23,6 +23,8 @@ public class Cl_Blitz : IEvent
         {
             card.Unit.Atk += 1;
             card.Unit.GiveBuff("TempAtk", 1);
+            return true;
         }
+        return false;
     }
 }

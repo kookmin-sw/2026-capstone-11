@@ -52,6 +52,7 @@ public class ChessUIController : MonoBehaviour
         Release();
     }
 
+
     private void Init()
     {
         if (eventBus == null)

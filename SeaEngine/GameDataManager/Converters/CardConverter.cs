@@ -37,9 +37,17 @@ public class CardConverter : JsonConverter<Card>
         
         writer.WritePropertyName("Buff");
         writer.WriteStartArray();
-        //TODO : Buffs
+        foreach (var keyValuePair in value.Unit.Buffs)
+        {
+            writer.WriteStartObject();
+            writer.WritePropertyName("id");
+            writer.WriteValue(keyValuePair.Key);
+            writer.WritePropertyName("Amount");
+            writer.WriteValue(keyValuePair.Value);
+            writer.WriteEndObject();
+        }
         writer.WriteEndArray();
-        
+
         writer.WriteEndObject();
     }
 

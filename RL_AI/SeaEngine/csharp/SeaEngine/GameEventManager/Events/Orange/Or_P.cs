@@ -13,10 +13,12 @@ public class Or_P : IEvent
     public string Id => "Or_P";
     public string Timing => "TurnEnd";
 
-    public void Apply(Uid source, GameData data)
+    public bool Apply(Uid source, GameData data)
     {
         var card = data.GetCardById(source);
         var enemyZone = card.Owner == data.Player1 ? 5 : 0;
-        if(card.Unit.PosX == enemyZone) data.DrawCard(card.Owner, 1);
+        if(card.Unit.PosX == enemyZone) 
+            data.DrawCard(card.Owner, 1);
+        return true;
     }
 }

@@ -9,7 +9,8 @@ public class RuleTurnEnd : IEvent
     public string Id => "Rule";
     public string Timing => "TurnEnd";
 
-    public void Apply(Uid source, GameData data)
+    public bool Apply(Uid source, GameData data)
     {
+        return true;
     }
 }

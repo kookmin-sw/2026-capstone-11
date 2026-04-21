@@ -18,6 +18,9 @@ namespace Game.Server
         public SessionEvents Events = new();
         private SessionRouter _router = new();
         private SessionEnter _entrance;
+        private SessionData _data;
+        private SessionReady _ready;
+        private SessionObserverEnter _observerEnter;
         private INetAPI _net;
 
         public Session(INetAPI net)
@@ -27,9 +30,12 @@ namespace Game.Server
             _net.SetReceiveHandler(this);
 
             _entrance = new(_net, Events, _router);
+            _data = new(_net, Events, _router);
+            _ready = new(_net, Events, _router);
+            _observerEnter = new(_net, _router);
         }
 
-        public void QueryPlayer(string playerName, byte[] raw, long expireTimeMs, Action<QueryTaskResult> callBack)
+        public void QueryPlayer(string playerName, byte[] raw, long expireTimeMs, Action<string, QueryTaskResult> callBack)
         {
             if (_router.TryRoute(playerName, out var connId))
             {
@@ -38,7 +44,23 @@ namespace Game.Server
                      connId,
                      raw,
                      expireTimeMs,
-                     (connId, result) => { callBack(result); }
+                     (connId, result) => { callBack(playerName, result); }
+                     );
+                return;
+            }
+            else return;
+        }
+
+        public void QueryPlayerInform(string playerName, byte[] raw, long expireTimeMs, Action<string, QueryTaskResult> callBack)
+        {
+            if (_router.TryRoute(playerName, out var connId))
+            {
+                _net.AsyncRequestQuery(
+                     NetEventHandlerId.Constant.Session,
+                     connId,
+                     raw,
+                     expireTimeMs,
+                     (connId, result) => { callBack(playerName, result); }
                      );
                 return;
             }
@@ -54,6 +76,15 @@ namespace Game.Server
         {
             if (_router.TryRoute(playerName, out var connId))
                 _net.Send(HandlerId, 0, connId, raw);
+        }
+
+        public void Clear()
+        {
+            foreach (var conn in _router.IdList)
+                _net.Disconnect(conn);
+
+            Events.Clear();
+            _router.Clear();
         }
         // Data
         public void OnReceive(ConnId connId, byte[] raw)

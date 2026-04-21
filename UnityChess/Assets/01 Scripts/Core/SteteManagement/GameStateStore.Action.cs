@@ -68,7 +68,8 @@ namespace Core.StateManagement
                     noTargetActionBySource[action.source] = action;
                 }
             }
-
+        
+            // 승리 이벤트 발생 시 에러 발생
             if (turnEndAction == null)
                 throw new InvalidOperationException("[GameStateStore] TurnEnd action is missing.");
         }

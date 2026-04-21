@@ -12,6 +12,11 @@ namespace Game.Server
         public Dictionary<string, ConnId>.ValueCollection IdList => _player_connDict.Values;
         public Dictionary<ConnId, string>.ValueCollection playerList => _conn_playerDict.Values;
 
+        public void Clear()
+        {
+            _player_connDict.Clear();
+            _conn_playerDict.Clear();
+        }
         public bool TryAdd(string name, ConnId id)
         {
             if (!_player_connDict.TryAdd(name, id))

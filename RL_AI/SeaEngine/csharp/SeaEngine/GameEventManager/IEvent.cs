@@ -7,5 +7,5 @@ public interface IEvent
 {
     public string Id { get; }
     public string Timing { get; }
-    public void Apply(Uid source, GameData data);
+    public bool Apply(Uid source, GameData data);
 }
