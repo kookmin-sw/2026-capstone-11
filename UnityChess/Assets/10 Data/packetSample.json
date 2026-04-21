@@ -1,0 +1,410 @@
+{
+  "Data": {
+    "Player1": {
+      "Id": "Player1",
+      "Hand": [
+        "C002",
+        "C003",
+        "C004"
+      ],
+      "Deck": [
+        "C001",
+        "C000",
+        "C005",
+        "C006"
+      ],
+      "Trash": []
+    },
+    "Player2": {
+      "Id": "Player2",
+      "Hand": [
+        "C00A",
+        "C009",
+        "C00B"
+      ],
+      "Deck": [
+        "C00C",
+        "C00D",
+        "C008",
+        "C007"
+      ],
+      "Trash": []
+    },
+    "Board": [
+      {
+        "Uid": "C000",
+        "Id": "Or_L",
+        "Owner": "Player1",
+        "isPlaced": true,
+        "isMoved": false,
+        "X": 0,
+        "Y": 2,
+        "Atk": 3,
+        "Hp": 9,
+        "MaxHp": 9,
+        "Buff": []
+      },
+      {
+        "Uid": "C001",
+        "Id": "Or_B",
+        "Owner": "Player1",
+        "isPlaced": false,
+        "isMoved": false,
+        "X": -1,
+        "Y": -1,
+        "Atk": 1,
+        "Hp": 4,
+        "MaxHp": 4,
+        "Buff": []
+      },
+      {
+        "Uid": "C002",
+        "Id": "Or_N",
+        "Owner": "Player1",
+        "isPlaced": false,
+        "isMoved": false,
+        "X": -1,
+        "Y": -1,
+        "Atk": 2,
+        "Hp": 3,
+        "MaxHp": 3,
+        "Buff": []
+      },
+      {
+        "Uid": "C003",
+        "Id": "Or_R",
+        "Owner": "Player1",
+        "isPlaced": false,
+        "isMoved": false,
+        "X": -1,
+        "Y": -1,
+        "Atk": 1,
+        "Hp": 3,
+        "MaxHp": 3,
+        "Buff": []
+      },
+      {
+        "Uid": "C004",
+        "Id": "Or_P",
+        "Owner": "Player1",
+        "isPlaced": false,
+        "isMoved": false,
+        "X": -1,
+        "Y": -1,
+        "Atk": 1,
+        "Hp": 1,
+        "MaxHp": 1,
+        "Buff": []
+      },
+      {
+        "Uid": "C005",
+        "Id": "Or_P",
+        "Owner": "Player1",
+        "isPlaced": false,
+        "isMoved": false,
+        "X": -1,
+        "Y": -1,
+        "Atk": 1,
+        "Hp": 1,
+        "MaxHp": 1,
+        "Buff": []
+      },
+      {
+        "Uid": "C006",
+        "Id": "Or_P",
+        "Owner": "Player1",
+        "isPlaced": false,
+        "isMoved": false,
+        "X": -1,
+        "Y": -1,
+        "Atk": 1,
+        "Hp": 1,
+        "MaxHp": 1,
+        "Buff": []
+      },
+      {
+        "Uid": "C007",
+        "Id": "Cl_L",
+        "Owner": "Player2",
+        "isPlaced": true,
+        "isMoved": false,
+        "X": 5,
+        "Y": 3,
+        "Atk": 3,
+        "Hp": 9,
+        "MaxHp": 9,
+        "Buff": []
+      },
+      {
+        "Uid": "C008",
+        "Id": "Cl_B",
+        "Owner": "Player2",
+        "isPlaced": false,
+        "isMoved": false,
+        "X": -1,
+        "Y": -1,
+        "Atk": 1,
+        "Hp": 2,
+        "MaxHp": 2,
+        "Buff": []
+      },
+      {
+        "Uid": "C009",
+        "Id": "Cl_N",
+        "Owner": "Player2",
+        "isPlaced": false,
+        "isMoved": false,
+        "X": -1,
+        "Y": -1,
+        "Atk": 2,
+        "Hp": 2,
+        "MaxHp": 2,
+        "Buff": []
+      },
+      {
+        "Uid": "C00A",
+        "Id": "Cl_R",
+        "Owner": "Player2",
+        "isPlaced": false,
+        "isMoved": false,
+        "X": -1,
+        "Y": -1,
+        "Atk": 1,
+        "Hp": 3,
+        "MaxHp": 3,
+        "Buff": []
+      },
+      {
+        "Uid": "C00B",
+        "Id": "Cl_P",
+        "Owner": "Player2",
+        "isPlaced": false,
+        "isMoved": false,
+        "X": -1,
+        "Y": -1,
+        "Atk": 1,
+        "Hp": 1,
+        "MaxHp": 1,
+        "Buff": []
+      },
+      {
+        "Uid": "C00C",
+        "Id": "Cl_P",
+        "Owner": "Player2",
+        "isPlaced": false,
+        "isMoved": false,
+        "X": -1,
+        "Y": -1,
+        "Atk": 1,
+        "Hp": 1,
+        "MaxHp": 1,
+        "Buff": []
+      },
+      {
+        "Uid": "C00D",
+        "Id": "Cl_P",
+        "Owner": "Player2",
+        "isPlaced": false,
+        "isMoved": false,
+        "X": -1,
+        "Y": -1,
+        "Atk": 1,
+        "Hp": 1,
+        "MaxHp": 1,
+        "Buff": []
+      }
+    ],
+    "ActivePlayerId": "Player1"
+  },
+  "Actions": [
+    {
+      "Uid": "A000",
+      "EffectId": "DefaultMove",
+      "Source": "C000",
+      "Target": {
+        "Type": "Cell",
+        "Value": "1/1"
+      }
+    },
+    {
+      "Uid": "A001",
+      "EffectId": "DefaultMove",
+      "Source": "C000",
+      "Target": {
+        "Type": "Cell",
+        "Value": "1/2"
+      }
+    },
+    {
+      "Uid": "A002",
+      "EffectId": "DefaultMove",
+      "Source": "C000",
+      "Target": {
+        "Type": "Cell",
+        "Value": "1/3"
+      }
+    },
+    {
+      "Uid": "A003",
+      "EffectId": "DefaultMove",
+      "Source": "C000",
+      "Target": {
+        "Type": "Cell",
+        "Value": "0/1"
+      }
+    },
+    {
+      "Uid": "A004",
+      "EffectId": "DefaultMove",
+      "Source": "C000",
+      "Target": {
+        "Type": "Cell",
+        "Value": "0/3"
+      }
+    },
+    {
+      "Uid": "A005",
+      "EffectId": "DeployUnit",
+      "Source": "C002",
+      "Target": {
+        "Type": "Cell",
+        "Value": "0/0"
+      }
+    },
+    {
+      "Uid": "A006",
+      "EffectId": "DeployUnit",
+      "Source": "C002",
+      "Target": {
+        "Type": "Cell",
+        "Value": "0/1"
+      }
+    },
+    {
+      "Uid": "A007",
+      "EffectId": "DeployUnit",
+      "Source": "C002",
+      "Target": {
+        "Type": "Cell",
+        "Value": "0/3"
+      }
+    },
+    {
+      "Uid": "A008",
+      "EffectId": "DeployUnit",
+      "Source": "C002",
+      "Target": {
+        "Type": "Cell",
+        "Value": "0/4"
+      }
+    },
+    {
+      "Uid": "A009",
+      "EffectId": "DeployUnit",
+      "Source": "C002",
+      "Target": {
+        "Type": "Cell",
+        "Value": "0/5"
+      }
+    },
+    {
+      "Uid": "A00A",
+      "EffectId": "DeployUnit",
+      "Source": "C003",
+      "Target": {
+        "Type": "Cell",
+        "Value": "0/0"
+      }
+    },
+    {
+      "Uid": "A00B",
+      "EffectId": "DeployUnit",
+      "Source": "C003",
+      "Target": {
+        "Type": "Cell",
+        "Value": "0/1"
+      }
+    },
+    {
+      "Uid": "A00C",
+      "EffectId": "DeployUnit",
+      "Source": "C003",
+      "Target": {
+        "Type": "Cell",
+        "Value": "0/3"
+      }
+    },
+    {
+      "Uid": "A00D",
+      "EffectId": "DeployUnit",
+      "Source": "C003",
+      "Target": {
+        "Type": "Cell",
+        "Value": "0/4"
+      }
+    },
+    {
+      "Uid": "A00E",
+      "EffectId": "DeployUnit",
+      "Source": "C003",
+      "Target": {
+        "Type": "Cell",
+        "Value": "0/5"
+      }
+    },
+    {
+      "Uid": "A00F",
+      "EffectId": "DeployUnit",
+      "Source": "C004",
+      "Target": {
+        "Type": "Cell",
+        "Value": "0/0"
+      }
+    },
+    {
+      "Uid": "A010",
+      "EffectId": "DeployUnit",
+      "Source": "C004",
+      "Target": {
+        "Type": "Cell",
+        "Value": "0/1"
+      }
+    },
+    {
+      "Uid": "A011",
+      "EffectId": "DeployUnit",
+      "Source": "C004",
+      "Target": {
+        "Type": "Cell",
+        "Value": "0/3"
+      }
+    },
+    {
+      "Uid": "A012",
+      "EffectId": "DeployUnit",
+      "Source": "C004",
+      "Target": {
+        "Type": "Cell",
+        "Value": "0/4"
+      }
+    },
+    {
+      "Uid": "A013",
+      "EffectId": "DeployUnit",
+      "Source": "C004",
+      "Target": {
+        "Type": "Cell",
+        "Value": "0/5"
+      }
+    },
+    {
+      "Uid": "A014",
+      "EffectId": "TurnEnd",
+      "Source": "00",
+      "Target": {
+        "Type": "None",
+        "Value": null
+      }
+    }
+  ]
+}
