@@ -1,33 +1,78 @@
-# 프로젝트 관리
-유니티 버전: 6000.2.7f2 (유니티 6.2)  
-버전관리 도구: Github desktop  
+# 👑 Call of the King: RL_AI (SeaEngine Edition)
 
-## 브랜치 및 씬 작업 규칙
-유니티 씬 충돌 방지를 위해 **개인 브랜치**의 **개인 씬**에서 작업합니다.  
+`RL_AI`는 C# 기반 보드게임 엔진 **SeaEngine** 위에서 동작하는 최첨단 강화학습 실험 레이어입니다.  
+현재 프로젝트는 단순한 로직 구현을 넘어, **병렬 데이터 수집**과 **비동기 통신**을 통한 학습 가속화 단계에 도달해 있습니다.
 
-### 브랜치 및 개인 씬 생성 방법
-1. Current Branch에서 'develop branch' 선택
-2. Current Branch에서 New Branch 선택하여 이름 작성 후 브랜치 생성
-3. Publish Branch 클릭하여 Github에 업로드
-4. 유니티 프로젝트의 "**00 Scenes**"에 개인 씬 폴더 생성
-5. 유니티 프로젝트의 "**00 Scenes/Develop**"폴더의 씬을 복사하고 개인 씬 폴더에 붙여넣기
 ---
-## 커밋 규칙
-커밋 메시지에 아래의 헤더를 남겨주세요.
-- [Add] : 기존에 없던 기능을 새로 만들어 추가했을 때
-- [Update] : 기존의 내용을 개선한 사항(리팩토링 등)이 있을 때
-- [Fix] : 오류나 버그를 수정했을 때
-- [Delete] : 기존에 있던 파일 등을 삭제했을 때 
+
+## 🏗️ 시스템 아키텍처
+
+현재 시스템은 **Python(지능)**과 **C#(육체)**이 분리된 하이브리드 구조입니다.
+
+```text
+[ start.ipynb ] (User Interface)
+      ↓ (await)
+[ experiment.py ] (Global Loop & Checkpointing)
+      ↓ (async)
+[ trainer.py ] (PPO Algorithm & Rollout Management)
+      ↓ (await)
+[ VectorSeaEngineEnv ] (Parallel Environment Manager)
+      ↓ (Multi-Process IPC)
+[ SeaEngineCli (C#) ] × 8 Engines (Concurrent Simulation)
+```
+
+### ⚡ 핵심 기술적 특징
+- **Vectorized Environment**: 8개 이상의 C# 엔진을 동시에 구동하여 데이터를 병렬로 수집합니다.
+- **Batched Inference**: 병렬 환경의 상태를 하나로 묶어 GPU에서 한 번에 추론하여 효율을 극대화했습니다.
+- **Pure Async Architecture**: 주피터 노트북의 루프 충돌 문제를 해결하기 위해 전체 파이프라인을 `async/await` 기반의 순수 비동기로 재설계했습니다.
+- **Automated Log Management**: 실험 종료 시 생성된 로그를 자동 압축(.zip)하고 정리하여 저장 공간을 효율적으로 관리합니다.
+
 ---
-## PR 및 merge
-매주 merge를 진행하여 develop 브랜치에 작업 사항을 반영합니다.  
-(merge 요일은 추후 결정)  
 
-PR 진행 전 **개인 브랜치의 모든 작업 사항을 Push** 했는지 확인하세요.  
-### PR 진행 방법
-1. 작업 브랜치에서 "**Create Pull Request**"를 선택
-2. 리다이렉트 된 Github 페이지에서 **base: develop** 확인
-3. 커밋 규칙에 따라 작업한 내용으로 PR 메시지를 작성
-4. github에서 "**Create Pull Request**" 버튼 클릭
+## 📁 디렉토리 구조 (Standardized)
 
-- merge 작업이 완료되면 **기존 작업 브랜치를 삭제**하고 develop 브랜치에서 Pull 한 뒤 위의 [브랜치 및 개인 씬 생성 방법](#브랜치-및-개인-씬-생성-방법)에 따라 새로운 브랜치를 생성하시기 바랍니다.
+- **[SeaEngine/](RL_AI/SeaEngine)**: C# 엔진 브리지 및 관측(Observation) 변환 로직
+  - `bridge/`: `VectorEnv`, `SeaEngineSession` (IPC 통신 핵심)
+  - `csharp/`: 실제 C# 게임 엔진 소스 코드 및 CLI
+- **[training/](RL_AI/training)**: 강화학습 핵심 알고리즘
+  - `trainer.py`: PPO 트레이너 (비동기 최적화)
+  - `reward.py`: 지능형 보상 함수 (HP 격차 및 효율성 평가)
+  - `storage.py`: 데이터 수집 버퍼
+- **[simulation/](RL_AI/simulation)**: 매치 실행 및 평가 도구
+  - `evaluator.py`: 16방향 정밀 매트릭스 평가기 (Mirror/Counter Match 지원)
+  - `match_runner.py`: 통합 매치 실행 진입점
+- **[models/](RL_AI/models)**: 학습된 최적의 모델(`pt`) 저장소
+- **[log/](RL_AI/log)**: 리포트 및 매치 로그 (자동 압축 관리)
+
+---
+
+## ⚖️ 밸런스 패치 (Current Baseline)
+
+공정한 학습 환경을 위해 **'귤 덱'**의 수치를 다음과 같이 조정하였습니다.
+
+| 카드 ID | 이름 | Atk | HP | 비고 |
+| :--- | :--- | :--- | :--- | :--- |
+| **Or_L** | 귤 공주님 | 3 | **7** | 리더 유지력 조정 |
+| **Or_B** | 귤 직장인? | 1 | **3** | 워프 기동 리스크 강화 |
+| **Or_K** | 망상의 기사님 | 2 | **2** | 전투 효율 정상화 |
+| **Or_P** | 귤 요정 | 1 | 1 | 자원 수급 전용 |
+
+---
+
+## 📊 평가 지표 및 분석
+
+학습 후 실행되는 **Deep Analytics**를 통해 다음 지표를 추적합니다.
+1. **Mirror Match Win Rate**: 동일 덱 조건에서 상대(Greedy)보다 얼마나 영리한가? (진정한 지능의 척도)
+2. **Counter Match Win Rate**: 덱 상성을 전략으로 극복하고 있는가?
+3. **Avg Interaction Steps**: 게임이 단순 암살이 아닌 정석적인 운영 싸움으로 흘러가는가?
+
+---
+
+## 🚀 향후 로드맵 (Roadmap)
+
+1. **gRPC 기반 통신 (RPC 전환)**: 텍스트 기반 JSON 통신을 이진(Binary) RPC로 교체하여 학습 속도를 5배 이상 추가 가속.
+2. **Transformer 아키텍처**: 현재의 MLP 신경망을 기물 간의 관계를 파악하는 **Attention** 구조로 리뉴얼.
+3. **대규모 Self-Play**: 15,000 에피소드 이상의 자기 대전을 통해 '알파고'급 전술 지능 확보.
+
+---
+**Maintained by Su-seok AI Engineer**

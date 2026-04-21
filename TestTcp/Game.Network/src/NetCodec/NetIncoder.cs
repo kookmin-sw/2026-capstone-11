@@ -147,16 +147,7 @@ namespace Game.Network
 
             return packet;
         }
-
-        // public static byte[] EncodeWithHeader(int handlerNum, int queryNum, byte[] data)
-        //     => EncodeWithHeader((handlerNum, queryNum, data));
-
-        // public static byte[] EncodeWithHeader(int handlerNum, int queryNum, string message)
-        //     => EncodeWithHeader(handlerNum, queryNum, Encoding.UTF8.GetBytes(message ?? string.Empty));
-
-        // public static byte[] EmptyPacket()
-        //     => EncodeWithHeader(0, 0, Array.Empty<byte>());
-
+        
         public static Codec DecodeWithHeader(byte[] packet)
         {
             if (packet == null || packet.Length < HeaderSize)

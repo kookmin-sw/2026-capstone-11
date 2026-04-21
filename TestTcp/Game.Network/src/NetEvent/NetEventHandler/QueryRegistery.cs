@@ -34,8 +34,9 @@ namespace Game.Network
         public TaskCompletionSource<QueryTaskResult> tcs;
         public readonly int QueryNum;
         public readonly long ExpireTimeMs; 
-        public Action<byte[]>? SuccAction;
-        public Action? FailAction; 
+        // public Action<ConnId, byte[]>? SuccAction;
+        // public Action<ConnId>? FailAction; 
+        public Action<ConnId, QueryTaskResult>? CallBack;
 
 
         public static QueryRegistery CreateQueryRegistery(int queryNum, long expireTimeMs)
@@ -50,21 +51,28 @@ namespace Game.Network
             return registery;
         }
 
-        public static QueryRegistery CreateQueryRegistery(int queryNum, long expireTimeMs, Action<byte[]>? respondedAction = null, Action? timeOutAction = null)
+        // public static QueryRegistery CreateQueryRegistery(int queryNum, long expireTimeMs, Action<ConnId, byte[]>? respondedAction = null, Action<ConnId>? timeOutAction = null)
+        // {
+        //     var registery = new QueryRegistery(queryNum, expireTimeMs);
+        //     registery.SuccAction = respondedAction;
+        //     registery.FailAction = timeOutAction;
+        //     return registery;
+        // }
+        public static QueryRegistery CreateQueryRegistery(int queryNum, long expireTimeMs, Action<ConnId, QueryTaskResult>? callBack)
         {
             var registery = new QueryRegistery(queryNum, expireTimeMs);
-            registery.SuccAction = respondedAction;
-            registery.FailAction = timeOutAction;
+            registery.CallBack = callBack;
             return registery;
-        } 
+        }  
 
         private QueryRegistery(int queryNum, long expireTimeMs)
         {
             tcs = new TaskCompletionSource<QueryTaskResult>();
             QueryNum = queryNum;
             ExpireTimeMs = expireTimeMs;
-            SuccAction = null;
-            FailAction = null;
+            // SuccAction = null;
+            // FailAction = null;
+            CallBack = null;
         }
 
         private QueryRegistery(int queryNum, long expireTimeMs, TaskCompletionSource<QueryTaskResult> taskCompSource)
@@ -72,8 +80,9 @@ namespace Game.Network
             tcs = taskCompSource;
             QueryNum = queryNum;
             ExpireTimeMs = expireTimeMs;
-            SuccAction = null;
-            FailAction = null;
+            // SuccAction = null;
+            // FailAction = null;
+            CallBack = null;
         }
 
     }

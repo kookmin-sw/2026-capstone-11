@@ -10,7 +10,7 @@ namespace Game.Network
         /// 메세지 처리에 대한 handler는 handlerId가 지정
         /// queryNum == 0일시 일반 전송. != 0인 경우 해당 쿼리번호에 해당하는 클라이언트 쿼리에 응답.
         /// </summary>
-        public void Send(int handlerId, int queryNum, string ConnId, byte[] raw);
+        public void Send(int handlerId, int queryNum, ConnId id, byte[] raw);
 
 
         /// <summary>
@@ -24,7 +24,7 @@ namespace Game.Network
         /// 특정 ConnId의 연결을 중단.
         /// Disconnect 처리에 대한 handler는 handerId가 지정
         /// </summary>
-        public void Disconnect(string ConnId);
+        public void Disconnect(ConnId id);
 
         /// <summary>
         /// 특정 ConnId에 대한 쿼리 등록 후 raw 전송. 
@@ -33,7 +33,7 @@ namespace Game.Network
         /// Task는 QueryTaskResult(bool InTime, byte[] AnswerRaw) 을 반환.
         /// expire시 (false, Array.Empty<byte>), 도착시 (true, *대답으로 받은 raw 데이터*)   
         /// </summary>
-        public Task<QueryTaskResult> AsyncRequestQuery(int handlerId, string ConnId, byte[] query_raw, long expireTimeMs);
+        public Task<QueryTaskResult> AsyncRequestQuery(int handlerId, ConnId id, byte[] query_raw, long expireTimeMs);
 
         /// <summary>
         /// 특정 ConnId에 대한 쿼리 등록 후 raw 전송. 
@@ -42,7 +42,7 @@ namespace Game.Network
         /// Task는 QueryTaskResult(bool InTime, byte[] AnswerRaw) 을 반환.
         /// expire시 (false, Array.Empty<byte>), 도착시 (true, *대답으로 받은 raw 데이터*)   
         /// </summary>
-        public Task<QueryTaskResult> AsyncRequestQuery(int handlerId, string ConnId, byte[] query_raw, long expireTimeMs, TaskCompletionSource<QueryTaskResult> tcs);
+        public Task<QueryTaskResult> AsyncRequestQuery(int handlerId, ConnId id, byte[] query_raw, long expireTimeMs, TaskCompletionSource<QueryTaskResult> tcs);
 
         /// <summary>
         /// 특정 ConnId에 대한 쿼리 등록 후 raw 전송. 
@@ -53,14 +53,16 @@ namespace Game.Network
         /// responseAction은 쿼리 응답시 호출, timeOutAction은 expire시 호출.
         /// **위 콜백은 기본적은 Exception handling이 없음**
         /// </summary>
-        public Task<QueryTaskResult> AsyncRequestQuery(int handlerId, string ConnId, byte[] query_raw, long expireTimeMs, Action<byte[]>? responseAction, Action? timeOutAction);
+        public Task<QueryTaskResult> AsyncRequestQuery(int handlerId, ConnId id, byte[] query_raw, long expireTimeMs, Action<ConnId, QueryTaskResult>? callBack);
+        
+        // public Task<QueryTaskResult> AsyncRequestQuery(int handlerId, ConnId id, byte[] query_raw, long expireTimeMs, Action<ConnId, byte[]>? responseAction, Action<ConnId>? timeOutAction);
 
         /// <summary>
         /// 현재 연결된 Connection id를 조회.
         /// 연결된 Connection 수가 minConnCount 이하일 경우 false.
         /// 반환된 연결이 항상 Connection을 보장하진 않음.
         /// </summary>
-        public bool TryGetConnIdList(int minConnCount, out List<string> connIdList); 
+        public bool TryGetConnIdList(int minConnCount, out List<ConnId> connIdList); 
 
         /// <summary>
         /// handler 등록
@@ -68,12 +70,15 @@ namespace Game.Network
         /// </summary>
         public void SetReceiveHandler(int handerId, INetEventHandler handler);
 
+        public void SetReceiveHandler(INetReceiveEventHandler handler);
+
         /// <summary>
         /// NetInEvent 중 Control에 해당하는 OnDisconnect, OnException, OnHello에 반응하는 handler 등록
         /// </summary>
         public void SetControlHandler(INetEventHandler handler);
+        public void SetControlHandler(INetControlEventHandler handler);
 
-        public bool IsConnValid(string connId);
+        public bool IsConnValid(ConnId id);
 
         /// <summary>
         /// 해당 IP 주소와 포트 번호로 Connection을 생성.
@@ -83,7 +88,7 @@ namespace Game.Network
         /// <param name="portNum"></param>
         /// <param name="expireTimeMs"></param>
         /// <returns></returns> 
-        public Task<string?> ConnectTo(string ipAddr, int portNum, long expireTimeMs); 
+        public Task<ConnId?> ConnectTo(string ipAddr, int portNum, long expireTimeMs); 
     }
 
 }

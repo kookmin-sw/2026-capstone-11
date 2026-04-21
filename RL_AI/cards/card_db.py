@@ -1,14 +1,17 @@
 from __future__ import annotations
 
+import csv
 from dataclasses import dataclass, field
 from enum import IntEnum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 import re
 
-import openpyxl
-
 MODULE_DIR = Path(__file__).resolve().parent
+CARD_ID_ALIASES = {
+    "Or_K": "Or_N",
+    "Cl_K": "Cl_N",
+}
 
 
 class Role(IntEnum):
@@ -187,6 +190,8 @@ class CardDefinition:
     text: str
     effect_name: str
     effect: str
+    effect_id: str = ""
+    event_id: str = ""
     text_flags: Dict[str, int] = field(default_factory=dict)
     effect_flags: Dict[str, int] = field(default_factory=dict)
     text_target_schema: str = "none"
@@ -215,6 +220,8 @@ class CardDefinition:
             "text": self.text,
             "effect_name": self.effect_name,
             "effect": self.effect,
+            "effect_id": self.effect_id,
+            "event_id": self.event_id,
             "text_flags": dict(self.text_flags),
             "effect_flags": dict(self.effect_flags),
             "text_target_schema": self.text_target_schema,
@@ -228,6 +235,8 @@ class CardDefinition:
             "attack": self.attack,
             "life": self.life,
             "text_condition": int(self.text_condition),
+            "effect_id": self.effect_id,
+            "event_id": self.event_id,
             "text_flags": dict(self.text_flags),
             "effect_flags": dict(self.effect_flags),
             "text_target_schema": self.text_target_schema,
@@ -235,51 +244,63 @@ class CardDefinition:
         }
 
 
-def _get_header_map(ws):
-    header_row_index = None
-    for idx, row in enumerate(ws.iter_rows(values_only=True), start=1):
-        if _normalize_text(row[0]) == "CardID":
-            header_row_index = idx
-            headers = [_normalize_text(c) for c in row]
+def _read_table_rows(card_data_path: Path) -> List[Dict[str, str]]:
+    delimiter = "," if card_data_path.suffix.lower() == ".csv" else "\t"
+    with card_data_path.open("r", encoding="utf-8-sig", newline="") as f:
+        reader = csv.reader(f, delimiter=delimiter)
+        rows = list(reader)
+
+    header_index = None
+    for idx, row in enumerate(rows):
+        if row and _normalize_text(row[0]) == "CardID":
+            header_index = idx
             break
-    if header_row_index is None:
-        raise ValueError("Could not find header row starting with 'CardID'.")
-    header_map = {}
-    for i, h in enumerate(headers):
-        if h:
-            header_map[h] = i
-    return header_map, header_row_index
 
+    if header_index is None:
+        raise ValueError("Could not find header row starting with 'CardID' in card data file.")
 
-def load_card_list(xlsx_path: str | Path = "./Cards.xlsx", sheet_name: Optional[str] = None) -> List[CardDefinition]:
-    xlsx_path = _resolve_module_relative(xlsx_path)
-    wb = openpyxl.load_workbook(xlsx_path, data_only=True)
-    ws = wb[sheet_name] if sheet_name else wb[wb.sheetnames[0]]
-    header_map, header_row_index = _get_header_map(ws)
-    required_headers = ["CardID", "Name", "World", "Role", "Attack", "Life", "TextCondition", "TextName", "Text", "EffectName", "Effect"]
-    missing = [h for h in required_headers if h not in header_map]
+    headers = [_normalize_text(cell) for cell in rows[header_index]]
+    required_headers = ["CardID", "Name", "World", "Role", "Attack", "Life", "TextCondition", "EffectName", "Effect"]
+    missing = [h for h in required_headers if h not in headers]
     if missing:
         raise ValueError(f"Missing required headers: {missing}")
 
-    cards: List[CardDefinition] = []
-    for row in ws.iter_rows(min_row=header_row_index + 1, values_only=True):
-        card_id = _normalize_text(row[header_map["CardID"]])
-        if not card_id:
+    out: List[Dict[str, str]] = []
+    for row in rows[header_index + 1:]:
+        if not row:
             continue
-        text = _normalize_text(row[header_map["Text"]])
-        effect = _normalize_text(row[header_map["Effect"]])
+        padded = list(row) + [""] * max(0, len(headers) - len(row))
+        row_dict = {headers[i]: padded[i] for i in range(len(headers)) if headers[i]}
+        if not _normalize_text(row_dict.get("CardID", "")):
+            continue
+        out.append(row_dict)
+    return out
+
+
+def load_card_list(card_data_path: str | Path = "./Cards.csv") -> List[CardDefinition]:
+    card_data_path = _resolve_module_relative(card_data_path)
+    rows = _read_table_rows(card_data_path)
+
+    cards: List[CardDefinition] = []
+    for row in rows:
+        text = _normalize_text(row.get("Text") or row.get("EventText"))
+        effect = _normalize_text(row.get("Effect"))
+        raw_card_id = _normalize_text(row.get("CardID"))
+        canonical_card_id = CARD_ID_ALIASES.get(raw_card_id, raw_card_id)
         cards.append(CardDefinition(
-            card_id=card_id,
-            name=_normalize_text(row[header_map["Name"]]),
-            world=_normalize_int(row[header_map["World"]]),
-            role=Role.from_value(row[header_map["Role"]]),
-            attack=_normalize_int(row[header_map["Attack"]]),
-            life=_normalize_int(row[header_map["Life"]]),
-            text_condition=TextCondition.from_value(row[header_map["TextCondition"]]),
-            text_name=_normalize_text(row[header_map["TextName"]]),
+            card_id=canonical_card_id,
+            name=_normalize_text(row.get("Name")),
+            world=_normalize_int(row.get("World")),
+            role=Role.from_value(row.get("Role")),
+            attack=_normalize_int(row.get("Attack")),
+            life=_normalize_int(row.get("Life")),
+            text_condition=TextCondition.from_value(row.get("TextCondition")),
+            text_name=_normalize_text(row.get("TextName") or row.get("EventName")),
             text=text,
-            effect_name=_normalize_text(row[header_map["EffectName"]]),
+            effect_name=_normalize_text(row.get("EffectName")),
             effect=effect,
+            effect_id=_normalize_text(row.get("EffectID")) or canonical_card_id,
+            event_id=_normalize_text(row.get("EventID")) or canonical_card_id,
             text_flags=extract_effect_flags(text),
             effect_flags=extract_effect_flags(effect),
             text_target_schema=classify_target_schema(text),
@@ -288,8 +309,8 @@ def load_card_list(xlsx_path: str | Path = "./Cards.xlsx", sheet_name: Optional[
     return cards
 
 
-def load_card_db(xlsx_path: str | Path = "./Cards.xlsx", sheet_name: Optional[str] = None) -> Dict[str, CardDefinition]:
-    return {card.card_id: card for card in load_card_list(xlsx_path=xlsx_path, sheet_name=sheet_name)}
+def load_card_db(card_data_path: str | Path = "./Cards.csv") -> Dict[str, CardDefinition]:
+    return {card.card_id: card for card in load_card_list(card_data_path=card_data_path)}
 
 
 def group_cards_by_world(card_db: Dict[str, CardDefinition]) -> Dict[int, List[CardDefinition]]:
@@ -324,7 +345,7 @@ def build_default_deck(card_db: Dict[str, CardDefinition], world: int) -> List[s
 
 
 if __name__ == "__main__":
-    db = load_card_db("./Cards.xlsx")
+    db = load_card_db("./Cards.csv")
     grouped = group_cards_by_world(db)
     print(f"Loaded {len(db)} cards from {len(grouped)} worlds.")
     for world, cards in grouped.items():

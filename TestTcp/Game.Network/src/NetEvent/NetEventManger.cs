@@ -8,16 +8,34 @@ namespace Game.Network
 {
     public class NetEventManger
     {
-        private Dictionary<int, INetEventHandler> _handlerDict;
-        private HashSet<INetEventHandler> _controlHandler;
-        private Dictionary<(string ConnId, int queryNum), QueryRegistery> _queryDict;
+        private Dictionary<int, INetReceiveEventHandler> _handlerDict;
+        private HashSet<INetControlEventHandler> _controlHandler;
+        private Dictionary<(ConnId id, int queryNum), QueryRegistery> _queryDict;
         private int _maxDataPerTick;
         private int _maxControlPerTick;
         private int _query_seq;
 
+        public NetEventManger(int maxControlPerTick, int maxDataPerTick)
+        {
+            if (maxControlPerTick < 0 || maxDataPerTick < 0)
+                throw new ArgumentException();
+
+            _handlerDict = new();
+            _controlHandler = new();
+
+            _maxControlPerTick = maxControlPerTick;
+            _maxDataPerTick = maxDataPerTick;
+
+            _queryDict = new();
+            _query_seq = 1;
+        }
+
+
 
         // for CheckTimeOut() cache
-        private readonly List<(string, int)> _removeList = new();
+        private readonly List<(ConnId, int)> _removeList = new();
+        private static QueryTaskResult _timeOutResult = new QueryTaskResult(QueryResultStatus.TimeOut, Array.Empty<byte>());
+        private static QueryTaskResult _cancelResult = new QueryTaskResult(QueryResultStatus.Cancelled, Array.Empty<byte>());
 
 
         public void Init(NetEventQueue q)
@@ -50,7 +68,7 @@ namespace Game.Network
             string msg = "";
             foreach (var item in _queryDict)
             {
-                msg += $"\t [Registed Query] - ({item.Key.ConnId}, {item.Key.queryNum})\n";
+                msg += $"\t [Registed Query] - ({item.Key.id}, {item.Key.queryNum})\n";
             }
 
             return $"[EventManager:{this}] \n" +
@@ -77,8 +95,9 @@ namespace Game.Network
                 var key = _removeList[i];
                 if (_queryDict.Remove(key, out var registery))
                 {
-                    registery.tcs.TrySetResult(new QueryTaskResult(QueryResultStatus.TimeOut, Array.Empty<byte>()));
-                    registery.FailAction?.Invoke();
+                    registery.tcs.TrySetResult(_timeOutResult);
+                    //registery.FailAction?.Invoke(key.Item1);
+                    registery.CallBack?.Invoke(key.Item1, _timeOutResult);
                 }
             }
         }
@@ -95,75 +114,71 @@ namespace Game.Network
             }
 
         }
-        public NetEventManger(int maxControlPerTick, int maxDataPerTick)
-        {
-            if (maxControlPerTick < 0 || maxDataPerTick < 0)
-                throw new ArgumentException();
-
-            _handlerDict = new();
-            _controlHandler = new();
-
-            _maxControlPerTick = maxControlPerTick;
-            _maxDataPerTick = maxDataPerTick;
-
-            _queryDict = new();
-            _query_seq = 1;
-        }
 
 
 
-        public (int, Task<QueryTaskResult>) RegisterQueryTask(string ConnId, long expireTimeMs)
+        public (int, Task<QueryTaskResult>) RegisterQueryTask(ConnId connId, long expireTimeMs)
         {
             var registery = QueryRegistery.CreateQueryRegistery(_query_seq, GameTime.GetNow() + expireTimeMs);
-            _queryDict.Add((ConnId, _query_seq), registery);
+            _queryDict.Add((connId, _query_seq), registery);
             _query_seq++;
 
             return (registery.QueryNum, registery.tcs.Task);
         }
-        public (int, Task<QueryTaskResult>) RegisterQueryTask(string ConnId, long expireTimeMs, TaskCompletionSource<QueryTaskResult> tcs)
+        public (int, Task<QueryTaskResult>) RegisterQueryTask(ConnId connId, long expireTimeMs, TaskCompletionSource<QueryTaskResult> tcs)
         {
             var registery = QueryRegistery.CreateQueryRegistery(_query_seq, GameTime.GetNow() + expireTimeMs, tcs);
-            _queryDict.Add((ConnId, _query_seq), registery);
+            _queryDict.Add((connId, _query_seq), registery);
             _query_seq++;
 
             return (registery.QueryNum, registery.tcs.Task);
         }
 
-        public (int, Task<QueryTaskResult>) RegisterQueryTask(string ConnId, long expireTimeMs, Action<byte[]>? succAction = null, Action? failAction = null)
+        // public (int, Task<QueryTaskResult>) RegisterQueryTask(ConnId connId, long expireTimeMs, Action<ConnId, byte[]>? succAction = null, Action<ConnId>? failAction = null)
+        // {
+        //     var registery = QueryRegistery.CreateQueryRegistery(_query_seq, GameTime.GetNow() + expireTimeMs, succAction, failAction);
+        //     _queryDict.Add((connId, _query_seq), registery);
+        //     _query_seq++;
+
+        //     return (registery.QueryNum, registery.tcs.Task);
+        // }
+
+        public (int, Task<QueryTaskResult>) RegisterQueryTask(ConnId connId, long expireTimeMs, Action<ConnId, QueryTaskResult>? callBack)
         {
-            var registery = QueryRegistery.CreateQueryRegistery(_query_seq, GameTime.GetNow() + expireTimeMs, succAction, failAction);
-            _queryDict.Add((ConnId, _query_seq), registery);
+            var registery = QueryRegistery.CreateQueryRegistery(_query_seq, GameTime.GetNow() + expireTimeMs, callBack);
+            _queryDict.Add((connId, _query_seq), registery);
             _query_seq++;
 
             return (registery.QueryNum, registery.tcs.Task);
         }
 
-        public bool TryCancelQuery(string ConnId, int queryNum)
+        public bool TryCancelQuery(ConnId connId, int queryNum)
         {
             if (queryNum == 0) return false;
 
-            if (_queryDict.Remove((ConnId, queryNum), out var registery))
+            if (_queryDict.Remove((connId, queryNum), out var registery))
             {
-                registery.tcs.TrySetResult(new QueryTaskResult(QueryResultStatus.Cancelled, Array.Empty<byte>()));
+                registery.tcs.TrySetResult(_cancelResult);
+                registery.CallBack?.Invoke(connId, _cancelResult);
                 return true;
             }
             return false;
         }
 
-        public void SetReceiveHandler(int handlerNum, INetEventHandler handler)
-        => _handlerDict[handlerNum] = handler;
+        public void SetReceiveHandler(INetReceiveEventHandler handler)
+        => _handlerDict[handler.HandlerId] = handler;
 
-        public void SetControlHandler(INetEventHandler handler)
+        public void SetControlHandler(INetControlEventHandler handler)
         => _controlHandler.Add(handler);
 
-        public void CancelAll(string connId)
+        public void CancelAll(ConnId connId)
         {
-            var toDelete = _queryDict.Keys.Where(k => k.ConnId == connId).ToList();
+            var toDelete = _queryDict.Keys.Where(k => k.id == connId).ToList();
 
             for (int i = 0; i < toDelete.Count; i++)
             {
                 if (_queryDict.Remove(toDelete[i], out var registery))
-                    registery.tcs.TrySetResult(new QueryTaskResult(QueryResultStatus.Cancelled, Array.Empty<byte>()));
+                { registery.tcs.TrySetResult(_cancelResult); registery.CallBack?.Invoke(connId, _cancelResult); }
             }
         }
         private void ProcessNetInControl(NetInEvent inCon)
@@ -172,15 +187,15 @@ namespace Game.Network
             switch (inCon.type)
             {
                 case NetInEventType.Hello:
-                    foreach (var ch in _controlHandler) ch.OnHello(inCon.ConnId, inCon.data);
+                    foreach (var ch in _controlHandler) ch.OnHello(inCon.connId, inCon.data);
                     break;
 
                 case NetInEventType.Disconnect:
-                    foreach (var ch in _controlHandler) ch.OnDisconnect(inCon.ConnId, inCon.data);
+                    foreach (var ch in _controlHandler) ch.OnDisconnect(inCon.connId, inCon.data);
                     break;
 
                 case NetInEventType.Exception:
-                    foreach (var ch in _controlHandler) ch.OnException(inCon.ConnId, inCon.data, inCon.msg);
+                    foreach (var ch in _controlHandler) ch.OnException(inCon.connId, inCon.data, inCon.msg);
                     break;
             }
         }
@@ -195,17 +210,19 @@ namespace Game.Network
 
             if (c.IsRespond())
             {
-                if (_queryDict.Remove((inEv.ConnId, c.QueryNum), out var registery))
+                if (_queryDict.Remove((inEv.connId, c.QueryNum), out var registery))
                 {
-                    registery.tcs.TrySetResult(new QueryTaskResult(QueryResultStatus.Responded, c.Data));
-                    registery.SuccAction?.Invoke(c.Data);
+                    var result = new QueryTaskResult(QueryResultStatus.Responded, c.Data);
+                    registery.tcs.TrySetResult(result);
+                    registery.CallBack?.Invoke(inEv.connId, result);
+                    //registery.SuccAction?.Invoke(inEv.connId, c.Data);
                 }
-                handler?.OnRespond(inEv.ConnId, c.QueryNum, c.Data);
+                handler?.OnRespond(inEv.connId, c.QueryNum, c.Data);
 
             }
-            else if (c.IsQuery()) handler?.OnQuery(inEv.ConnId, c.QueryNum, c.Data);
+            else if (c.IsQuery()) handler?.OnQuery(inEv.connId, c.QueryNum, c.Data);
 
-            else handler?.OnReceive(inEv.ConnId, c.Data);
+            else handler?.OnReceive(inEv.connId, c.Data);
         }
     }
 }

@@ -12,9 +12,7 @@ public class ModeSelectionSceneMain : MonoBehaviour
 {
     [SerializeField] private TMP_InputField IPaddrInputField;
     [SerializeField] private TMP_InputField PortNumInputField;
-    [SerializeField] private NetworkManagerUnity networkManager;
-
-
+    [SerializeField] private GameInitializer gameInitializer;
 
     public void OnClickStartDedicateMode()
     {
@@ -35,35 +33,16 @@ public class ModeSelectionSceneMain : MonoBehaviour
 
         if (!PlayFabAccountManager.Instance.IsLoggedIn)
         {
-            Debug.Log("Need Playfab LogIn First");
-            return;
+            Debug.Log("No Playfab LogIn.");
+            string pcID = SystemInfo.deviceUniqueIdentifier;
+            gameInitializer.Data.PlayerName = "Jimmy, The Mind of PlaceHolder" + pcID;
         }
+        else gameInitializer.Data.PlayerName = PlayFabAccountManager.Instance.InGameDisplayName;
 
-
-        ConnectionInfo selfInfo = new ConnectionInfo(
-            netType: NetworkType.Dedicated, 
-            connType: ConnectionType.Client, 
-            seesion_id: 0, 
-            account_id: 0, 
-            account_name: PlayFabAccountManager.Instance.InGameDisplayName, 
-            app_version: "DevelopVersion", 
-            Token: PlayFabAccountManager.Instance.SessionTicket
-        );
-
-        ServiceOption option = new ServiceOption(
-            MaxConnPerService: 2,
-            HelloTimeOutMs: 10000,
-            PingIntervalMs: 5000,
-            PingTimeOutMs: 4500,
-            PingFailCountToDisconnect: 3       
-            );
-
-        BypassAuthenticator auth = new();
-
-
-        networkManager.Init(selfInfo, option, auth);
-        _ = networkManager.Net.ConnectTo(ipAddr.ToString(), portNum, 20000);
-        DontDestroyOnLoad(networkManager);
+        gameInitializer.Data.IpAddr = ipAddr.ToString();
+        gameInitializer.Data.PortNum = portNum;
+        
+        DontDestroyOnLoad(gameInitializer);
         SceneManager.LoadScene("NetworkTestScene");
     }
 }

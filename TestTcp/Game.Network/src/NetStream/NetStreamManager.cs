@@ -61,20 +61,20 @@ namespace Game.Network
                     $"\t Total Processed Events   : {_totalProcessedEvents}\n";
         }
 
-        public void Send(int handlerId, int queryNum, string ConnId, byte[] raw)
+        public void Send(int handlerId, int queryNum, ConnId connId, byte[] raw)
         {
             Codec c = (queryNum == 0)? Codec.CreateMessage(handlerId, raw) : Codec.CreateRespond(handlerId, queryNum, raw);         
             var packet = NetCodec.EncodeWithHeader(c);
 
-            _reqDataQueue.Enqueue(NetOutEvent.Send(ConnId, packet));
+            _reqDataQueue.Enqueue(NetOutEvent.Send(connId, packet));
         }
 
-        public void Query(int handlerId, int queryNum, string ConnId, byte[] raw)
+        public void Query(int handlerId, int queryNum, ConnId connId, byte[] raw)
         {
             Codec c = Codec.CreateQuery(handlerId, queryNum, raw);         
             var packet = NetCodec.EncodeWithHeader(c);
 
-            _reqDataQueue.Enqueue(NetOutEvent.Send(ConnId, packet));
+            _reqDataQueue.Enqueue(NetOutEvent.Send(connId, packet));
         }
 
         public void BroadCast(int handlerId, int queryNum, byte[] raw)
@@ -82,15 +82,15 @@ namespace Game.Network
             Codec c = (queryNum == 0)? Codec.CreateMessage(handlerId, raw) : Codec.CreateRespond(handlerId, queryNum, raw);         
             var packet = NetCodec.EncodeWithHeader(c);
             
-            _reqDataQueue.Enqueue(NetOutEvent.BroadCast("All", packet));
+            _reqDataQueue.Enqueue(NetOutEvent.BroadCast(ConnId.Default(), packet));
         }
 
-        public void Disconnect(string ConnId)
+        public void Disconnect(ConnId connId)
         {   
             Codec c = Codec.CreateEmpty();
             var packet = NetCodec.EncodeWithHeader(c);
             
-            _reqControlQueue.Enqueue(NetOutEvent.Disconnect(ConnId, packet));
+            _reqControlQueue.Enqueue(NetOutEvent.Disconnect(connId, packet));
         }
     }
 }
