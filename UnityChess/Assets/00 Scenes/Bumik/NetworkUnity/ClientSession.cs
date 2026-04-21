@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using events.server;
+using events.ui;
 using Game.Network;
 using PlayFab.ProfilesModels;
 using Unity.VisualScripting;
@@ -13,7 +15,7 @@ public class ClientSession : INetEventHandler
     private long ConnectionExpireTimeMs = 9999;
 
 
-
+    private int queryNum = 0;
     private ConnId _host = ConnId.Default();
     private SessionEvents _events = new();
     public SessionEvents Events => _events;
@@ -86,6 +88,7 @@ public class ClientSession : INetEventHandler
     public void OnQuery(ConnId connId, int queryNum, byte[] raw)
     {
         _events.OnGetQuery?.Invoke(queryNum, raw);
+        this.queryNum = queryNum;
     }
     public void OnException(ConnId connId, byte[] raw, string msg)
     {
@@ -108,4 +111,8 @@ public class ClientSession : INetEventHandler
         _events.OnDisconnectUnsafe?.Invoke();
     }
 
+    public void SubscribeEventBus()
+    {
+        NetworkEventBus.Instance.Subscribe<IServerEvents.ReplyQueryEvent>((evt) => { Answer(this.queryNum, Encoding.UTF8.GetBytes(evt.actionId)); });
+    }
 }
