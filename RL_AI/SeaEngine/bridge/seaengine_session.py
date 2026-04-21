@@ -1,12 +1,34 @@
-"""Bridge for running the copied SeaEngine C# project as the actual game backend."""
+"""Bridge for running the SeaEngine C# project as a gRPC backend."""
 
 from __future__ import annotations
 
-import json
 import os
 import subprocess
+import time
+import shutil
 from pathlib import Path
 from typing import Any, Dict, Optional
+
+import grpc
+from google.protobuf.json_format import MessageToDict
+
+# gRPC generated files
+from RL_AI.protos import seaengine_pb2, seaengine_pb2_grpc
+
+
+def _dotnet_root_from_cmd(dotnet_cmd: str) -> str:
+    try:
+        info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
+        for line in info.stdout.splitlines():
+            if "Base Path:" in line:
+                base_path = line.split("Base Path:", 1)[1].strip()
+                return str(Path(base_path).resolve().parents[1])
+    except Exception:
+        pass
+    cmd_path = Path(dotnet_cmd).resolve()
+    if cmd_path.parent.name == "bin" and cmd_path.parent.parent.name:
+        return str(cmd_path.parent.parent)
+    return str(cmd_path.parent)
 
 
 class SeaEngineSession:
@@ -25,24 +47,33 @@ class SeaEngineSession:
             else (self.project_root.parent / "cards" / "Cards.csv").resolve()
         )
         self._proc: Optional[subprocess.Popen[str]] = None
+        self._channel: Optional[grpc.Channel] = None
+        self._stub: Optional[seaengine_pb2_grpc.SeaEngineServiceStub] = None
 
     def start(self) -> None:
         if self._proc is not None:
             return
+        
         dotnet_cmd = os.environ.get("DOTNET_CMD") or self._resolve_dotnet_cmd()
+        # Ensure we have an absolute path if possible for DOTNET_ROOT
+        resolved_dotnet = shutil.which(dotnet_cmd) or dotnet_cmd
+        
         dotnet_cli_home = os.environ.get("DOTNET_CLI_HOME") or str(
             (Path.home() / ".dotnet_cli_home").resolve()
         )
-        launch_cmd = self._build_launch_command(dotnet_cmd)
-        dotnet_root = Path(dotnet_cmd).resolve().parent if dotnet_cmd else None
+        launch_cmd = self._build_launch_command(resolved_dotnet)
+        dotnet_root = _dotnet_root_from_cmd(resolved_dotnet) if resolved_dotnet else None
+        
         env = {
             **os.environ,
             "DOTNET_CLI_HOME": dotnet_cli_home,
             "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1",
         }
         if dotnet_root is not None:
-            env.setdefault("DOTNET_ROOT", str(dotnet_root))
-            env.setdefault("DOTNET_ROOT_X64", str(dotnet_root))
+            env["DOTNET_ROOT"] = str(dotnet_root)
+            env["DOTNET_ROOT_X64"] = str(dotnet_root)
+
+        # 서버 프로세스 실행
         self._proc = subprocess.Popen(
             launch_cmd,
             cwd=str(self.project_root.parent),
@@ -53,26 +84,61 @@ class SeaEngineSession:
             text=True,
             encoding="utf-8",
         )
+
+        # 서버가 출력하는 포트 번호 대기
+        port = None
+        start_time = time.time()
+        print(f"[*] Waiting for SeaEngine gRPC server to start...")
+        while time.time() - start_time < 60: # 60초 타임아웃으로 상향
+            line = self._proc.stdout.readline()
+            if not line:
+                # 프로세스가 조기에 종료된 경우 체크
+                if self._proc.poll() is not None:
+                    stderr = self._proc.stderr.read()
+                    raise RuntimeError(f"C# server exited prematurely. stderr={stderr}")
+                continue
+            
+            stripped = line.strip()
+            if stripped.startswith("PORT:"):
+                port = stripped.split(":")[1]
+                print(f"[*] SeaEngine gRPC server started on port {port}")
+                break
+            else:
+                # PORT 정보가 아닌 다른 메시지가 나오면 출력 (디버깅용)
+                if stripped: print(f"  [C# Output] {stripped}")
+        
+        if not port:
+            self._proc.terminate()
+            raise RuntimeError("Failed to detect PORT from C# server output within timeout.")
+
+        # 파이프 버퍼가 가득 차서 프로세스가 멈추는 것을 방지하기 위해 백그라운드에서 출력 소비
+        import threading
+        def drain_stream(stream):
+            try:
+                for _ in stream:
+                    pass
+            except:
+                pass
+
+        threading.Thread(target=drain_stream, args=(self._proc.stdout,), daemon=True).start()
+        threading.Thread(target=drain_stream, args=(self._proc.stderr,), daemon=True).start()
+
+        # gRPC 채널 및 스텁 설정
+        self._channel = grpc.insecure_channel(f"localhost:{port}")
+        self._stub = seaengine_pb2_grpc.SeaEngineServiceStub(self._channel)
+        
         try:
             self.ping()
-        except FileNotFoundError as exc:
-            raise RuntimeError(
-                "dotnet executable was not found. Install .NET SDK or set DOTNET_CMD to the full dotnet path."
-            ) from exc
+        except Exception as exc:
+            self.close()
+            raise RuntimeError(f"Failed to connect to gRPC server on port {port}.") from exc
 
     def close(self) -> None:
-        if self._proc is None:
-            return
-        try:
-            try:
-                self._request({"command": "close"})
-            except (BrokenPipeError, json.JSONDecodeError, RuntimeError):
-                # Shutdown is best-effort. Some environments close the bridge
-                # before returning the final JSON response, which is fine here.
-                pass
-        finally:
-            if self._proc.stdin:
-                self._proc.stdin.close()
+        if self._channel:
+            self._channel.close()
+            self._channel = None
+        
+        if self._proc:
             self._proc.terminate()
             try:
                 self._proc.wait(timeout=5)
@@ -80,9 +146,13 @@ class SeaEngineSession:
                 self._proc.kill()
                 self._proc.wait(timeout=5)
             self._proc = None
+        
+        self._stub = None
 
     def ping(self) -> Dict[str, Any]:
-        return self._request({"command": "ping"})
+        if not self._stub: raise RuntimeError("Session not started")
+        response = self._stub.Ping(seaengine_pb2.Empty())
+        return {"message": response.message}
 
     def init_game(
         self,
@@ -91,71 +161,49 @@ class SeaEngineSession:
         player2_deck: str = "",
         player1_id: str = "P1",
         player2_id: str = "P2",
+        logger_mode: str = "simple",
     ) -> Dict[str, Any]:
-        return self._request(
-            {
-                "command": "init",
-                "card_data_path": self.card_data_path,
-                "player1_deck": player1_deck,
-                "player2_deck": player2_deck,
-                "player1_id": player1_id,
-                "player2_id": player2_id,
-            }
+        if not self._stub: raise RuntimeError("Session not started")
+        request = seaengine_pb2.InitRequest(
+            card_data_path=self.card_data_path,
+            player1_deck=player1_deck,
+            player2_deck=player2_deck,
+            player1_id=player1_id,
+            player2_id=player2_id,
         )
+        snapshot = self._stub.InitGame(request)
+        return self._message_to_dict(snapshot)
 
     def snapshot(self) -> Dict[str, Any]:
-        return self._request({"command": "snapshot"})
+        if not self._stub: raise RuntimeError("Session not started")
+        snapshot = self._stub.GetSnapshot(seaengine_pb2.Empty())
+        return self._message_to_dict(snapshot)
 
     def apply_action(self, action_uid: str) -> Dict[str, Any]:
-        return self._request({"command": "apply", "action_uid": action_uid})
+        if not self._stub: raise RuntimeError("Session not started")
+        request = seaengine_pb2.ActionRequest(action_uid=action_uid)
+        snapshot = self._stub.ApplyAction(request)
+        return self._message_to_dict(snapshot)
 
-    def _request(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-        if self._proc is None or self._proc.stdin is None or self._proc.stdout is None:
-            raise RuntimeError("SeaEngine session is not started.")
-
-        self._proc.stdin.write(json.dumps(payload, ensure_ascii=False) + "\n")
-        self._proc.stdin.flush()
-
-        response = self._read_response_line()
-        if response.get("status") != "ok":
-            raise RuntimeError(response.get("error", "unknown_seaengine_error"))
-        return response["payload"]
-
-    def _read_response_line(self) -> Dict[str, Any]:
-        if self._proc is None or self._proc.stdout is None:
-            raise RuntimeError("SeaEngine session is not started.")
-
-        while True:
-            line = self._proc.stdout.readline()
-            if not line:
-                stderr = ""
-                if self._proc.stderr is not None:
-                    stderr = self._proc.stderr.read()
-                raise RuntimeError(f"SeaEngine bridge terminated unexpectedly. stderr={stderr}")
-
-            stripped = line.strip()
-            if not stripped:
-                continue
-
-            try:
-                return json.loads(stripped)
-            except json.JSONDecodeError:
-                # Ignore any unexpected non-JSON line and keep reading the next
-                # response line. The bridge protocol itself is still JSON-only.
-                continue
-
+    def _message_to_dict(self, message) -> Dict[str, Any]:
+        # 기존 코드 호환성을 위해 snake_case 유지 및 빈 리스트 처리
+        # 환경(5.29.6)에 맞는 파라미터명 사용
+        return MessageToDict(
+            message,
+            preserving_proto_field_name=True,
+            always_print_fields_with_no_presence=True
+        )
 
     def _build_launch_command(self, dotnet_cmd: str) -> list[str]:
         dll_path = self.cli_build_dir / "SeaEngineCli.dll"
-        linux_apphost = self.cli_build_dir / "SeaEngineCli"
         windows_apphost = self.cli_build_dir / "SeaEngineCli.exe"
 
+        # gRPC 서버로 실행할 때는 build 결과물을 직접 실행하는 것이 유리함
         if os.name == "nt" and windows_apphost.exists():
             return [str(windows_apphost)]
         if dll_path.exists():
             return [dotnet_cmd, str(dll_path)]
-        if linux_apphost.exists():
-            return [str(linux_apphost)]
+        
         return [dotnet_cmd, "run", "--project", str(self.cli_project), "-c", "Debug", "--no-build"]
 
     @staticmethod

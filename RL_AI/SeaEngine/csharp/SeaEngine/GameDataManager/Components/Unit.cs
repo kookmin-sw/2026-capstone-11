@@ -18,8 +18,12 @@ public class Unit(Card card)
     {
         if (x is < 0 or >= Board.BoardSize || y is < 0 or >= Board.BoardSize)
         {
-            throw new ArgumentOutOfRangeException($"Place Out of range({card.Guid})");
+            throw new ArgumentOutOfRangeException($"Place Out of range({Card.Guid})");
         }
+        Atk = Card.Data.Atk;
+        MaxHp = Card.Data.Hp;
+        Hp = Card.Data.Hp;
+        Buffs.Clear();
         IsPlaced = true;
         PosX = x;
         PosY = y;
@@ -29,7 +33,7 @@ public class Unit(Card card)
     {
         if (x is < 0 or >= Board.BoardSize || y is < 0 or >= Board.BoardSize)
         {
-            throw new ArgumentOutOfRangeException($"Move Out of range({card.Guid})");
+            throw new ArgumentOutOfRangeException($"Move Out of range({Card.Guid})");
         }
         PosX = x;
         PosY = y;
