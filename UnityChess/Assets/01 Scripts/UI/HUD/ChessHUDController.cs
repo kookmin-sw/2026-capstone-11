@@ -4,6 +4,7 @@ using TMPro;
 using Core;
 using System.Linq;
 using Core.StateManagement;
+using NUnit.Framework;
 
 namespace UI.HUD
 {
@@ -92,7 +93,7 @@ namespace UI.HUD
 
             UpdateTurnText();
             UpdateTurnIndicators(isMyTurn);
-            UpdatePlayerTexts(playerNames);
+            UpdatePlayerTexts(playerNames, isLocalPlayerP1);
             UpdateTurnEndButton(isMyTurn);
             UpdateInputLock(isMyTurn);
         }
@@ -119,10 +120,18 @@ namespace UI.HUD
             }
         }
 
-        private void UpdatePlayerTexts(string[] playerNames)
+        private void UpdatePlayerTexts(string[] playerNames, bool isP1)
         {
-            playerText[0].text = playerNames[0];
-            playerText[1].text = playerNames[1];
+            if (isP1)
+            {
+                playerText[0].text = playerNames[0];
+                playerText[1].text = playerNames[1];
+            }
+            else
+            {
+                playerText[0].text = playerNames[1];
+                playerText[1].text = playerNames[0];
+            }
         }
 
         private void UpdateTurnEndButton(bool isMyTurn)

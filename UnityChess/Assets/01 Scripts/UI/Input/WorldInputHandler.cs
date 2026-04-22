@@ -20,8 +20,14 @@ public class WorldInputHandler : MonoBehaviour, IInputHandler
 
     [SerializeField] private ChessUIEventBus eventBus;
 
+    private bool isP1;
     // 호버중인 대상
     private IHoverable current;
+
+    public void Init(bool isP1)
+    {
+        this.isP1 = isP1;
+    }
 
     void Update()
     {
@@ -64,7 +70,7 @@ public class WorldInputHandler : MonoBehaviour, IInputHandler
         {
             var cell = tilemap.WorldToCell(worldPos);
 
-            eventBus.Publish(new IClientEvents.CellSelectedEvent(BoardView.CellToBoard(cell)));
+            eventBus.Publish(new IClientEvents.CellSelectedEvent(BoardView.CellToBoard(cell, isP1)));
             return;
         }
 
