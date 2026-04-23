@@ -12,10 +12,10 @@ public class ClientSession : INetEventHandler
 {
     public int HandlerId => NetEventHandlerId.Constant.GameMessage;
 
-    private long ConnectionExpireTimeMs = 9999;
-
-
     private int queryNum = 0;
+    private bool disconnectUnsafe = true;
+
+
     private ConnId _host = ConnId.Default();
     private SessionEvents _events = new();
     public SessionEvents Events => _events;
@@ -27,6 +27,13 @@ public class ClientSession : INetEventHandler
         NetworkManagerUnity.Instance.Net.SetReceiveHandler(this);
     }
 
+    public void Clear()
+    {
+        queryNum = 0;
+        disconnectUnsafe = true;
+        _host = ConnId.Default();
+        _events.Clear();
+    }
 
     public void EnterSession(string name, Action<byte[]> succ, Action<string> fail)
     {
@@ -49,6 +56,12 @@ public class ClientSession : INetEventHandler
             (connId, result) => { callback.Invoke(result); }
             );
     }
+
+    public void Disconnect()
+    {
+        NetworkManagerUnity.Instance.Net.Disconnect(_host); 
+    }
+
     public void QueryDataRegister(byte[] raw, long expireMs, Action<QueryTaskResult> callback)
     {
         _ = NetworkManagerUnity.Instance.Net.AsyncRequestQuery(

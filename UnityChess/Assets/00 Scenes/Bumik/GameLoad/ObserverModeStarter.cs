@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Net;
 using System.Text;
@@ -13,11 +14,10 @@ public class ObserverModeStarter : MonoBehaviour
     [Header("Ref to UI Input")]
     [SerializeField] private TMP_InputField IPaddrInputField;
     [SerializeField] private TMP_InputField PortNumInputField;
+    [SerializeField] private TMP_InputField TargetPlayerName;
     [SerializeField] private string ObserverKey;
 
     [Header("Game Scene Load")]
-    [SerializeField] private NetworkManagerUnity netManager;
-    [SerializeField] private GameInitParam InitParam;
     [SerializeField] private string gameSceneName;
 
     private Coroutine _gameLoadCoroutine;
@@ -40,10 +40,17 @@ public class ObserverModeStarter : MonoBehaviour
             return;
         }
 
-        InitParam.IpAddr = ipAddr.ToString();
-        InitParam.PortNum = portNum;
+        if (String.IsNullOrEmpty(TargetPlayerName.text))
+        {
+            Debug.Log("Wrong Target PlayerName Input!");
+            return;
+        }
 
-        netManager.Init();
+        GameInitParam.Instance.IpAddr = ipAddr.ToString();
+        GameInitParam.Instance.PortNum = portNum;
+        GameInitParam.Instance.Player1Name = TargetPlayerName.text;
+
+        NetworkManagerUnity.Instance.Init();
 
         _gameLoadCoroutine = StartCoroutine(GameLoadCoroutine());
         _gameLoadTimeoutCoroutine = StartCoroutine(GameLoadTimeoutCoroutine());
@@ -75,28 +82,28 @@ public class ObserverModeStarter : MonoBehaviour
         yield return ConnectCoroutine();
         yield return SessionEnterCoroutine();
 
-        DontDestroyOnLoad(InitParam);
-        DontDestroyOnLoad(netManager);
+        DontDestroyOnLoad(GameInitParam.Instance);
+        DontDestroyOnLoad(NetworkManagerUnity.Instance);
         SceneManager.LoadScene(gameSceneName);
     }
 
     private IEnumerator ConnectCoroutine()
     {
         var wait = new WaitForCallback();
-        netManager.Session.Events.OnConnectHello = wait.Complete;
+        NetworkManagerUnity.Instance.Session.Events.OnConnectHello = wait.Complete;
 
-        _ = netManager.Net.ConnectTo(InitParam.IpAddr, InitParam.PortNum, 9999);
+        _ = NetworkManagerUnity.Instance.Net.ConnectTo(GameInitParam.Instance.IpAddr, GameInitParam.Instance.PortNum, 9999);
 
         yield return wait;
 
-        netManager.Session.Events.OnConnectHello = null;
+        NetworkManagerUnity.Instance.Session.Events.OnConnectHello = null;
     }
 
     private IEnumerator SessionEnterCoroutine()
     {
         var wait = new WaitForCallback();
-        _ = netManager.Net.AsyncRequestQuery(NetEventHandlerId.Constant.ObserverEnter, 
-            netManager.Session.Host, 
+        _ = NetworkManagerUnity.Instance.Net.AsyncRequestQuery(NetEventHandlerId.Constant.ObserverEnter,
+            NetworkManagerUnity.Instance.Session.Host,
             Encoding.UTF8.GetBytes(ObserverKey),
             10000,
             (connId, result) =>

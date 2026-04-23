@@ -21,21 +21,26 @@ public class NetworkManagerUnity : MonoBehaviour
     private bool _IsNetworkRunning;
     private Coroutine NetTickCoroutine;
 
-    public void Init()
-    {        
-        if (Instance != null)
+    public void Start()
+    {
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
             return;
-        } 
+        }
         else Instance = this;
+    }
+
+    public void Init()
+    {
+        if (_IsNetworkRunning) return;
 
         Game.Network.Log.SetLogger(Debug.Log);
 
         _network = NetworkManager.CreateNetworkManager(0, 10);
         _network.Start();
-        
-        
+
+
         _session = new();
         _IsNetworkRunning = true;
         NetTickCoroutine = StartCoroutine(TickCoroutine());
@@ -45,7 +50,7 @@ public class NetworkManagerUnity : MonoBehaviour
     private IEnumerator TickCoroutine()
     {
         while (_IsNetworkRunning)
-        { 
+        {
             _network.Tick();
             yield return null;
         }

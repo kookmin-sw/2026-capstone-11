@@ -26,8 +26,6 @@ public class DedicateModeStarter : MonoBehaviour
     [SerializeField] private TMP_InputField DeckInputField;
 
     [Header("Game Scene Load")]
-    [SerializeField] private NetworkManagerUnity netManager;
-    [SerializeField] private GameInitParam InitParam;
     [SerializeField] private string gameSceneName;
 
     private Coroutine _gameLoadCoroutine;
@@ -55,17 +53,17 @@ public class DedicateModeStarter : MonoBehaviour
         {
             Debug.Log("No Playfab LogIn.");
             string pcID = SystemInfo.deviceUniqueIdentifier;
-            InitParam.Player1Name = "Jimmy, The Mind of PlaceHolder" + pcID;
+            GameInitParam.Instance.Player1Name = "Jimmy, The Mind of PlaceHolder" + pcID;
         }
-        else InitParam.Player1Name = PlayFabAccountManager.Instance.InGameDisplayName;
+        else GameInitParam.Instance.Player1Name = PlayFabAccountManager.Instance.InGameDisplayName;
 
-        if (deckInput == "Or") InitParam.Player1Deck = "[\"Or_L\", \"Or_B\", \"Or_R\", \"Or_N\", \"Or_P\", \"Or_P\", \"Or_P\"]";
-        else InitParam.Player1Deck = "[\"Cl_L\", \"Cl_B\", \"Cl_R\", \"Cl_N\", \"Cl_P\", \"Cl_P\", \"Cl_P\"]";
+        if (deckInput == "Or") GameInitParam.Instance.Player1Deck = "[\"Or_L\", \"Or_B\", \"Or_R\", \"Or_N\", \"Or_P\", \"Or_P\", \"Or_P\"]";
+        else GameInitParam.Instance.Player1Deck = "[\"Cl_L\", \"Cl_B\", \"Cl_R\", \"Cl_N\", \"Cl_P\", \"Cl_P\", \"Cl_P\"]";
 
-        InitParam.IpAddr = ipAddr.ToString();
-        InitParam.PortNum = portNum;
+        GameInitParam.Instance.IpAddr = ipAddr.ToString();
+        GameInitParam.Instance.PortNum = portNum;
 
-        netManager.Init();
+        NetworkManagerUnity.Instance.Init();
 
         _gameLoadCoroutine = StartCoroutine(GameLoadCoroutine());
         _gameLoadTimeoutCoroutine = StartCoroutine(GameLoadTimeoutCoroutine());
@@ -97,40 +95,42 @@ public class DedicateModeStarter : MonoBehaviour
         yield return ConnectCoroutine();
         yield return SessionEnterCoroutine();
 
-        DontDestroyOnLoad(InitParam);
-        DontDestroyOnLoad(netManager);
+        if (_gameLoadTimeoutCoroutine != null) StopCoroutine(GameLoadTimeoutCoroutine());
+
+        DontDestroyOnLoad(GameInitParam.Instance);
+        DontDestroyOnLoad(NetworkManagerUnity.Instance);
         SceneManager.LoadScene(gameSceneName);
     }
 
     private IEnumerator ConnectCoroutine()
     {
         var wait = new WaitForCallback();
-        netManager.Session.Events.OnConnectHello = wait.Complete;
+        NetworkManagerUnity.Instance.Session.Events.OnConnectHello = wait.Complete;
 
-        _ = netManager.Net.ConnectTo(InitParam.IpAddr, InitParam.PortNum, 9999);
+        _ = NetworkManagerUnity.Instance.Net.ConnectTo(GameInitParam.Instance.IpAddr, GameInitParam.Instance.PortNum, 9999);
 
         yield return wait;
 
-        netManager.Session.Events.OnConnectHello = null;
+        NetworkManagerUnity.Instance.Session.Events.OnConnectHello = null;
     }
 
     private IEnumerator SessionEnterCoroutine()
     {
         var wait = new WaitForCallback();
-        netManager.Session.EnterSession(InitParam.Player1Name, (raw) => { wait.Complete(); }, (msg) => { Debug.Log(msg); });
+        NetworkManagerUnity.Instance.Session.EnterSession(GameInitParam.Instance.Player1Name, (raw) => { wait.Complete(); }, (msg) => { Debug.Log(msg); });
 
         yield return wait;
         yield return new WaitForSecondsRealtime(1.0f); // 서버 틱 맞추기 위해 대기
 
         var waitQuery = new WaitForCallback();
 
-        var req = new SimpleReq(InitParam.Player1Deck);
+        var req = new SimpleReq(GameInitParam.Instance.Player1Deck);
 
         byte[] buffer = new byte[SimpleReq.Codec.GetSize(req)];
         PacketWriter writer = new(buffer);
         SimpleReq.Codec.Write(ref writer, req);
 
-        netManager.Session.QueryDataRegister(buffer, 5000,
+        NetworkManagerUnity.Instance.Session.QueryDataRegister(buffer, 5000,
             (result) =>
             {
                 if (result.IsResponded)
@@ -142,6 +142,7 @@ public class DedicateModeStarter : MonoBehaviour
                     return;
                 }
                 Debug.Log("SessionEnter Req. is Expired");
+                StopGameLoad();
             });
 
         yield return waitQuery;
