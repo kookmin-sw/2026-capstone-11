@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Core.DTO;
+using ui.view;
+using PlayFab.ClientModels;
 
 namespace Core.StateManagement
 {
@@ -33,7 +35,7 @@ namespace Core.StateManagement
                     turnEndAction = action;
                 }
 
-                if (string.IsNullOrWhiteSpace(action.source))
+                if (action.source.IsEmpty)
                     continue;
 
                 if (!actionsBySource.TryGetValue(action.source, out var list))
@@ -68,44 +70,40 @@ namespace Core.StateManagement
                     noTargetActionBySource[action.source] = action;
                 }
             }
-        
-            // 승리 이벤트 발생 시 에러 발생
-            if (turnEndAction == null)
-                throw new InvalidOperationException("[GameStateStore] TurnEnd action is missing.");
         }
 
-        public IReadOnlyList<RuntimeAction> GetActionsBySource(string sourceUid)
+        public IReadOnlyList<RuntimeAction> GetActionsBySource(ActionSourceKey source)
         {
-            if (string.IsNullOrWhiteSpace(sourceUid))
+            if (source.IsEmpty)
                 return Array.Empty<RuntimeAction>();
 
-            return actionsBySource.TryGetValue(sourceUid, out var list)
+            return actionsBySource.TryGetValue(source, out var list)
                 ? list
                 : Array.Empty<RuntimeAction>();
         }
 
         public HashSet<string> GetSelectableSources()
         {
-            return actionsBySource.Keys.ToHashSet(StringComparer.Ordinal);
+            return actionsBySource.Keys.Select(k => k.Uid).ToHashSet();
         }
 
-        public HashSet<Vector2Int> GetSelectableCells(string sourceUid)
+        public HashSet<Vector2Int> GetSelectableCells(ActionSourceKey source)
         {
-            if (string.IsNullOrWhiteSpace(sourceUid))
+            if (source.IsEmpty)
                 return new HashSet<Vector2Int>();
 
-            if (!actionsBySourceAndCell.TryGetValue(sourceUid, out var map))
+            if (!actionsBySourceAndCell.TryGetValue(source, out var map))
                 return new HashSet<Vector2Int>();
 
             return map.Keys.ToHashSet();
         }
 
-        public IReadOnlyList<IReadOnlyList<EntityID>> GetSelectableTargetEntityGroups(string sourceUid)
+        public IReadOnlyList<IReadOnlyList<EntityID>> GetSelectableTargetEntityGroups(ActionSourceKey source)
         {
-            if (string.IsNullOrWhiteSpace(sourceUid))
+            if (source.IsEmpty)
                 return Array.Empty<IReadOnlyList<EntityID>>();
 
-            var actions = GetActionsBySource(sourceUid);
+            var actions = GetActionsBySource(source);
             var result = new List<IReadOnlyList<EntityID>>();
 
             foreach (var action in actions)
@@ -119,10 +117,10 @@ namespace Core.StateManagement
             return result;
         }
 
-        public bool TryResolveNoTargetAction(string sourceUid, out RuntimeAction action)
+        public bool TryResolveNoTargetAction(ActionSourceKey source, out RuntimeAction action)
         {
-            if (!string.IsNullOrWhiteSpace(sourceUid) &&
-                noTargetActionBySource.TryGetValue(sourceUid, out action))
+            if (!source.IsEmpty &&
+                noTargetActionBySource.TryGetValue(source, out action))
             {
                 return true;
             }
@@ -131,10 +129,10 @@ namespace Core.StateManagement
             return false;
         }
 
-        public bool TryResolveBySourceAndCell(string sourceUid, Vector2Int pos, out RuntimeAction action)
+        public bool TryResolveBySourceAndCell(ActionSourceKey source, Vector2Int pos, out RuntimeAction action)
         {
-            if (!string.IsNullOrWhiteSpace(sourceUid) &&
-                actionsBySourceAndCell.TryGetValue(sourceUid, out var map) &&
+            if (!source.IsEmpty &&
+                actionsBySourceAndCell.TryGetValue(source, out var map) &&
                 map.TryGetValue(pos, out action))
             {
                 return true;
@@ -144,14 +142,14 @@ namespace Core.StateManagement
             return false;
         }
 
-        public bool TryResolveBySourceAndTargets(string sourceUid, IEnumerable<EntityID> targetIds, out RuntimeAction action)
+        public bool TryResolveBySourceAndTargets(ActionSourceKey source, IEnumerable<EntityID> targetIds, out RuntimeAction action)
         {
             action = null;
 
-            if (string.IsNullOrWhiteSpace(sourceUid))
+            if (source.IsEmpty)
                 return false;
 
-            if (!actionsBySourceAndTargetsKey.TryGetValue(sourceUid, out var map))
+            if (!actionsBySourceAndTargetsKey.TryGetValue(source, out var map))
                 return false;
 
             return map.TryGetValue(MakeTargetsKey(targetIds), out action);
@@ -165,20 +163,20 @@ namespace Core.StateManagement
             return turnEndAction;
         }
 
-        public bool HasAnyActionForSource(string sourceUid)
+        public bool HasAnyActionForSource(ActionSourceKey source)
         {
-            return !string.IsNullOrWhiteSpace(sourceUid) && actionsBySource.ContainsKey(sourceUid);
+            return !source.IsEmpty && actionsBySource.ContainsKey(source);
         }
 
-        public bool CanDeploy(EntityID id)
+        public bool CanDeploy(ActionSourceKey source)
         {
-            var availableActions = GetActionsBySource(id.id);
+            var availableActions = GetActionsBySource(source);
             return availableActions.Any(x => x.effectType == RuntimeActionEffectType.DeployUnit);
         }
 
-        public bool CanUseEffect(EntityID id)
+        public bool CanUseEffect(ActionSourceKey source)
         {
-            var availableActions = GetActionsBySource(id.id);
+            var availableActions = GetActionsBySource(source);
             return availableActions.Any(x => x.effectType == RuntimeActionEffectType.CardEffect);
         }
 
@@ -189,7 +187,7 @@ namespace Core.StateManagement
                 uid = dto.Uid,
                 effectId = dto.EffectId,
                 effectType = ParseEffectType(dto.EffectId),
-                source = dto.Source,
+                source = new ActionSourceKey(ParseSourceType(dto.EffectId), dto.Source),
                 rawTarget = dto.Target?.Value ?? string.Empty,
                 targetType = RuntimeActionTargetType.None
             };
@@ -208,6 +206,19 @@ namespace Core.StateManagement
                 "PawnGeneric" => RuntimeActionEffectType.PawnGeneric,
                 null or "" => RuntimeActionEffectType.Unknown,
                 _ => RuntimeActionEffectType.CardEffect
+            };
+        }
+
+        private ViewType ParseSourceType(string effectId)
+        {
+            return effectId switch
+            {
+                "DefaultMove" => ViewType.Unit,
+                "DeployUnit" => ViewType.Card,
+                "TurnEnd" => ViewType.None,
+                "PawnGeneric" => ViewType.Card,
+                null or "" => ViewType.None,
+                _ => ViewType.Card
             };
         }
 

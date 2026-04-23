@@ -32,11 +32,17 @@ namespace Core.StateManagement
             return player;
         }
 
+        public string TryGetPlayerId(int idx=0)
+        {
+            return Players.Keys.ToList()[idx];
+        }
+
         // 세션에 접속한 플레이어의 ID가 Json의 P1과 일치하는지 여부로 로컬 플레이어가 P1인지 판단
         public bool IsLocalPlayer()
         {
             return string.Equals(LocalPlayerId, Players.Keys.First(), StringComparison.Ordinal);
         }
+
 
         public void AddOrReplaceUnit(EntityState state)
         {

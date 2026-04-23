@@ -4,6 +4,7 @@ using TMPro;
 using Core;
 using System.Linq;
 using Core.StateManagement;
+using NUnit.Framework;
 
 namespace UI.HUD
 {
@@ -21,11 +22,6 @@ namespace UI.HUD
 
         [Header("Local Player")]
         [SerializeField] private string localPlayerId = "Player1";
-
-        private int localTurnCount = 1;
-        private string lastActivePlayerId = string.Empty;
-        private string firstPlayerId = string.Empty;
-        private bool isInitialized = false;
 
         private void Start()
         {
@@ -51,7 +47,7 @@ namespace UI.HUD
         /// <summary>
         /// 스냅샷 적용 이후 호출해서 HUD를 갱신
         /// </summary>
-        public void RefreshHUD(string localPlayerId, string[] playerNames, bool isLocalPlayerP1)
+        public void RefreshHUD(GameStateStore state, string[] playerNames, bool isLocalPlayerP1)
         {
             if (gameManager == null || gameManager.State == null)
             {
@@ -67,42 +63,21 @@ namespace UI.HUD
                 return;
             }
 
-            if (!isInitialized)
-            {
-                isInitialized = true;
-                localTurnCount = 1;
-                firstPlayerId = currentActivePlayerId;
-                lastActivePlayerId = currentActivePlayerId;
-            }
-            else
-            {
-                bool myTurnStartedNow =
-                    lastActivePlayerId != firstPlayerId &&
-                    currentActivePlayerId == firstPlayerId;
-
-                if (myTurnStartedNow)
-                {
-                    localTurnCount++;
-                }
-
-                lastActivePlayerId = currentActivePlayerId;
-            }
-
             bool isMyTurn = currentActivePlayerId == localPlayerId;
 
-            UpdateTurnText();
+            UpdateTurnText(state.TurnNumber);
             UpdateTurnIndicators(isMyTurn);
-            UpdatePlayerTexts(playerNames);
+            UpdatePlayerTexts(playerNames, isLocalPlayerP1);
             UpdateTurnEndButton(isMyTurn);
             UpdateInputLock(isMyTurn);
         }
 
-        private void UpdateTurnText()
+        private void UpdateTurnText(int turnNum)
         {
             if (turnText == null)
                 return;
 
-            turnText.text = $"{localTurnCount}";
+            turnText.text = $"{turnNum}";
         }
 
         private void UpdateTurnIndicators(bool isMyTurn)
@@ -119,10 +94,18 @@ namespace UI.HUD
             }
         }
 
-        private void UpdatePlayerTexts(string[] playerNames)
+        private void UpdatePlayerTexts(string[] playerNames, bool isP1)
         {
-            playerText[0].text = playerNames[0];
-            playerText[1].text = playerNames[1];
+            if (isP1)
+            {
+                playerText[0].text = playerNames[0];
+                playerText[1].text = playerNames[1];
+            }
+            else
+            {
+                playerText[0].text = playerNames[1];
+                playerText[1].text = playerNames[0];
+            }
         }
 
         private void UpdateTurnEndButton(bool isMyTurn)

@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using Newtonsoft.Json;
 using Core.DTO;
+using ui.view;
 
 namespace Core.StateManagement
 {
@@ -121,6 +122,20 @@ namespace Core.StateManagement
         }
     }
 
+    public struct ActionSourceKey
+    {
+        public ViewType Type;
+        public string Uid;
+
+        public ActionSourceKey(ViewType type, string uid)
+        {
+            Type = type;
+            Uid = uid ?? string.Empty;
+        }
+
+        public bool IsEmpty => Type == ViewType.None || string.IsNullOrWhiteSpace(Uid);
+    }
+
     public enum RuntimeActionEffectType
     {
         CardEffect,
@@ -147,7 +162,7 @@ namespace Core.StateManagement
         public string uid;
         public string effectId;
         public RuntimeActionEffectType effectType;
-        public string source;
+        public ActionSourceKey source;
         public string rawTarget;
         public RuntimeActionTargetType targetType = RuntimeActionTargetType.None;
         public Vector2Int? positionTarget;
@@ -169,13 +184,14 @@ namespace Core.StateManagement
         public int TurnNumber { get; private set; }
         public string ActivePlayerId { get; private set; } = string.Empty;
         public string LocalPlayerId { get; set; } = string.Empty;
+        public string WinnerId { get; private set; } = string.Empty;
 
         // Action 인덱스
         private readonly List<RuntimeAction> actions = new();
-        private readonly Dictionary<string, List<RuntimeAction>> actionsBySource = new(StringComparer.Ordinal);
-        private readonly Dictionary<string, Dictionary<Vector2Int, RuntimeAction>> actionsBySourceAndCell = new(StringComparer.Ordinal);
-        private readonly Dictionary<string, Dictionary<string, RuntimeAction>> actionsBySourceAndTargetsKey = new(StringComparer.Ordinal);
-        private readonly Dictionary<string, RuntimeAction> noTargetActionBySource = new(StringComparer.Ordinal);
+        private readonly Dictionary<ActionSourceKey, List<RuntimeAction>> actionsBySource = new();
+        private readonly Dictionary<ActionSourceKey, Dictionary<Vector2Int, RuntimeAction>> actionsBySourceAndCell = new();
+        private readonly Dictionary<ActionSourceKey, Dictionary<string, RuntimeAction>> actionsBySourceAndTargetsKey = new();
+        private readonly Dictionary<ActionSourceKey, RuntimeAction> noTargetActionBySource = new();
         private RuntimeAction turnEndAction;
 
         // 게임 상태를 초기화
@@ -225,6 +241,8 @@ namespace Core.StateManagement
             RebuildBoardIndex();
 
             ActivePlayerId = snapshot.Data.ActivePlayerId ?? string.Empty;
+            WinnerId = snapshot.Data.WinnerId ?? string.Empty;
+            TurnNumber = snapshot.Data.TurnCnt;
             ApplyActions(snapshot.Actions);
         }
 
@@ -315,8 +333,7 @@ namespace Core.StateManagement
             return string.Join("/",
                 targetIds
                     .Select(x => x.id)
-                    .Where(x => !string.IsNullOrWhiteSpace(x))
-                    .OrderBy(x => x, StringComparer.Ordinal));
+                    .Where(x => !string.IsNullOrWhiteSpace(x)));
         }
 
         private void ValidatePlayerState(PlayerState player)

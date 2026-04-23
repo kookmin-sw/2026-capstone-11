@@ -6,8 +6,8 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/00 Scenes/Release/main.unity
-    guid: 99c9720ab356a0642a771bea13969a05
+    path: Assets/00 Scenes/InGame/ModeSelection.unity
+    guid: 2493e34fccc6d9050b524e15ac9dd3a1
   - enabled: 1
     path: Assets/00 Scenes/Develop/Chess.unity
     guid: 0ec7b4d4c12cbae03b6b49423ebd96cb
@@ -17,6 +17,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/00 Scenes/Bumik/ModeSelectionCopy.unity
     guid: 9b5a96180bd5d41e39ef548f5114aefd
+
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
