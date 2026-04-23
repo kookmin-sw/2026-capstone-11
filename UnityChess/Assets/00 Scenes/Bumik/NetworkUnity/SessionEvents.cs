@@ -7,6 +7,4 @@ public class SessionEvents
     public Action? OnDisconnectUnsafe = null;
     public Action<byte[]>? OnMessageReceive = null;
     public Action<int, byte[]>? OnGetQuery = null;
-    
-
 }

@@ -12,10 +12,10 @@ public class ClientSession : INetEventHandler
 {
     public int HandlerId => NetEventHandlerId.Constant.GameMessage;
 
-    private long ConnectionExpireTimeMs = 9999;
-
-
     private int queryNum = 0;
+    private bool disconnectUnsafe = true;
+
+
     private ConnId _host = ConnId.Default();
     private SessionEvents _events = new();
     public SessionEvents Events => _events;

@@ -23,12 +23,14 @@ public class NetworkManagerUnity : MonoBehaviour
 
     public void Init()
     {        
-        if (Instance != null)
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
             return;
         } 
         else Instance = this;
+
+        if (_IsNetworkRunning) return;
 
         Game.Network.Log.SetLogger(Debug.Log);
 

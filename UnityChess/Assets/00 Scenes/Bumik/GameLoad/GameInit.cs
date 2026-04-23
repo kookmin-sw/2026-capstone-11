@@ -23,6 +23,8 @@ public class GameInit : MonoBehaviour
         if (NetworkManagerUnity.Instance == null) Debug.LogError("Network is not Instanciated");
         if (GameInitParam.Instance == null) Debug.LogError("InitParam is not Instanciated");
 
+        NetworkManagerUnity.Instance.Session.Events.OnDisconnectUnsafe = () => {};
+
         // NetworkManagerUnity.Instance.Session.Events.OnGetQuery = (queryNum, raw) => { };
         NetworkManagerUnity.Instance.Session.Events.OnMessageReceive = (raw) => { gameManager.InitSnapshotJson(Encoding.UTF8.GetString(raw), GameInitParam.Instance.Player1Name); };
         NetworkManagerUnity.Instance.Session.SubscribeEventBus();

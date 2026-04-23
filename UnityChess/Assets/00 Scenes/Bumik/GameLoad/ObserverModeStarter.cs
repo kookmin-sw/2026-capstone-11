@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Net;
 using System.Text;
@@ -13,6 +14,7 @@ public class ObserverModeStarter : MonoBehaviour
     [Header("Ref to UI Input")]
     [SerializeField] private TMP_InputField IPaddrInputField;
     [SerializeField] private TMP_InputField PortNumInputField;
+    [SerializeField] private TMP_InputField TargetPlayerName;
     [SerializeField] private string ObserverKey;
 
     [Header("Game Scene Load")]
@@ -40,8 +42,15 @@ public class ObserverModeStarter : MonoBehaviour
             return;
         }
 
+        if (String.IsNullOrEmpty(TargetPlayerName.text))
+        {
+            Debug.Log("Wrong Target PlayerName Input!");
+            return;
+        }
+
         InitParam.IpAddr = ipAddr.ToString();
         InitParam.PortNum = portNum;
+        InitParam.Player1Name = TargetPlayerName.text;
 
         netManager.Init();
 

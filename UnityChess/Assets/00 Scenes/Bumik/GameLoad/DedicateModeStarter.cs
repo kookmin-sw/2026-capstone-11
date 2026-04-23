@@ -97,6 +97,8 @@ public class DedicateModeStarter : MonoBehaviour
         yield return ConnectCoroutine();
         yield return SessionEnterCoroutine();
 
+        if (_gameLoadTimeoutCoroutine != null) StopCoroutine(GameLoadTimeoutCoroutine());
+
         DontDestroyOnLoad(InitParam);
         DontDestroyOnLoad(netManager);
         SceneManager.LoadScene(gameSceneName);
@@ -142,6 +144,7 @@ public class DedicateModeStarter : MonoBehaviour
                     return;
                 }
                 Debug.Log("SessionEnter Req. is Expired");
+                StopGameLoad();
             });
 
         yield return waitQuery;
