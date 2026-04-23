@@ -56,6 +56,12 @@ public class ClientSession : INetEventHandler
             (connId, result) => { callback.Invoke(result); }
             );
     }
+
+    public void Disconnect()
+    {
+        NetworkManagerUnity.Instance.Net.Disconnect(_host); 
+    }
+
     public void QueryDataRegister(byte[] raw, long expireMs, Action<QueryTaskResult> callback)
     {
         _ = NetworkManagerUnity.Instance.Net.AsyncRequestQuery(
