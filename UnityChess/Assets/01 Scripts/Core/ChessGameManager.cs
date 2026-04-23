@@ -50,6 +50,12 @@ namespace Core
         {
             gameStateStore.ApplySnapshotJson(json);
             PublishSnapshotRefreshed();
+
+            // 게임 종료 여부 체크
+            if (gameStateStore.WinnerId != null && gameStateStore.WinnerId != string.Empty)
+            {
+                PublishGameEnd();
+            }
         }
 
         public void ApplySnapshot(GameSnapshotDTO snapshot)

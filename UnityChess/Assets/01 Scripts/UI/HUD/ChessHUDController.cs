@@ -20,9 +20,6 @@ namespace UI.HUD
         [SerializeField] private Button turnEndButton;
         [SerializeField] private TMP_Text[] playerText;
 
-        [Header("Local Player")]
-        [SerializeField] private string localPlayerId = "Player1";
-
         private void Start()
         {
             Init();
@@ -63,9 +60,11 @@ namespace UI.HUD
                 return;
             }
 
-            bool isMyTurn = currentActivePlayerId == localPlayerId;
+            bool isMyTurn = currentActivePlayerId == state.LocalPlayerId;
 
-            UpdateTurnText(state.TurnNumber);
+            Debug.Log($"is my turn? {isMyTurn} (ActivePlayerId: {currentActivePlayerId}, LocalPlayerId: {state.LocalPlayerId})");
+
+            UpdateTurnText(state.TurnCnt);
             UpdateTurnIndicators(isMyTurn);
             UpdatePlayerTexts(playerNames, isLocalPlayerP1);
             UpdateTurnEndButton(isMyTurn);

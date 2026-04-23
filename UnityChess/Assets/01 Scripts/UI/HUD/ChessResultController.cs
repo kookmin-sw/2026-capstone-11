@@ -25,7 +25,8 @@ namespace UI.HUD
 
         private void GoToLobby()
         {            
-            SceneManager.LoadScene(LobbySceneName);
+            NetworkManagerUnity.Instance.Session.Disconnect();
+            //SceneManager.LoadScene(LobbySceneName);
         }
 
         public void ShowResult(GameStateStore state, string winner, string[] playerNames)

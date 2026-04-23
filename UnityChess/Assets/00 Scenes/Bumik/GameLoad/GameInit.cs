@@ -41,7 +41,7 @@ public class GameInit : MonoBehaviour
 
     private IEnumerator SceneCloseCoroutine()
     {
-        yield return new WaitForSecondsRealtime(5.0f);
+        yield return new WaitForSecondsRealtime(1.0f);
         
         GameInitParam.Instance.Clear();
         NetworkManagerUnity.Instance.Session.Clear();

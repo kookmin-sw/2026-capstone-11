@@ -181,7 +181,7 @@ namespace Core.StateManagement
         public Dictionary<string, PlayerState> Players { get; private set; } = new(StringComparer.Ordinal);
         public Dictionary<Vector2Int, EntityID> BoardIndex { get; private set; } = new();
 
-        public int TurnNumber { get; private set; }
+        public int TurnCnt { get; private set; }
         public string ActivePlayerId { get; private set; } = string.Empty;
         public string LocalPlayerId { get; set; } = string.Empty;
         public string WinnerId { get; private set; } = string.Empty;
@@ -208,7 +208,7 @@ namespace Core.StateManagement
             noTargetActionBySource.Clear();
             turnEndAction = null;
 
-            TurnNumber = 0;
+            TurnCnt = 0;
             ActivePlayerId = string.Empty;
         }
         
@@ -242,8 +242,10 @@ namespace Core.StateManagement
 
             ActivePlayerId = snapshot.Data.ActivePlayerId ?? string.Empty;
             WinnerId = snapshot.Data.WinnerId ?? string.Empty;
-            TurnNumber = snapshot.Data.TurnCnt;
+            TurnCnt = snapshot.Data.TurnCnt;
             ApplyActions(snapshot.Actions);
+
+            Debug.Log($"Snapshot TurnCnt: {snapshot.Data.TurnCnt}, StateStore TurnCnt: {TurnCnt}");
         }
 
         private void ApplyPlayers(GameSnapshotDataDTO data)

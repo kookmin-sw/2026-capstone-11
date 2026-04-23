@@ -1030,7 +1030,7 @@ MonoBehaviour:
   eventBus: {fileID: 64190383}
   resultText: {fileID: 511602064}
   winnerText: {fileID: 0}
-  player1Text: {fileID: 899422172}
+  player1Text: {fileID: 1846536991}
   player2Text: {fileID: 77414193}
   player1DeckText: {fileID: 0}
   player2DeckText: {fileID: 0}
@@ -2908,7 +2908,7 @@ GameObject:
   - component: {fileID: 899422173}
   - component: {fileID: 899422172}
   m_Layer: 5
-  m_Name: Player1
+  m_Name: Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7982,6 +7982,7 @@ MonoBehaviour:
   stateStore: {fileID: 252991396}
   boardView: {fileID: 427112746}
   handParent: {fileID: 1501335248}
+  CloseScene: ModeSelection
 --- !u!1 &1157191413
 GameObject:
   m_ObjectHideFlags: 0
@@ -8650,7 +8651,7 @@ MonoBehaviour:
   gameStateStore: {fileID: 252991396}
   viewFactory: {fileID: 1306483364}
   hudController: {fileID: 1826855864}
-  resultController: {fileID: 0}
+  resultController: {fileID: 265014210}
   eventBus: {fileID: 64190383}
   inputHandler: {fileID: 76979778}
   boardParent: {fileID: 427112741}
@@ -9376,7 +9377,6 @@ MonoBehaviour:
   playerText:
   - {fileID: 102093994}
   - {fileID: 1942703222}
-  localPlayerId: Player1
 --- !u!1 &1846536989
 GameObject:
   m_ObjectHideFlags: 0
@@ -9389,7 +9389,7 @@ GameObject:
   - component: {fileID: 1846536992}
   - component: {fileID: 1846536991}
   m_Layer: 5
-  m_Name: text
+  m_Name: Player1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
