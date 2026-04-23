@@ -7,6 +7,8 @@ using System.Collections;
 using Game.Network.Service;
 using Game.Network;
 using events.ui;
+using UnityEngine.SceneManagement;
+using Unity.VisualScripting;
 
 
 public class GameInit : MonoBehaviour
@@ -18,18 +20,35 @@ public class GameInit : MonoBehaviour
     [SerializeField] private BoardView boardView;
     [SerializeField] private Transform handParent;
 
+    [Header("Game Close Scene")] 
+    [SerializeField] private string CloseScene;
+    private Coroutine _closeCoroutine = null;
+
     void Start()
     {
         if (NetworkManagerUnity.Instance == null) Debug.LogError("Network is not Instanciated");
         if (GameInitParam.Instance == null) Debug.LogError("InitParam is not Instanciated");
 
-        NetworkManagerUnity.Instance.Session.Events.OnDisconnectUnsafe = () => {};
+        NetworkManagerUnity.Instance.Session.Events.OnDisconnectUnsafe = () => {if (_closeCoroutine == null) _closeCoroutine = StartCoroutine(SceneCloseCoroutine());};
 
         // NetworkManagerUnity.Instance.Session.Events.OnGetQuery = (queryNum, raw) => { };
         NetworkManagerUnity.Instance.Session.Events.OnMessageReceive = (raw) => { gameManager.InitSnapshotJson(Encoding.UTF8.GetString(raw), GameInitParam.Instance.Player1Name); };
         NetworkManagerUnity.Instance.Session.SubscribeEventBus();
 
         StartCoroutine(ReadyCoroutine());
+    }
+
+    private IEnumerator SceneCloseCoroutine()
+    {
+        yield return new WaitForSecondsRealtime(5.0f);
+        GameInitParam.Instance.Player1Deck = "";
+        GameInitParam.Instance.Player1Name = "";
+        NetworkManagerUnity.Instance.Session.Clear();
+
+        DontDestroyOnLoad(GameInitParam.Instance);
+        DontDestroyOnLoad(NetworkManagerUnity.Instance);
+        
+        SceneManager.LoadScene(CloseScene);
     }
 
     private IEnumerator ReadyCoroutine()

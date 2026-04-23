@@ -2074,7 +2074,7 @@ MonoBehaviour:
   DeckInputField: {fileID: 140492234}
   netManager: {fileID: 1752615031}
   InitParam: {fileID: 822743213}
-  gameSceneName: Chess
+  gameSceneName: ChessCopy
 --- !u!4 &304439362
 Transform:
   m_ObjectHideFlags: 0
@@ -2108,7 +2108,7 @@ MonoBehaviour:
   ObserverKey: sMHpCrsONvSMBqaE091PwqTD0Cg56lqy
   netManager: {fileID: 1752615031}
   InitParam: {fileID: 822743213}
-  gameSceneName: Chess
+  gameSceneName: ChessCopy
 --- !u!1 &344721450
 GameObject:
   m_ObjectHideFlags: 0

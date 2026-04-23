@@ -7184,6 +7184,7 @@ MonoBehaviour:
   stateStore: {fileID: 252991396}
   boardView: {fileID: 427112746}
   handParent: {fileID: 1501335248}
+  CloseScene: ModeSelectionCopy
 --- !u!1 &1157191413
 GameObject:
   m_ObjectHideFlags: 0

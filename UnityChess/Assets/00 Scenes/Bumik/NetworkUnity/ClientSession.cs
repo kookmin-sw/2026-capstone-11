@@ -27,6 +27,13 @@ public class ClientSession : INetEventHandler
         NetworkManagerUnity.Instance.Net.SetReceiveHandler(this);
     }
 
+    public void Clear()
+    {
+        queryNum = 0;
+        disconnectUnsafe = true;
+        _host = ConnId.Default();
+        _events.Clear();
+    }
 
     public void EnterSession(string name, Action<byte[]> succ, Action<string> fail)
     {
