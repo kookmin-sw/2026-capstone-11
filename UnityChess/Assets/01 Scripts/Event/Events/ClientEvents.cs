@@ -59,5 +59,15 @@ namespace events.client
         {
             public IHoverable Target;
         }
+
+        public class GameEndEvent : IBaseEvent
+        {
+            public string winner;
+            
+            public GameEndEvent(string winner)
+            {
+                this.winner = winner;
+            }
+        }
     }
 }

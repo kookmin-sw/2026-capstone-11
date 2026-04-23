@@ -23,11 +23,6 @@ namespace UI.HUD
         [Header("Local Player")]
         [SerializeField] private string localPlayerId = "Player1";
 
-        private int localTurnCount = 1;
-        private string lastActivePlayerId = string.Empty;
-        private string firstPlayerId = string.Empty;
-        private bool isInitialized = false;
-
         private void Start()
         {
             Init();
@@ -52,7 +47,7 @@ namespace UI.HUD
         /// <summary>
         /// 스냅샷 적용 이후 호출해서 HUD를 갱신
         /// </summary>
-        public void RefreshHUD(string localPlayerId, string[] playerNames, bool isLocalPlayerP1)
+        public void RefreshHUD(GameStateStore state, string[] playerNames, bool isLocalPlayerP1)
         {
             if (gameManager == null || gameManager.State == null)
             {
@@ -68,42 +63,21 @@ namespace UI.HUD
                 return;
             }
 
-            if (!isInitialized)
-            {
-                isInitialized = true;
-                localTurnCount = 1;
-                firstPlayerId = currentActivePlayerId;
-                lastActivePlayerId = currentActivePlayerId;
-            }
-            else
-            {
-                bool myTurnStartedNow =
-                    lastActivePlayerId != firstPlayerId &&
-                    currentActivePlayerId == firstPlayerId;
-
-                if (myTurnStartedNow)
-                {
-                    localTurnCount++;
-                }
-
-                lastActivePlayerId = currentActivePlayerId;
-            }
-
             bool isMyTurn = currentActivePlayerId == localPlayerId;
 
-            UpdateTurnText();
+            UpdateTurnText(state.TurnNumber);
             UpdateTurnIndicators(isMyTurn);
             UpdatePlayerTexts(playerNames, isLocalPlayerP1);
             UpdateTurnEndButton(isMyTurn);
             UpdateInputLock(isMyTurn);
         }
 
-        private void UpdateTurnText()
+        private void UpdateTurnText(int turnNum)
         {
             if (turnText == null)
                 return;
 
-            turnText.text = $"{localTurnCount}";
+            turnText.text = $"{turnNum}";
         }
 
         private void UpdateTurnIndicators(bool isMyTurn)

@@ -29,7 +29,7 @@ namespace ui.tooltip
         }
 
         // 유닛과 효과 설명을 함께 표시하는 카드 툴팁 (후보)
-        public static TooltipData CadTooltip(CardDefinition def)
+        public static TooltipData CardTooltip(CardDefinition def)
         {
             return new TooltipData(
                 title: def.card.name,
@@ -37,6 +37,16 @@ namespace ui.tooltip
                 description: $"[{def.evt.timing}] {def.evt.name}: {def.evt.text}" + "\n\n" +
                 $"{def.effect.name}: {def.effect.text}" + "\n\n" +
                 $"공격력: {def.card.attack}    체력: {def.card.hp}"
+            );
+        }
+        
+        // 정보가 공개되지 않는 뒷면 상태인 상대 카드 툴팁
+        public static TooltipData OpponentCardTooltip()
+        {
+            return new TooltipData(
+                title: "???",
+                header: "[카드/클래스 : ???]",
+                description: "???"
             );
         }
 

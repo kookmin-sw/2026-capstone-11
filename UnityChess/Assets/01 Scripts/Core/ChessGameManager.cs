@@ -18,13 +18,14 @@ namespace Core
         [SerializeField] private GameStateStore gameStateStore;
         [SerializeField] private ViewFactory viewFactory;
         [SerializeField] private ChessHUDController hudController;
+        [SerializeField] private ChessResultController resultController;
         [SerializeField] private ChessUIEventBus eventBus;
         [SerializeField] private WorldInputHandler inputHandler;
         
         // View가 생성될 때의 부모 transform
         [SerializeField] private Transform boardParent;
         [SerializeField] private Transform handParent;
-
+        [SerializeField] private Transform OppoHandParent;
 
         public GameStateStore State => gameStateStore;
 
@@ -37,6 +38,12 @@ namespace Core
             inputHandler.Init(gameStateStore.IsLocalPlayer());
 
             PublishSnapshotRefreshed();
+
+            // 게임 종료 여부 체크
+            if (gameStateStore.WinnerId != null && gameStateStore.WinnerId != string.Empty)
+            {
+                PublishGameEnd();
+            }
         }
         
         public void ApplySnapshotJson(string json)
@@ -136,17 +143,30 @@ namespace Core
             viewFactory.RebuildFromState(
                 state: gameStateStore,
                 localPlayerId: gameStateStore.LocalPlayerId,
+                opponentPlayerId: gameStateStore.Players.Keys.First(id => id != gameStateStore.LocalPlayerId),
                 boardParent: boardParent,
                 handParent: handParent, 
+                OppoHandParent: OppoHandParent,
                 isLocalPlayerP1: gameStateStore.IsLocalPlayer()
             );
 
             hudController.RefreshHUD(
-                localPlayerId: gameStateStore.LocalPlayerId, // TODO: 실제 local player
+                state: gameStateStore,
                 playerNames: gameStateStore.Players.Values.Select(p => p.playerId).ToArray(),
                 isLocalPlayerP1: gameStateStore.IsLocalPlayer()
             );
             //eventBus.Publish(new SnapshotRefreshedEvent());
+        }
+
+        private void PublishGameEnd()
+        {
+            resultController.gameObject.SetActive(true);
+            
+            resultController.ShowResult(
+                state: gameStateStore,
+                winner: gameStateStore.WinnerId,
+                playerNames: gameStateStore.Players.Values.Select(p => p.playerId).ToArray()
+            );
         }
 
         private void PublishUIEvent(IBaseEvent uiEvent)

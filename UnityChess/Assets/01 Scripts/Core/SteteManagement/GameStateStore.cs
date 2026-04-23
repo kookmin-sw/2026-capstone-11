@@ -184,6 +184,7 @@ namespace Core.StateManagement
         public int TurnNumber { get; private set; }
         public string ActivePlayerId { get; private set; } = string.Empty;
         public string LocalPlayerId { get; set; } = string.Empty;
+        public string WinnerId { get; private set; } = string.Empty;
 
         // Action 인덱스
         private readonly List<RuntimeAction> actions = new();
@@ -240,6 +241,8 @@ namespace Core.StateManagement
             RebuildBoardIndex();
 
             ActivePlayerId = snapshot.Data.ActivePlayerId ?? string.Empty;
+            WinnerId = snapshot.Data.WinnerId ?? string.Empty;
+            TurnNumber = snapshot.Data.TurnCnt;
             ApplyActions(snapshot.Actions);
         }
 
