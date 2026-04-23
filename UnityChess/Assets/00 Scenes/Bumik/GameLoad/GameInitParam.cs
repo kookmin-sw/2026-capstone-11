@@ -22,4 +22,13 @@ public class GameInitParam : MonoBehaviour
         } 
         else Instance = this;
     }
+
+    public void Clear()
+    {
+        Player1Name = "";
+        Player1Deck = "";
+
+        IpAddr = "";
+        PortNum = 0;
+    }
 }

@@ -41,8 +41,8 @@ public class GameInit : MonoBehaviour
     private IEnumerator SceneCloseCoroutine()
     {
         yield return new WaitForSecondsRealtime(5.0f);
-        GameInitParam.Instance.Player1Deck = "";
-        GameInitParam.Instance.Player1Name = "";
+        
+        GameInitParam.Instance.Clear();
         NetworkManagerUnity.Instance.Session.Clear();
 
         DontDestroyOnLoad(GameInitParam.Instance);
