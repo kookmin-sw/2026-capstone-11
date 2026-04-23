@@ -8,6 +8,7 @@ using Core.StateManagement;
 using Core.DTO;
 using core.UI;
 using System.Linq;
+using ui.view;
 using UI.HUD;
 
 namespace Core
@@ -17,12 +18,14 @@ namespace Core
         [SerializeField] private GameStateStore gameStateStore;
         [SerializeField] private ViewFactory viewFactory;
         [SerializeField] private ChessHUDController hudController;
+        [SerializeField] private ChessResultController resultController;
         [SerializeField] private ChessUIEventBus eventBus;
+        [SerializeField] private WorldInputHandler inputHandler;
         
         // View가 생성될 때의 부모 transform
         [SerializeField] private Transform boardParent;
         [SerializeField] private Transform handParent;
-
+        [SerializeField] private Transform OppoHandParent;
 
         public GameStateStore State => gameStateStore;
 
@@ -32,7 +35,15 @@ namespace Core
             gameStateStore.LocalPlayerId = localPlayerId;
 
             gameStateStore.ApplySnapshotJson(json);
+            inputHandler.Init(gameStateStore.IsLocalPlayer());
+
             PublishSnapshotRefreshed();
+
+            // 게임 종료 여부 체크
+            if (gameStateStore.WinnerId != null && gameStateStore.WinnerId != string.Empty)
+            {
+                PublishGameEnd();
+            }
         }
         
         public void ApplySnapshotJson(string json)
@@ -47,9 +58,9 @@ namespace Core
             PublishSnapshotRefreshed();
         }
 
-        public bool CanSelectSource(string sourceUid)
+        public bool CanSelectSource(ActionSourceKey source)
         {
-            return gameStateStore.HasAnyActionForSource(sourceUid);
+            return gameStateStore.HasAnyActionForSource(source);
         }
 
         public HashSet<string> GetSelectableSources()
@@ -57,58 +68,58 @@ namespace Core
             return gameStateStore.GetSelectableSources();
         }
 
-        public HashSet<Vector2Int> GetSelectableCells(string sourceUid)
+        public HashSet<Vector2Int> GetSelectableCells(ActionSourceKey source)
         {
-            return gameStateStore.GetSelectableCells(sourceUid);
+            return gameStateStore.GetSelectableCells(source);
         }
 
-        public IReadOnlyList<IReadOnlyList<EntityID>> GetSelectableTargetEntityGroups(string sourceUid)
+        public IReadOnlyList<IReadOnlyList<EntityID>> GetSelectableTargetEntityGroups(ActionSourceKey source)
         {
-            return gameStateStore.GetSelectableTargetEntityGroups(sourceUid);
+            return gameStateStore.GetSelectableTargetEntityGroups(source);
         }
 
-        public bool TryResolveCellAction(string sourceUid, Vector2Int pos, out RuntimeAction action)
+        public bool TryResolveCellAction(ActionSourceKey source, Vector2Int pos, out RuntimeAction action)
         {
-            return gameStateStore.TryResolveBySourceAndCell(sourceUid, pos, out action);
+            return gameStateStore.TryResolveBySourceAndCell(source, pos, out action);
         }
 
-        public bool TryResolveEntityTargetAction(string sourceUid, IEnumerable<EntityID> targetIds, out RuntimeAction action)
+        public bool TryResolveEntityTargetAction(ActionSourceKey source, IEnumerable<EntityID> targetIds, out RuntimeAction action)
         {
-            return gameStateStore.TryResolveBySourceAndTargets(sourceUid, targetIds, out action);
+            return gameStateStore.TryResolveBySourceAndTargets(source, targetIds, out action);
         }
 
-        public bool TryResolveNoTargetAction(string sourceUid, out RuntimeAction action)
+        public bool TryResolveNoTargetAction(ActionSourceKey source, out RuntimeAction action)
         {
-            return gameStateStore.TryResolveNoTargetAction(sourceUid, out action);
+            return gameStateStore.TryResolveNoTargetAction(source, out action);
         }
 
-        public bool TryBuildCellActionRequest(string sourceUid, Vector2Int pos, out string actionUid)
+        public bool TryBuildCellActionRequest(ActionSourceKey source, Vector2Int pos, out string actionUid)
         {
             actionUid = null;
 
-            if (!TryResolveCellAction(sourceUid, pos, out var action))
+            if (!TryResolveCellAction(source, pos, out var action))
                 return false;
 
             actionUid = action.uid;
             return true;
         }
 
-        public bool TryBuildEntityTargetActionRequest(string sourceUid, IEnumerable<EntityID> targetIds, out string actionUid)
+        public bool TryBuildEntityTargetActionRequest(ActionSourceKey source, IEnumerable<EntityID> targetIds, out string actionUid)
         {
             actionUid = null;
 
-            if (!TryResolveEntityTargetAction(sourceUid, targetIds, out var action))
+            if (!TryResolveEntityTargetAction(source, targetIds, out var action))
                 return false;
 
             actionUid = action.uid;
             return true;
         }
 
-        public bool TryBuildNoTargetActionRequest(string sourceUid, out string actionUid)
+        public bool TryBuildNoTargetActionRequest(ActionSourceKey source, out string actionUid)
         {
             actionUid = null;
 
-            if (!TryResolveNoTargetAction(sourceUid, out var action))
+            if (!TryResolveNoTargetAction(source, out var action))
                 return false;
 
             actionUid = action.uid;
@@ -132,17 +143,30 @@ namespace Core
             viewFactory.RebuildFromState(
                 state: gameStateStore,
                 localPlayerId: gameStateStore.LocalPlayerId,
+                opponentPlayerId: gameStateStore.Players.Keys.First(id => id != gameStateStore.LocalPlayerId),
                 boardParent: boardParent,
                 handParent: handParent, 
+                OppoHandParent: OppoHandParent,
                 isLocalPlayerP1: gameStateStore.IsLocalPlayer()
             );
 
             hudController.RefreshHUD(
-                localPlayerId: gameStateStore.LocalPlayerId, // TODO: 실제 local player
+                state: gameStateStore,
                 playerNames: gameStateStore.Players.Values.Select(p => p.playerId).ToArray(),
                 isLocalPlayerP1: gameStateStore.IsLocalPlayer()
             );
             //eventBus.Publish(new SnapshotRefreshedEvent());
+        }
+
+        private void PublishGameEnd()
+        {
+            resultController.gameObject.SetActive(true);
+            
+            resultController.ShowResult(
+                state: gameStateStore,
+                winner: gameStateStore.WinnerId,
+                playerNames: gameStateStore.Players.Values.Select(p => p.playerId).ToArray()
+            );
         }
 
         private void PublishUIEvent(IBaseEvent uiEvent)

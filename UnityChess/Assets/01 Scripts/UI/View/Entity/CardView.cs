@@ -9,8 +9,8 @@ namespace ui.view.card
 {
     public enum VisualType
     {
-        UnitCard,  // 소환 전 유닛 카드
-        SpellCard, // 소환 후 스펠 카드
+        MyCard, // 정보를 볼 수 있는 자신의 카드
+        OpponentCard, // 정보를 볼 수 없는 상대의 카드
     }
 
     /// <summary>
@@ -46,17 +46,14 @@ namespace ui.view.card
         public TooltipData GetTooltipData()
         {
             // 시점에 따라 유닛 카드 또는 스펠 카드 툴팁을 반환
-            // if (data.visualType == VisualType.UnitCard)
-            // {
-            //     return TooltipBuilder.UnitCardTooltip(definition);
-            // }
-            // else // VisualType.SpellCard
-            // {
-            //     return TooltipBuilder.SpellCardTooltip(definition);
-            // }
-
-            // 유닛과 효과 설명을 함께 표시하는 카드 툴팁 (후보)
-            return TooltipBuilder.CadTooltip(definition);
+            if (data.visualType == VisualType.MyCard)
+            {
+                return TooltipBuilder.CardTooltip(definition);
+            }
+            else // VisualType.OpponentCard
+            {
+                return TooltipBuilder.OpponentCardTooltip();
+            }
         }
 
         public void OnSelected()

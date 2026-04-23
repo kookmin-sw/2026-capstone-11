@@ -10,7 +10,8 @@ namespace ui.view
         Card,
         Unit,
         Cell,
-        HUD
+        HUD,
+        None,
     }
 
     /// <summary>

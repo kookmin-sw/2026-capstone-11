@@ -1884,7 +1884,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 320, y: -30}
+  m_AnchoredPosition: {x: 319.99997, y: -30}
   m_SizeDelta: {x: 1500, y: 400}
   m_Pivot: {x: 1, y: 0}
 --- !u!114 &649486377
@@ -2172,7 +2172,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: -300, y: 50}
+  m_AnchoredPosition: {x: -299.99997, y: 50}
   m_SizeDelta: {x: 1000, y: 300}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &718986977
@@ -7886,6 +7886,7 @@ MonoBehaviour:
   viewFactory: {fileID: 1306483364}
   hudController: {fileID: 1826855864}
   eventBus: {fileID: 64190383}
+  inputHandler: {fileID: 76979778}
   boardParent: {fileID: 427112741}
   handParent: {fileID: 454696266}
 --- !u!4 &1470376624

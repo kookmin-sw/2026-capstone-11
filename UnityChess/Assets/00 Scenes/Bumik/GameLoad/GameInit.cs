@@ -27,6 +27,7 @@ public class GameInit : MonoBehaviour
         NetworkManagerUnity.Instance.Session.Events.OnMessageReceive = (raw) => { gameManager.InitSnapshotJson(Encoding.UTF8.GetString(raw), GameInitParam.Instance.Player1Name); };
         NetworkManagerUnity.Instance.Session.SubscribeEventBus();
 
+        // 이 코루틴을 실행하기 이전에 게임 씬 로드 및 Bootstrap이 완료되어야 함
         StartCoroutine(ReadyCoroutine());
     }
 

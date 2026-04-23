@@ -26,6 +26,12 @@ namespace Core.DTO
         [JsonProperty("Board")]
         public List<BoardEntityDTO> Board;
 
+        [JsonProperty("TurnCnt")]
+        public int TurnCnt;
+
+        [JsonProperty("WinnerId")]
+        public string WinnerId;
+        
         [JsonProperty("ActivePlayerId")]
         public string ActivePlayerId;
     }

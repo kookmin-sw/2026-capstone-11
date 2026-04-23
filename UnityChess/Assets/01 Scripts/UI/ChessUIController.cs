@@ -5,6 +5,7 @@ using UnityEngine;
 using events.client;
 using events.ui;
 using ui.view.board;
+using ui.view;
 using Core;
 using Core.StateManagement;
 using events.server;
@@ -29,8 +30,8 @@ public class ChessUIController : MonoBehaviour
 
     private SelectionState state = SelectionState.None;
 
-    // 현재 선택된 액션 source UID
-    private string selectedSourceUid;
+    // 현재 선택된 액션 source
+    private ActionSourceKey selectedSource;
 
     // source -> cell target
     private HashSet<Vector2Int> validCells = new();
@@ -95,7 +96,8 @@ public class ChessUIController : MonoBehaviour
         if (string.IsNullOrWhiteSpace(sourceUid))
             return;
 
-        TrySelectSource(sourceUid);
+        var source = new ActionSourceKey(ViewType.Card, sourceUid);
+        TrySelectSource(source);
     }
 
     // BoardView에서 직접 호출하기 위한 진입점
@@ -103,18 +105,19 @@ public class ChessUIController : MonoBehaviour
     {
         if (isInputLocked) return;
 
-        string clickedUid = evt.UnitUUID;
-        Debug.Log($"[ChessUIController] Unit selected: {clickedUid}");
+        var clickedSource = new ActionSourceKey(ViewType.Unit, evt.UnitUUID);
+        
+        Debug.Log($"[ChessUIController] Unit selected: {clickedSource.Uid}");
 
         // source가 이미 선택된 상태에서 entity target을 고르는 단계라면
         // 이번 클릭은 source 재선택이 아니라 target 선택으로 해석한다
-        if (state == SelectionState.SelectingEntityTargets && !string.IsNullOrWhiteSpace(selectedSourceUid))
+        if (state == SelectionState.SelectingEntityTargets)
         {
-            TrySelectEntityTarget(clickedUid);
+            TrySelectEntityTarget(evt.UnitUUID);
             return;
         }
 
-        TrySelectSource(clickedUid);
+        TrySelectSource(clickedSource);
     }
 
     private void OnCardSelected(IClientEvents.CardSelectedEvent evt)
@@ -123,31 +126,33 @@ public class ChessUIController : MonoBehaviour
 
         string clickedUid = evt.CardUUID;
         Debug.Log($"[ChessUIController] Card selected: {clickedUid}");
+        
+        var clickedSource = new ActionSourceKey(ViewType.Card, clickedUid);
 
         // 카드 선택은 항상 source 선택으로 해석한다
-        TrySelectSource(clickedUid);
+        TrySelectSource(clickedSource);
     }
 
     // source 선택 시도
-    private void TrySelectSource(string sourceUid)
+    private void TrySelectSource(ActionSourceKey source)
     {
-        if (string.IsNullOrWhiteSpace(sourceUid))
+        if (source.IsEmpty)
         {
             ResetSelectionAndHighlights();
             return;
         }
 
-        if (!gameManager.CanSelectSource(sourceUid))
+        if (!gameManager.CanSelectSource(source))
         {
-            Debug.Log($"[ChessUIController] No available action for source: {sourceUid}");
+            Debug.Log($"[ChessUIController] No available action for source: {source.Uid}");
             ResetSelectionAndHighlights();
             return;
         }
-
-        selectedSourceUid = sourceUid;
+    
+        selectedSource = source;
 
         // 1) no-target action이면 즉시 확정
-        if (gameManager.TryResolveNoTargetAction(sourceUid, out var noTargetAction))
+        if (gameManager.TryResolveNoTargetAction(source, out var noTargetAction))
         {
             SubmitAction(noTargetAction.uid);
             ResetSelectionAndHighlights();
@@ -155,17 +160,17 @@ public class ChessUIController : MonoBehaviour
         }
 
         // 2) cell target이 있으면 셀 선택 단계로 진입
-        validCells = gameManager.GetSelectableCells(sourceUid);
+        validCells = gameManager.GetSelectableCells(source);
         if (validCells.Count > 0)
         {
             state = SelectionState.SelectingCellTarget;
             boardView.Clear();
-            boardView.Show(validCells);
+            boardView.Show(validCells, gameManager.State.IsLocalPlayer());
             return;
         }
 
         // 3) entity target group이 있으면 엔티티 선택 단계로 진입
-        BuildEntityTargetSelectionState(sourceUid);
+        BuildEntityTargetSelectionState(source);
         if (validTargetGroups.Count > 0)
         {
             state = SelectionState.SelectingEntityTargets;
@@ -173,17 +178,17 @@ public class ChessUIController : MonoBehaviour
             return;
         }
 
-        Debug.Log($"[ChessUIController] Source selected but no resolvable target found: {sourceUid}");
+        Debug.Log($"[ChessUIController] Source selected but no resolvable target found: {source.Uid}");
         ResetSelectionAndHighlights();
     }
 
-    private void BuildEntityTargetSelectionState(string sourceUid)
+    private void BuildEntityTargetSelectionState(ActionSourceKey source)
     {
         validTargetGroups.Clear();
         selectedTargetIds.Clear();
         validTargetCandidateIds.Clear();
 
-        var groups = gameManager.GetSelectableTargetEntityGroups(sourceUid);
+        var groups = gameManager.GetSelectableTargetEntityGroups(source);
         if (groups == null)
             return;
 
@@ -212,6 +217,8 @@ public class ChessUIController : MonoBehaviour
         if (validTargetGroups.Count == 0)
             return;
 
+        int nextIndex = selectedTargetIds.Count;
+
         // 이미 고른 타겟들과 양립 가능한 그룹만 남긴다.
         var compatibleGroups = validTargetGroups
             .Where(IsCompatibleWithCurrentSelection)
@@ -224,13 +231,10 @@ public class ChessUIController : MonoBehaviour
 
         foreach (var group in compatibleGroups)
         {
-            foreach (var targetId in group)
-            {
-                if (selectedTargetIds.Contains(targetId))
-                    continue;
-
-                remainingCandidateIds.Add(targetId.id);
-            }
+            if (group.Count <= nextIndex)
+                continue;
+            
+            remainingCandidateIds.Add(group[nextIndex].id);
         }
 
         var highlightCells = new HashSet<Vector2Int>();
@@ -248,7 +252,7 @@ public class ChessUIController : MonoBehaviour
 
         if (highlightCells.Count > 0)
         {
-            boardView.Show(highlightCells);
+            boardView.Show(highlightCells, gameManager.State.IsLocalPlayer());
         }
     }
 
@@ -258,13 +262,17 @@ public class ChessUIController : MonoBehaviour
         if (group == null || group.Count == 0)
             return false;
 
-        foreach (var selected in selectedTargetIds)
+        // 이미 선택된 타겟들과 양립 가능한 그룹이 하나라도 있으면 true
+        if (selectedTargetIds.Count > group.Count)
+            return false;
+
+        for (int i = 0; i < selectedTargetIds.Count; i++)
         {
-            if (!group.Contains(selected))
+            if (!group.Contains(selectedTargetIds[i]))
                 return false;
         }
 
-        return selectedTargetIds.Count <= group.Count;
+        return true;
     }
 
     // entity target 선택 시도
@@ -290,7 +298,7 @@ public class ChessUIController : MonoBehaviour
         var proposedTargets = new List<EntityID>(selectedTargetIds) { clickedId };
 
         // exact match가 되면 즉시 액션 확정
-        if (gameManager.TryResolveEntityTargetAction(selectedSourceUid, proposedTargets, out var resolvedAction))
+        if (gameManager.TryResolveEntityTargetAction(selectedSource, proposedTargets, out var resolvedAction))
         {
             SubmitAction(resolvedAction.uid);
             ResetSelectionAndHighlights();
@@ -350,13 +358,13 @@ public class ChessUIController : MonoBehaviour
             return;
         }
 
-        if (gameManager.TryResolveCellAction(selectedSourceUid, evt.Pos, out var action))
+        if (gameManager.TryResolveCellAction(selectedSource, evt.Pos, out var action))
         {
             SubmitAction(action.uid);
         }
         else
         {
-            Debug.LogWarning($"[ChessUIController] Action not found for source={selectedSourceUid}, cell={evt.Pos}");
+            Debug.LogWarning($"[ChessUIController] Action not found for source={selectedSource.Uid}, cell={evt.Pos}");
         }
 
         ResetSelectionAndHighlights();
@@ -373,7 +381,7 @@ public class ChessUIController : MonoBehaviour
     public void ResetSelectionAndHighlights()
     {
         state = SelectionState.None;
-        selectedSourceUid = null;
+        selectedSource = default;
 
         validCells.Clear();
         validTargetGroups.Clear();
