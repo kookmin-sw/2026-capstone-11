@@ -5,6 +5,19 @@ using System;
 namespace core.data
 {
     /// <summary>
+    /// </summary>
+    /// 유닛 클래스를 나타내는 구조체
+    public enum UnitType
+    {
+        Pawn,
+        Rook,
+        Knight,
+        Bishop,
+        Leader,
+        Unknown,
+    }
+
+    /// <summary>
     /// 카드 유닛의 기본 정보를 정의하는 데이터 구조
     /// </summary>
     [Serializable]
@@ -13,7 +26,7 @@ namespace core.data
         public string cardId; // Card.csv의 PK
         public string name;
         public string leaderId; // world 구분을 위한 리더 카드의 ID
-        public string unitType; // 유닛 클래스
+        public UnitType unitClass; // 유닛 클래스
 
         public int attack;
         public int hp;
@@ -62,7 +75,7 @@ namespace core.data
         public string CardId => card.cardId;
         public string Name => card.name;
         public string LeaderId => card.leaderId;
-        public string UnitType => card.unitType;
+        public UnitType UnitType => card.unitClass;
         public int Attack => card.attack;
         public int HP => card.hp;
 

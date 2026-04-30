@@ -49,6 +49,8 @@ namespace core.UI
         
         [SerializeField]
         private List<ViewSpriteEntry> SpriteEntries;
+        [SerializeField]
+        private Sprite[] auroraSprites; // 유닛 바닥에 띄우는 클래스 구분 스프라이트
 
         // TODO: 아트 작업 완료 이후 각 유닛/카드에 맞는 스프라이트를 자동 연결할 수 있도록 개선
         private Dictionary<PrefabKey, Sprite[]> SpriteDict = new Dictionary<PrefabKey, Sprite[]>();
@@ -113,7 +115,6 @@ namespace core.UI
             string opponentPlayerId,
             Transform boardParent,
             Transform handParent,
-            Transform OppoHandParent,
             bool isLocalPlayerP1)
         {
             if (state == null)
@@ -126,8 +127,7 @@ namespace core.UI
 
             CreateBoardViews(state, localPlayerId, boardParent, isLocalPlayerP1);
             CreateBoardViews(state, opponentPlayerId, boardParent, isLocalPlayerP1);
-            CreateHandViews(state, localPlayerId, handParent, true);
-            CreateHandViews(state, opponentPlayerId, OppoHandParent, false);
+            CreateHandViews(state, localPlayerId, handParent);
         }
 
         private void CreateBoardViews(GameStateStore state, string ownerId, Transform boardParent, bool isLocalPlayerP1)
@@ -158,14 +158,15 @@ namespace core.UI
                 }
 
                 var key = new PrefabKey { Type = data.Type, defId = data.cardId };
-                var spriteRenderer = (view as UnitView).gameObject.GetComponent<SpriteRenderer>();
+                var unitView = view as UnitView;
 
-                // 플레이어 자신의 유닛/카드인지 확인하고 해당하는 스프라이트를 설정
-                spriteRenderer.sprite = isMyUnit ? SpriteDict[key][0] : SpriteDict[key][1];
+                // 플레이어 자신의 유닛인지 확인하고 해당하는 스프라이트를 설정
+                unitView.unitSprite.sprite = isMyUnit ? SpriteDict[key][0] : SpriteDict[key][1];
+                SetClassSprite(unitView, isMyUnit);
             }
         }
 
-        private void CreateHandViews(GameStateStore state, string playerId, Transform handParent, bool isMyCard)
+        private void CreateHandViews(GameStateStore state, string playerId, Transform handParent)
         {
             var hand = state.GetHand(playerId);
 
@@ -174,12 +175,9 @@ namespace core.UI
                 if (!state.TryGetUnit(uid, out var entity))
                     continue;
 
-                var visualType = isMyCard ? VisualType.MyCard : VisualType.OpponentCard;
-
                 var data = new CardViewData(
                     id: new ViewID(ViewType.Card, uid.id),
                     type: ViewType.Card,
-                    visualType: visualType,
                     cardId: entity.cardId
                 );
 
@@ -187,10 +185,40 @@ namespace core.UI
                 var key = new PrefabKey { Type = data.Type, defId = data.cardId };
 
                 var image = (view as CardView).gameObject.GetComponent<Image>();
-
-                // 플레이어 자신의 유닛/카드인지 확인하고 해당하는 스프라이트를 설정
-                image.sprite = isMyCard ? SpriteDict[key][0] : SpriteDict[key][1];
+                
+                image.sprite = SpriteDict[key][0];
             }
+        }
+
+        private void SetClassSprite(UnitView unitView, bool isMyUnit)
+        {
+            var unitClass = cardDB.Get(unitView.data.cardId).UnitType;
+
+            // 유닛 클래스에 따라 클래스 스프라이트 설정
+            switch (unitClass)
+            {
+                case UnitType.Leader:
+                    unitView.classSprite.sprite = auroraSprites[0];
+                    break;
+                case UnitType.Bishop:
+                    unitView.classSprite.sprite = auroraSprites[1];
+                    break;
+                case UnitType.Knight:
+                    unitView.classSprite.sprite = auroraSprites[2];
+                    break;
+                case UnitType.Rook:
+                    unitView.classSprite.sprite = auroraSprites[3];
+                    break;
+                case UnitType.Pawn:
+                    unitView.classSprite.sprite = auroraSprites[4];
+                    break;
+                default:
+                    Debug.LogWarning($"알 수 없는 유닛 클래스: {unitClass}");
+                    break;
+            }
+
+            // 아군 유닛을 흰색으로 하고, 상대 유닛을 검은색으로 설정
+            unitView.classSprite.color = isMyUnit ? Color.white : Color.black;
         }
 
         void Awake()

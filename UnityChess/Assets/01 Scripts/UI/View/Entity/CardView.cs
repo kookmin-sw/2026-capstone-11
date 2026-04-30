@@ -7,26 +7,16 @@ using UnityEngine;
 
 namespace ui.view.card
 {
-    public enum VisualType
-    {
-        MyCard, // 정보를 볼 수 있는 자신의 카드
-        OpponentCard, // 정보를 볼 수 없는 상대의 카드
-    }
-
     /// <summary>
     /// 카드 뷰에 필요한 데이터 클래스
     /// </summary>
     public class CardViewData : BaseViewData
     {
-        public VisualType visualType;
-
         public CardViewData(ViewID id,
                             ViewType type,
-                            string cardId,
-                            VisualType visualType) : base(id, type)
+                            string cardId) : base(id, type)
         {
             this.cardId = cardId;
-            this.visualType = visualType;
         }
     }
 
@@ -45,15 +35,7 @@ namespace ui.view.card
 
         public TooltipData GetTooltipData()
         {
-            // 시점에 따라 유닛 카드 또는 스펠 카드 툴팁을 반환
-            if (data.visualType == VisualType.MyCard)
-            {
-                return TooltipBuilder.CardTooltip(definition);
-            }
-            else // VisualType.OpponentCard
-            {
-                return TooltipBuilder.OpponentCardTooltip();
-            }
+            return TooltipBuilder.CardTooltip(definition);
         }
 
         public void OnSelected()

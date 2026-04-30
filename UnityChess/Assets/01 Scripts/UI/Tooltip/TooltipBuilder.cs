@@ -9,31 +9,12 @@ namespace ui.tooltip
     /// </summary> 
     public static class TooltipBuilder
     {
-        public static TooltipData UnitCardTooltip(CardDefinition def)
-        {
-            return new TooltipData(
-                title: def.card.name,
-                header: $"[유닛/클래스 : {def.card.unitType}]",
-                description: $"[{def.evt.timing}] {def.evt.name}: {def.evt.text}" + "\n\n" +
-                $"공격력: {def.card.attack}    체력: {def.card.hp}"
-            );
-        }
-
-        public static TooltipData SpellCardTooltip(CardDefinition def)
-        {
-            return new TooltipData(
-                title: def.card.name,
-                header: $"[스펠/클래스 : {def.card.unitType}]",
-                description: $"{def.effect.name}: {def.effect.text}"
-            );
-        }
-
-        // 유닛과 효과 설명을 함께 표시하는 카드 툴팁 (후보)
+        // 유닛과 효과 설명을 함께 표시하는 카드 툴팁
         public static TooltipData CardTooltip(CardDefinition def)
         {
             return new TooltipData(
                 title: def.card.name,
-                header: $"[카드/클래스 : {def.card.unitType}]",
+                header: $"[카드/클래스 : {ResolveClass(def.card.unitClass)}]",
                 description: $"[{def.evt.timing}] {def.evt.name}: {def.evt.text}" + "\n\n" +
                 $"{def.effect.name}: {def.effect.text}" + "\n\n" +
                 $"공격력: {def.card.attack}    체력: {def.card.hp}"
@@ -54,10 +35,20 @@ namespace ui.tooltip
         {
             return new TooltipData(
                 title: def.card.name,
-                header: $"[유닛/클래스 : {def.card.unitType}]",
+                header: $"[유닛/클래스 : {ResolveClass(def.card.unitClass)}]",
                 description: $"[{def.evt.timing}] {def.evt.name}: {def.evt.text}" + "\n\n" +
                 $"공격력: {def.card.attack}    체력: {data.curHP} / {def.card.hp}"
             );
         }
+
+        private static string ResolveClass(UnitType unitType) => unitType switch
+        {
+            UnitType.Leader => "군주",
+            UnitType.Bishop => "비숍",
+            UnitType.Knight => "나이트",
+            UnitType.Rook => "룩",
+            UnitType.Pawn => "폰",
+            _ => "???",
+        };
     }
 }

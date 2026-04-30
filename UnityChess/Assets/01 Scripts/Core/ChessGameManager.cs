@@ -25,7 +25,6 @@ namespace Core
         // View가 생성될 때의 부모 transform
         [SerializeField] private Transform boardParent;
         [SerializeField] private Transform handParent;
-        [SerializeField] private Transform OppoHandParent;
 
         public GameStateStore State => gameStateStore;
 
@@ -152,7 +151,6 @@ namespace Core
                 opponentPlayerId: gameStateStore.Players.Keys.First(id => id != gameStateStore.LocalPlayerId),
                 boardParent: boardParent,
                 handParent: handParent, 
-                OppoHandParent: OppoHandParent,
                 isLocalPlayerP1: gameStateStore.IsLocalPlayer()
             );
 

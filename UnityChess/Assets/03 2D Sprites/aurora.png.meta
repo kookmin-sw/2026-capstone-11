@@ -1,10 +1,22 @@
 fileFormatVersion: 2
-guid: 2dfadf84da8c1cf4aae9bc1157d3305e
+guid: 3330cc91e43b90d779096b6364fe519d
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 3736619520553653961
-    second: HotkeyBox_34x34_0
+      213: 5706694930677602157
+    second: aurora_0
+  - first:
+      213: 3662135700537781725
+    second: aurora_1
+  - first:
+      213: 1033718157552196516
+    second: aurora_2
+  - first:
+      213: -5812747068746175359
+    second: aurora_3
+  - first:
+      213: 6109752833870817001
+    second: aurora_4
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -51,7 +63,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 32
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -100,23 +112,111 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: HotkeyBox_34x34_0
+      name: aurora_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 34
-        height: 34
+        x: 1
+        y: 6
+        width: 30
+        height: 21
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 5, y: 6, z: 6, w: 5}
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 9c6146f08a32bd330800000000000000
-      internalID: 3736619520553653961
+      spriteID: d679f88ddc0423f40800000000000000
+      internalID: 5706694930677602157
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: aurora_1
+      rect:
+        serializedVersion: 2
+        x: 33
+        y: 6
+        width: 30
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ddda4dd440582d230800000000000000
+      internalID: 3662135700537781725
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: aurora_2
+      rect:
+        serializedVersion: 2
+        x: 65
+        y: 6
+        width: 30
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4ab15caff21885e00800000000000000
+      internalID: 1033718157552196516
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: aurora_3
+      rect:
+        serializedVersion: 2
+        x: 97
+        y: 6
+        width: 30
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 18ce0369659f45fa0800000000000000
+      internalID: -5812747068746175359
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: aurora_4
+      rect:
+        serializedVersion: 2
+        x: 129
+        y: 6
+        width: 30
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9e66e40e4d33ac450800000000000000
+      internalID: 6109752833870817001
       vertices: []
       indices: 
       edges: []
@@ -125,7 +225,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 1388ac6bee7d39150a6c6f8f0d40afe0
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -135,7 +235,11 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      HotkeyBox_34x34_0: 3736619520553653961
+      aurora_0: 5706694930677602157
+      aurora_1: 3662135700537781725
+      aurora_2: 1033718157552196516
+      aurora_3: -5812747068746175359
+      aurora_4: 6109752833870817001
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

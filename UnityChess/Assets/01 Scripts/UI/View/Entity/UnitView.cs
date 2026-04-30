@@ -9,23 +9,11 @@ using core.data;
 
 namespace ui.view.unit
 {
-    public enum MoveType
-    {
-        Pawn,
-        Rook,
-        Knight,
-        Bishop,
-        Queen,
-        King
-    }
-
     /// <summary>
     /// 유닛의 런타임 상태를 다루는 뷰 데이터
     /// </summary>
     public class UnitViewData : BaseViewData
     {
-        
-
         // 동적 상태
         public int curAttack;
         public int curHP;
@@ -53,6 +41,8 @@ namespace ui.view.unit
     public class UnitView : BaseView, IHoverable, ISelectable
     {
         public UnitViewData data;
+        public SpriteRenderer unitSprite;
+        public SpriteRenderer classSprite;
 
         public override void Init(BaseViewData baseData, IEventBus eventBus)
         {

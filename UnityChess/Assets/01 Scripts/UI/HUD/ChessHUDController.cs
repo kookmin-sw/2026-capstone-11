@@ -15,6 +15,7 @@ namespace UI.HUD
         [SerializeField] private ChessUIController uiController;
 
         [Header("HUD")]
+        [SerializeField] private TMP_Text oppoCardCount;
         [SerializeField] private TMP_Text turnText;
         [SerializeField] private Transform[] turnIndicators;
         [SerializeField] private Button turnEndButton;
@@ -67,6 +68,7 @@ namespace UI.HUD
             UpdateTurnText(state.TurnCnt);
             UpdateTurnIndicators(isMyTurn);
             UpdatePlayerTexts(playerNames, isLocalPlayerP1);
+            UpdateOppoCardCountText(state.GetHand(isLocalPlayerP1 ? playerNames[1] : playerNames[0]).Count);
             UpdateTurnEndButton(isMyTurn);
             UpdateInputLock(isMyTurn);
         }
@@ -105,6 +107,11 @@ namespace UI.HUD
                 playerText[0].text = playerNames[1];
                 playerText[1].text = playerNames[0];
             }
+        }
+
+        private void UpdateOppoCardCountText(int conut)
+        {
+            oppoCardCount.text = conut.ToString();
         }
 
         private void UpdateTurnEndButton(bool isMyTurn)

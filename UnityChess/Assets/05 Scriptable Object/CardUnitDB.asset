@@ -16,7 +16,7 @@ MonoBehaviour:
   - cardId: Or_L
     name: "\uADE4 \uACF5\uC8FC\uB2D8"
     leaderId: Or_L
-    unitType: "\uAD70\uC8FC"
+    unitClass: 4
     attack: 3
     hp: 7
     effectId: 
@@ -24,31 +24,31 @@ MonoBehaviour:
   - cardId: Or_B
     name: "\uADE4 \uC9C1\uC7A5\uC778?"
     leaderId: Or_L
-    unitType: "\uBE44\uC20D"
+    unitClass: 3
     attack: 1
-    hp: 3
+    hp: 2
     effectId: 
     eventId: 
   - cardId: Or_N
     name: "\uB9DD\uC0C1\uC758 \uAE30\uC0AC\uB2D8"
     leaderId: Or_L
-    unitType: "\uB098\uC774\uD2B8"
+    unitClass: 2
     attack: 2
-    hp: 2
+    hp: 3
     effectId: 
     eventId: 
   - cardId: Or_R
     name: "\uADE4 \uB098\uBB34"
     leaderId: Or_L
-    unitType: "\uB8E9"
+    unitClass: 1
     attack: 1
-    hp: 2
+    hp: 1
     effectId: 
     eventId: 
   - cardId: Or_P
     name: "\uADE4 \uC694\uC815"
     leaderId: Or_L
-    unitType: "\uD3F0"
+    unitClass: 0
     attack: 1
     hp: 1
     effectId: PawnGeneric
@@ -56,7 +56,7 @@ MonoBehaviour:
   - cardId: Cl_L
     name: "\uC0E4\uB97C\uB85C\uD14C"
     leaderId: Cl_L
-    unitType: "\uAD70\uC8FC"
+    unitClass: 4
     attack: 3
     hp: 10
     effectId: 
@@ -64,15 +64,15 @@ MonoBehaviour:
   - cardId: Cl_B
     name: "\uBC14\uC774\uC62C\uB81B"
     leaderId: Cl_L
-    unitType: "\uBE44\uC20D"
-    attack: 1
-    hp: 2
+    unitClass: 3
+    attack: 2
+    hp: 3
     effectId: 
     eventId: Cl_Blitz
   - cardId: Cl_N
     name: "\uC544\uC774\uB9B0"
     leaderId: Cl_L
-    unitType: "\uB098\uC774\uD2B8"
+    unitClass: 2
     attack: 2
     hp: 2
     effectId: 
@@ -80,7 +80,7 @@ MonoBehaviour:
   - cardId: Cl_R
     name: "\uB9B4\uB9AC\uC544"
     leaderId: Cl_L
-    unitType: "\uB8E9"
+    unitClass: 1
     attack: 1
     hp: 3
     effectId: 
@@ -88,7 +88,7 @@ MonoBehaviour:
   - cardId: Cl_P
     name: "\uBBF8\uC2A4\uD2F0\uC544"
     leaderId: Cl_L
-    unitType: "\uD3F0"
+    unitClass: 0
     attack: 1
     hp: 1
     effectId: PawnGeneric
@@ -99,9 +99,6 @@ MonoBehaviour:
     text: "\uC120\uD0DD\uD55C \uC544\uAD70 \uC720\uB2DB\uC774 \uADF8 \uC720\uB2DB\uC758
       \uC774\uB3D9 \uBC94\uC704 \uB0B4 \uC801\uC744 \uD558\uB098 \uC120\uD0DD\uD574
       \uACF5\uACA9\uD569\uB2C8\uB2E4."
-  - effectId: 
-    name: 
-    text: 
   - effectId: Or_L
     name: "\uC81C\uC655\uC758 \uC704\uC5C4"
     text: "\uCE74\uB4DC\uB97C \uD55C \uC7A5 \uBF51\uC2B5\uB2C8\uB2E4. \uC544\uAD70
@@ -123,9 +120,6 @@ MonoBehaviour:
       \uB0B4 \uC120\uD0DD\uB41C \uC801 \uD558\uB098\uC640 \uC774 \uC720\uB2DB\uC740
       \uB2E4\uC74C \uC0C1\uB300 \uD134 \uC885\uB8CC\uAE4C\uC9C0 \uAE30\uBCF8 \uC774\uB3D9\uC744
       \uC218\uD589\uD560 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4."
-  - effectId: 
-    name: 
-    text: 
   - effectId: Cl_L
     name: "\uC11C\uB9AC \uC601\uC5ED"
     text: "\uCE74\uB4DC\uB97C \uD55C \uC7A5 \uBF51\uC2B5\uB2C8\uB2E4. \uC774\uB3D9\uBC94\uC704
@@ -172,10 +166,6 @@ MonoBehaviour:
     timing: "\uD134 \uC885\uB8CC"
     text: "\uC774 \uC720\uB2DB\uC774 \uC0C1\uB300\uD3B8 \uC601\uC5ED\uC5D0 \uC788\uB2E4\uBA74
       \uCE74\uB4DC\uB97C \uD55C \uC7A5 \uBF51\uC2B5\uB2C8\uB2E4."
-  - eventId: 
-    name: 
-    timing: "\uC54C \uC218 \uC5C6\uC74C"
-    text: 
   - eventId: Cl_L
     name: Eisprinzessin
     timing: "\uD134 \uC2DC\uC791"
@@ -193,10 +183,6 @@ MonoBehaviour:
     text: "\uC774 \uC720\uB2DB\uC774 \uC0C1\uB300\uD3B8 \uC601\uC5ED\uC5D0 \uC788\uB2E4\uBA74
       \uC801 \uC720\uB2DB \uBAA8\uB450\uC5D0\uAC8C 2\uB370\uBBF8\uC9C0\uB97C \uC8FC\uACE0
       \uC774 \uC720\uB2DB\uC744 \uD30C\uAD34\uD569\uB2C8\uB2E4."
-  - eventId: 
-    name: 
-    timing: "\uC54C \uC218 \uC5C6\uC74C"
-    text: 
   - eventId: Cl_Blitz
     name: Blitzschwert
     timing: "\uD134 \uC2DC\uC791"
