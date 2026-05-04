@@ -48,12 +48,21 @@ def _setup_logger(log_file: Path) -> None:
     print(f"[*] log file: {log_file}")
 
 
+def _format_elapsed(seconds: float) -> str:
+    seconds = max(0.0, float(seconds))
+    hours, remainder = divmod(int(seconds), 3600)
+    minutes, whole_seconds = divmod(remainder, 60)
+    return f"{hours:02d}:{minutes:02d}:{whole_seconds:02d} ({seconds:.1f}s)"
+
+
 def _publish_latest_artifact(src_path: str | Path | None, dst_path: Path) -> str | None:
     if not src_path:
         return None
     src = Path(src_path)
     if not src.exists():
         return None
+    if src.resolve() == dst_path.resolve():
+        return str(dst_path)
     dst_path.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(src, dst_path)
     return str(dst_path)
@@ -126,12 +135,14 @@ def _ensure_dotnet() -> str:
     for dotnet_cmd in candidates:
         try:
             info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
-            print(info.stdout)
+            first_line = next((line.strip() for line in info.stdout.splitlines() if line.strip().startswith("Version:")), "")
+            print(f"dotnet ok: {dotnet_cmd}" + (f" ({first_line})" if first_line else ""))
             return dotnet_cmd
         except (subprocess.CalledProcessError, FileNotFoundError):
             continue
 
     if os.name != "nt":
+        print("[*] dotnet not found; installing dotnet-sdk-10.0...")
         install_steps = [
             ["sudo", "apt", "update"],
             ["sudo", "apt", "install", "-y", "dotnet-sdk-10.0"],
@@ -145,12 +156,13 @@ def _ensure_dotnet() -> str:
                     text=True,
                     env={**os.environ, "DEBIAN_FRONTEND": "noninteractive"},
                 )
-                if completed.stdout:
-                    print(completed.stdout)
-                if completed.stderr:
-                    print(completed.stderr)
                 if completed.returncode != 0:
+                    if completed.stdout:
+                        print(completed.stdout)
+                    if completed.stderr:
+                        print(completed.stderr)
                     raise RuntimeError(f"{' '.join(step)} failed with exit code {completed.returncode}")
+                print(f"[*] ok: {' '.join(step)}")
             except Exception as exc:
                 print(f"[!] dotnet auto-install step failed: {' '.join(step)} :: {exc}")
                 break
@@ -158,7 +170,8 @@ def _ensure_dotnet() -> str:
         for dotnet_cmd in candidates:
             try:
                 info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
-                print(info.stdout)
+                first_line = next((line.strip() for line in info.stdout.splitlines() if line.strip().startswith("Version:")), "")
+                print(f"dotnet ok: {dotnet_cmd}" + (f" ({first_line})" if first_line else ""))
                 return dotnet_cmd
             except (subprocess.CalledProcessError, FileNotFoundError):
                 continue
@@ -275,13 +288,9 @@ def _ensure_python_deps() -> None:
     if str(deps_dir) not in sys.path:
         sys.path.insert(0, str(deps_dir))
 
-    if core_probe_output:
-        print(core_probe_output)
-
     extra_ok, extra_output = _probe_extra_python_deps(python_cmd)
     if extra_ok:
-        if extra_output:
-            print(extra_output)
+        print(f"python deps ok: {python_cmd}")
         return
     required = ["pythonnet", "clr_loader"]
 
@@ -316,11 +325,11 @@ def _ensure_python_deps() -> None:
     import setuptools
     import torch
 
-    print(sys.executable)
-    print(torch.__version__)
-    print(numpy.__version__)
-    print(setuptools.__version__)
-    print(torch.cuda.is_available())
+    print(
+        f"python deps ok: {sys.executable} | "
+        f"torch={torch.__version__} | numpy={numpy.__version__} | "
+        f"setuptools={setuptools.__version__} | cuda={torch.cuda.is_available()}"
+    )
 
 
 def _prepare_project_dir() -> None:
@@ -397,10 +406,12 @@ def _run_train_eval(
     resume_model_path: str = "",
     resume_episodes_completed: int = 0,
     resume_skip_pre_eval: bool = False,
+    eval_belief_mcts: bool = False,
 ) -> None:
     os.environ.setdefault("SEAENGINE_VECTOR_BACKEND", "local")
     os.environ.setdefault("SEAENGINE_LOCAL_THREADS", "1")
     os.environ.setdefault("SEAENGINE_QUIET_WORKER_LOG", "1")
+    os.environ.setdefault("SEAENGINE_SUPPRESS_NATIVE_LOGS", "1")
     os.environ.setdefault("SEAENGINE_FAST_POOL", "0")
     os.environ.setdefault("SEAENGINE_TRAIN_MAX_TURNS", "100")
 
@@ -444,19 +455,12 @@ def _run_train_eval(
         resume_episodes_completed=resume_episodes_completed if resume_model_path else None,
         resume_skip_pre_eval=resume_skip_pre_eval,
         summary_report_path=str(Path.home() / "RL_AI" / "log" / "start_summary.txt"),
+        eval_belief_mcts=eval_belief_mcts,
     )
 
-    latest_log_zip = _publish_latest_artifact(
-        result.get("log_zip_path"),
-        Path.home() / "RL_AI" / "log" / "start_latest.zip",
-    )
     summary_copy = _publish_latest_artifact(
         result.get("summary_report_path"),
         Path.home() / "RL_AI" / "log" / "start_summary.txt",
-    )
-    histories_copy = _publish_latest_artifact(
-        result.get("log_zip_path"),
-        Path.home() / "RL_AI" / "log" / "start_histories.zip",
     )
     latest_model_zip = _publish_latest_artifact(
         result.get("model_zip_path"),
@@ -469,9 +473,8 @@ def _run_train_eval(
 
     print("=== SeaEngine Train/Eval Experiment ===")
     print(result["train"])
-    print(f"artifact log zip: {latest_log_zip}")
+    print(f"artifact log zip: {result.get('log_zip_path')}")
     print(f"artifact summary: {summary_copy}")
-    print(f"artifact histories: {histories_copy}")
     print(f"artifact model zip: {latest_model_zip}")
     print(f"artifact model alias: {model_copy}")
 
@@ -489,6 +492,7 @@ def main() -> int:
     parser.add_argument("--resume-model-path", type=str, default="")
     parser.add_argument("--resume-episodes-completed", type=int, default=0)
     parser.add_argument("--resume-skip-pre-eval", action="store_true")
+    parser.add_argument("--eval-belief-mcts", action="store_true", help="Use shallow belief-MCTS wrapper for evaluation suites only")
     args = parser.parse_args()
 
     workspace_dir = Path.home() / "RL_AI"
@@ -507,8 +511,9 @@ def main() -> int:
     print("[*] start.py launched")
     print(f"[*] pid={os.getpid()}")
     print(
-        f"[*] args: eval_matches_per_combo={args.eval_matches} (total {args.eval_matches * 24}), train_episodes={args.train_episodes}, "
+        f"[*] args: eval_matches_per_combo={args.eval_matches} (pre/post total {args.eval_matches * 32}), train_episodes={args.train_episodes}, "
         f"max_turns={args.max_turns}, update_interval={args.update_interval}, seed={args.seed}, "
+        f"eval_belief_mcts={args.eval_belief_mcts}, "
         f"skip_unzip={args.skip_unzip}, skip_build={args.skip_build}"
     )
 
@@ -524,16 +529,21 @@ def main() -> int:
         resume_model_path=args.resume_model_path,
         resume_episodes_completed=args.resume_episodes_completed,
         resume_skip_pre_eval=args.resume_skip_pre_eval,
+        eval_belief_mcts=args.eval_belief_mcts,
     )
     print("[*] start.py finished successfully")
     return 0
 
 
 if __name__ == "__main__":
+    _script_started_at = time.perf_counter()
     try:
-        raise SystemExit(main())
+        _exit_code = main()
+        print(f"[*] start.py total runtime: {_format_elapsed(time.perf_counter() - _script_started_at)}")
+        raise SystemExit(_exit_code)
     except Exception as exc:
         print("[!] start.py failed")
         print(f"[!] error: {exc}")
         print(traceback.format_exc())
-        raise
+        print(f"[*] start.py total runtime: {_format_elapsed(time.perf_counter() - _script_started_at)}")
+        raise SystemExit(1) from exc

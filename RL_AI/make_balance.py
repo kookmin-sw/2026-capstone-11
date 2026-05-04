@@ -49,6 +49,13 @@ def _setup_logger(log_file: Path) -> None:
     print(f"[*] log file: {log_file}")
 
 
+def _format_elapsed(seconds: float) -> str:
+    seconds = max(0.0, float(seconds))
+    hours, remainder = divmod(int(seconds), 3600)
+    minutes, whole_seconds = divmod(remainder, 60)
+    return f"{hours:02d}:{minutes:02d}:{whole_seconds:02d} ({seconds:.1f}s)"
+
+
 def _install_dotnet_sdk() -> None:
     if os.name == "nt":
         return
@@ -98,6 +105,8 @@ def _publish_latest_artifact(src_path: str | Path | None, dst_path: Path) -> str
     src = Path(src_path)
     if not src.exists():
         return None
+    if src.resolve() == dst_path.resolve():
+        return str(dst_path)
     dst_path.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(src, dst_path)
     return str(dst_path)
@@ -241,17 +250,47 @@ def _resolve_model_path(model_path: str) -> Path:
     return _extract_zip_model(zip_candidates[-1])
 
 
-def _zip_new_txt_logs(run_start_ts: float) -> Path | None:
-    log_dir = Path.home() / "RL_AI" / "log"
-    new_logs = sorted([p for p in log_dir.glob("*.txt") if p.stat().st_mtime >= run_start_ts - 1.0], key=lambda p: p.name)
-    if not new_logs:
-        print("no new txt logs to zip")
+def _collect_balance_artifacts(result: dict[str, object]) -> list[Path]:
+    artifacts: list[Path] = []
+
+    def _add(path_like: object) -> None:
+        if not path_like:
+            return
+        path = Path(str(path_like))
+        if path.exists() and path not in artifacts:
+            artifacts.append(path)
+
+    _add(result.get("summary_report_path"))
+    _add(result.get("history_report_path"))
+    for scenario in result.get("scenario_results", []):
+        if not isinstance(scenario, dict):
+            continue
+        _add(scenario.get("report_path"))
+        _add(scenario.get("history_path"))
+        for path_like in scenario.get("shard_report_paths", []):
+            _add(path_like)
+        for path_like in scenario.get("shard_history_paths", []):
+            _add(path_like)
+
+    return sorted(artifacts, key=lambda p: p.name)
+
+
+def _zip_balance_artifacts(artifact_paths: list[Path]) -> Path | None:
+    if not artifact_paths:
+        print("no balance artifacts to zip")
         return None
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    zip_path = log_dir / f"make_balance_log_{ts}.zip"
+    log_dir = Path.home() / "RL_AI" / "log"
+    zip_path = log_dir / "make_balance_latest.zip"
     with zipfile.ZipFile(zip_path, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
-        for p in new_logs:
+        for p in artifact_paths:
             zf.write(p, arcname=p.name)
+    for p in artifact_paths:
+        if p.name == "make_balance_summary.txt" or p.resolve() == zip_path.resolve():
+            continue
+        try:
+            p.unlink()
+        except OSError:
+            pass
     print(f"log zip: {zip_path}")
     return zip_path
 
@@ -265,7 +304,11 @@ def _run_balance(
     device: str,
     progress_interval: int,
     scenario_workers: int,
-) -> None:
+    scenario_shards: int,
+    include_history: bool,
+    history_limit: int | None,
+    use_belief_mcts: bool,
+) -> dict[str, object]:
     run_started_at = time.perf_counter()
     scenario_started_at: dict[str, float] = {}
     scenario_totals: dict[str, int] = {}
@@ -273,6 +316,7 @@ def _run_balance(
     home = Path.home()
     if str(home) not in sys.path:
         sys.path.insert(0, str(home))
+    os.environ.setdefault("SEAENGINE_SUPPRESS_NATIVE_LOGS", "1")
 
     dotnet_cmd = which("dotnet")
     if dotnet_cmd is None:
@@ -334,9 +378,12 @@ def _run_balance(
         seed=seed,
         device=device,
         opponent_mode="self",
-        include_history=True,
+        include_history=include_history,
+        history_limit=history_limit,
         progress_callback=_progress_logger,
         scenario_workers=scenario_workers,
+        scenario_shards=scenario_shards,
+        use_belief_mcts=use_belief_mcts,
     )
 
     summary_copy = _publish_latest_artifact(
@@ -349,6 +396,7 @@ def _run_balance(
     print(f"avg speed: {total_speed:.2f} eps/s")
     print(result["aggregate"])
     print(f"artifact summary: {summary_copy}")
+    return result
 
 
 def main() -> int:
@@ -360,6 +408,10 @@ def main() -> int:
     parser.add_argument("--device", type=str, default="auto")
     parser.add_argument("--progress-interval", type=int, default=50)
     parser.add_argument("--scenario-workers", type=int, default=0)
+    parser.add_argument("--scenario-shards", type=int, default=1, help="Split each of the 8 balance scenarios into N independent tasks")
+    parser.add_argument("--no-history", action="store_true", help="Skip representative match histories for faster large runs")
+    parser.add_argument("--history-limit", type=int, default=0, help="Representative histories per scenario (0 = auto, negative = none)")
+    parser.add_argument("--use-belief-mcts", action="store_true", help="Evaluate saved RL through the shallow belief-MCTS wrapper")
     parser.add_argument("--log-file", type=str, default="")
     args = parser.parse_args()
 
@@ -377,15 +429,20 @@ def main() -> int:
     print(
         f"[*] args: model_path={args.model_path or '(auto-latest)'}, total_matches={args.total_matches}, "
         f"max_turns={args.max_turns}, seed={args.seed}, device={args.device}, "
-        f"progress_interval={args.progress_interval}, scenario_workers={args.scenario_workers}"
+        f"progress_interval={args.progress_interval}, scenario_workers={args.scenario_workers}, "
+        f"scenario_shards={args.scenario_shards}, "
+        f"use_belief_mcts={args.use_belief_mcts}, "
+        f"include_history={not args.no_history and args.history_limit >= 0}, history_limit={args.history_limit}"
     )
 
     scenario_workers = args.scenario_workers if args.scenario_workers > 0 else _default_scenario_workers()
-    print(f"[*] resolved scenario_workers={scenario_workers}")
+    scenario_shards = max(1, int(args.scenario_shards))
+    include_history = (not args.no_history) and args.history_limit >= 0
+    history_limit = None if args.history_limit == 0 else max(0, args.history_limit)
+    print(f"[*] resolved scenario_workers={scenario_workers} | scenario_shards={scenario_shards}")
     model_path = _resolve_model_path(args.model_path)
     print(f"[*] resolved model: {model_path}")
-    run_start_ts = datetime.now().timestamp()
-    _run_balance(
+    result = _run_balance(
         model_path=model_path,
         total_matches=args.total_matches,
         max_turns=args.max_turns,
@@ -393,27 +450,27 @@ def main() -> int:
         device=args.device,
         progress_interval=args.progress_interval,
         scenario_workers=scenario_workers,
+        scenario_shards=scenario_shards,
+        include_history=include_history,
+        history_limit=history_limit,
+        use_belief_mcts=args.use_belief_mcts,
     )
-    log_zip_path = _zip_new_txt_logs(run_start_ts)
-    latest_log_zip = _publish_latest_artifact(
-        log_zip_path,
-        Path.home() / "RL_AI" / "log" / "make_balance_latest.zip",
-    )
-    histories_copy = _publish_latest_artifact(
-        log_zip_path,
-        Path.home() / "RL_AI" / "log" / "make_balance_histories.zip",
-    )
-    print(f"artifact log zip: {latest_log_zip}")
-    print(f"artifact histories: {histories_copy}")
+    artifact_paths = _collect_balance_artifacts(result)
+    log_zip_path = _zip_balance_artifacts(artifact_paths)
+    print(f"artifact log zip: {log_zip_path}")
     print("[*] make_balance.py finished successfully")
     return 0
 
 
 if __name__ == "__main__":
+    _script_started_at = time.perf_counter()
     try:
-        raise SystemExit(main())
+        _exit_code = main()
+        print(f"[*] make_balance.py total runtime: {_format_elapsed(time.perf_counter() - _script_started_at)}")
+        raise SystemExit(_exit_code)
     except Exception as exc:
         print("[!] make_balance.py failed")
         print(f"[!] error: {exc}")
         print(traceback.format_exc())
-        raise
+        print(f"[*] make_balance.py total runtime: {_format_elapsed(time.perf_counter() - _script_started_at)}")
+        raise SystemExit(1) from exc

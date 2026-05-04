@@ -9,10 +9,11 @@ BOARD_SIZE = 6
 MAX_BOARD_CARDS = 14
 MAX_HAND_CARDS = 7
 GLOBAL_FEATURE_DIM = 57
-BOARD_TOKEN_DIM = 31
-HAND_TOKEN_DIM = 10
+BOARD_TOKEN_DIM = 41
+HAND_TOKEN_DIM = 20
 
 ROLE_ORDER = ["Leader", "Bishop", "Knight", "Rook", "Pawn"]
+CARD_ID_ORDER = ["Or_L", "Or_B", "Or_N", "Or_R", "Or_P", "Cl_L", "Cl_B", "Cl_N", "Cl_R", "Cl_P"]
 ROLE_BY_SUFFIX = {
     "L": "Leader",
     "B": "Bishop",
@@ -94,6 +95,10 @@ def _distance(x1: int, y1: int, x2: int, y2: int) -> float:
 
 def _role_one_hot(role: str) -> List[float]:
     return [1.0 if role == name else 0.0 for name in ROLE_ORDER]
+
+
+def _card_id_one_hot(card_id: str) -> List[float]:
+    return [1.0 if card_id == name else 0.0 for name in CARD_ID_ORDER]
 
 
 def _effect_one_hot(effect_id: str) -> List[float]:
@@ -862,6 +867,7 @@ def _build_board_vector_ctx(ctx: _SnapshotContext) -> List[float]:
                 row_progress,
                 promotion_ready,
                 promotion_distance,
+                *_card_id_one_hot(_card_id(card)),
                 *_role_one_hot(role),
             ]
         )
@@ -893,12 +899,13 @@ def _build_hand_vector_ctx(ctx: _SnapshotContext) -> List[float]:
                 1.0 if card_id.startswith("Cl_") else 0.0,
                 deployable,
                 skill_usable,
+                *_card_id_one_hot(card_id),
                 *_role_one_hot(role),
             ]
         )
     missing_slots = MAX_HAND_CARDS - min(len(ctx.own_hand), MAX_HAND_CARDS)
     if missing_slots > 0:
-        vectors.extend([0.0] * missing_slots * 10)
+        vectors.extend([0.0] * missing_slots * HAND_TOKEN_DIM)
     return vectors
 
 
@@ -921,6 +928,8 @@ def _encode_action_features_ctx(ctx: _SnapshotContext, action: Dict[str, Any]) -
     attack_mod, has_move_lock, has_attack_lock, timed_status_count = _status_summary_ctx(source) if source else (0.0, 0.0, 0.0, 0.0)
     source_role = _role_from_card(source or {})
     target_role = _role_from_card(target_card or {})
+    source_card_id = _card_id(source or {})
+    target_card_id = _card_id(target_card or {})
     source_adjacent_enemies = _count_enemy_neighbors_ctx(ctx, source) if source else 0.0
     target_incoming_attackers = _count_attackers_of_card_ctx(ctx, target_card) if target_card else 0.0
 
@@ -954,11 +963,13 @@ def _encode_action_features_ctx(ctx: _SnapshotContext, action: Dict[str, Any]) -
         has_move_lock,
         has_attack_lock,
         _normalize_ratio(timed_status_count, 4.0),
+        *_card_id_one_hot(source_card_id),
         *_role_one_hot(source_role),
         0.0 if target_card is None else (1.0 if target_card.get("owner") != ctx.player_id else -1.0),
         0.0 if target_card is None else _normalize_ratio(float(target_card.get("effective_atk", 0.0)), 10.0),
         0.0 if target_card is None else _normalize_ratio(target_hp, target_max_hp),
         0.0 if target_card is None else (1.0 if target_role == "Leader" else 0.0),
+        *_card_id_one_hot(target_card_id),
         *_role_one_hot(target_role),
         _normalize_pos(source_x),
         _normalize_pos(source_y),
@@ -1043,6 +1054,7 @@ def _build_board_vector(snapshot: Dict[str, Any], player_id: str) -> List[float]
                 row_progress,
                 promotion_ready,
                 promotion_distance,
+                *_card_id_one_hot(_card_id(card)),
                 *_role_one_hot(role),
             ]
         )
@@ -1076,12 +1088,13 @@ def _build_hand_vector(snapshot: Dict[str, Any], player_id: str) -> List[float]:
                 1.0 if card_id.startswith("Cl_") else 0.0,
                 deployable,
                 skill_usable,
+                *_card_id_one_hot(card_id),
                 *_role_one_hot(role),
             ]
         )
     missing_slots = MAX_HAND_CARDS - min(len(hand), MAX_HAND_CARDS)
     if missing_slots > 0:
-        vectors.extend([0.0] * missing_slots * 10)
+        vectors.extend([0.0] * missing_slots * HAND_TOKEN_DIM)
     return vectors
 
 

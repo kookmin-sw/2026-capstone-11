@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass
+import math
 import random
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
@@ -20,6 +21,93 @@ from RL_AI.SeaEngine.observation import (
     SeaEngineObservation,
     build_observation,
 )
+
+
+BOARD_SIZE = 6
+
+
+def _card_id(card: Dict[str, Any] | None) -> str:
+    if not card:
+        return ""
+    return str(card.get("card_id", card.get("id", card.get("name", ""))))
+
+
+def _role(card: Dict[str, Any] | None) -> str:
+    if not card:
+        return ""
+    role = str(card.get("role", ""))
+    if role:
+        return role
+    card_id = _card_id(card)
+    suffix = card_id.split("_")[-1][-1:] if card_id else ""
+    return {"L": "Leader", "B": "Bishop", "N": "Knight", "R": "Rook", "P": "Pawn"}.get(suffix, "")
+
+
+def _players(snapshot: Dict[str, Any]) -> tuple[str, str]:
+    active = str(snapshot.get("active_player", ""))
+    ids = [str(player.get("id", "")) for player in snapshot.get("players", []) if str(player.get("id", ""))]
+    enemy = next((pid for pid in ids if pid != active), "")
+    return active, enemy
+
+
+def _leader(snapshot: Dict[str, Any], owner: str) -> Optional[Dict[str, Any]]:
+    for card in snapshot.get("board", []):
+        if card.get("owner") == owner and card.get("is_placed") and _role(card) == "Leader":
+            return card
+    return None
+
+
+def _distance_xy(x1: int, y1: int, x2: int, y2: int) -> int:
+    if min(x1, y1, x2, y2) < 0:
+        return 99
+    return abs(x1 - x2) + abs(y1 - y2)
+
+
+def _target_card(snapshot: Dict[str, Any], action: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    target = action.get("target", {}) or {}
+    target_uid = str(target.get("guid", ""))
+    if not target_uid:
+        return None
+    return next((card for card in snapshot.get("board", []) if str(card.get("uid", "")) == target_uid), None)
+
+
+def _source_card(snapshot: Dict[str, Any], action: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    source_uid = str(action.get("source", ""))
+    if not source_uid:
+        return None
+    for card in snapshot.get("board", []):
+        if str(card.get("uid", "")) == source_uid:
+            return card
+    for player in snapshot.get("players", []):
+        for card in player.get("hand", []):
+            if str(card.get("uid", "")) == source_uid:
+                return card
+    return None
+
+
+def _cell_after_action(action: Dict[str, Any], source: Optional[Dict[str, Any]]) -> tuple[int, int]:
+    target = action.get("target", {}) or {}
+    if str(target.get("type", "")) == "Cell":
+        return int(target.get("pos_x", -1)), int(target.get("pos_y", -1))
+    if source:
+        return int(source.get("pos_x", -1)), int(source.get("pos_y", -1))
+    return -1, -1
+
+
+def _attackers_on(snapshot: Dict[str, Any], target: Optional[Dict[str, Any]], *, by_owner: str) -> int:
+    if not target or not target.get("is_placed"):
+        return 0
+    tx = int(target.get("pos_x", -1))
+    ty = int(target.get("pos_y", -1))
+    count = 0
+    for card in snapshot.get("board", []):
+        if card.get("owner") != by_owner or not card.get("is_placed"):
+            continue
+        cx = int(card.get("pos_x", -1))
+        cy = int(card.get("pos_y", -1))
+        if _distance_xy(cx, cy, tx, ty) <= 2:
+            count += 1
+    return count
 
 
 class SeaEngineAgent(ABC):
@@ -71,39 +159,147 @@ class SeaEngineGreedyAgent(SeaEngineAgent):
         effect_id = action.get("effect_id", "")
         target = action.get("target", {})
         target_type = target.get("type", "None")
-        target_uid = target.get("guid", "")
-        cards = {card["uid"]: card for card in snapshot.get("board", [])}
-        target_card = cards.get(target_uid)
+        target_card = _target_card(snapshot, action)
+        source = _source_card(snapshot, action)
+        active, enemy = _players(snapshot)
+        enemy_leader = _leader(snapshot, enemy)
 
         score = 0
         if effect_id == "DefaultAttack":
-            score += 80
+            score += 95
         elif effect_id == "DeployUnit":
-            score += 45
+            score += 55
         elif effect_id == "DefaultMove":
-            score += 20
+            score += 25
         elif effect_id == "TurnEnd":
             score -= 100
         else:
-            score += 55
+            score += 65
 
         if target_type == "Unit" and target_card is not None:
-            if target_card.get("role") == "Leader":
-                score += 100
-            score += 10 - min(int(target_card.get("hp", 10)), 10)
+            target_hp = int(target_card.get("hp", 10))
+            source_atk = int((source or {}).get("effective_atk", (source or {}).get("atk", 0)))
+            if _role(target_card) == "Leader":
+                score += 150
+            if source_atk >= target_hp > 0:
+                score += 45
+            score += 15 - min(target_hp, 15)
 
         if target_type == "Cell":
             target_x = int(target.get("pos_x", -1))
             target_y = int(target.get("pos_y", -1))
-            enemy_leader = next(
-                (card for card in snapshot.get("board", []) if card.get("owner") != snapshot.get("active_player") and card.get("role") == "Leader" and card.get("is_placed")),
-                None,
-            )
             if enemy_leader is not None:
-                distance = abs(target_x - int(enemy_leader.get("pos_x", -1))) + abs(target_y - int(enemy_leader.get("pos_y", -1)))
-                score += max(0, 8 - distance)
+                distance = _distance_xy(target_x, target_y, int(enemy_leader.get("pos_x", -1)), int(enemy_leader.get("pos_y", -1)))
+                score += max(0, 12 - distance * 2)
+            if 2 <= target_x <= 3 and 2 <= target_y <= 3:
+                score += 8
+
+        if source is not None:
+            card_id = _card_id(source)
+            role = _role(source)
+            if effect_id == "DeployUnit":
+                score += {"Leader": 12, "Knight": 10, "Bishop": 8, "Rook": 8, "Pawn": 5}.get(role, 0)
+            if card_id in {"Or_N", "Cl_B", "Cl_N"}:
+                score += 4
 
         score += self.rng.randint(0, 3)
+        return score
+
+
+class SeaEngineRuleBasedAgent(SeaEngineAgent):
+    """A stronger tactical baseline without search or engine replay support."""
+
+    def __init__(self, seed: Optional[int] = None) -> None:
+        super().__init__("rule_based", seed=seed)
+
+    def select_action(
+        self,
+        snapshot: Dict[str, Any],
+        legal_actions: Sequence[Dict[str, Any]],
+    ) -> Tuple[int, Dict[str, Any]]:
+        if not legal_actions:
+            raise ValueError("No legal actions available.")
+        scored = [(self._score_action(snapshot, action), idx, action) for idx, action in enumerate(legal_actions)]
+        best_score = max(score for score, _, _ in scored)
+        best = [(idx, action) for score, idx, action in scored if score == best_score]
+        return best[self.rng.randrange(len(best))]
+
+    def _score_action(self, snapshot: Dict[str, Any], action: Dict[str, Any]) -> float:
+        active, enemy = _players(snapshot)
+        own_leader = _leader(snapshot, active)
+        enemy_leader = _leader(snapshot, enemy)
+        source = _source_card(snapshot, action)
+        target_card = _target_card(snapshot, action)
+        effect_id = str(action.get("effect_id", ""))
+        target = action.get("target", {}) or {}
+        target_type = str(target.get("type", "None"))
+        source_role = _role(source)
+        source_id = _card_id(source)
+        source_atk = float((source or {}).get("effective_atk", (source or {}).get("atk", 0.0)))
+
+        score = 0.0
+        if effect_id == "TurnEnd":
+            non_end_actions = [a for a in snapshot.get("actions", []) if str(a.get("effect_id", "")) != "TurnEnd"]
+            return -200.0 - len(non_end_actions)
+        if effect_id == "DefaultAttack":
+            score += 110.0
+        elif effect_id == "DeployUnit":
+            score += 58.0
+        elif effect_id == "DefaultMove":
+            score += 28.0
+        else:
+            score += 72.0
+
+        if target_card is not None:
+            target_role = _role(target_card)
+            target_hp = float(target_card.get("hp", 0.0))
+            target_atk = float(target_card.get("effective_atk", target_card.get("atk", 0.0)))
+            if target_role == "Leader":
+                score += 190.0
+                score += max(0.0, 40.0 - target_hp * 4.0)
+            if source_atk >= target_hp > 0:
+                score += 55.0 + target_atk * 3.0
+                if target_role in {"Bishop", "Knight", "Rook"}:
+                    score += 12.0
+            if source is not None and target_atk >= float(source.get("hp", 0.0)) > 0:
+                score -= 18.0
+            score += max(0.0, 16.0 - target_hp)
+            score += _attackers_on(snapshot, target_card, by_owner=active) * 3.0
+
+        tx, ty = _cell_after_action(action, source)
+        if target_type == "Cell" and tx >= 0 and ty >= 0:
+            if 2 <= tx <= 3 and 2 <= ty <= 3:
+                score += 12.0
+            if enemy_leader is not None:
+                before = _distance_xy(
+                    int((source or {}).get("pos_x", -1)),
+                    int((source or {}).get("pos_y", -1)),
+                    int(enemy_leader.get("pos_x", -1)),
+                    int(enemy_leader.get("pos_y", -1)),
+                )
+                after = _distance_xy(tx, ty, int(enemy_leader.get("pos_x", -1)), int(enemy_leader.get("pos_y", -1)))
+                score += max(-10.0, float(before - after) * 8.0)
+                if after <= 2:
+                    score += 18.0
+            if own_leader is not None:
+                own_after = _distance_xy(tx, ty, int(own_leader.get("pos_x", -1)), int(own_leader.get("pos_y", -1)))
+                if source_role != "Leader" and own_after <= 2:
+                    score += 4.0
+
+        if effect_id == "DeployUnit":
+            score += {"Leader": 14.0, "Knight": 13.0, "Bishop": 11.0, "Rook": 10.0, "Pawn": 7.0}.get(source_role, 0.0)
+            if source_id in {"Cl_B", "Or_N"}:
+                score += 6.0
+        if source_id == "Or_N" and target_card is not None:
+            score += 8.0
+        if source_id in {"Cl_B", "Cl_N", "Cl_R"} and effect_id not in {"TurnEnd", "DefaultMove"}:
+            score += 5.0
+
+        own_board = [c for c in snapshot.get("board", []) if c.get("owner") == active and c.get("is_placed")]
+        enemy_board = [c for c in snapshot.get("board", []) if c.get("owner") == enemy and c.get("is_placed")]
+        score += min(len(own_board), 7) * 1.2
+        score -= min(len(enemy_board), 7) * 0.6
+        score += self.rng.random() * 0.01
         return score
 
 
@@ -401,6 +597,278 @@ class SeaEngineRLAgent(SeaEngineAgent):
         log_prob = dist.log_prob(action_index_tensor)
         entropy = dist.entropy()
         return log_prob, entropy, value
+
+
+class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
+    """Replay-based shallow MCTS wrapper for an RL policy.
+
+    Current SeaEngine bridge has no arbitrary clone/restore API. For each
+    branch, this wrapper creates a fresh session, replays observed action
+    signatures from game start, applies one candidate, then rolls out briefly.
+    """
+
+    def __init__(
+        self,
+        base_agent: SeaEngineRLAgent,
+        *,
+        simulations: int = 4,
+        top_k: int = 4,
+        rollout_steps: int = 8,
+        seed: Optional[int] = None,
+    ) -> None:
+        super().__init__("belief_mcts", seed=seed)
+        self.base_agent = base_agent
+        self.simulations = max(1, int(simulations))
+        self.top_k = max(1, int(top_k))
+        self.rollout_steps = max(1, int(rollout_steps))
+        self.heuristic_agent = SeaEngineRuleBasedAgent(seed=seed)
+        self.player1_deck = ""
+        self.player2_deck = ""
+        self.card_data_path: Optional[str] = None
+        self._history: list[Dict[str, Any]] = []
+        self._replay_available = True
+        self.last_output: Optional[SeaEngineRLAgentOutput] = None
+        self.last_search: Dict[str, Any] = {}
+
+    @property
+    def device(self):
+        return self.base_agent.device
+
+    @property
+    def model(self):
+        return self.base_agent.model
+
+    @property
+    def sample_actions(self) -> bool:
+        return self.base_agent.sample_actions
+
+    @sample_actions.setter
+    def sample_actions(self, enabled: bool) -> None:
+        self.base_agent.sample_actions = enabled
+
+    @contextmanager
+    def sampling_mode(self, enabled: bool):
+        with self.base_agent.sampling_mode(enabled):
+            yield
+
+    @classmethod
+    def from_env(cls, base_agent: SeaEngineRLAgent, *, seed: Optional[int] = None) -> "SeaEngineBeliefMCTSAgent":
+        import os
+
+        def _env_int(name: str, default: int) -> int:
+            try:
+                return int(str(os.environ.get(name, default)).strip())
+            except Exception:
+                return default
+
+        return cls(
+            base_agent,
+            simulations=_env_int("SEAENGINE_BELIEF_MCTS_SIMS", 4),
+            top_k=_env_int("SEAENGINE_BELIEF_MCTS_TOP_K", 4),
+            rollout_steps=_env_int("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", 8),
+            seed=seed,
+        )
+
+    def reset_search_history(
+        self,
+        *,
+        player1_deck: str = "",
+        player2_deck: str = "",
+        card_data_path: Optional[str] = None,
+        replay_available: bool = True,
+    ) -> None:
+        self.player1_deck = str(player1_deck or "")
+        self.player2_deck = str(player2_deck or "")
+        self.card_data_path = card_data_path
+        self._history = []
+        self._replay_available = bool(replay_available)
+
+    def set_replay_available(self, enabled: bool) -> None:
+        self._replay_available = bool(enabled)
+
+    def observe_transition(self, snapshot: Dict[str, Any], action: Dict[str, Any]) -> None:
+        if self._replay_available:
+            self._history.append(self._action_signature(snapshot, action))
+
+    def compute_policy_output(
+        self,
+        snapshot: Dict[str, Any],
+        legal_actions: Sequence[Dict[str, Any]],
+    ) -> SeaEngineRLAgentOutput:
+        idx, action = self.select_action(snapshot, legal_actions)
+        base_output = self.base_agent.last_output
+        if base_output is None:
+            raise RuntimeError("belief MCTS did not produce a base policy output")
+        output = SeaEngineRLAgentOutput(
+            action_index=idx,
+            action=action,
+            state_vector=base_output.state_vector,
+            action_feature_vectors=base_output.action_feature_vectors,
+            logits=base_output.logits,
+            probabilities=base_output.probabilities,
+            log_prob=base_output.log_prob,
+            value=base_output.value,
+        )
+        self.last_output = output
+        return output
+
+    def select_action(
+        self,
+        snapshot: Dict[str, Any],
+        legal_actions: Sequence[Dict[str, Any]],
+    ) -> Tuple[int, Dict[str, Any]]:
+        if not legal_actions:
+            raise ValueError("No legal actions available.")
+        with self.base_agent.sampling_mode(False):
+            policy_output = self.base_agent.compute_policy_output(snapshot, legal_actions)
+        self.last_output = policy_output
+        if len(legal_actions) == 1 or not self._can_replay():
+            self.last_search = {"mode": "policy_fallback", "chosen_index": policy_output.action_index}
+            return policy_output.action_index, policy_output.action
+
+        candidates = self._candidate_indices(policy_output, snapshot, legal_actions)
+        root_player = str(snapshot.get("active_player", ""))
+        scores = {idx: [] for idx in candidates}
+        failures = 0
+        for idx in candidates:
+            candidate_signature = self._action_signature(snapshot, legal_actions[idx])
+            for _ in range(self.simulations):
+                try:
+                    score = self._simulate_candidate(candidate_signature, root_player=root_player)
+                except Exception:
+                    failures += 1
+                    score = None
+                if score is not None:
+                    scores[idx].append(float(score))
+
+        averaged = {idx: (sum(values) / len(values) if values else -999.0) for idx, values in scores.items()}
+        if all(value <= -999.0 for value in averaged.values()):
+            self.last_search = {
+                "mode": "policy_fallback",
+                "reason": "replay_failed",
+                "failures": failures,
+                "chosen_index": policy_output.action_index,
+            }
+            return policy_output.action_index, policy_output.action
+
+        chosen_index = max(candidates, key=lambda idx: (averaged[idx], float(policy_output.probabilities[idx])))
+        self.last_search = {
+            "mode": "replay_mcts",
+            "simulations": self.simulations,
+            "rollout_steps": self.rollout_steps,
+            "candidates": candidates,
+            "mean_values": averaged,
+            "failures": failures,
+            "history_len": len(self._history),
+            "policy_choice": policy_output.action_index,
+            "chosen_index": chosen_index,
+        }
+        return chosen_index, legal_actions[chosen_index]
+
+    def _candidate_indices(
+        self,
+        policy_output: SeaEngineRLAgentOutput,
+        snapshot: Dict[str, Any],
+        legal_actions: Sequence[Dict[str, Any]],
+    ) -> list[int]:
+        by_prior = sorted(range(len(legal_actions)), key=lambda idx: float(policy_output.probabilities[idx]), reverse=True)
+        by_heuristic = sorted(range(len(legal_actions)), key=lambda idx: self.heuristic_agent._score_action(snapshot, legal_actions[idx]), reverse=True)
+        selected: list[int] = []
+        for rows in (by_prior, by_heuristic):
+            for idx in rows:
+                if idx not in selected:
+                    selected.append(idx)
+                if len(selected) >= self.top_k:
+                    break
+            if len(selected) >= self.top_k:
+                break
+        return selected[: min(len(legal_actions), max(self.top_k, 1))]
+
+    def _can_replay(self) -> bool:
+        return self._replay_available and bool(self.player1_deck) and bool(self.player2_deck)
+
+    def _simulate_candidate(self, candidate_signature: Dict[str, Any], *, root_player: str) -> float:
+        from RL_AI.SeaEngine.bridge.pythonnet_session import PythonNetSession
+
+        session = PythonNetSession(card_data_path=self.card_data_path)
+        session.start()
+        try:
+            snapshot = session.init_game(player1_deck=self.player1_deck, player2_deck=self.player2_deck, logger_mode="silent")
+            for signature in self._history:
+                action = self._find_matching_action(snapshot, signature)
+                if action is None:
+                    return -999.0
+                snapshot = session.apply_action(str(action["uid"]))
+            candidate = self._find_matching_action(snapshot, candidate_signature)
+            if candidate is None:
+                return -999.0
+            snapshot = session.apply_action(str(candidate["uid"]))
+            for _ in range(self.rollout_steps):
+                if snapshot.get("result") != "Ongoing":
+                    break
+                actions = list(snapshot.get("actions", []))
+                if not actions:
+                    break
+                _idx, rollout_action = self.heuristic_agent.select_action(snapshot, actions)
+                snapshot = session.apply_action(str(rollout_action["uid"]))
+            return self._score_snapshot(snapshot, root_player=root_player)
+        finally:
+            session.close()
+
+    def _score_snapshot(self, snapshot: Dict[str, Any], *, root_player: str) -> float:
+        winner = str(snapshot.get("winner_id", ""))
+        if str(snapshot.get("result", "Ongoing")) != "Ongoing":
+            if winner == root_player:
+                return 1.0
+            if winner:
+                return -1.0
+            return 0.0
+        enemy = next((p for p in ["P1", "P2"] if p != root_player), "")
+        own_leader = _leader(snapshot, root_player)
+        enemy_leader = _leader(snapshot, enemy)
+        own_hp = float((own_leader or {}).get("hp", 0.0))
+        enemy_hp = float((enemy_leader or {}).get("hp", 0.0))
+        own_board = sum(1 for c in snapshot.get("board", []) if c.get("owner") == root_player and c.get("is_placed"))
+        enemy_board = sum(1 for c in snapshot.get("board", []) if c.get("owner") == enemy and c.get("is_placed"))
+        return math.tanh(((own_hp - enemy_hp) / 10.0) + ((own_board - enemy_board) * 0.08))
+
+    def _action_signature(self, snapshot: Dict[str, Any], action: Dict[str, Any]) -> Dict[str, Any]:
+        source = _source_card(snapshot, action)
+        target_card = _target_card(snapshot, action)
+        target = action.get("target", {}) or {}
+        return {
+            "active_player": str(snapshot.get("active_player", "")),
+            "effect_id": str(action.get("effect_id", "")),
+            "source_card_id": _card_id(source),
+            "source_role": _role(source),
+            "source_owner": str((source or {}).get("owner", "")),
+            "source_pos": (int((source or {}).get("pos_x", -1)), int((source or {}).get("pos_y", -1))),
+            "target_type": str(target.get("type", "None")),
+            "target_card_id": _card_id(target_card),
+            "target_owner": str((target_card or {}).get("owner", "")),
+            "target_pos": (int(target.get("pos_x", -1)), int(target.get("pos_y", -1))),
+        }
+
+    def _find_matching_action(self, snapshot: Dict[str, Any], signature: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        scored: list[tuple[int, Dict[str, Any]]] = []
+        for action in snapshot.get("actions", []):
+            current = self._action_signature(snapshot, action)
+            score = 0
+            for key in ("active_player", "effect_id", "source_card_id", "source_role", "source_owner", "target_type", "target_card_id", "target_owner"):
+                if current.get(key) == signature.get(key):
+                    score += 2
+            if current.get("source_pos") == signature.get("source_pos"):
+                score += 1
+            if current.get("target_pos") == signature.get("target_pos"):
+                score += 2
+            if score >= 8:
+                scored.append((score, action))
+        if not scored:
+            return None
+        scored.sort(key=lambda row: row[0], reverse=True)
+        return scored[0][1]
+
+
 def load_state_dict_flexible(model: nn.Module, state_dict: Dict[str, torch.Tensor]) -> None:
     """Load a checkpoint while tolerating expanded input projections.
 
@@ -418,7 +886,7 @@ def load_state_dict_flexible(model: nn.Module, state_dict: Dict[str, torch.Tenso
             compatible_state[key] = source_tensor
             continue
         if (
-            key in {"global_proj.weight", "unit_proj.weight"}
+            key in {"global_proj.weight", "unit_proj.weight", "hand_proj.weight", "action_encoder.0.weight"}
             and source_tensor.ndim == 2
             and current_tensor.ndim == 2
         ):

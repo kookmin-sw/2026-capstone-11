@@ -17,6 +17,13 @@ STAGNATION_TURN_START = 15
 STAGNATION_TRANSITION_THRESHOLD = 0.030
 STAGNATION_PENALTY = 0.010
 
+OPENING_TURN_LIMIT = 8
+UNSUPPORTED_LEADER_PENALTY = 0.020
+BAD_PASS_PENALTY = 0.012
+DEVELOPMENT_BONUS = 0.010
+SUPPORT_BONUS = 0.008
+LEADER_PUSH_PENALTY = 0.010
+
 
 def _safe_float(value: Any, default: float = 0.0) -> float:
     try:
@@ -151,63 +158,6 @@ def _leader_forward_progress(snapshot: Dict[str, Any], owner_id: str) -> float:
     return float((BOARD_SIZE - 1) - x) / float(BOARD_SIZE - 1)
 
 
-def _bishop_multi_attack_opportunity(snapshot: Dict[str, Any], owner_id: str) -> int:
-    enemy_id = _find_enemy_id(snapshot, owner_id)
-    if not enemy_id:
-        return 0
-    enemy_positions = {
-        (int(card.get("pos_x", -1)), int(card.get("pos_y", -1)))
-        for card in snapshot.get("board", [])
-        if str(card.get("owner", "")) == enemy_id and bool(card.get("is_placed", False))
-    }
-    best = 0
-    for card in snapshot.get("board", []):
-        if str(card.get("owner", "")) != owner_id:
-            continue
-        if not bool(card.get("is_placed", False)):
-            continue
-        if _card_role(card) != "Bishop":
-            continue
-        area = _move_area_for_card(card)
-        hit_count = sum(1 for pos in area if pos in enemy_positions)
-        if hit_count > best:
-            best = hit_count
-    return best
-
-
-def _or_n_chain_opportunity(snapshot: Dict[str, Any], owner_id: str) -> int:
-    enemy_id = _find_enemy_id(snapshot, owner_id)
-    if not enemy_id:
-        return 0
-    enemy_positions = {
-        (int(card.get("pos_x", -1)), int(card.get("pos_y", -1)))
-        for card in snapshot.get("board", [])
-        if str(card.get("owner", "")) == enemy_id and bool(card.get("is_placed", False))
-    }
-    enemy_cards = [
-        card
-        for card in snapshot.get("board", [])
-        if str(card.get("owner", "")) == enemy_id and bool(card.get("is_placed", False))
-    ]
-    best = 0
-    for card in snapshot.get("board", []):
-        if str(card.get("owner", "")) != owner_id:
-            continue
-        if not bool(card.get("is_placed", False)):
-            continue
-        if _card_id(card) != "Or_N":
-            continue
-        area = _move_area_for_card(card)
-        hit_count = sum(1 for pos in area if pos in enemy_positions)
-        if hit_count < 2:
-            continue
-        attack = _safe_float(card.get("effective_atk", card.get("atk", 0.0)), 0.0)
-        if any(_safe_float(enemy.get("hp", 0.0), 0.0) <= attack for enemy in enemy_cards if (int(enemy.get("pos_x", -1)), int(enemy.get("pos_y", -1))) in area):
-            if hit_count > best:
-                best = hit_count
-    return best
-
-
 def _pawn_last_rank_count(snapshot: Dict[str, Any], owner_id: str) -> int:
     count = 0
     last_rank = 5 if owner_id == "P1" else 0
@@ -219,10 +169,6 @@ def _pawn_last_rank_count(snapshot: Dict[str, Any], owner_id: str) -> int:
         if bool(card.get("is_placed", False)) and int(card.get("pos_x", -1)) == last_rank:
             count += 1
     return count
-
-
-def _is_charlotte_side(snapshot: Dict[str, Any], owner_id: str) -> bool:
-    return any(_card_id(card).startswith("Cl_") for card in _own_cards(snapshot, owner_id))
 
 
 def _pawn_progress(snapshot: Dict[str, Any], owner_id: str) -> float:
@@ -245,6 +191,23 @@ def _pawn_progress(snapshot: Dict[str, Any], owner_id: str) -> float:
         else:
             progress_sum += (5.0 - _safe_float(x, 0.0)) / 5.0
     return 0.0 if pawns == 0 else progress_sum / float(pawns)
+
+
+def _development_score(snapshot: Dict[str, Any], owner_id: str) -> float:
+    """Small opening-shape score: placed minor pieces plus leader cover."""
+    score = 0.0
+    for card in snapshot.get("board", []):
+        if str(card.get("owner", "")) != owner_id:
+            continue
+        if not bool(card.get("is_placed", False)):
+            continue
+        role = _card_role(card)
+        if role in {"Knight", "Bishop"}:
+            score += 1.0
+        elif role == "Pawn":
+            score += 0.35
+    score += 0.75 * float(_leader_support_score(snapshot, owner_id))
+    return score
 
 
 def _find_enemy_id(snapshot: Dict[str, Any], ai_id: str) -> str:
@@ -328,28 +291,32 @@ def dense_reward_from_transition(
     elif next_advantage < prev_advantage:
         reward -= _clip(0.01 * (prev_advantage - next_advantage), 0.0, 0.02)
 
-    if _is_charlotte_side(next_snapshot, ai_id) or _is_charlotte_side(prev_snapshot, ai_id):
-        prev_support = _leader_support_score(prev_snapshot, ai_id)
-        next_support = _leader_support_score(next_snapshot, ai_id)
-        support_delta = next_support - prev_support
-        reward += _clip(0.008 * float(support_delta), -0.02, 0.02)
+    prev_support = _leader_support_score(prev_snapshot, ai_id)
+    next_support = _leader_support_score(next_snapshot, ai_id)
+    support_delta = next_support - prev_support
+    reward += _clip(SUPPORT_BONUS * float(support_delta), -0.02, 0.02)
 
-        prev_progress = _leader_forward_progress(prev_snapshot, ai_id)
-        next_progress = _leader_forward_progress(next_snapshot, ai_id)
-        if int(next_snapshot.get("turn", 0)) <= 6 and next_support == 0 and next_progress > 0.50:
-            reward -= 0.015
-        elif next_progress > prev_progress and next_support == 0:
-            reward -= 0.005
+    prev_progress = _leader_forward_progress(prev_snapshot, ai_id)
+    next_progress = _leader_forward_progress(next_snapshot, ai_id)
+    if int(next_snapshot.get("turn", 0)) <= OPENING_TURN_LIMIT:
+        prev_development = _development_score(prev_snapshot, ai_id)
+        next_development = _development_score(next_snapshot, ai_id)
+        reward += _clip(
+            DEVELOPMENT_BONUS * float(next_development - prev_development),
+            -0.015,
+            0.025,
+        )
 
-        if action_effect_id == "Cl_B":
-            bishop_hits = _bishop_multi_attack_opportunity(prev_snapshot, ai_id)
-            if bishop_hits > 0:
-                reward += _clip(0.006 * float(bishop_hits), 0.0, 0.03)
+        if next_support == 0 and next_progress > max(0.45, prev_progress + 0.08):
+            reward -= UNSUPPORTED_LEADER_PENALTY
 
-    if action_effect_id == "Or_N":
-        chain_potential = _or_n_chain_opportunity(prev_snapshot, ai_id)
-        if chain_potential > 0:
-            reward += _clip(0.004 * float(chain_potential), 0.0, 0.025)
+        if action_effect_id == "TurnEnd":
+            has_non_end = any(str(action.get("effect_id", "")) != "TurnEnd" for action in prev_snapshot.get("actions", []))
+            if has_non_end:
+                reward -= BAD_PASS_PENALTY
+
+        if next_progress > prev_progress and next_support == 0:
+            reward -= LEADER_PUSH_PENALTY
 
     prev_pawn_last_rank = _pawn_last_rank_count(prev_snapshot, ai_id)
     next_pawn_last_rank = _pawn_last_rank_count(next_snapshot, ai_id)

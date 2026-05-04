@@ -14,6 +14,7 @@ from typing import Any, Dict, Optional, Sequence
 
 from RL_AI.SeaEngine.action_adapter import choose_action_with_agent
 from RL_AI.agents import (
+    SeaEngineBeliefMCTSAgent,
     SeaEngineGreedyAgent,
     SeaEngineRandomAgent,
     SeaEngineRLAgent,
@@ -258,10 +259,13 @@ class ServerAiClient:
             return SeaEngineRandomAgent(seed=self.seed)
         if self.mode == "greedy":
             return SeaEngineGreedyAgent(seed=self.seed)
-        if self.mode == "rl":
+        if self.mode in {"rl", "belief_mcts"}:
             if not self.model_path:
-                raise ValueError("mode=rl requires --model-path")
-            return _load_rl_agent(model_path=self.model_path, device=self.device, seed=self.seed)
+                raise ValueError("mode=rl/belief_mcts requires --model-path")
+            rl_agent = _load_rl_agent(model_path=self.model_path, device=self.device, seed=self.seed)
+            if self.mode == "belief_mcts":
+                return SeaEngineBeliefMCTSAgent.from_env(rl_agent, seed=self.seed)
+            return rl_agent
         raise ValueError(f"Unsupported mode: {self.mode}")
 
     def _log(self, message: str) -> None:
@@ -357,8 +361,8 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="SeaEngine server AI client")
     parser.add_argument("host", help="game server IP/hostname")
     parser.add_argument("port", type=int, help="game server port")
-    parser.add_argument("--mode", choices=["rl", "greedy", "random"], default="rl")
-    parser.add_argument("--model-path", help="model checkpoint path for rl mode")
+    parser.add_argument("--mode", choices=["rl", "belief_mcts", "greedy", "random"], default="rl")
+    parser.add_argument("--model-path", help="model checkpoint path for rl/belief_mcts mode")
     parser.add_argument("--player-name", default="AI Player")
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--device", default="auto")

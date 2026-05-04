@@ -18,6 +18,7 @@ def build_win_rate_report(summary: Dict[str, object]) -> str:
     p2_name = str(summary.get("p2_agent", "P2"))
     action_type_counts = dict(summary.get("action_type_counts", {}))
     card_use_counts = dict(summary.get("card_use_counts", {}))
+    leader_hp_stats = dict(summary.get("leader_hp_stats", {}))
     card_use_total = sum(int(count) for count in card_use_counts.values())
     total_steps_estimate = episodes * avg_steps
     card_use_per_match = 0.0 if episodes == 0 else card_use_total / episodes
@@ -35,6 +36,27 @@ def build_win_rate_report(summary: Dict[str, object]) -> str:
         f"Average steps: {avg_steps:.2f}",
         f"Average final turn: {avg_final_turn:.2f}",
     ]
+
+    if leader_hp_stats:
+        def _hp_line(title: str, rows: object) -> None:
+            if not isinstance(rows, dict) or not rows:
+                return
+            lines.append(f"[{title}]")
+            for key, raw in rows.items():
+                row = dict(raw or {})
+                count = int(row.get("count", 0))
+                if count <= 0:
+                    continue
+                lines.append(
+                    f"- {key}: n={count}, avg={float(row.get('avg', 0.0)):.2f}, "
+                    f"min={float(row.get('min', 0.0)):.2f}, max={float(row.get('max', 0.0)):.2f}"
+                )
+
+        lines.append("")
+        _hp_line("Leader Min HP By Player", leader_hp_stats.get("min_by_player"))
+        _hp_line("Leader Final HP By Player", leader_hp_stats.get("final_by_player"))
+        _hp_line("Leader Min HP By Deck", leader_hp_stats.get("min_by_deck"))
+        _hp_line("Leader Final HP By Deck", leader_hp_stats.get("final_by_deck"))
 
     if action_type_counts:
         lines.append("")

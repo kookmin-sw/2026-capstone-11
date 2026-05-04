@@ -19,6 +19,7 @@ from RL_AI.agents import (
     SeaEngineGreedyAgent,
     SeaEngineRLAgent,
     SeaEngineRandomAgent,
+    SeaEngineRuleBasedAgent,
     load_state_dict_flexible,
 )
 from RL_AI.SeaEngine.bridge.seaengine_session import SeaEngineSession
@@ -45,6 +46,29 @@ class PPOConfig:
     entropy_coef: float = 0.01
     update_epochs: int = 2
     max_grad_norm: float = 0.5
+
+
+def _ppo_config_from_env() -> PPOConfig:
+    config = PPOConfig()
+    overrides = {
+        "learning_rate": ("SEAENGINE_PPO_LR", float),
+        "gamma": ("SEAENGINE_PPO_GAMMA", float),
+        "gae_lambda": ("SEAENGINE_PPO_GAE_LAMBDA", float),
+        "clip_epsilon": ("SEAENGINE_PPO_CLIP", float),
+        "value_loss_coef": ("SEAENGINE_PPO_VALUE_COEF", float),
+        "entropy_coef": ("SEAENGINE_PPO_ENTROPY", float),
+        "update_epochs": ("SEAENGINE_PPO_UPDATE_EPOCHS", int),
+        "max_grad_norm": ("SEAENGINE_PPO_MAX_GRAD_NORM", float),
+    }
+    for field_name, (env_name, caster) in overrides.items():
+        raw_value = os.getenv(env_name)
+        if raw_value is None or str(raw_value).strip() == "":
+            continue
+        try:
+            setattr(config, field_name, caster(raw_value))
+        except ValueError:
+            print(f"[!] ignored invalid {env_name}={raw_value!r}")
+    return config
 
 
 class PastSelfAgent(SeaEngineAgent):
@@ -80,10 +104,18 @@ class PastSelfAgent(SeaEngineAgent):
 class SeaEnginePPOTrainer:
     def __init__(self, agent: SeaEngineRLAgent, config: Optional[PPOConfig] = None) -> None:
         self.agent = agent
-        self.config = PPOConfig() if config is None else config
+        self.config = _ppo_config_from_env() if config is None else config
+        self.agent.learning_rate = self.config.learning_rate
+        if self.agent.optimizer is not None:
+            for group in self.agent.optimizer.param_groups:
+                group["lr"] = self.config.learning_rate
         self.model_dir = Path(__file__).resolve().parent.parent / "models"
         self.model_dir.mkdir(exist_ok=True)
         self._match_balance_counters: Counter[str] = Counter()
+        self._layout_sample_counts: Counter[str] = Counter()
+        self._layout_seed = int(os.getenv("SEAENGINE_LAYOUT_SEED", "17011"))
+        self._layout_rng = random.Random(self._layout_seed)
+        self._layout_mode = os.getenv("SEAENGINE_TRAIN_LAYOUT_MODE", "balanced").strip().lower()
         
         # Standard Decks
         self.decks = {
@@ -115,6 +147,8 @@ class SeaEnginePPOTrainer:
             return "r"
         if name == "greedy":
             return "g"
+        if name == "rule_based":
+            return "b"
         if name.startswith("self_ep_"):
             return f"s{str(name).split('_')[-1]}"
         return name[:1].lower()
@@ -131,6 +165,72 @@ class SeaEnginePPOTrainer:
             {"player1_is_ai": False, "ai_deck": "Charlotte", "opp_deck": "Charlotte"},
         ]
         return layouts[layout_index % len(layouts)]
+
+    def _deck_name_from_json(self, deck_json: str, *, fallback: str = "Unknown") -> str:
+        if "Cl_" in str(deck_json):
+            return "Charlotte"
+        if "Or_" in str(deck_json):
+            return "Orange"
+        return fallback
+
+    def _layout_label(self, layout: Dict[str, object]) -> str:
+        side_label = "first" if bool(layout.get("player1_is_ai", True)) else "second"
+        ai_deck = str(layout.get("ai_deck", "Unknown"))
+        opp_deck = str(layout.get("opp_deck", "Unknown"))
+        relation_label = "same" if ai_deck == opp_deck else "diff"
+        return f"{ai_deck}/{side_label}/{relation_label}"
+
+    def _all_training_layouts(self) -> list[Dict[str, object]]:
+        return [
+            {"player1_is_ai": True, "ai_deck": "Orange", "opp_deck": "Orange"},
+            {"player1_is_ai": True, "ai_deck": "Orange", "opp_deck": "Charlotte"},
+            {"player1_is_ai": True, "ai_deck": "Charlotte", "opp_deck": "Orange"},
+            {"player1_is_ai": True, "ai_deck": "Charlotte", "opp_deck": "Charlotte"},
+            {"player1_is_ai": False, "ai_deck": "Orange", "opp_deck": "Orange"},
+            {"player1_is_ai": False, "ai_deck": "Orange", "opp_deck": "Charlotte"},
+            {"player1_is_ai": False, "ai_deck": "Charlotte", "opp_deck": "Orange"},
+            {"player1_is_ai": False, "ai_deck": "Charlotte", "opp_deck": "Charlotte"},
+        ]
+
+    def _sample_training_layout(self, layout_index: int) -> Dict[str, object]:
+        """Pick a training matchup.
+
+        Default mode is balanced, so all 8 layouts are seen evenly. The adaptive
+        mode lightly oversamples layouts that have been seen less often in the
+        current run. A focused mode remains available for targeted debugging.
+        """
+        mode = self._layout_mode or "balanced"
+        if mode == "balanced":
+            return self._balanced_match_layout(layout_index)
+
+        layouts = self._all_training_layouts()
+        if mode == "adaptive":
+            weights = []
+            for layout in layouts:
+                label = self._layout_label(layout)
+                seen = int(self._layout_sample_counts.get(label, 0))
+                weights.append(1.0 / (1.0 + float(seen)) ** 0.5)
+            return self._layout_rng.choices(layouts, weights=weights, k=1)[0]
+
+        if mode == "focused":
+            focus_ratio_raw = os.getenv("SEAENGINE_TRAIN_LAYOUT_FOCUS_RATIO", "0.20")
+            try:
+                focus_ratio = max(0.0, min(0.80, float(focus_ratio_raw)))
+            except ValueError:
+                focus_ratio = 0.20
+            if focus_ratio <= 0.0 or self._layout_rng.random() >= focus_ratio:
+                return self._balanced_match_layout(layout_index)
+
+            focus_layouts = [
+                {"player1_is_ai": True, "ai_deck": "Charlotte", "opp_deck": "Orange"},
+                {"player1_is_ai": False, "ai_deck": "Charlotte", "opp_deck": "Orange"},
+                {"player1_is_ai": True, "ai_deck": "Charlotte", "opp_deck": "Charlotte"},
+                {"player1_is_ai": False, "ai_deck": "Charlotte", "opp_deck": "Charlotte"},
+            ]
+            weights = [0.35, 0.35, 0.15, 0.15]
+            return self._layout_rng.choices(focus_layouts, weights=weights, k=1)[0]
+
+        return self._balanced_match_layout(layout_index)
 
     def _extend_buffer(self, dst: RolloutBuffer, src: RolloutBuffer) -> None:
         for step in src.steps:
@@ -276,10 +376,15 @@ class SeaEnginePPOTrainer:
         normalized_advantages = torch.tensor(buffer.normalized_advantages(), dtype=torch.float32, device=self.agent.device)
         returns = torch.tensor([s.return_value for s in buffer.steps], dtype=torch.float32, device=self.agent.device)
         old_log_probs = torch.tensor([s.old_log_prob for s in buffer.steps], dtype=torch.float32, device=self.agent.device)
+        imitation_weights = torch.tensor([float(getattr(s, "imitation_weight", 0.0)) for s in buffer.steps], dtype=torch.float32, device=self.agent.device)
+        imitation_coef = max(0.0, float(os.getenv("SEAENGINE_IMITATION_COEF", "0.03")))
 
         policy_loss_total = 0.0
         value_loss_total = 0.0
         entropy_total = 0.0
+        approx_kl_total = 0.0
+        clip_fraction_total = 0.0
+        grad_norm_total = 0.0
         batch_size = len(buffer)
         
         for _ in range(self.config.update_epochs):
@@ -294,23 +399,35 @@ class SeaEnginePPOTrainer:
             policy_loss = -torch.min(ratio * normalized_advantages, clipped_ratio * normalized_advantages).mean()
             value_loss = (value - returns).pow(2).mean()
             entropy_loss = entropy.mean()
+            approx_kl = (old_log_probs - log_prob).mean()
+            clip_fraction = ((ratio - 1.0).abs() > self.config.clip_epsilon).float().mean()
+            imitation_loss = torch.tensor(0.0, dtype=torch.float32, device=self.agent.device)
+            imitation_mass = imitation_weights.sum()
+            if imitation_coef > 0.0 and float(imitation_mass.item()) > 0.0:
+                imitation_loss = -(log_prob * imitation_weights).sum() / imitation_mass
 
-            loss = policy_loss + self.config.value_loss_coef * value_loss - self.config.entropy_coef * entropy_loss
+            loss = policy_loss + self.config.value_loss_coef * value_loss - self.config.entropy_coef * entropy_loss + imitation_coef * imitation_loss
 
             self.agent.optimizer.zero_grad()
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(self.agent.model.parameters(), self.config.max_grad_norm)
+            grad_norm = torch.nn.utils.clip_grad_norm_(self.agent.model.parameters(), self.config.max_grad_norm)
 
             self.agent.optimizer.step()
 
             policy_loss_total += float(policy_loss.item())
             value_loss_total += float(value_loss.item())
             entropy_total += float(entropy_loss.item())
+            approx_kl_total += float(approx_kl.item())
+            clip_fraction_total += float(clip_fraction.item())
+            grad_norm_total += float(grad_norm.item())
 
         return {
             "policy_loss": policy_loss_total / self.config.update_epochs,
             "value_loss": value_loss_total / self.config.update_epochs,
             "entropy": entropy_total / self.config.update_epochs,
+            "approx_kl": approx_kl_total / self.config.update_epochs,
+            "clip_fraction": clip_fraction_total / self.config.update_epochs,
+            "grad_norm": grad_norm_total / self.config.update_epochs,
         }
 
     def collect_vector_episodes(
@@ -329,9 +446,14 @@ class SeaEnginePPOTrainer:
         num_envs = env.num_envs
         opening_noise_turns = max(0, int(os.getenv("SEAENGINE_OPENING_NOISE_TURNS", "4")))
         opening_noise_prob = float(os.getenv("SEAENGINE_OPENING_NOISE_PROB", "0.25"))
+        opening_teacher_prob = max(0.0, min(0.60, float(os.getenv("SEAENGINE_OPENING_TEACHER_PROB", "0.12"))))
+        opening_teacher_turns = max(0, int(os.getenv("SEAENGINE_OPENING_TEACHER_TURNS", str(opening_noise_turns))))
+        opening_teacher_agents = [SeaEngineRuleBasedAgent(seed=episode_start_idx + 14001 + i) for i in range(num_envs)]
         configs = []
         opponents = []
         ai_ids = []
+        layout_labels = []
+        layout_counts: Counter[str] = Counter()
         buffers = [RolloutBuffer() for _ in range(num_envs)]
         step_counts = [0] * num_envs
         opponent_lookup = {agent.name: agent for agent in opponent_pool}
@@ -349,11 +471,13 @@ class SeaEnginePPOTrainer:
             if player1_deck and player2_deck:
                 p1_d, p2_d = player1_deck, player2_deck
                 player1_is_ai = True
+                ai_deck_name = self._deck_name_from_json(player1_deck, fallback="AI")
+                opp_deck_name = self._deck_name_from_json(player2_deck, fallback="Opponent")
             else:
                 balance_key = opp.name
                 balance_index = self._match_balance_counters[balance_key]
                 self._match_balance_counters[balance_key] += 1
-                layout = self._balanced_match_layout(balance_index)
+                layout = self._sample_training_layout(balance_index)
                 ai_deck_name = str(layout["ai_deck"])
                 opp_deck_name = str(layout["opp_deck"])
                 player1_is_ai = bool(layout["player1_is_ai"])
@@ -371,6 +495,12 @@ class SeaEnginePPOTrainer:
                 "player2_id": "Opponent" if player1_is_ai else "AI",
             })
             ai_ids.append("AI")
+            side_label = "first" if player1_is_ai else "second"
+            relation_label = "same" if ai_deck_name == opp_deck_name else "diff"
+            layout_label = f"{ai_deck_name}/{side_label}/{relation_label}"
+            layout_labels.append(layout_label)
+            layout_counts[layout_label] += 1
+            self._layout_sample_counts[layout_label] += 1
 
         snapshots = env.init_games(configs)
         start_mode_lookup = {}
@@ -486,6 +616,7 @@ class SeaEnginePPOTrainer:
                     "final_turn": snap["turn"],
                     "ai_won": snap.get("winner_id") == ai_ids[i],
                     "opponent_name": opponents[i].name,
+                    "layout_label": layout_labels[i],
                     "start_mode_requested": start_mode_lookup.get(i, "normal"),
                     "start_mode_actual": burnin_actual_modes[i],
                     "burnin_profile": burnin_profiles[i],
@@ -531,6 +662,19 @@ class SeaEnginePPOTrainer:
                     chosen_action = out.action
                     chosen_index = out.action_index
                     chosen_log_prob = out.log_prob
+                    imitation_weight = 0.0
+                    if (
+                        opening_teacher_turns > 0
+                        and int(snapshots[idx].get("turn", 0)) <= opening_teacher_turns
+                        and len(legal_actions) > 1
+                        and random.random() < opening_teacher_prob
+                    ):
+                        teacher_index, teacher_action = opening_teacher_agents[idx].select_action(snapshots[idx], legal_actions)
+                        chosen_index = int(teacher_index)
+                        chosen_action = teacher_action
+                        logits_tensor = torch.tensor(out.logits, dtype=torch.float32, device=self.agent.device)
+                        chosen_log_prob = float(torch.log_softmax(logits_tensor, dim=0)[chosen_index].item())
+                        imitation_weight = 1.0
                     if (
                         opening_noise_turns > 0
                         and int(snapshots[idx].get("turn", 0)) <= opening_noise_turns
@@ -541,6 +685,7 @@ class SeaEnginePPOTrainer:
                         chosen_action = legal_actions[chosen_index]
                         logits_tensor = torch.tensor(out.logits, dtype=torch.float32, device=self.agent.device)
                         chosen_log_prob = float(torch.log_softmax(logits_tensor, dim=0)[chosen_index].item())
+                        imitation_weight = 0.0
                     buffers[idx].add_step(
                         RolloutStep(
                             episode_id=episode_start_idx + idx,
@@ -552,6 +697,7 @@ class SeaEnginePPOTrainer:
                             done=False,
                             old_log_prob=chosen_log_prob,
                             old_value=out.value,
+                            imitation_weight=imitation_weight,
                         )
                     )
                     cmds[idx] = ("apply_action", {"action_uid": chosen_action["uid"]})
@@ -576,6 +722,7 @@ class SeaEnginePPOTrainer:
         return {
             "results": results,
             "burnin_profile_stats": dict(sorted(burnin_profile_counts.items())),
+            "layout_stats": dict(sorted(layout_counts.items())),
         }
 
     def train(
@@ -620,6 +767,7 @@ class SeaEnginePPOTrainer:
         requested_start_modes_total: Counter[str] = Counter()
         actual_start_modes_total: Counter[str] = Counter()
         burnin_profile_counts_total: Counter[str] = Counter()
+        layout_counts_total: Counter[str] = Counter()
         try:
             parallel_desc = env.describe_parallelism()
             print(f"[*] Starting Training: {num_episodes} episodes | Device: {self.agent.device} | Envs: {num_envs} (PythonNet)")
@@ -659,6 +807,9 @@ class SeaEnginePPOTrainer:
                     rollouts = list(collect_pack.get("results", []))
                     burnin_profile_counts_total.update(
                         Counter({str(k): int(v) for k, v in dict(collect_pack.get("burnin_profile_stats", {})).items()})
+                    )
+                    layout_counts_total.update(
+                        Counter({str(k): int(v) for k, v in dict(collect_pack.get("layout_stats", {})).items()})
                     )
                 except Exception as e:
                     print(f"  [!] Vector Engine crashed during batch {episode_start_idx}. Restarting envs... ({e})")
@@ -750,12 +901,14 @@ class SeaEnginePPOTrainer:
             "actual": dict(sorted(actual_start_modes_total.items())),
         }
         results["burnin_profile_stats"] = dict(sorted(burnin_profile_counts_total.items()))
+        results["layout_stats"] = dict(sorted(layout_counts_total.items()))
         return results
 
     def build_default_opponent_pool(self, *, seed: Optional[int] = None) -> List[SeaEngineAgent]:
         return [
             SeaEngineRandomAgent(seed=seed),
             SeaEngineGreedyAgent(seed=None if seed is None else seed + 1),
+            SeaEngineRuleBasedAgent(seed=None if seed is None else seed + 2),
         ]
 
     def evaluate(

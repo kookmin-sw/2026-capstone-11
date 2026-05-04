@@ -7,6 +7,7 @@ import json
 import uuid
 import threading
 import ctypes
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Dict, Optional, List
 
@@ -26,6 +27,7 @@ class PythonNetSession:
     _logger_requires_game_id = False
     _rl_exporter_type = None
     _rl_export_method = None
+    _native_output_lock = threading.Lock()
 
     def __init__(
         self,
@@ -128,6 +130,35 @@ class PythonNetSession:
         runtime_config = dll_path.with_suffix(".runtimeconfig.json")
         return runtime_config if runtime_config.exists() else None
 
+    @staticmethod
+    @contextmanager
+    def _suppress_native_output():
+        if os.getenv("SEAENGINE_SUPPRESS_NATIVE_LOGS", "1").strip().lower() in {"0", "false", "no", "off"}:
+            yield
+            return
+        with PythonNetSession._native_output_lock:
+            stdout_fd = stderr_fd = devnull_fd = None
+            try:
+                import sys
+
+                sys.stdout.flush()
+                sys.stderr.flush()
+                stdout_fd = os.dup(1)
+                stderr_fd = os.dup(2)
+                devnull_fd = os.open(os.devnull, os.O_WRONLY)
+                os.dup2(devnull_fd, 1)
+                os.dup2(devnull_fd, 2)
+                yield
+            finally:
+                if stdout_fd is not None:
+                    os.dup2(stdout_fd, 1)
+                    os.close(stdout_fd)
+                if stderr_fd is not None:
+                    os.dup2(stderr_fd, 2)
+                    os.close(stderr_fd)
+                if devnull_fd is not None:
+                    os.close(devnull_fd)
+
     def start(self) -> None:
         if PythonNetSession._clr_initialized:
             return
@@ -158,9 +189,10 @@ class PythonNetSession:
                 else:
                     os.environ["DOTNET_ROOT"] = str(dotnet_root)
                     os.environ["DOTNET_ROOT_X64"] = str(dotnet_root)
-                    print(f"[*] pythonnet dotnet root: {dotnet_root}")
+                    if os.getenv("SEAENGINE_VERBOSE_PYTHONNET_LOG", "0") == "1":
+                        print(f"[*] pythonnet dotnet root: {dotnet_root}")
                 os.environ["PYTHONNET_RUNTIME"] = "coreclr"
-                if runtime_config is not None:
+                if runtime_config is not None and os.getenv("SEAENGINE_VERBOSE_PYTHONNET_LOG", "0") == "1":
                     print(f"[*] pythonnet runtime config: {runtime_config}")
                 rt = clr_loader.get_coreclr(
                     runtime_config=str(runtime_config) if runtime_config is not None else None,
@@ -174,7 +206,8 @@ class PythonNetSession:
                         raise
                     # Another thread in the same process may have initialized the
                     # runtime milliseconds earlier. Treat that as success and move on.
-                    print("[*] pythonnet runtime already initialized in this process")
+                    if os.getenv("SEAENGINE_VERBOSE_PYTHONNET_LOG", "0") == "1":
+                        print("[*] pythonnet runtime already initialized in this process")
             except Exception as exc:
                 raise RuntimeError(
                     "Failed to initialize the .NET runtime for PythonNet. "
@@ -194,19 +227,23 @@ class PythonNetSession:
             json_path = self._resolve_newtonsoft_json_path()
             if json_path is not None and json_path.exists():
                 try:
-                    System.Reflection.Assembly.LoadFrom(str(json_path))
+                    with self._suppress_native_output():
+                        System.Reflection.Assembly.LoadFrom(str(json_path))
                 except Exception:
                     try:
-                        clr.AddReference(str(json_path))
+                        with self._suppress_native_output():
+                            clr.AddReference(str(json_path))
                     except Exception:
                         # Newtonsoft is optional for the bridge path we use here.
                         pass
 
             if not PythonNetSession._assembly_loaded:
                 # Load the engine assembly directly from disk so PythonNet can reflect over it.
-                PythonNetSession._asm = System.Reflection.Assembly.LoadFrom(str(dll_path))
+                with self._suppress_native_output():
+                    PythonNetSession._asm = System.Reflection.Assembly.LoadFrom(str(dll_path))
                 try:
-                    clr.AddReference("SeaEngine")
+                    with self._suppress_native_output():
+                        clr.AddReference("SeaEngine")
                 except Exception:
                     # Assembly.LoadFrom above is enough for reflection-based usage.
                     pass
@@ -265,7 +302,8 @@ class PythonNetSession:
             PythonNetSession._rl_export_method = PythonNetSession._rl_exporter_type.GetMethod("Export")
 
         if self._loader is None:
-            self._loader = self._create_card_loader()
+            with self._suppress_native_output():
+                self._loader = self._create_card_loader()
         mode = str(logger_mode or "silent").strip().lower()
         if mode == "simple":
             logger = System.Activator.CreateInstance(PythonNetSession._simple_logger_type, f"py_{uuid.uuid4().hex[:12]}")
@@ -275,12 +313,14 @@ class PythonNetSession:
         self._logger_mode = mode
         self._logger = logger
 
-        self._game = System.Activator.CreateInstance(PythonNetSession._game_type, self._loader, logger, player1_id, player2_id)
+        with self._suppress_native_output():
+            self._game = System.Activator.CreateInstance(PythonNetSession._game_type, self._loader, logger, player1_id, player2_id)
         
         p1_deck = self._normalize_deck(player1_deck, True)
         p2_deck = self._normalize_deck(player2_deck, False)
         
-        self._game.Init(p1_deck, p2_deck)
+        with self._suppress_native_output():
+            self._game.Init(p1_deck, p2_deck)
         self._turn_counter = 1
         return self.snapshot()
 

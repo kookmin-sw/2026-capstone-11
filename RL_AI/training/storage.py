@@ -20,6 +20,7 @@ class RolloutStep:
     old_value: float
     return_value: float = 0.0
     advantage: float = 0.0
+    imitation_weight: float = 0.0
 
 
 class RolloutBuffer:
