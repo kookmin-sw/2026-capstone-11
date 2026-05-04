@@ -17,6 +17,7 @@ public class Cl_P : IEvent
     public bool Apply(Uid source, GameData data)
     {
         var card = data.GetCardById(source);
+        if(data.ActivePlayer != card.Owner) return false;
         var enemyZone = card.Owner == data.Player1 ? 5 : 0;
         if (card.Unit.PosX == enemyZone)
         {
