@@ -13,7 +13,10 @@ public class Or_L : IEvent
 
     public bool Apply(Uid source, GameData data)
     {
-        CombatUtils.Heal(data.GetCardById(source), 1, data);
+        var card = data.GetCardById(source);
+        if(data.ActivePlayer != card.Owner) return false;
+        
+        CombatUtils.Heal(card, 1, data);
         return true;
     }
 }

@@ -16,6 +16,7 @@ public class Cl_N : IEvent
     public bool Apply(Uid source, GameData data)
     {
         var card = data.Board.GetCardById(source);
+        if(data.ActivePlayer != card.Owner) return false;
         var leader = data.Board.Cards
             .First(c => c.Owner == data.GetCardById(source).Owner && c.Data.UnitType == UnitType.Leader);
         
