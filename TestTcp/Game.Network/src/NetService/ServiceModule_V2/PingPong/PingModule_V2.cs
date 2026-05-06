@@ -8,10 +8,8 @@ namespace Game.Network.Service
     public class PingModule_V2 : IServiceModule
     {
         private INetAPI _net;
-        private IPeerDictPingWriter _toWrite;
-        private IPeerDictReader _toRead;
+        private IPeerDictWriter _other;
 
-        private int _failureCount;
         private int _pingInterval;
         private int _pingTimeOut;
 
@@ -20,10 +18,8 @@ namespace Game.Network.Service
         public void Init(ServiceContext_V2 context)
         {
             _net = context.Net;
-            _toWrite = context.Other;
-            _toRead = context.Other;
+            _other = context.Other;
 
-            _failureCount = context.Opt.pingFailCountToDisconnect;
             _pingInterval = context.Opt.pingIntervalMs;
             _pingTimeOut = context.Opt.pingTimeOutMs;
 
@@ -40,7 +36,7 @@ namespace Game.Network.Service
 
 
             var startTime = GameTime.GetNow();
-            foreach (var peer in _toRead.ReadPeers())
+            foreach (var peer in _other.PeerReaderList())
                 _ = QuaryPing(peer.connId, startTime);
 
         }
@@ -52,21 +48,12 @@ namespace Game.Network.Service
         
         private void PingCallBack(ConnId connId, QueryTaskResult result, long startTime)
         {
-            if (result.IsCancelled || !_toWrite.TryGetPing(connId, out var pingInfo)) return;
+            if (result.IsCancelled || !_other.TryWritePeer(connId, out var peer)) return;
             
             if (result.IsResponded)
             {
-                var end = GameTime.GetNow();
-                pingInfo.currentPingResult = end - startTime;
-                pingInfo.failureCount = _failureCount;
-
-                Log.WriteLog($"[Ping] : Got Ping From {connId} | Result : {pingInfo.currentPingResult}");
-            }
-            else // result.IsTimeOut 
-            {
-                pingInfo.failureCount--;
-
-                Log.WriteLog($"[Ping] : Fail Ping From {connId} | Remain Fail Count : {pingInfo.failureCount}");
+                peer.ResetTimer();
+                Log.WriteLog($"[Ping] : Got Ping From {connId} | Result : {GameTime.GetNow() - startTime}");
             }
         }
     }

@@ -2,33 +2,43 @@ using System.ComponentModel.Design;
 
 namespace Game.Network.Service
 {
-    public class HostControlModule : IServiceModule, INetControlEventHandler
+    public class HostControlModule : IServiceModule
+                                    , INetReceiveEventHandler
+
     {
+        public int HandlerId => NetEventHandlerId.Constant.PeerEntrance;
+
+
         private IPeerDictWriter _other;
+        private INetAPI _net;
         private IServiceEventPublisher _bridge;
 
+        private int SuspendTimeOutThres;
+        private int DisconnectTimeOutThres;
 
         public void Init(ServiceContext_V2 context)
         {
+            _net = context.Net;
             _other = context.Other;
             _bridge = context.EventBridge;
-            context.Net.SetControlHandler(this);
         }
 
-        public void OnException(ConnId connId, byte[] raw, string msg) { }
-
-        public void OnHello(ConnId connId, byte[] raw)
+        public void Tick(int delta)
         {
-
-        }
-        public void OnDisconnect(ConnId connId, byte[] raw)
-        {
-            if (_other.RemovePeer(connId, out var Peer))
+            foreach (var peer in _other.PeerWriterList())
             {
-                Log.WriteLog($"[HostControl] : Peer Disconnected {connId} | Publish Out Event");
-                _bridge.PublishOutEvents(Peer);
+                peer.AddTimer(delta);
+                if (peer.Timer > SuspendTimeOutThres && peer.state == Peer.State.Connected)
+                {
+                    peer.SetState(Peer.State.Suspended);
+                    _net.Disconnect(peer.connId);
+                }
+                if (peer.Timer > DisconnectTimeOutThres && peer.state == Peer.State.Suspended)
+                {
+                    peer.SetState(Peer.State.Finished);
+                    _bridge.PublishOutEvents(peer);
+                }
             }
         }
-
     }
 }

@@ -25,6 +25,13 @@ namespace Game.Network
             BinaryPrimitives.WriteInt32LittleEndian(_buffer.Slice(_offset, 4), data);
             _offset += 4;
         }
+        public void WriteUInt32(uint data)
+        {
+            if (_buffer.Length - _offset < 4) throw new  InvalidOperationException("Not enough space.");
+            BinaryPrimitives.WriteUInt32LittleEndian(_buffer.Slice(_offset, 4), data);
+            _offset += 4;
+        }
+
 
         public void WriteInt16(short data)
         {

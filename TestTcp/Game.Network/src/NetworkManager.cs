@@ -53,6 +53,11 @@ namespace Game.Network
         
         public void Send(int handlerId, int queryNum, ConnId id, byte[] raw)
             => NetStream.Send(handlerId, queryNum, id, raw);
+
+        public void SendMessage<T>(int handlerId, ConnId id, T data, IPacketCodec<T> codec) {}
+
+        public void SendRespond<T>(int handlerId, int queryNum, ConnId id, T data, IPacketCodec<T> codec) {}
+
         
 
         public void BroadCast(int handlerId, int queryNum, byte[] raw)

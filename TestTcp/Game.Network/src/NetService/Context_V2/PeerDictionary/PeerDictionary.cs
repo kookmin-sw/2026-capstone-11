@@ -8,7 +8,7 @@ namespace Game.Network.Service
     public interface IPeerDictReader
     {
         bool TryReadPeer(ConnId connId, out IPeerReader peer);
-        List<IPeerReader> ReadPeers();
+        IReadOnlyCollection<IPeerReader> PeerReaderList();
         bool HasPeer(ConnId connId); 
     }
 
@@ -18,16 +18,13 @@ namespace Game.Network.Service
         void AddPeer(Peer peer);
         bool RemovePeer(ConnId connId, out Peer peer);
         bool RemovePeer(ConnId connId);
+        bool TryWritePeer(ConnId connId, out IPeerWriter peer);
+        IReadOnlyCollection<IPeerWriter> PeerWriterList();
     }
 
     public interface IPeerDictSessionWriter : IPeerDictReader
     {
         bool TryGetSession(ConnId connId, out ISessionInfoWriter bindInfo);
-    }
-
-    public interface IPeerDictPingWriter : IPeerDictReader
-    {
-        bool TryGetPing(ConnId connId, out PingInfo bindInfo);
     }
 
     public interface IPeerDictInfoWriter : IPeerDictReader
@@ -36,9 +33,9 @@ namespace Game.Network.Service
     }
 
 
-
-
-    public class PeerDictionary : IPeerDictWriter, IPeerDictSessionWriter, IPeerDictPingWriter, IPeerDictInfoWriter
+    public class PeerDictionary : IPeerDictWriter
+                                , IPeerDictSessionWriter
+                                , IPeerDictInfoWriter
     {
         private Dictionary<ConnId, Peer> _dictonary = new();
 
@@ -55,8 +52,11 @@ namespace Game.Network.Service
             reader = null;
             return false;
         }
-        public List<IPeerReader> ReadPeers()
-            => _dictonary.Values.ToList<IPeerReader>();
+        public IReadOnlyCollection<IPeerReader> PeerReaderList()
+            => _dictonary.Values;
+        
+        public IReadOnlyCollection<IPeerWriter> PeerWriterList()
+            => _dictonary.Values;
 
         //Writer
         public void AddPeer(ConnId connId, Peer peer)
@@ -71,6 +71,16 @@ namespace Game.Network.Service
         public bool RemovePeer(ConnId connId)
             => _dictonary.Remove(connId);
 
+        public bool TryWritePeer(ConnId connId, out IPeerWriter writer)
+        {
+            if (_dictonary.TryGetValue(connId, out Peer peer))
+            {
+                writer = peer;
+                return true;
+            }
+            writer = null;
+            return false;
+        }
         public bool TryGetSession(ConnId connId, out ISessionInfoWriter info)
         {
             if (_dictonary.TryGetValue(connId, out Peer peer))
@@ -79,17 +89,6 @@ namespace Game.Network.Service
                 return true;
             }
             info = null;
-            return false;
-        }
-
-        public bool TryGetPing(ConnId connId, out PingInfo ping)
-        {
-            if (_dictonary.TryGetValue(connId, out Peer peer))
-            {
-                ping = peer.ping;
-                return true;
-            }
-            ping = null;
             return false;
         }
 
@@ -104,8 +103,5 @@ namespace Game.Network.Service
             return false;
         }
     }
-
-
-
 
 }

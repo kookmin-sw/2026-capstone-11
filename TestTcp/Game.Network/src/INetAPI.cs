@@ -14,6 +14,9 @@ namespace Game.Network
         /// </summary>
         public void Send(int handlerId, int queryNum, ConnId id, byte[] raw);
 
+        public void SendMessage<T>(int handlerId, ConnId id, T data, IPacketCodec<T> codec);
+        public void SendRespond<T>(int handlerId, int queryNum, ConnId id, T data, IPacketCodec<T> codec);
+
 
         /// <summary>
         /// 모든 연결에 raw를 전송. 

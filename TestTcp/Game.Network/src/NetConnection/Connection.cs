@@ -1,5 +1,6 @@
 
 using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Drawing;
@@ -160,6 +161,8 @@ namespace Game.Network
                         byte[] size = BitConverter.GetBytes(data.Length);
                         await _stream.WriteAsync(size, 0, size.Length, token);
                         await _stream.WriteAsync(data, 0, data.Length, token);
+
+                        //ArrayPool<byte>.Shared.Return(data);
                     }
 
                 }

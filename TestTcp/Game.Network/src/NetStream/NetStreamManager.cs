@@ -1,5 +1,6 @@
 
 using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -70,6 +71,53 @@ namespace Game.Network
             var packet = NetCodec.EncodeWithHeader(c);
 
             _reqDataQueue.Enqueue(NetOutEvent.Send(connId, packet));
+        }
+
+        public void SendMessage<T>(int handlerId, ConnId id, T data, IPacketCodec<T> codec)
+        {
+            //byte[] buffer = ArrayPool<byte>.Shared.Rent(Codec.HeaderSize + codec.GetSize(data)); 
+            byte[] buffer = new byte[Codec.HeaderSize + codec.GetSize(data)]; 
+            PacketWriter writer = new(buffer);
+
+            writer.WriteUInt32(Codec.FlagBit.None);
+            writer.WriteInt32(handlerId);
+            writer.WriteInt32(0);
+            writer.WriteInt32(0);
+            
+            codec.Write(ref writer, data);
+
+            _reqDataQueue.Enqueue(NetOutEvent.Send(id, buffer));
+        }
+        public void SendRespond<T>(int handlerId, int queryNum, ConnId id, T data, IPacketCodec<T> codec)
+        {
+            //byte[] buffer = ArrayPool<byte>.Shared.Rent(Codec.HeaderSize + codec.GetSize(data)); 
+            byte[] buffer = new byte[Codec.HeaderSize + codec.GetSize(data)]; 
+            PacketWriter writer = new(buffer);
+
+            writer.WriteUInt32(Codec.FlagBit.Respond);
+            writer.WriteInt32(handlerId);
+            writer.WriteInt32(queryNum);
+            writer.WriteInt32(0);
+            
+            codec.Write(ref writer, data);
+
+            _reqDataQueue.Enqueue(NetOutEvent.Send(id, buffer));
+        }
+
+        public void SendQuery<T>(int handlerId, int queryNum, ConnId id, T data, IPacketCodec<T> codec)
+        {
+            // byte[] buffer = ArrayPool<byte>.Shared.Rent(Codec.HeaderSize + codec.GetSize(data)); 
+            byte[] buffer = new byte[Codec.HeaderSize + codec.GetSize(data)]; 
+            PacketWriter writer = new(buffer);
+
+            writer.WriteUInt32(Codec.FlagBit.Query);
+            writer.WriteInt32(handlerId);
+            writer.WriteInt32(queryNum);
+            writer.WriteInt32(0);
+            
+            codec.Write(ref writer, data);
+
+            _reqDataQueue.Enqueue(NetOutEvent.Send(id, buffer));
         }
 
         public void Query(int handlerId, int queryNum, ConnId connId, byte[] raw)

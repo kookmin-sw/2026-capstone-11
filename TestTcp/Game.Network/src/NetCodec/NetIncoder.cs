@@ -32,7 +32,7 @@ namespace Game.Network
         public byte[] Data { get; }
 
         // Packet Flag Bit
-        private static class FlagBit
+        public static class FlagBit
         {
             public const uint None = 0x0000_0000;
             public const uint Control = 0x0000_0001;

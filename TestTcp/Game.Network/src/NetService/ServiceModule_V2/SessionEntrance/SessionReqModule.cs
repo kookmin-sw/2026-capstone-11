@@ -14,7 +14,6 @@ namespace Game.Network.Service
         private IGameWriter _game;
         private IHostReader _host;
 
-  
 
         public void Init(ServiceContext_V2 context)
         {
