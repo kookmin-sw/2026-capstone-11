@@ -215,10 +215,92 @@ def _release_lock(lock_path: Path) -> None:
         pass
 
 
+def _workspace_venv_dir() -> Path:
+    return Path.home() / ".seaengine-venv"
+
+
+def _workspace_venv_python() -> Path:
+    venv_dir = _workspace_venv_dir()
+    return venv_dir / ("Scripts" if os.name == "nt" else "bin") / ("python.exe" if os.name == "nt" else "python")
+
+
+def _ensure_workspace_venv() -> str:
+    venv_dir = _workspace_venv_dir()
+    venv_python = _workspace_venv_python()
+    venv_dir.mkdir(parents=True, exist_ok=True)
+
+    if not venv_python.exists():
+        print(f"[*] creating Python venv at {venv_dir}...")
+        creator = sys.executable if Path(sys.executable).exists() else (which("python3") or which("python"))
+        if not creator:
+            raise RuntimeError("No Python interpreter available to create a workspace venv.")
+        env = _python_probe_env()
+        subprocess.run(
+            [creator, "-m", "venv", str(venv_dir)],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            cwd=str(Path.home()),
+            env=env,
+        )
+
+    ok, _ = _probe_core_python_deps(str(venv_python))
+    if ok:
+        return str(venv_python)
+
+    print(f"[*] installing core Python deps into {venv_dir}...")
+    pip_cache_dir = venv_dir / ".pip-cache"
+    pip_cache_dir.mkdir(parents=True, exist_ok=True)
+    env = _python_probe_env()
+    env["PIP_CACHE_DIR"] = str(pip_cache_dir)
+    env["TMPDIR"] = str(venv_dir)
+    completed = subprocess.run(
+        [
+            str(venv_python),
+            "-m",
+            "pip",
+            "install",
+            "-q",
+            "--upgrade",
+            "--force-reinstall",
+            "torch",
+            "numpy",
+            "setuptools",
+            "grpcio",
+            "protobuf",
+            "pythonnet",
+            "clr_loader",
+        ],
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        cwd=str(venv_dir),
+        env=env,
+    )
+    if completed.returncode != 0:
+        if completed.stdout:
+            print(completed.stdout)
+        if completed.stderr:
+            print(completed.stderr)
+        raise RuntimeError(f"venv bootstrap pip install failed with exit code {completed.returncode}")
+
+    ok, probe_output = _probe_core_python_deps(str(venv_python))
+    if not ok:
+        raise RuntimeError(
+            "Workspace venv bootstrap finished but core Python deps are still unavailable."
+        )
+    print(f"[*] workspace python venv ready: {venv_python}")
+    print(probe_output)
+    return str(venv_python)
+
+
 def _python_candidate_paths() -> list[str]:
     home = Path.home()
     candidates: list[str] = []
     for candidate in [
+        str(_workspace_venv_python()),
         os.getenv("PYTHON_CMD", "").strip(),
         os.getenv("SEAENGINE_PYTHON", "").strip(),
         which("python"),
@@ -277,10 +359,14 @@ def _ensure_python_deps() -> None:
             core_probe_output = probe_output
             break
     if python_cmd is None:
-        raise RuntimeError(
-            "Core Python deps (torch/numpy/setuptools) are unavailable in the current environment. "
-            "Please free disk space or point to a working Python environment."
-        )
+        python_cmd = _ensure_workspace_venv()
+        ok, probe_output = _probe_core_python_deps(python_cmd)
+        if not ok:
+            raise RuntimeError(
+                "Core Python deps (torch/numpy/setuptools) are unavailable even after workspace venv bootstrap. "
+                "Please free disk space or point to a working Python environment."
+            )
+        core_probe_output = probe_output
 
     if os.environ.get("SEAENGINE_PYTHON_SELECTED", "").strip() != "1":
         if Path(python_cmd).resolve() != Path(sys.executable).resolve() or os.getenv("PYTHONPATH") or os.getenv("PYTHONHOME"):
@@ -289,6 +375,8 @@ def _ensure_python_deps() -> None:
             env.pop("PYTHONPATH", None)
             env["PYTHONNOUSERSITE"] = "1"
             env["SEAENGINE_PYTHON_SELECTED"] = "1"
+            env["PYTHON_CMD"] = python_cmd
+            env["SEAENGINE_PYTHON"] = python_cmd
             argv = [python_cmd]
             if getattr(sys.flags, "unbuffered", 0):
                 argv.append("-u")
@@ -303,7 +391,7 @@ def _ensure_python_deps() -> None:
     if core_probe_output:
         print(core_probe_output)
 
-    required = ["pytest", "pythonnet", "clr_loader"]
+    required = ["pytest", "grpcio", "protobuf", "pythonnet", "clr_loader"]
     missing = [pkg for pkg in required if importlib.util.find_spec(pkg) is None]
     if missing:
         completed = subprocess.run(
