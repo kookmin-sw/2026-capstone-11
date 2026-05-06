@@ -1,5 +1,6 @@
 using System.Text;
 using SeaEngine.Common;
+using SeaEngine.GameDataManager;
 
 namespace SeaEngine.GameDataManager.Components;
 
@@ -41,13 +42,25 @@ public class CardZone
 
     public void Shuffle()
     {
-        _cards = _cards.Shuffle().ToList();
+        for (int i = _cards.Count - 1; i > 0; i--)
+        {
+            int j = Random.Shared.Next(i + 1);
+            (_cards[i], _cards[j]) = (_cards[j], _cards[i]);
+        }
     }
     
     public CardZone(){}
     public CardZone(List<Card> cards)
     {
         _cards = cards;
+    }
+
+    public CardZone Clone(GameCloneContext ctx)
+    {
+        var clonedCards = new List<Card>(_cards.Count);
+        foreach (var card in _cards)
+            clonedCards.Add(ctx.GetOrClone(card));
+        return new CardZone(clonedCards);
     }
 
     public override string ToString()

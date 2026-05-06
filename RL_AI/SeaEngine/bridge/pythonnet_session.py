@@ -300,6 +300,27 @@ class PythonNetSession:
         self._logger = None
         self._logger_mode = "silent"
 
+    @classmethod
+    def wrap_game(
+        cls,
+        game: Any,
+        *,
+        card_data_path: Optional[str] = None,
+        project_root: Optional[Path] = None,
+    ) -> "PythonNetSession":
+        session = cls(card_data_path=card_data_path, project_root=project_root)
+        if not cls._clr_initialized:
+            session.start()
+        session._game = game
+        session._logger = None
+        session._logger_mode = "silent"
+        try:
+            game_data = getattr(game, "Data", None)
+            session._turn_counter = int(getattr(game_data, "TurnCnt", 0)) + 1
+        except Exception:
+            session._turn_counter = 1
+        return session
+
     def ping(self) -> Dict[str, Any]:
         return {"message": "pong"}
 
@@ -694,9 +715,11 @@ class PythonNetSession:
     def fork_game(self):
         if self._game is None:
             raise RuntimeError("Game not initialized")
-        fork = getattr(self._game, "Fork", None)
+        fork = getattr(self._game, "Clone", None)
         if not callable(fork):
-            raise RuntimeError("SeaEngine.Game.Fork is not available. Rebuild the C# engine.")
+            fork = getattr(self._game, "Fork", None)
+        if not callable(fork):
+            raise RuntimeError("SeaEngine.Game.Clone/Fork is not available. Rebuild the C# engine.")
         return fork()
 
     def apply_action(self, action_uid: str) -> Dict[str, Any]:

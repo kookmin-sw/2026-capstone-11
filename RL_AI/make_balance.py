@@ -215,23 +215,105 @@ def _release_lock(lock_path: Path) -> None:
         pass
 
 
+def _python_candidate_paths() -> list[str]:
+    home = Path.home()
+    candidates: list[str] = []
+    for candidate in [
+        os.getenv("PYTHON_CMD", "").strip(),
+        os.getenv("SEAENGINE_PYTHON", "").strip(),
+        which("python"),
+        which("python3"),
+        "/opt/python/bin/python",
+        "/opt/python/bin/python3",
+        "/opt/python/bin/python3.12",
+        sys.executable,
+        "/usr/bin/python3.12",
+        "/usr/bin/python3",
+        str(home / ".local" / "bin" / "python"),
+        str(home / ".local" / "bin" / "python3"),
+    ]:
+        if candidate and candidate not in candidates and Path(candidate).exists():
+            candidates.append(candidate)
+    return candidates
+
+
+def _python_probe_env() -> dict[str, str]:
+    env = os.environ.copy()
+    env.pop("PYTHONHOME", None)
+    env.pop("PYTHONPATH", None)
+    env["PYTHONNOUSERSITE"] = "1"
+    return env
+
+
+def _probe_core_python_deps(python_cmd: str) -> tuple[bool, str]:
+    probe_code = (
+        "import torch, numpy, setuptools; "
+        "print(torch.__version__); "
+        "print(numpy.__version__); "
+        "print(setuptools.__version__); "
+        "print(torch.cuda.is_available())"
+    )
+    completed = subprocess.run(
+        [python_cmd, "-c", probe_code],
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        cwd=str(Path.home()),
+        env=_python_probe_env(),
+    )
+    if completed.returncode == 0:
+        return True, completed.stdout.strip()
+    return False, (completed.stdout + completed.stderr).strip()
+
+
 def _ensure_python_deps() -> None:
-    deps_dir = Path.home() / ".rl_ai_deps"
+    python_cmd = None
+    core_probe_output = ""
+    for candidate in _python_candidate_paths():
+        ok, probe_output = _probe_core_python_deps(candidate)
+        if ok:
+            python_cmd = candidate
+            core_probe_output = probe_output
+            break
+    if python_cmd is None:
+        raise RuntimeError(
+            "Core Python deps (torch/numpy/setuptools) are unavailable in the current environment. "
+            "Please free disk space or point to a working Python environment."
+        )
+
+    if os.environ.get("SEAENGINE_PYTHON_SELECTED", "").strip() != "1":
+        if Path(python_cmd).resolve() != Path(sys.executable).resolve() or os.getenv("PYTHONPATH") or os.getenv("PYTHONHOME"):
+            env = os.environ.copy()
+            env.pop("PYTHONHOME", None)
+            env.pop("PYTHONPATH", None)
+            env["PYTHONNOUSERSITE"] = "1"
+            env["SEAENGINE_PYTHON_SELECTED"] = "1"
+            argv = [python_cmd]
+            if getattr(sys.flags, "unbuffered", 0):
+                argv.append("-u")
+            argv.extend(sys.argv)
+            os.execvpe(python_cmd, argv, env)
+
+    deps_dir = Path(tempfile.gettempdir()) / "rl_ai_deps"
     deps_dir.mkdir(parents=True, exist_ok=True)
     if str(deps_dir) not in sys.path:
         sys.path.insert(0, str(deps_dir))
 
-    required = ["torch", "numpy", "pytest", "pythonnet", "clr_loader"]
+    if core_probe_output:
+        print(core_probe_output)
+
+    required = ["pytest", "pythonnet", "clr_loader"]
     missing = [pkg for pkg in required if importlib.util.find_spec(pkg) is None]
     if missing:
-        import subprocess
-
         completed = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "-q", "--target", str(deps_dir), *missing],
+            [python_cmd, "-m", "pip", "install", "-q", "--upgrade", "--force-reinstall", "--target", str(deps_dir), *missing],
             check=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
+            cwd=str(deps_dir),
+            env=_python_probe_env() | {"PIP_CACHE_DIR": str(deps_dir / ".pip-cache"), "TMPDIR": str(deps_dir)},
         )
         if completed.returncode != 0:
             if completed.stdout:
@@ -239,6 +321,11 @@ def _ensure_python_deps() -> None:
             if completed.stderr:
                 print(completed.stderr)
             raise RuntimeError(f"pip install failed with exit code {completed.returncode}")
+
+    import numpy
+    import setuptools
+    import torch
+    import pytest
 
 
 def _prepare_project_dir() -> None:

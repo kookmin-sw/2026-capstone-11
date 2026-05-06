@@ -10,33 +10,62 @@ public class Board
     public static readonly IReadOnlyList<(int, int)> Player1Zone = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5)];
     public static readonly IReadOnlyList<(int, int)> Player2Zone = [(5, 0), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5)];
     
-    private List<Card> _cards = [];
+    private readonly List<Card> _cards = [];
+    private readonly Dictionary<Uid, Card> _cardById = new();
+    private readonly Card?[,] _grid = new Card[BoardSize, BoardSize];
     public IReadOnlyList<Card> Cards => _cards;
 
     public void Register(Card card)
     {
         _cards.Add(card);
+        _cardById[card.Guid] = card;
+        if (card.Unit.IsPlaced)
+        {
+            var x = card.Unit.PosX;
+            var y = card.Unit.PosY;
+            if (x >= 0 && x < BoardSize && y >= 0 && y < BoardSize)
+                _grid[x, y] = card;
+        }
+    }
+
+    public void ReconstructFrom(IReadOnlyList<Card> cards)
+    {
+        Clear();
+        for (int i = 0; i < cards.Count; i++)
+        {
+            var card = cards[i];
+            _cards.Add(card);
+            _cardById[card.Guid] = card;
+            if (card.Unit.IsPlaced)
+            {
+                var x = card.Unit.PosX;
+                var y = card.Unit.PosY;
+                if (x >= 0 && x < BoardSize && y >= 0 && y < BoardSize)
+                    _grid[x, y] = card;
+            }
+        }
     }
 
     public void Clear()
     {
         _cards.Clear();
+        _cardById.Clear();
+        Array.Clear(_grid, 0, _grid.Length);
     }
 
     public bool IsEmptyCell(int x, int y)
     {
-        return !_cards.Any(c => c.Unit.IsPlaced && c.Unit.PosX == x && c.Unit.PosY == y);
+        return _grid[x, y] == null;
     }
 
     public Card GetCardByPos(int x, int y)
     {
-        int index = _cards.FindIndex(c => c.Unit.PosX == x && c.Unit.PosY == y);
-        return index == -1 ? throw new InvalidOperationException("Cannot find card by pos(maybe cell is empty)") : _cards[index];
+        return _grid[x, y] ?? throw new InvalidOperationException("Cannot find card by pos(maybe cell is empty)");
     }
 
     public Card GetCardById(Uid guid)
     {
-        return _cards.Find(c => c.Guid == guid) ?? throw new InvalidOperationException();
+        return _cardById.TryGetValue(guid, out var card) ? card : throw new InvalidOperationException();
     }
 
     public override string ToString()

@@ -780,10 +780,11 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
             self.last_search = {"mode": "single_action", "chosen_index": policy_output.action_index}
             return policy_output.action_index, policy_output.action
 
+        state_game = snapshot.get("_engine_game")
         state_bytes = snapshot.get("_engine_state_bytes")
         state_handle = snapshot.get("_engine_state_handle")
         state_json = str(snapshot.get("_engine_state", ""))
-        if state_bytes is None and state_handle is None and not state_json:
+        if state_game is None and state_bytes is None and state_handle is None and not state_json:
             self.last_search = {
                 "mode": "policy_fallback",
                 "reason": "engine_state_unavailable",
@@ -810,6 +811,7 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
                             session,
                             candidate_signature,
                             root_player=root_player,
+                            state_game=state_game,
                             state_bytes=state_bytes,
                             state_handle=state_handle,
                             state_json=state_json,
@@ -875,41 +877,57 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
         candidate_signature: Dict[str, Any],
         *,
         root_player: str,
+        state_game: Any = None,
         state_bytes: Any = None,
         state_json: str,
         state_handle: Any = None,
         player1_id: str = "P1",
         player2_id: str = "P2",
     ) -> float:
-        if state_bytes is not None:
-            snapshot = session.restore_snapshot_bytes(
-                state_bytes,
-                logger_mode="silent",
-                player1_id=player1_id,
-                player2_id=player2_id,
-            )
-        elif state_handle is not None:
-            snapshot = session.restore_state_handle(
-                int(state_handle),
-                logger_mode="silent",
-                player1_id=player1_id,
-                player2_id=player2_id,
-            )
-        else:
-            snapshot = session.restore_state(state_json, logger_mode="silent")
-        candidate = self._find_matching_action(snapshot, candidate_signature)
-        if candidate is None:
-            return -999.0
-        snapshot = session.apply_action(str(candidate["uid"]))
-        for _ in range(self.rollout_steps):
-            if snapshot.get("result") != "Ongoing":
-                break
-            actions = list(snapshot.get("actions", []))
-            if not actions:
-                break
-            _idx, rollout_action = self.heuristic_agent.select_action(snapshot, actions)
-            snapshot = session.apply_action(str(rollout_action["uid"]))
-        return self._score_snapshot(snapshot, root_player=root_player)
+        with session._suppress_native_output():
+            if state_game is not None:
+                from RL_AI.SeaEngine.bridge.pythonnet_session import PythonNetSession
+
+                clone_fn = getattr(state_game, "Clone", None)
+                if not callable(clone_fn):
+                    clone_fn = getattr(state_game, "Fork", None)
+                if not callable(clone_fn):
+                    raise RuntimeError("SeaEngine.Game.Clone/Fork is not available")
+                cloned_game = clone_fn()
+                session = PythonNetSession.wrap_game(
+                    cloned_game,
+                    card_data_path=self.card_data_path,
+                )
+                snapshot = session.snapshot()
+            elif state_bytes is not None:
+                snapshot = session.restore_snapshot_bytes(
+                    state_bytes,
+                    logger_mode="silent",
+                    player1_id=player1_id,
+                    player2_id=player2_id,
+                )
+            elif state_handle is not None:
+                snapshot = session.restore_state_handle(
+                    int(state_handle),
+                    logger_mode="silent",
+                    player1_id=player1_id,
+                    player2_id=player2_id,
+                )
+            else:
+                snapshot = session.restore_state(state_json, logger_mode="silent")
+            candidate = self._find_matching_action(snapshot, candidate_signature)
+            if candidate is None:
+                return -999.0
+            snapshot = session.apply_action(str(candidate["uid"]))
+            for _ in range(self.rollout_steps):
+                if snapshot.get("result") != "Ongoing":
+                    break
+                actions = list(snapshot.get("actions", []))
+                if not actions:
+                    break
+                _idx, rollout_action = self.heuristic_agent.select_action(snapshot, actions)
+                snapshot = session.apply_action(str(rollout_action["uid"]))
+            return self._score_snapshot(snapshot, root_player=root_player)
 
     def _score_snapshot(self, snapshot: Dict[str, Any], *, root_player: str) -> float:
         winner = str(snapshot.get("winner_id", ""))

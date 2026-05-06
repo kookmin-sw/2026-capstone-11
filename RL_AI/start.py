@@ -251,15 +251,29 @@ def _python_candidate_paths() -> list[str]:
     candidates: list[str] = []
     for candidate in [
         os.getenv("PYTHON_CMD", "").strip(),
-        sys.executable,
+        os.getenv("SEAENGINE_PYTHON", "").strip(),
+        which("python"),
+        which("python3"),
         "/opt/python/bin/python",
+        "/opt/python/bin/python3",
+        "/opt/python/bin/python3.12",
+        sys.executable,
         "/usr/bin/python3.12",
         "/usr/bin/python3",
         str(home / ".local" / "bin" / "python"),
+        str(home / ".local" / "bin" / "python3"),
     ]:
         if candidate and candidate not in candidates and Path(candidate).exists():
             candidates.append(candidate)
     return candidates
+
+
+def _python_probe_env() -> dict[str, str]:
+    env = os.environ.copy()
+    env.pop("PYTHONHOME", None)
+    env.pop("PYTHONPATH", None)
+    env["PYTHONNOUSERSITE"] = "1"
+    return env
 
 
 def _probe_core_python_deps(python_cmd: str) -> tuple[bool, str]:
@@ -270,7 +284,7 @@ def _probe_core_python_deps(python_cmd: str) -> tuple[bool, str]:
         "print(setuptools.__version__); "
         "print(torch.cuda.is_available())"
     )
-    env = os.environ.copy()
+    env = _python_probe_env()
     completed = subprocess.run(
         [python_cmd, "-c", probe_code],
         check=False,
@@ -287,7 +301,7 @@ def _probe_core_python_deps(python_cmd: str) -> tuple[bool, str]:
 
 def _probe_extra_python_deps(python_cmd: str) -> tuple[bool, str]:
     probe_code = "import pythonnet, clr_loader; print('pythonnet ok')"
-    env = os.environ.copy()
+    env = _python_probe_env()
     completed = subprocess.run(
         [python_cmd, "-c", probe_code],
         check=False,
@@ -316,6 +330,19 @@ def _ensure_python_deps() -> None:
             "Core Python deps (torch/numpy/setuptools) are unavailable in the current environment. "
             "Please free disk space or point to a working Python environment."
         )
+
+    if os.environ.get("SEAENGINE_PYTHON_SELECTED", "").strip() != "1":
+        if Path(python_cmd).resolve() != Path(sys.executable).resolve() or os.getenv("PYTHONPATH") or os.getenv("PYTHONHOME"):
+            env = os.environ.copy()
+            env.pop("PYTHONHOME", None)
+            env.pop("PYTHONPATH", None)
+            env["PYTHONNOUSERSITE"] = "1"
+            env["SEAENGINE_PYTHON_SELECTED"] = "1"
+            argv = [python_cmd]
+            if getattr(sys.flags, "unbuffered", 0):
+                argv.append("-u")
+            argv.extend(sys.argv)
+            os.execvpe(python_cmd, argv, env)
 
     deps_dir = Path(tempfile.gettempdir()) / "rl_ai_deps"
     deps_dir.mkdir(parents=True, exist_ok=True)
