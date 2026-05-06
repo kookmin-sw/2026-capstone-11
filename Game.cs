@@ -27,14 +27,17 @@ Actions:
 ";
     }
 
+    private static readonly Newtonsoft.Json.JsonConverter[] _serializeConverters =
+    [
+        new CardZoneConverter(),
+        new CardConverter(),
+        new BoardConverter(),
+        new ActionConverter(),
+        new TargetConverter()
+    ];
+
     public string Serialize()
     {
-        return JsonConvert.SerializeObject(this, Formatting.Indented, [
-            new CardZoneConverter(),
-            new CardConverter(),
-            new BoardConverter(),
-            new ActionConverter(),
-            new TargetConverter()
-        ]);
+        return JsonConvert.SerializeObject(this, Formatting.Indented, _serializeConverters);
     }
 }

@@ -27,9 +27,8 @@ public class Or_B : IEffect
         
         zone.RemoveCard(card);
 
-        data.Board.Cards
-            .First(c => c.Owner == data.GetCardById(source).Owner && c.Data.UnitType == UnitType.Leader)
-            .Unit.Move(target.PosX, target.PosY);
+        var leader = data.Board.Cards.First(c => c.Owner == card.Owner && c.Data.UnitType == UnitType.Leader);
+        data.Board.MoveCard(leader, target.PosX, target.PosY);
         
         owner.Trash.AddCard(card);
     }
