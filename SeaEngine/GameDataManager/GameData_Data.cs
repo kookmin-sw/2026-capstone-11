@@ -45,9 +45,12 @@ public partial class GameData
         }
     }
 
+    private static readonly Newtonsoft.Json.JsonConverter[] _serializeConverters =
+        [new CardZoneConverter(), new CardConverter(), new BoardConverter()];
+
     public string Serialize()
     {
-        return JsonConvert.SerializeObject(this, Formatting.Indented, [new CardZoneConverter(), new CardConverter(), new BoardConverter()]);
+        return JsonConvert.SerializeObject(this, Formatting.Indented, _serializeConverters);
     }
 
     public void TriggerEvent(string eventId, string timing, Uid source)

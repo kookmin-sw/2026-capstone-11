@@ -25,8 +25,8 @@ public partial class Game
         if (Data.Player2.Deck.Cards.All(c => c.Data.UnitType != UnitType.Leader))
             throw new InvalidOperationException("No Leader in Player 2 Deck");
         
-        Data.Player1.Deck.Cards.First(c => c.Data.UnitType == UnitType.Leader).Unit.Place(0, 2);
-        Data.Player2.Deck.Cards.First(c => c.Data.UnitType == UnitType.Leader).Unit.Place(5, 3);
+        Data.Board.PlaceCard(Data.Player1.Deck.Cards.First(c => c.Data.UnitType == UnitType.Leader), 0, 2);
+        Data.Board.PlaceCard(Data.Player2.Deck.Cards.First(c => c.Data.UnitType == UnitType.Leader), 5, 3);
         
         Data.DrawCard(Data.Player1, 3);  
         Data.DrawCard(Data.Player2, 3);  

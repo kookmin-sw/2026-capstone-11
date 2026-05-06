@@ -41,7 +41,11 @@ public class CardZone
 
     public void Shuffle()
     {
-        _cards = _cards.Shuffle().ToList();
+        for (int i = _cards.Count - 1; i > 0; i--)
+        {
+            int j = Random.Shared.Next(i + 1);
+            (_cards[i], _cards[j]) = (_cards[j], _cards[i]);
+        }
     }
     
     public CardZone(){}

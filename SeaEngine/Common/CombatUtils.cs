@@ -17,7 +17,7 @@ public static class CombatUtils
         if (target.Unit.Hp > 0) return false;
         
         data.TriggerEvent(target.Data.EventId, "OnDestroy", target.Guid);
-        target.Unit.Withdraw();
+        data.Board.WithdrawCard(target);
 
         if (target.Data.UnitType == UnitType.Leader)
         {
