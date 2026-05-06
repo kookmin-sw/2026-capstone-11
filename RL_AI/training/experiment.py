@@ -21,6 +21,8 @@ from RL_AI.agents import (
     SeaEngineRLAgent,
     SeaEngineRandomAgent,
     SeaEngineRuleBasedAgent,
+    default_model_hidden_dim,
+    infer_hidden_dim_from_state_dict,
     load_state_dict_flexible,
 )
 from RL_AI.training.evaluator import evaluate_agents
@@ -435,7 +437,7 @@ def _default_scenario_workers() -> int:
     return max(1, min(8, cpu))
 
 
-def _clone_agent_for_eval(agent: SeaEngineAgent, *, use_belief_mcts: bool = False, seed: Optional[int] = None) -> SeaEngineAgent:
+def _clone_agent_for_eval(agent: SeaEngineAgent, *, use_belief_mcts: bool = True, seed: Optional[int] = None) -> SeaEngineAgent:
     clone = copy.deepcopy(agent)
     if hasattr(clone, "sample_actions"):
         try:
@@ -567,7 +569,7 @@ def _run_8combo_opponent_eval_suite(
     start_mode: str = "normal",
     burnin_profile: str = "fixed",
     scenario_workers: int = 1,
-    use_belief_mcts: bool = False,
+    use_belief_mcts: bool = True,
 ) -> Dict[str, object]:
     deck_pairs = [
         ("귤", trainer.decks["Orange"]),
@@ -857,10 +859,15 @@ def _load_saved_rl_agent(
     import torch
 
     resolved_device = _resolve_device(device)
-    agent = SeaEngineRLAgent(seed=seed, device=resolved_device, sample_actions=False)
+    state_dict = torch.load(model_path, map_location=resolved_device)
+    agent = SeaEngineRLAgent(
+        seed=seed,
+        device=resolved_device,
+        sample_actions=False,
+        hidden_dim=infer_hidden_dim_from_state_dict(state_dict),
+    )
     agent.ensure_model(state_dim=STATE_VECTOR_DIM)
     assert agent.model is not None
-    state_dict = torch.load(model_path, map_location=agent.device)
     load_state_dict_flexible(agent.model, state_dict)
     agent.model.eval()
     return agent
@@ -888,7 +895,7 @@ def run_saved_model_balance_experiment(
     report_path: Optional[str] = None,
     scenario_workers: int = 1,
     scenario_shards: int = 1,
-    use_belief_mcts: bool = False,
+    use_belief_mcts: bool = True,
 ) -> Dict[str, object]:
     """
     Evaluate a saved RL model on balance scenarios.
@@ -1349,7 +1356,7 @@ def run_train_eval_experiment(
     resume_episodes_completed: Optional[int] = None,
     resume_skip_pre_eval: bool = False,
     summary_report_path: Optional[str] = None,
-    eval_belief_mcts: bool = False,
+    eval_belief_mcts: bool = True,
 ) -> Dict[str, object]:
     artifact_start_wall = time.time()
     resolved_device = _resolve_device(device)
@@ -1428,7 +1435,7 @@ def run_train_eval_experiment(
         f"[*] Experiment start | eval_matches_per_combo={eval_matches} (per suite total {eval_matches * 8}, all pre/post suites total {eval_matches * 32}) | train_episodes={train_episodes} | "
         f"max_turns={max_turns} | update_interval={update_interval} | num_envs={num_envs} | "
         f"vector_backend={backend} | local_threads={local_threads} | "
-        f"device={resolved_device} | "
+        f"device={resolved_device} | model_hidden_dim={getattr(learning_agent, 'hidden_dim', default_model_hidden_dim())} | "
         f"train_max_turns={train_max_turns} | train_update_interval={train_update_interval} | "
         f"fast_pool={fast_pool_enabled} | save_interval={save_interval} | checkpoint_interval={checkpoint_interval} | "
         f"ppo_lr={trainer.config.learning_rate} | ppo_entropy={trainer.config.entropy_coef} | "
@@ -1467,6 +1474,59 @@ def run_train_eval_experiment(
             save_report("\n".join(lines).rstrip() + "\n", summary_snapshot_path)
         except Exception as exc:
             print(f"[!] failed to update start summary snapshot: {exc}")
+
+    def _compact_eval_line(name: str, summary: Dict[str, object]) -> str:
+        episodes = int(summary.get("episodes", 0))
+        p1_wins = int(summary.get("p1_wins", 0))
+        p2_wins = int(summary.get("p2_wins", 0))
+        draws = int(summary.get("draws", 0))
+        avg_steps = float(summary.get("avg_steps", 0.0))
+        avg_final_turn = float(summary.get("avg_final_turn", 0.0))
+        p1_rate = 0.0 if episodes == 0 else 100.0 * p1_wins / episodes
+        p2_rate = 0.0 if episodes == 0 else 100.0 * p2_wins / episodes
+        draw_rate = 0.0 if episodes == 0 else 100.0 * draws / episodes
+        return (
+            f"{name}=episodes={episodes}, p1_wins={p1_wins} ({p1_rate:.1f}%), "
+            f"p2_wins={p2_wins} ({p2_rate:.1f}%), draws={draws} ({draw_rate:.1f}%), "
+            f"avg_steps={avg_steps:.2f}, avg_final_turn={avg_final_turn:.2f}, "
+            f"report={summary.get('report_path', '')}"
+        )
+
+    def _compact_train_line(train_summary: Dict[str, object]) -> str:
+        episodes = int(train_summary.get("episodes", 0))
+        wins = int(train_summary.get("wins", 0))
+        losses = int(train_summary.get("losses", 0))
+        draws = int(train_summary.get("draws", 0))
+        updates = int(train_summary.get("updates", 0))
+        win_rate = 0.0 if episodes == 0 else 100.0 * wins / episodes
+        avg_speed = 0.0
+        last_update = dict(train_summary.get("last_update", {}) or {})
+        parts = [
+            f"episodes={episodes}",
+            f"wins={wins} ({win_rate:.1f}%)",
+            f"losses={losses}",
+            f"draws={draws}",
+            f"updates={updates}",
+        ]
+        if last_update:
+            parts.append(
+                "last_update="
+                + ",".join(
+                    f"{key}={float(last_update.get(key, 0.0)):.4f}"
+                    for key in ("policy_loss", "value_loss", "entropy", "approx_kl", "clip_fraction", "grad_norm")
+                )
+            )
+        if episodes > 0:
+            start_time = float(train_summary.get("train_elapsed_sec", 0.0) or 0.0)
+            if start_time > 0.0:
+                avg_speed = episodes / start_time
+        if avg_speed > 0.0:
+            parts.append(f"avg_speed={avg_speed:.2f} eps/s")
+        parts.append(f"opponents={train_summary.get('opponent_stats', {})}")
+        parts.append(f"start_modes={train_summary.get('start_mode_stats', {})}")
+        parts.append(f"burnin_profiles={train_summary.get('burnin_profile_stats', {})}")
+        parts.append(f"layouts={train_summary.get('layout_stats', {})}")
+        return "train=" + " | ".join(parts)
 
     _write_summary_snapshot(
         "initialized",
@@ -1740,6 +1800,7 @@ def run_train_eval_experiment(
                 seed=_seed_with_offset(seed, 7000 + episodes_completed),
             )
         print(f"[*] Training chunk {episodes_completed + 1}-{episodes_completed + chunk}...")
+        chunk_train_start = time.perf_counter()
         train_summary = trainer.train(
             num_episodes=chunk,
             opponent_pool=opponent_pool,
@@ -1756,6 +1817,8 @@ def run_train_eval_experiment(
             save_interval=save_interval,
             episode_offset=episodes_completed,
         )
+        train_summary = dict(train_summary)
+        train_summary["train_elapsed_sec"] = max(1e-9, time.perf_counter() - chunk_train_start)
         episodes_completed += chunk
         last_train_summary = train_summary
 
@@ -2093,18 +2156,28 @@ def run_train_eval_experiment(
     report_text = "\n".join(report_lines)
     saved_path = save_report(report_text, _default_report_path() if report_path is None else report_path)
     if summary_snapshot_path is not None:
+        checkpoint_lines = [
+            f"checkpoint_count={len(checkpoints)}",
+            *[
+                f"checkpoint_ep={ckpt['episodes_completed']} | report={ckpt['report_path']} | score={dict(ckpt.get('population_score', {})).get('score', 0.0):.4f}"
+                for ckpt in checkpoints
+            ],
+        ]
         _write_summary_snapshot(
             "final",
             [
-                "before_random_done",
-                "before_greedy_done",
-                "before_rule_done",
-                "before_self_done",
-                "training_done",
-                "after_random_done",
-                "after_greedy_done",
-                "after_rule_done",
-                "after_self_done",
+                _compact_eval_line("before_random", before_random),
+                _compact_eval_line("before_greedy", before_greedy),
+                _compact_eval_line("before_rule", before_rule),
+                _compact_eval_line("before_self", before_self),
+                _compact_train_line(last_train_summary),
+                _compact_eval_line("after_random", after_random),
+                _compact_eval_line("after_greedy", after_greedy),
+                _compact_eval_line("after_rule", after_rule),
+                _compact_eval_line("after_self", after_self),
+                f"total_wall_time_sec={max(0.0, time.perf_counter() - artifact_start_wall):.1f}",
+                f"selected_checkpoint_ep={max(checkpoints, key=lambda ckpt: dict(ckpt.get('population_score', {})).get('score', -999.0))['episodes_completed'] if checkpoints else ''}",
+                *checkpoint_lines,
                 f"final_report={saved_path}",
                 "",
             ],

@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass
 import math
+import os
 import random
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
@@ -24,6 +25,28 @@ from RL_AI.SeaEngine.observation import (
 
 
 BOARD_SIZE = 6
+DEFAULT_MODEL_HIDDEN_DIM = 192
+
+
+def default_model_hidden_dim() -> int:
+    raw_value = os.getenv("SEAENGINE_MODEL_HIDDEN_DIM")
+    if raw_value is None or str(raw_value).strip() == "":
+        return DEFAULT_MODEL_HIDDEN_DIM
+    try:
+        value = int(str(raw_value).strip())
+    except ValueError:
+        print(f"[!] ignored invalid SEAENGINE_MODEL_HIDDEN_DIM={raw_value!r}")
+        return DEFAULT_MODEL_HIDDEN_DIM
+    return max(32, value)
+
+
+def infer_hidden_dim_from_state_dict(state_dict: Dict[str, torch.Tensor], fallback: Optional[int] = None) -> int:
+    """Infer model width from a checkpoint so old 128-wide models still load cleanly."""
+    for key in ("global_proj.weight", "policy_head.0.weight", "value_head.0.weight"):
+        tensor = state_dict.get(key)
+        if tensor is not None and getattr(tensor, "ndim", 0) >= 1:
+            return int(tensor.shape[0])
+    return default_model_hidden_dim() if fallback is None else int(fallback)
 
 
 def _card_id(card: Dict[str, Any] | None) -> str:
@@ -317,8 +340,9 @@ class SeaEngineRLAgentOutput:
 
 class PPOActorCritic(nn.Module):
     """Transformer-based Actor-Critic for SeaEngine."""
-    def __init__(self, state_dim: int, action_dim: int, hidden_dim: int = 128) -> None:
+    def __init__(self, state_dim: int, action_dim: int, hidden_dim: Optional[int] = None) -> None:
         super().__init__()
+        hidden_dim = default_model_hidden_dim() if hidden_dim is None else int(hidden_dim)
         # State vector components (matching observation.py)
         self.global_dim = GLOBAL_FEATURE_DIM
         self.num_units = 14
@@ -402,14 +426,14 @@ class SeaEngineRLAgent(SeaEngineAgent):
     def __init__(
         self,
         *,
-        hidden_dim: int = 128,
+        hidden_dim: Optional[int] = None,
         learning_rate: float = 3e-4,
         sample_actions: bool = True,
         device: str = "auto",
         seed: Optional[int] = None,
     ) -> None:
         super().__init__("rl", seed=seed)
-        self.hidden_dim = hidden_dim
+        self.hidden_dim = default_model_hidden_dim() if hidden_dim is None else int(hidden_dim)
         self.learning_rate = learning_rate
         self.sample_actions = sample_actions
         device_name = str(device).strip().lower()
@@ -453,13 +477,16 @@ class SeaEngineRLAgent(SeaEngineAgent):
         legal_actions: Sequence[Dict[str, Any]],
     ) -> SeaEngineRLAgentOutput:
         if snapshot.get("state_vector") is not None and snapshot.get("action_feature_vectors") is not None:
+            global_vector = snapshot.get("global_vector") or []
+            state_vector = snapshot.get("state_vector") or []
+            action_feature_vectors = snapshot.get("action_feature_vectors") or []
             observation = SeaEngineObservation(
                 unit_list=[],
                 hand_list=[],
-                global_vector=list(snapshot.get("global_vector", [])),
+                global_vector=list(global_vector),
                 legal_action_mask=[1 for _ in legal_actions],
-                state_vector=list(snapshot["state_vector"]),
-                action_feature_vectors=[list(a) for a in snapshot["action_feature_vectors"]],
+                state_vector=list(state_vector),
+                action_feature_vectors=[list(a) for a in action_feature_vectors],
             )
         else:
             observation = build_observation({**snapshot, "actions": list(legal_actions)}, snapshot.get("active_player"))
@@ -600,20 +627,26 @@ class SeaEngineRLAgent(SeaEngineAgent):
 
 
 class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
-    """Replay-based shallow MCTS wrapper for an RL policy.
+    """Lightweight belief-search wrapper for an RL policy.
 
-    Current SeaEngine bridge has no arbitrary clone/restore API. For each
-    branch, this wrapper creates a fresh session, replays observed action
-    signatures from game start, applies one candidate, then rolls out briefly.
+    Restore-based search is the only search mode now. It replays from the
+    captured engine state and keeps the search budget intentionally shallow so
+    it remains usable in large evaluation sweeps.
     """
 
     def __init__(
         self,
         base_agent: SeaEngineRLAgent,
         *,
-        simulations: int = 4,
-        top_k: int = 4,
-        rollout_steps: int = 8,
+        simulations: int = 2,
+        top_k: int = 3,
+        rollout_steps: int = 2,
+        mode: str = "restore",
+        c_puct: float = 1.25,
+        noise: float = 0.02,
+        policy_weight: float = 0.70,
+        heuristic_weight: float = 0.25,
+        value_weight: float = 0.05,
         seed: Optional[int] = None,
     ) -> None:
         super().__init__("belief_mcts", seed=seed)
@@ -621,6 +654,12 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
         self.simulations = max(1, int(simulations))
         self.top_k = max(1, int(top_k))
         self.rollout_steps = max(1, int(rollout_steps))
+        self.mode = "restore"
+        self.c_puct = max(0.0, float(c_puct))
+        self.noise = max(0.0, float(noise))
+        self.policy_weight = max(0.0, float(policy_weight))
+        self.heuristic_weight = max(0.0, float(heuristic_weight))
+        self.value_weight = max(0.0, float(value_weight))
         self.heuristic_agent = SeaEngineRuleBasedAgent(seed=seed)
         self.player1_deck = ""
         self.player2_deck = ""
@@ -661,11 +700,23 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
             except Exception:
                 return default
 
+        def _env_float(name: str, default: float) -> float:
+            try:
+                return float(str(os.environ.get(name, default)).strip())
+            except Exception:
+                return default
+
         return cls(
             base_agent,
-            simulations=_env_int("SEAENGINE_BELIEF_MCTS_SIMS", 4),
-            top_k=_env_int("SEAENGINE_BELIEF_MCTS_TOP_K", 4),
-            rollout_steps=_env_int("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", 8),
+            simulations=_env_int("SEAENGINE_BELIEF_MCTS_SIMS", 2),
+            top_k=_env_int("SEAENGINE_BELIEF_MCTS_TOP_K", 3),
+            rollout_steps=_env_int("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", 2),
+            mode="restore",
+            c_puct=_env_float("SEAENGINE_BELIEF_MCTS_C_PUCT", 1.25),
+            noise=_env_float("SEAENGINE_BELIEF_MCTS_NOISE", 0.02),
+            policy_weight=_env_float("SEAENGINE_BELIEF_MCTS_POLICY_WEIGHT", 0.70),
+            heuristic_weight=_env_float("SEAENGINE_BELIEF_MCTS_HEURISTIC_WEIGHT", 0.25),
+            value_weight=_env_float("SEAENGINE_BELIEF_MCTS_VALUE_WEIGHT", 0.05),
             seed=seed,
         )
 
@@ -685,6 +736,9 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
 
     def set_replay_available(self, enabled: bool) -> None:
         self._replay_available = bool(enabled)
+
+    def requires_engine_state(self) -> bool:
+        return True
 
     def observe_transition(self, snapshot: Dict[str, Any], action: Dict[str, Any]) -> None:
         if self._replay_available:
@@ -722,24 +776,53 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
         with self.base_agent.sampling_mode(False):
             policy_output = self.base_agent.compute_policy_output(snapshot, legal_actions)
         self.last_output = policy_output
-        if len(legal_actions) == 1 or not self._can_replay():
-            self.last_search = {"mode": "policy_fallback", "chosen_index": policy_output.action_index}
+        if len(legal_actions) == 1:
+            self.last_search = {"mode": "single_action", "chosen_index": policy_output.action_index}
+            return policy_output.action_index, policy_output.action
+
+        state_bytes = snapshot.get("_engine_state_bytes")
+        state_handle = snapshot.get("_engine_state_handle")
+        state_json = str(snapshot.get("_engine_state", ""))
+        if state_bytes is None and state_handle is None and not state_json:
+            self.last_search = {
+                "mode": "policy_fallback",
+                "reason": "engine_state_unavailable",
+                "chosen_index": policy_output.action_index,
+            }
             return policy_output.action_index, policy_output.action
 
         candidates = self._candidate_indices(policy_output, snapshot, legal_actions)
         root_player = str(snapshot.get("active_player", ""))
+        player1_id = str(snapshot.get("_engine_state_player1_id", "P1") or "P1")
+        player2_id = str(snapshot.get("_engine_state_player2_id", "P2") or "P2")
         scores = {idx: [] for idx in candidates}
         failures = 0
-        for idx in candidates:
-            candidate_signature = self._action_signature(snapshot, legal_actions[idx])
-            for _ in range(self.simulations):
-                try:
-                    score = self._simulate_candidate(candidate_signature, root_player=root_player)
-                except Exception:
-                    failures += 1
-                    score = None
-                if score is not None:
-                    scores[idx].append(float(score))
+        from RL_AI.SeaEngine.bridge.pythonnet_session import PythonNetSession
+
+        session = PythonNetSession(card_data_path=self.card_data_path)
+        session.start()
+        try:
+            for idx in candidates:
+                candidate_signature = self._action_signature(snapshot, legal_actions[idx])
+                for _ in range(self.simulations):
+                    try:
+                        score = self._simulate_candidate(
+                            session,
+                            candidate_signature,
+                            root_player=root_player,
+                            state_bytes=state_bytes,
+                            state_handle=state_handle,
+                            state_json=state_json,
+                            player1_id=player1_id,
+                            player2_id=player2_id,
+                        )
+                    except Exception:
+                        failures += 1
+                        score = None
+                    if score is not None:
+                        scores[idx].append(float(score))
+        finally:
+            session.close()
 
         averaged = {idx: (sum(values) / len(values) if values else -999.0) for idx, values in scores.items()}
         if all(value <= -999.0 for value in averaged.values()):
@@ -753,13 +836,12 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
 
         chosen_index = max(candidates, key=lambda idx: (averaged[idx], float(policy_output.probabilities[idx])))
         self.last_search = {
-            "mode": "replay_mcts",
+            "mode": "restore_mcts",
             "simulations": self.simulations,
             "rollout_steps": self.rollout_steps,
             "candidates": candidates,
             "mean_values": averaged,
             "failures": failures,
-            "history_len": len(self._history),
             "policy_choice": policy_output.action_index,
             "chosen_index": chosen_index,
         }
@@ -787,33 +869,47 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
     def _can_replay(self) -> bool:
         return self._replay_available and bool(self.player1_deck) and bool(self.player2_deck)
 
-    def _simulate_candidate(self, candidate_signature: Dict[str, Any], *, root_player: str) -> float:
-        from RL_AI.SeaEngine.bridge.pythonnet_session import PythonNetSession
-
-        session = PythonNetSession(card_data_path=self.card_data_path)
-        session.start()
-        try:
-            snapshot = session.init_game(player1_deck=self.player1_deck, player2_deck=self.player2_deck, logger_mode="silent")
-            for signature in self._history:
-                action = self._find_matching_action(snapshot, signature)
-                if action is None:
-                    return -999.0
-                snapshot = session.apply_action(str(action["uid"]))
-            candidate = self._find_matching_action(snapshot, candidate_signature)
-            if candidate is None:
-                return -999.0
-            snapshot = session.apply_action(str(candidate["uid"]))
-            for _ in range(self.rollout_steps):
-                if snapshot.get("result") != "Ongoing":
-                    break
-                actions = list(snapshot.get("actions", []))
-                if not actions:
-                    break
-                _idx, rollout_action = self.heuristic_agent.select_action(snapshot, actions)
-                snapshot = session.apply_action(str(rollout_action["uid"]))
-            return self._score_snapshot(snapshot, root_player=root_player)
-        finally:
-            session.close()
+    def _simulate_candidate(
+        self,
+        session: Any,
+        candidate_signature: Dict[str, Any],
+        *,
+        root_player: str,
+        state_bytes: Any = None,
+        state_json: str,
+        state_handle: Any = None,
+        player1_id: str = "P1",
+        player2_id: str = "P2",
+    ) -> float:
+        if state_bytes is not None:
+            snapshot = session.restore_snapshot_bytes(
+                state_bytes,
+                logger_mode="silent",
+                player1_id=player1_id,
+                player2_id=player2_id,
+            )
+        elif state_handle is not None:
+            snapshot = session.restore_state_handle(
+                int(state_handle),
+                logger_mode="silent",
+                player1_id=player1_id,
+                player2_id=player2_id,
+            )
+        else:
+            snapshot = session.restore_state(state_json, logger_mode="silent")
+        candidate = self._find_matching_action(snapshot, candidate_signature)
+        if candidate is None:
+            return -999.0
+        snapshot = session.apply_action(str(candidate["uid"]))
+        for _ in range(self.rollout_steps):
+            if snapshot.get("result") != "Ongoing":
+                break
+            actions = list(snapshot.get("actions", []))
+            if not actions:
+                break
+            _idx, rollout_action = self.heuristic_agent.select_action(snapshot, actions)
+            snapshot = session.apply_action(str(rollout_action["uid"]))
+        return self._score_snapshot(snapshot, root_player=root_player)
 
     def _score_snapshot(self, snapshot: Dict[str, Any], *, root_player: str) -> float:
         winner = str(snapshot.get("winner_id", ""))

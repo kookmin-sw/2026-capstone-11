@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import os
 import json
 import uuid
@@ -115,7 +116,12 @@ class PythonNetSession:
     def _is_usable_dotnet_root(root: Path) -> bool:
         shared = root / "shared" / "Microsoft.NETCore.App"
         hostfxr_dir = root / "host" / "fxr"
-        hostfxr_libs = sorted(hostfxr_dir.glob("*/libhostfxr.so"))
+        hostfxr_names = ["hostfxr.dll"] if os.name == "nt" else ["libhostfxr.so", "libhostfxr.dylib"]
+        hostfxr_libs = sorted(
+            path
+            for name in hostfxr_names
+            for path in hostfxr_dir.glob(f"*/{name}")
+        )
         if not (shared.exists() and any(shared.iterdir()) and hostfxr_libs):
             return False
         for hostfxr_lib in hostfxr_libs[::-1]:
@@ -128,7 +134,22 @@ class PythonNetSession:
 
     def _resolve_runtime_config(self, dll_path: Path) -> Optional[Path]:
         runtime_config = dll_path.with_suffix(".runtimeconfig.json")
-        return runtime_config if runtime_config.exists() else None
+        if runtime_config.exists():
+            return runtime_config
+        payload = {
+            "runtimeOptions": {
+                "tfm": "net10.0",
+                "framework": {
+                    "name": "Microsoft.NETCore.App",
+                    "version": "10.0.0",
+                },
+            }
+        }
+        try:
+            runtime_config.write_text(json.dumps(payload), encoding="utf-8")
+            return runtime_config
+        except Exception:
+            return None
 
     @staticmethod
     @contextmanager
@@ -526,6 +547,157 @@ class PythonNetSession:
         if self._game is None:
             raise RuntimeError("Game not initialized")
         return self._build_snapshot()
+
+    def capture_state(self) -> str:
+        if self._game is None:
+            raise RuntimeError("Game not initialized")
+        return base64.b64encode(self.capture_snapshot_bytes()).decode("ascii")
+
+    def capture_snapshot_bytes(self) -> bytes:
+        if self._game is None:
+            raise RuntimeError("Game not initialized")
+        capture = getattr(self._game, "CaptureSnapshotBytes", None)
+        if not callable(capture):
+            raise RuntimeError("SeaEngine.Game.CaptureSnapshotBytes is not available. Rebuild the C# engine.")
+        return bytes(capture())
+
+    def capture_state_handle(self) -> int:
+        if self._game is None:
+            raise RuntimeError("Game not initialized")
+        capture = getattr(self._game, "CaptureStateHandle", None)
+        if not callable(capture):
+            raise RuntimeError("SeaEngine.Game.CaptureStateHandle is not available. Rebuild the C# engine.")
+        return int(capture())
+
+    def store_state(self, state_json: str) -> int:
+        if not PythonNetSession._clr_initialized:
+            self.start()
+        if self._game is None:
+            self.restore_state(state_json, logger_mode="silent")
+            return self.capture_state_handle()
+        store = getattr(self._game, "StoreState", None)
+        if not callable(store):
+            raise RuntimeError("SeaEngine.Game.StoreState is not available. Rebuild the C# engine.")
+        try:
+            snapshot_bytes = base64.b64decode(str(state_json))
+            return int(store(snapshot_bytes))
+        except Exception:
+            return int(store(str(state_json)))
+
+    def release_state_handle(self, handle: int) -> None:
+        if self._game is None:
+            return
+        release = getattr(self._game, "ReleaseStateHandle", None)
+        if callable(release):
+            try:
+                release(int(handle))
+            except Exception:
+                pass
+
+    def restore_state(
+        self,
+        state_json: str,
+        *,
+        logger_mode: str = "silent",
+        player1_id: str = "Player1",
+        player2_id: str = "Player2",
+    ) -> Dict[str, Any]:
+        return self.restore_snapshot_bytes(
+            base64.b64decode(str(state_json)),
+            logger_mode=logger_mode,
+            player1_id=player1_id,
+            player2_id=player2_id,
+        )
+
+    def restore_snapshot_bytes(
+        self,
+        snapshot_bytes: bytes | bytearray | memoryview,
+        *,
+        logger_mode: str = "silent",
+        player1_id: str = "Player1",
+        player2_id: str = "Player2",
+    ) -> Dict[str, Any]:
+        if not PythonNetSession._clr_initialized:
+            self.start()
+
+        if self._loader is None:
+            with self._suppress_native_output():
+                self._loader = self._create_card_loader()
+
+        if self._game is None:
+            import System
+
+            mode = str(logger_mode or "silent").strip().lower()
+            if mode == "simple":
+                logger = System.Activator.CreateInstance(PythonNetSession._simple_logger_type, f"py_{uuid.uuid4().hex[:12]}")
+            else:
+                logger = self._create_silent_logger()
+                mode = "silent"
+            self._logger_mode = mode
+            self._logger = logger
+            with self._suppress_native_output():
+                self._game = System.Activator.CreateInstance(PythonNetSession._game_type, self._loader, logger, player1_id, player2_id)
+
+        restore = getattr(self._game, "RestoreSnapshotBytes", None)
+        if not callable(restore):
+            raise RuntimeError("SeaEngine.Game.RestoreSnapshotBytes is not available. Rebuild the C# engine.")
+        with self._suppress_native_output():
+            restore(bytes(snapshot_bytes))
+        try:
+            game_data = getattr(self._game, "Data", None)
+            self._turn_counter = int(getattr(game_data, "TurnCnt", 0)) + 1
+        except Exception:
+            self._turn_counter = max(1, self._turn_counter)
+        return self.snapshot()
+
+    def restore_state_handle(
+        self,
+        handle: int,
+        *,
+        logger_mode: str = "silent",
+        player1_id: str = "Player1",
+        player2_id: str = "Player2",
+    ) -> Dict[str, Any]:
+        if not PythonNetSession._clr_initialized:
+            self.start()
+
+        if self._loader is None:
+            with self._suppress_native_output():
+                self._loader = self._create_card_loader()
+
+        if self._game is None:
+            import System
+
+            mode = str(logger_mode or "silent").strip().lower()
+            if mode == "simple":
+                logger = System.Activator.CreateInstance(PythonNetSession._simple_logger_type, f"py_{uuid.uuid4().hex[:12]}")
+            else:
+                logger = self._create_silent_logger()
+                mode = "silent"
+            self._logger_mode = mode
+            self._logger = logger
+            with self._suppress_native_output():
+                self._game = System.Activator.CreateInstance(PythonNetSession._game_type, self._loader, logger, player1_id, player2_id)
+
+        restore = getattr(self._game, "RestoreStateHandle", None)
+        if not callable(restore):
+            raise RuntimeError("SeaEngine.Game.RestoreStateHandle is not available. Rebuild the C# engine.")
+        with self._suppress_native_output():
+            restore(int(handle))
+        try:
+            game_data = getattr(self._game, "Data", None)
+            self._turn_counter = int(getattr(game_data, "TurnCnt", 0)) + 1
+        except Exception:
+            self._turn_counter = max(1, self._turn_counter)
+        return self.snapshot()
+
+    def fork_game(self):
+        if self._game is None:
+            raise RuntimeError("Game not initialized")
+        fork = getattr(self._game, "Fork", None)
+        if not callable(fork):
+            raise RuntimeError("SeaEngine.Game.Fork is not available. Rebuild the C# engine.")
+        return fork()
 
     def apply_action(self, action_uid: str) -> Dict[str, Any]:
         if self._game is None:

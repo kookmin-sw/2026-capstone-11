@@ -20,6 +20,8 @@ from RL_AI.agents import (
     SeaEngineRLAgent,
     SeaEngineRandomAgent,
     SeaEngineRuleBasedAgent,
+    default_model_hidden_dim,
+    infer_hidden_dim_from_state_dict,
     load_state_dict_flexible,
 )
 from RL_AI.SeaEngine.bridge.seaengine_session import SeaEngineSession
@@ -73,21 +75,23 @@ def _ppo_config_from_env() -> PPOConfig:
 
 class PastSelfAgent(SeaEngineAgent):
     """An agent that plays using a previously saved model state."""
-    def __init__(self, model_path: str, device: str = "cpu", name: str = "past_self", hidden_dim: int = 128):
+    def __init__(self, model_path: str, device: str = "cpu", name: str = "past_self", hidden_dim: Optional[int] = None):
         super().__init__(name)
         self.device = torch.device(device)
         self.model = None
         self.model_path = model_path
-        self.hidden_dim = hidden_dim
+        self.hidden_dim = default_model_hidden_dim() if hidden_dim is None else int(hidden_dim)
 
     def select_action(self, snapshot: Dict[str, Any], legal_actions: Sequence[Dict[str, Any]]) -> Tuple[int, Dict[str, Any]]:
         if self.model is None:
             # Lazy load model
             from RL_AI.SeaEngine.observation import build_fixed_state_vector, ACTION_FEATURE_DIM
             from RL_AI.agents import PPOActorCritic
+            state_dict = torch.load(self.model_path, map_location=self.device)
+            self.hidden_dim = infer_hidden_dim_from_state_dict(state_dict, fallback=self.hidden_dim)
             state_dim = len(build_fixed_state_vector(snapshot))
             self.model = PPOActorCritic(state_dim, ACTION_FEATURE_DIM, hidden_dim=self.hidden_dim).to(self.device)
-            load_state_dict_flexible(self.model, torch.load(self.model_path, map_location=self.device))
+            load_state_dict_flexible(self.model, state_dict)
             self.model.eval()
 
         from RL_AI.SeaEngine.observation import build_observation

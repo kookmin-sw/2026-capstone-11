@@ -1,6 +1,7 @@
 from .seaengine_agents import (
     ACTION_FEATURE_DIM,
     BOARD_TOKEN_DIM,
+    DEFAULT_MODEL_HIDDEN_DIM,
     GLOBAL_FEATURE_DIM,
     HAND_TOKEN_DIM,
     PPOActorCritic,
@@ -12,12 +13,15 @@ from .seaengine_agents import (
     SeaEngineRandomAgent,
     SeaEngineRuleBasedAgent,
     build_observation,
+    default_model_hidden_dim,
+    infer_hidden_dim_from_state_dict,
     load_state_dict_flexible,
 )
 
 __all__ = [
     "ACTION_FEATURE_DIM",
     "BOARD_TOKEN_DIM",
+    "DEFAULT_MODEL_HIDDEN_DIM",
     "GLOBAL_FEATURE_DIM",
     "HAND_TOKEN_DIM",
     "PPOActorCritic",
@@ -29,5 +33,7 @@ __all__ = [
     "SeaEngineRandomAgent",
     "SeaEngineRuleBasedAgent",
     "build_observation",
+    "default_model_hidden_dim",
+    "infer_hidden_dim_from_state_dict",
     "load_state_dict_flexible",
 ]

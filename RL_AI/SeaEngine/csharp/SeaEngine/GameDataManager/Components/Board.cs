@@ -18,6 +18,11 @@ public class Board
         _cards.Add(card);
     }
 
+    public void Clear()
+    {
+        _cards.Clear();
+    }
+
     public bool IsEmptyCell(int x, int y)
     {
         return !_cards.Any(c => c.Unit.IsPlaced && c.Unit.PosX == x && c.Unit.PosY == y);

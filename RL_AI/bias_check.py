@@ -66,30 +66,6 @@ def _format_elapsed(seconds: float) -> str:
     return f"{hours:02d}:{minutes:02d}:{whole_seconds:02d} ({seconds:.1f}s)"
 
 
-def _install_dotnet_sdk() -> None:
-    if os.name == "nt":
-        return
-    install_steps = [
-        ["sudo", "apt", "update"],
-        ["sudo", "apt", "install", "-y", "dotnet-sdk-10.0"],
-    ]
-    for step in install_steps:
-        completed = subprocess.run(
-            step,
-            check=False,
-            capture_output=True,
-            text=True,
-            env={**os.environ, "DEBIAN_FRONTEND": "noninteractive"},
-        )
-        if completed.stdout:
-            print(completed.stdout)
-        if completed.stderr:
-            print(completed.stderr)
-        if completed.returncode != 0:
-            print(f"[!] dotnet auto-install step failed: {' '.join(step)} :: exit {completed.returncode}")
-            break
-
-
 def _dotnet_root_from_cmd(dotnet_cmd: str) -> str:
     try:
         info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
@@ -105,6 +81,76 @@ def _dotnet_root_from_cmd(dotnet_cmd: str) -> str:
     return str(cmd_path.parent)
 
 
+def _dotnet_executable(root: Path) -> Path:
+    return root / ("dotnet.exe" if os.name == "nt" else "dotnet")
+
+
+def _set_dotnet_env(dotnet_cmd: str) -> None:
+    dotnet_root = _dotnet_root_from_cmd(dotnet_cmd)
+    os.environ["DOTNET_CMD"] = dotnet_cmd
+    os.environ["DOTNET_ROOT"] = dotnet_root
+    os.environ["DOTNET_ROOT_X64"] = dotnet_root
+    path_parts = os.environ.get("PATH", "").split(os.pathsep) if os.environ.get("PATH") else []
+    dotnet_dir = str(Path(dotnet_cmd).resolve().parent)
+    if dotnet_dir not in path_parts:
+        os.environ["PATH"] = dotnet_dir + os.pathsep + os.environ.get("PATH", "")
+
+
+def _try_dotnet(dotnet_cmd: str) -> bool:
+    try:
+        info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
+        first_line = next((line.strip() for line in info.stdout.splitlines() if line.strip().startswith("Version:")), "")
+        _set_dotnet_env(dotnet_cmd)
+        print(f"dotnet ok: {dotnet_cmd}" + (f" ({first_line})" if first_line else ""))
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError, PermissionError, OSError):
+        return False
+
+
+def _install_home_dotnet() -> str:
+    if os.name == "nt":
+        return ""
+    home_dotnet = Path.home() / ".dotnet"
+    dotnet_cmd = _dotnet_executable(home_dotnet)
+    install_script = home_dotnet / "dotnet-install.sh"
+    home_dotnet.mkdir(parents=True, exist_ok=True)
+
+    if not install_script.exists():
+        print("[*] installing dotnet SDK to ~/.dotnet via dotnet-install.sh...")
+        download_commands = [
+            ["curl", "-fsSL", "https://dot.net/v1/dotnet-install.sh", "-o", str(install_script)],
+            ["wget", "-q", "https://dot.net/v1/dotnet-install.sh", "-O", str(install_script)],
+        ]
+        for command in download_commands:
+            try:
+                completed = subprocess.run(command, check=False, capture_output=True, text=True)
+            except FileNotFoundError:
+                continue
+            if completed.returncode == 0 and install_script.exists():
+                break
+            if completed.stderr:
+                print(completed.stderr)
+
+    if not install_script.exists():
+        print("[!] dotnet-install.sh download failed; ~/.dotnet install unavailable.")
+        return ""
+
+    install_commands = [
+        ["bash", str(install_script), "--version", "10.0.107", "--install-dir", str(home_dotnet), "--no-path"],
+        ["bash", str(install_script), "--channel", "10.0", "--quality", "ga", "--install-dir", str(home_dotnet), "--no-path"],
+    ]
+    for command in install_commands:
+        completed = subprocess.run(command, check=False, capture_output=True, text=True)
+        if completed.stdout:
+            print(completed.stdout)
+        if completed.stderr:
+            print(completed.stderr)
+        if completed.returncode == 0 and dotnet_cmd.exists() and _try_dotnet(str(dotnet_cmd)):
+            return str(dotnet_cmd)
+        print(f"[!] home dotnet install step failed: {' '.join(command)} :: exit {completed.returncode}")
+    return ""
+
+
 def _ensure_dotnet() -> str:
     home = Path.home()
     candidates: list[str] = []
@@ -118,30 +164,21 @@ def _ensure_dotnet() -> str:
             if root_candidate not in candidates:
                 candidates.append(root_candidate)
     for candidate in [
+        str(_dotnet_executable(home / ".dotnet")),
         shutil.which("dotnet"),
         "/usr/bin/dotnet",
         "/usr/share/dotnet/dotnet",
-        str(home / ".dotnet" / ("dotnet.exe" if os.name == "nt" else "dotnet")),
     ]:
         if candidate and candidate not in candidates:
             candidates.append(candidate)
 
     for dotnet_cmd in candidates:
-        try:
-            info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
-            print(info.stdout)
+        if _try_dotnet(dotnet_cmd):
             return dotnet_cmd
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            continue
 
-    _install_dotnet_sdk()
-    for dotnet_cmd in candidates:
-        try:
-            info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
-            print(info.stdout)
-            return dotnet_cmd
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            continue
+    home_dotnet = _install_home_dotnet()
+    if home_dotnet:
+        return home_dotnet
 
     print(
         "[!] No usable dotnet command found. Tried: "
@@ -405,21 +442,23 @@ def _configure_runtime_env() -> str:
     os.environ.setdefault("SEAENGINE_SUPPRESS_NATIVE_LOGS", "1")
     os.environ.setdefault("SEAENGINE_FAST_POOL", "0")
     os.environ.setdefault("SEAENGINE_TRAIN_MAX_TURNS", "100")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_MODE", "restore")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_SIMS", "2")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "3")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "2")
 
     home = Path.home()
     if str(home) not in sys.path:
         sys.path.insert(0, str(home))
 
-    dotnet_cmd = which("dotnet")
+    dotnet_cmd = os.getenv("DOTNET_CMD", "").strip() or which("dotnet")
     if dotnet_cmd is None:
         fallback = home / ".dotnet" / ("dotnet.exe" if os.name == "nt" else "dotnet")
         if fallback.exists():
             dotnet_cmd = str(fallback)
     if dotnet_cmd:
-        os.environ["DOTNET_CMD"] = dotnet_cmd
-        dotnet_root = _dotnet_root_from_cmd(dotnet_cmd)
-        os.environ["DOTNET_ROOT"] = dotnet_root
-        os.environ["DOTNET_ROOT_X64"] = dotnet_root
+        _set_dotnet_env(dotnet_cmd)
+        dotnet_root = os.environ["DOTNET_ROOT"]
         print(f"[*] dotnet command: {dotnet_cmd}")
         print(f"[*] dotnet root: {dotnet_root}")
     return dotnet_cmd or "dotnet"
@@ -1218,15 +1257,21 @@ def _make_rl_agent_factory(
     state_dict: Dict[str, Any],
     observation_mode: str,
     device: str,
-    hidden_dim: int = 128,
-    use_belief_mcts: bool = False,
+    hidden_dim: Optional[int] = None,
+    use_belief_mcts: bool = True,
 ) -> Callable[[int], Any]:
-    from RL_AI.agents import SeaEngineBeliefMCTSAgent, SeaEngineRLAgent, load_state_dict_flexible
+    from RL_AI.agents import (
+        SeaEngineBeliefMCTSAgent,
+        SeaEngineRLAgent,
+        infer_hidden_dim_from_state_dict,
+        load_state_dict_flexible,
+    )
     from RL_AI.SeaEngine.observation import STATE_VECTOR_DIM
+    resolved_hidden_dim = infer_hidden_dim_from_state_dict(state_dict, fallback=hidden_dim)
 
     def _factory(seed: int) -> Any:
         agent = SeaEngineRLAgent(
-            hidden_dim=hidden_dim,
+            hidden_dim=resolved_hidden_dim,
             sample_actions=False,
             device=device,
             seed=seed,
@@ -1271,6 +1316,7 @@ class _BiasCheckRLAgentWrapper:
 
         if self._belief_agent is not None:
             search_snapshot = dict(snapshot)
+            search_snapshot["global_vector"] = obs.global_vector
             search_snapshot["state_vector"] = obs.state_vector
             search_snapshot["action_feature_vectors"] = obs.action_feature_vectors
             return self._belief_agent.select_action(search_snapshot, legal_actions)
@@ -1533,7 +1579,12 @@ def main() -> int:
     parser.add_argument("--scenario-workers", type=int, default=0, help="Number of scenario workers inside each suite (0 = auto)")
     parser.add_argument("--no-history", action="store_true", help="Skip representative history reports for faster large bias sweeps")
     parser.add_argument("--history-limit", type=int, default=0, help="Representative histories per scenario (0 = auto, negative = none)")
-    parser.add_argument("--use-belief-mcts", action="store_true", help="Evaluate RL suites through the shallow belief-MCTS wrapper")
+    parser.add_argument(
+        "--use-belief-mcts",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Evaluate RL suites through the shallow belief-MCTS wrapper",
+    )
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--device", type=str, default="auto")
     parser.add_argument("--skip-unzip", action="store_true")
@@ -1560,7 +1611,11 @@ def main() -> int:
         f"ablation_matches={args.ablation_matches}, mirror_matches={args.mirror_matches}, "
         f"checkpoint_matches={args.checkpoint_matches}, checkpoint_limit={args.checkpoint_limit}, "
         f"parallel_workers={args.parallel_workers}, scenario_workers={args.scenario_workers}, seed={args.seed}, device={args.device}, "
-        f"use_belief_mcts={args.use_belief_mcts}, "
+        f"model_hidden_dim={os.environ.get('SEAENGINE_MODEL_HIDDEN_DIM', '192')}, "
+        f"belief_mcts_sims={os.environ.get('SEAENGINE_BELIEF_MCTS_SIMS', '2')}, "
+        f"belief_mcts_top_k={os.environ.get('SEAENGINE_BELIEF_MCTS_TOP_K', '3')}, "
+        f"belief_mcts_rollout_steps={os.environ.get('SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS', '2')}, "
+        f"use_belief_mcts={args.use_belief_mcts}, belief_mcts_mode={os.environ.get('SEAENGINE_BELIEF_MCTS_MODE', 'restore')}, "
         f"include_history={not args.no_history and args.history_limit >= 0}, history_limit={args.history_limit}, "
         f"skip_unzip={args.skip_unzip}, skip_build={args.skip_build}"
     )

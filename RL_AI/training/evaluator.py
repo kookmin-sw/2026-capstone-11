@@ -237,13 +237,17 @@ def play_evaluation_match(
             _update_min_leader_hp(min_leader_hp_by_player, snapshot)
 
             while snapshot["result"] == "Ongoing" and snapshot["turn"] <= max_turns:
+                _attach_engine_state_if_needed(session, snapshot, [p1_agent, p2_agent])
                 actions = snapshot.get("actions", [])
                 if not actions:
                     break
 
                 active_player = snapshot["active_player"]
                 acting_agent = agents[active_player]
-                _, action = choose_action_with_agent(acting_agent, snapshot)
+                try:
+                    _, action = choose_action_with_agent(acting_agent, snapshot)
+                finally:
+                    _release_engine_state_if_needed(session, snapshot)
                 _notify_observed_transition([p1_agent, p2_agent], snapshot, action)
 
                 effect_id = str(action.get("effect_id", ""))
@@ -320,6 +324,34 @@ def _notify_replay_available(agents: list[object], enabled: bool) -> None:
         setter = getattr(agent, "set_replay_available", None)
         if callable(setter):
             setter(enabled)
+
+
+def _attach_engine_state_if_needed(session: PythonNetSession, snapshot: Dict[str, object], agents: list[object]) -> None:
+    for agent in _unique_agents(agents):
+        needs_state = getattr(agent, "requires_engine_state", None)
+        if callable(needs_state) and bool(needs_state()):
+            try:
+                snapshot["_engine_state_bytes"] = session.capture_snapshot_bytes()
+                players = list(snapshot.get("players", []) or [])
+                if len(players) >= 2:
+                    snapshot["_engine_state_player1_id"] = str(players[0].get("id", "P1") or "P1")
+                    snapshot["_engine_state_player2_id"] = str(players[1].get("id", "P2") or "P2")
+            except Exception:
+                snapshot.pop("_engine_state_bytes", None)
+                snapshot.pop("_engine_state_player1_id", None)
+                snapshot.pop("_engine_state_player2_id", None)
+                try:
+                    snapshot["_engine_state"] = session.capture_state()
+                except Exception:
+                    snapshot.pop("_engine_state", None)
+            return
+
+
+def _release_engine_state_if_needed(session: PythonNetSession, snapshot: Dict[str, object]) -> None:
+    snapshot.pop("_engine_state_bytes", None)
+    snapshot.pop("_engine_state_player1_id", None)
+    snapshot.pop("_engine_state_player2_id", None)
+    snapshot.pop("_engine_state_handle", None)
 
 
 def _notify_observed_transition(agents: list[object], snapshot: Dict[str, Any], action: Dict[str, Any]) -> None:
