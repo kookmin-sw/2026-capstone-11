@@ -21,6 +21,23 @@ public class Board
         _cardById[card.Guid] = card;
     }
 
+    public void ReconstructFrom(IReadOnlyList<Card> cards)
+    {
+        for (int i = 0; i < cards.Count; i++)
+        {
+            var card = cards[i];
+            _cards.Add(card);
+            _cardById[card.Guid] = card;
+            if (card.Unit.IsPlaced)
+            {
+                var x = card.Unit.PosX;
+                var y = card.Unit.PosY;
+                if (x >= 0 && x < BoardSize && y >= 0 && y < BoardSize)
+                    _grid[x, y] = card;
+            }
+        }
+    }
+
     public bool IsEmptyCell(int x, int y) => _grid[x, y] == null;
 
     public Card GetCardByPos(int x, int y) =>

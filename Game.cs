@@ -27,7 +27,7 @@ Actions:
 ";
     }
 
-    private static readonly Newtonsoft.Json.JsonConverter[] SerializeConverters =
+    private static readonly JsonConverter[] SerializeConverters =
     [
         new CardZoneConverter(),
         new CardConverter(),
