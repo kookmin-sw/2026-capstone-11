@@ -54,6 +54,14 @@ public class CardZone
         _cards = cards;
     }
 
+    public CardZone Clone(GameCloneContext ctx)
+    {
+        var clonedCards = new List<Card>(_cards.Count);
+        foreach (var card in _cards)
+            clonedCards.Add(ctx.GetOrClone(card));
+        return new CardZone(clonedCards);
+    }
+
     public override string ToString()
     {
         StringBuilder sb = new StringBuilder();

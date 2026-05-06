@@ -30,6 +30,17 @@ public partial class GameData
         Winner = null;
     }
 
+    private GameData(Player player1, Player player2, Board board, ILogger logger, Player activePlayer, Player? winner, int turnCnt)
+    {
+        Player1 = player1;
+        Player2 = player2;
+        Board = board;
+        Logger = logger;
+        ActivePlayer = activePlayer;
+        Winner = winner;
+        TurnCnt = turnCnt;
+    }
+
     public void Init(List<Card> player1Cards, List<Card> player2Cards)
     {
         foreach (var card in player1Cards)
@@ -45,12 +56,12 @@ public partial class GameData
         }
     }
 
-    private static readonly Newtonsoft.Json.JsonConverter[] _serializeConverters =
+    private static readonly JsonConverter[] SerializeConverters =
         [new CardZoneConverter(), new CardConverter(), new BoardConverter()];
 
     public string Serialize()
     {
-        return JsonConvert.SerializeObject(this, Formatting.Indented, _serializeConverters);
+        return JsonConvert.SerializeObject(this, Formatting.Indented, SerializeConverters);
     }
 
     public void TriggerEvent(string eventId, string timing, Uid source)

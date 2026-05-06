@@ -18,6 +18,24 @@ public class Card
         Guid = uidFactory.Next();
     }
 
+    private Card(Uid guid, CardData data, Player owner, Unit unit)
+    {
+        Guid = guid;
+        Data = data;
+        Owner = owner;
+        Unit = unit;
+    }
+
+    public Card Clone(GameCloneContext ctx)
+    {
+        var clonedOwner = ctx.GetCloned(Owner);
+        var clonedUnit = Unit.Clone();
+        var cloned = new Card(Guid, Data, clonedOwner, clonedUnit);
+        clonedUnit.Card = cloned;
+        ctx.Register(this, cloned);
+        return cloned;
+    }
+
     public override string ToString()
     {
         return $"{Guid} - {Owner.Id} - {Data.Name}";
