@@ -29,6 +29,7 @@ class PythonNetSession:
     _rl_exporter_type = None
     _rl_export_method = None
     _native_output_lock = threading.Lock()
+    _native_output_state = threading.local()
 
     def __init__(
         self,
@@ -154,6 +155,9 @@ class PythonNetSession:
     @staticmethod
     @contextmanager
     def _suppress_native_output():
+        if getattr(PythonNetSession._native_output_state, "depth", 0) > 0:
+            yield
+            return
         if os.getenv("SEAENGINE_SUPPRESS_NATIVE_LOGS", "1").strip().lower() in {"0", "false", "no", "off"}:
             yield
             return
@@ -179,6 +183,16 @@ class PythonNetSession:
                     os.close(stderr_fd)
                 if devnull_fd is not None:
                     os.close(devnull_fd)
+
+    @staticmethod
+    @contextmanager
+    def muted_native_output():
+        current = int(getattr(PythonNetSession._native_output_state, "depth", 0))
+        PythonNetSession._native_output_state.depth = current + 1
+        try:
+            yield
+        finally:
+            PythonNetSession._native_output_state.depth = max(0, current)
 
     def start(self) -> None:
         if PythonNetSession._clr_initialized:

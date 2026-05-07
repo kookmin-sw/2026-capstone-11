@@ -56,6 +56,12 @@ def _format_elapsed(seconds: float) -> str:
     return f"{hours:02d}:{minutes:02d}:{whole_seconds:02d} ({seconds:.1f}s)"
 
 
+def _apply_parallel_opt_env(section: str) -> None:
+    from RL_AI.start import _apply_parallel_opt_env as _shared_apply_parallel_opt_env
+
+    _shared_apply_parallel_opt_env(section)
+
+
 def _dotnet_root_from_cmd(dotnet_cmd: str) -> str:
     try:
         info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
@@ -172,7 +178,27 @@ def _ensure_dotnet() -> str:
 
 
 def _default_scenario_workers() -> int:
-    return max(1, min(8, os.cpu_count() or 1))
+    return 1
+
+
+def _env_positive_int(name: str) -> int:
+    raw = os.getenv(name, "").strip()
+    if not raw:
+        return 0
+    try:
+        value = int(raw)
+    except ValueError:
+        return 0
+    return value if value > 0 else 0
+
+
+def _resolve_scenario_workers(requested: int) -> int:
+    if requested > 0:
+        return requested
+    env_value = _env_positive_int("SEAENGINE_SCENARIO_WORKERS")
+    if env_value > 0:
+        return env_value
+    return _default_scenario_workers()
 
 
 def _publish_latest_artifact(src_path: str | Path | None, dst_path: Path) -> str | None:
@@ -569,9 +595,9 @@ def _run_balance(
         sys.path.insert(0, str(home))
     os.environ.setdefault("SEAENGINE_SUPPRESS_NATIVE_LOGS", "1")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_MODE", "restore")
-    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_SIMS", "2")
-    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "3")
-    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "2")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_SIMS", "1")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "2")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "1")
 
     dotnet_cmd = _ensure_dotnet()
     if dotnet_cmd:
@@ -667,7 +693,16 @@ def main() -> int:
     log_file = Path(args.log_file) if args.log_file else default_log
     _setup_logger(log_file)
 
+    os.environ.setdefault("SEAENGINE_VECTOR_BACKEND", "local")
+    os.environ.setdefault("SEAENGINE_NUM_ENVS", "1")
+    os.environ.setdefault("SEAENGINE_LOCAL_THREADS", "0")
+    os.environ.setdefault("SEAENGINE_WORKERS", "0")
+    os.environ.setdefault("SEAENGINE_LOCAL_MAX_WORKERS", "0")
+    os.environ.setdefault("SEAENGINE_SCENARIO_WORKERS", "1")
+    os.environ.setdefault("SEAENGINE_PARALLEL_WORKERS", "1")
+    os.environ.setdefault("SEAENGINE_FAST_POOL", "0")
     _ensure_python_deps()
+    _apply_parallel_opt_env("make_balance")
     _prepare_project_dir()
 
     print("[*] make_balance.py launched")
@@ -678,14 +713,14 @@ def main() -> int:
         f"model_hidden_dim={os.environ.get('SEAENGINE_MODEL_HIDDEN_DIM', '192')}, "
         f"progress_interval={args.progress_interval}, scenario_workers={args.scenario_workers}, "
         f"scenario_shards={args.scenario_shards}, "
-        f"belief_mcts_sims={os.environ.get('SEAENGINE_BELIEF_MCTS_SIMS', '2')}, "
-        f"belief_mcts_top_k={os.environ.get('SEAENGINE_BELIEF_MCTS_TOP_K', '3')}, "
+        f"belief_mcts_sims={os.environ.get('SEAENGINE_BELIEF_MCTS_SIMS', '1')}, "
+        f"belief_mcts_top_k={os.environ.get('SEAENGINE_BELIEF_MCTS_TOP_K', '2')}, "
         f"belief_mcts_rollout_steps={os.environ.get('SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS', '2')}, "
         f"use_belief_mcts={args.use_belief_mcts}, belief_mcts_mode={os.environ.get('SEAENGINE_BELIEF_MCTS_MODE', 'restore')}, "
         f"include_history={not args.no_history and args.history_limit >= 0}, history_limit={args.history_limit}"
     )
 
-    scenario_workers = args.scenario_workers if args.scenario_workers > 0 else _default_scenario_workers()
+    scenario_workers = _resolve_scenario_workers(args.scenario_workers)
     scenario_shards = max(1, int(args.scenario_shards))
     include_history = (not args.no_history) and args.history_limit >= 0
     history_limit = None if args.history_limit == 0 else max(0, args.history_limit)

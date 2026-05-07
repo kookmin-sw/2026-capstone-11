@@ -433,8 +433,24 @@ def _default_scenario_workers() -> int:
             return max(1, int(env_workers))
         except Exception:
             pass
-    cpu = os.cpu_count() or 1
-    return max(1, min(8, cpu))
+    return 1
+
+
+def _make_skipped_eval_summary(opponent_label: str) -> Dict[str, object]:
+    return {
+        "episodes": 0,
+        "p1_agent": "skipped",
+        "p2_agent": opponent_label,
+        "p1_wins": 0,
+        "p2_wins": 0,
+        "draws": 0,
+        "avg_steps": 0.0,
+        "avg_final_turn": 0.0,
+        "action_type_counts": {},
+        "card_use_counts": {},
+        "report_path": "skipped",
+        "histories": [],
+    }
 
 
 def _clone_agent_for_eval(agent: SeaEngineAgent, *, use_belief_mcts: bool = True, seed: Optional[int] = None) -> SeaEngineAgent:
@@ -1357,6 +1373,7 @@ def run_train_eval_experiment(
     resume_skip_pre_eval: bool = False,
     summary_report_path: Optional[str] = None,
     eval_belief_mcts: bool = True,
+    skip_prepost_eval: bool = True,
 ) -> Dict[str, object]:
     artifact_start_wall = time.time()
     resolved_device = _resolve_device(device)
@@ -1397,8 +1414,14 @@ def run_train_eval_experiment(
         opponent_pool = list(train_opponent_pool)
 
     if num_envs is None:
-        cpu = os.cpu_count() or 8
-        num_envs = max(8, min(24, cpu))
+        env_num_envs_raw = os.getenv("SEAENGINE_NUM_ENVS", "").strip()
+        if env_num_envs_raw:
+            try:
+                num_envs = max(1, int(env_num_envs_raw))
+            except ValueError:
+                num_envs = None
+    if num_envs is None:
+        num_envs = 1
     scenario_workers = _default_scenario_workers()
 
     checkpoint_interval = max(1, checkpoint_interval)
@@ -1432,7 +1455,7 @@ def run_train_eval_experiment(
     backend = os.getenv("SEAENGINE_VECTOR_BACKEND", "local")
     local_threads = os.getenv("SEAENGINE_LOCAL_THREADS", "1")
     print(
-        f"[*] Experiment start | eval_matches_per_combo={eval_matches} (per suite total {eval_matches * 8}, all pre/post suites total {eval_matches * 32}) | train_episodes={train_episodes} | "
+        f"[*] Experiment start | eval_matches_per_combo={eval_matches} (per suite total {eval_matches * 8}, all pre/post suites total {0 if skip_prepost_eval else eval_matches * 32}) | train_episodes={train_episodes} | "
         f"max_turns={max_turns} | update_interval={update_interval} | num_envs={num_envs} | "
         f"vector_backend={backend} | local_threads={local_threads} | "
         f"device={resolved_device} | model_hidden_dim={getattr(learning_agent, 'hidden_dim', default_model_hidden_dim())} | "
@@ -1442,6 +1465,7 @@ def run_train_eval_experiment(
         f"ppo_clip={trainer.config.clip_epsilon} | ppo_epochs={trainer.config.update_epochs} | "
         f"layout_mode={getattr(trainer, '_layout_mode', 'balanced')} | layout_seed={getattr(trainer, '_layout_seed', '17011')} | "
         f"scenario_workers={scenario_workers} | "
+        f"prepost_eval={not skip_prepost_eval} | "
         f"eval_belief_mcts={eval_belief_mcts} | "
         f"checkpoint_eval_per_combo={checkpoint_eval_matches} (per suite total {checkpoint_eval_matches * 8}, all checkpoint suites total {checkpoint_eval_matches * 24})"
     )
@@ -1566,67 +1590,25 @@ def run_train_eval_experiment(
         )
         print(message)
 
-    if resume_model_path and resume_skip_pre_eval:
-        print("[*] Resume mode: skipping before-training evaluations.")
-        before_random = {
-            "episodes": 0,
-            "p1_agent": learning_agent.name,
-            "p2_agent": random_eval_opponent.name,
-            "p1_wins": 0,
-            "p2_wins": 0,
-            "draws": 0,
-            "avg_steps": 0.0,
-            "avg_final_turn": 0.0,
-            "action_type_counts": {},
-            "card_use_counts": {},
-            "report_path": "",
-            "histories": [],
-        }
+    if skip_prepost_eval:
+        print("[*] Pre/post evaluation disabled; training-only run.")
+        before_random = _make_skipped_eval_summary("random")
         before_random_history_path = None
-        before_greedy = {
-            "episodes": 0,
-            "p1_agent": learning_agent.name,
-            "p2_agent": greedy_eval_opponent.name,
-            "p1_wins": 0,
-            "p2_wins": 0,
-            "draws": 0,
-            "avg_steps": 0.0,
-            "avg_final_turn": 0.0,
-            "action_type_counts": {},
-            "card_use_counts": {},
-            "report_path": "",
-            "histories": [],
-        }
+        before_greedy = _make_skipped_eval_summary("greedy")
         before_greedy_history_path = None
-        before_rule = {
-            "episodes": 0,
-            "p1_agent": learning_agent.name,
-            "p2_agent": rule_eval_opponent.name,
-            "p1_wins": 0,
-            "p2_wins": 0,
-            "draws": 0,
-            "avg_steps": 0.0,
-            "avg_final_turn": 0.0,
-            "action_type_counts": {},
-            "card_use_counts": {},
-            "report_path": "",
-            "histories": [],
-        }
+        before_rule = _make_skipped_eval_summary("rule_based")
         before_rule_history_path = None
-        before_self = {
-            "episodes": 0,
-            "p1_agent": learning_agent.name,
-            "p2_agent": learning_agent.name,
-            "p1_wins": 0,
-            "p2_wins": 0,
-            "draws": 0,
-            "avg_steps": 0.0,
-            "avg_final_turn": 0.0,
-            "action_type_counts": {},
-            "card_use_counts": {},
-            "report_path": "",
-            "histories": [],
-        }
+        before_self = _make_skipped_eval_summary("self")
+        before_self_history_path = None
+    elif resume_model_path and resume_skip_pre_eval:
+        print("[*] Resume mode: skipping before-training evaluations.")
+        before_random = _make_skipped_eval_summary("random")
+        before_random_history_path = None
+        before_greedy = _make_skipped_eval_summary("greedy")
+        before_greedy_history_path = None
+        before_rule = _make_skipped_eval_summary("rule_based")
+        before_rule_history_path = None
+        before_self = _make_skipped_eval_summary("self")
         before_self_history_path = None
     else:
         print(f"[*] Evaluating before training vs random across 8 combos ({eval_matches} each)...")
@@ -1959,133 +1941,143 @@ def run_train_eval_experiment(
                     )
             prev_checkpoint_greedy_wr = greedy_wr
 
-    print(f"[*] Evaluating after training vs random across 8 combos ({eval_matches} each)...")
-    after_random_suite = _run_8combo_opponent_eval_suite(
-        trainer=trainer,
-        rl_agent=learning_agent,
-        opponent_agent=SeaEngineRandomAgent(seed=_seed_with_offset(seed, 404)),
-        opponent_label="random",
-        suite_title="After Training vs Random",
-        history_tag="se_evalhist_after_random",
-        num_matches_per_combo=eval_matches,
-        card_data_path=card_data_path,
-        max_turns=max_turns,
-        scenario_report_prefix="se_after_random",
-        scenario_workers=scenario_workers,
-        use_belief_mcts=eval_belief_mcts,
-    )
-    after_random = after_random_suite["history_summary"]
-    after_random_history_path = None
-    if include_eval_history:
-        after_random_history_path = _save_history_report(
-            prefix="se_evalhist_after_random",
-            title="After Training vs Random Histories",
-            summary=after_random,
+    if skip_prepost_eval:
+        after_random = _make_skipped_eval_summary("random")
+        after_random_history_path = None
+        after_greedy = _make_skipped_eval_summary("greedy")
+        after_greedy_history_path = None
+        after_rule = _make_skipped_eval_summary("rule_based")
+        after_rule_history_path = None
+        after_self = _make_skipped_eval_summary("self")
+        after_self_history_path = None
+    else:
+        print(f"[*] Evaluating after training vs random across 8 combos ({eval_matches} each)...")
+        after_random_suite = _run_8combo_opponent_eval_suite(
+            trainer=trainer,
+            rl_agent=learning_agent,
+            opponent_agent=SeaEngineRandomAgent(seed=_seed_with_offset(seed, 404)),
+            opponent_label="random",
+            suite_title="After Training vs Random",
+            history_tag="se_evalhist_after_random",
+            num_matches_per_combo=eval_matches,
+            card_data_path=card_data_path,
+            max_turns=max_turns,
+            scenario_report_prefix="se_after_random",
+            scenario_workers=scenario_workers,
+            use_belief_mcts=eval_belief_mcts,
         )
-        if after_random_history_path is not None:
-            after_random["report_path"] = str(after_random_history_path)
-    _write_summary_snapshot("after_random_done", [f"after_random={after_random['report_path']}", ""])
+        after_random = after_random_suite["history_summary"]
+        after_random_history_path = None
+        if include_eval_history:
+            after_random_history_path = _save_history_report(
+                prefix="se_evalhist_after_random",
+                title="After Training vs Random Histories",
+                summary=after_random,
+            )
+            if after_random_history_path is not None:
+                after_random["report_path"] = str(after_random_history_path)
+        _write_summary_snapshot("after_random_done", [f"after_random={after_random['report_path']}", ""])
 
-    print(f"[*] Evaluating after training vs greedy across 8 combos ({eval_matches} each)...")
-    after_greedy_suite = _run_8combo_opponent_eval_suite(
-        trainer=trainer,
-        rl_agent=learning_agent,
-        opponent_agent=SeaEngineGreedyAgent(seed=_seed_with_offset(seed, 505)),
-        opponent_label="greedy",
-        suite_title="After Training vs Greedy",
-        history_tag="se_evalhist_after_greedy",
-        num_matches_per_combo=eval_matches,
-        card_data_path=card_data_path,
-        max_turns=max_turns,
-        scenario_report_prefix="se_after_greedy",
-        scenario_workers=scenario_workers,
-        use_belief_mcts=eval_belief_mcts,
-    )
-    after_greedy = after_greedy_suite["history_summary"]
-    after_greedy_history_path = None
-    if include_eval_history:
-        after_greedy_history_path = _save_history_report(
-            prefix="se_evalhist_after_greedy",
-            title="After Training vs Greedy Histories",
-            summary=after_greedy,
+        print(f"[*] Evaluating after training vs greedy across 8 combos ({eval_matches} each)...")
+        after_greedy_suite = _run_8combo_opponent_eval_suite(
+            trainer=trainer,
+            rl_agent=learning_agent,
+            opponent_agent=SeaEngineGreedyAgent(seed=_seed_with_offset(seed, 505)),
+            opponent_label="greedy",
+            suite_title="After Training vs Greedy",
+            history_tag="se_evalhist_after_greedy",
+            num_matches_per_combo=eval_matches,
+            card_data_path=card_data_path,
+            max_turns=max_turns,
+            scenario_report_prefix="se_after_greedy",
+            scenario_workers=scenario_workers,
+            use_belief_mcts=eval_belief_mcts,
         )
-        if after_greedy_history_path is not None:
-            after_greedy["report_path"] = str(after_greedy_history_path)
-    _write_summary_snapshot(
-        "after_greedy_done",
-        [f"after_random={after_random['report_path']}", f"after_greedy={after_greedy['report_path']}", ""],
-    )
+        after_greedy = after_greedy_suite["history_summary"]
+        after_greedy_history_path = None
+        if include_eval_history:
+            after_greedy_history_path = _save_history_report(
+                prefix="se_evalhist_after_greedy",
+                title="After Training vs Greedy Histories",
+                summary=after_greedy,
+            )
+            if after_greedy_history_path is not None:
+                after_greedy["report_path"] = str(after_greedy_history_path)
+        _write_summary_snapshot(
+            "after_greedy_done",
+            [f"after_random={after_random['report_path']}", f"after_greedy={after_greedy['report_path']}", ""],
+        )
 
-    print(f"[*] Evaluating after training vs rule-based across 8 combos ({eval_matches} each)...")
-    after_rule_suite = _run_8combo_opponent_eval_suite(
-        trainer=trainer,
-        rl_agent=learning_agent,
-        opponent_agent=SeaEngineRuleBasedAgent(seed=_seed_with_offset(seed, 555)),
-        opponent_label="rule_based",
-        suite_title="After Training vs Rule-Based",
-        history_tag="se_evalhist_after_rule",
-        num_matches_per_combo=eval_matches,
-        card_data_path=card_data_path,
-        max_turns=max_turns,
-        scenario_report_prefix="se_after_rule",
-        scenario_workers=scenario_workers,
-        use_belief_mcts=eval_belief_mcts,
-    )
-    after_rule = after_rule_suite["history_summary"]
-    after_rule_history_path = None
-    if include_eval_history:
-        after_rule_history_path = _save_history_report(
-            prefix="se_evalhist_after_rule",
-            title="After Training vs Rule-Based Histories",
-            summary=after_rule,
+        print(f"[*] Evaluating after training vs rule-based across 8 combos ({eval_matches} each)...")
+        after_rule_suite = _run_8combo_opponent_eval_suite(
+            trainer=trainer,
+            rl_agent=learning_agent,
+            opponent_agent=SeaEngineRuleBasedAgent(seed=_seed_with_offset(seed, 555)),
+            opponent_label="rule_based",
+            suite_title="After Training vs Rule-Based",
+            history_tag="se_evalhist_after_rule",
+            num_matches_per_combo=eval_matches,
+            card_data_path=card_data_path,
+            max_turns=max_turns,
+            scenario_report_prefix="se_after_rule",
+            scenario_workers=scenario_workers,
+            use_belief_mcts=eval_belief_mcts,
         )
-        if after_rule_history_path is not None:
-            after_rule["report_path"] = str(after_rule_history_path)
-    _write_summary_snapshot(
-        "after_rule_done",
-        [
-            f"after_random={after_random['report_path']}",
-            f"after_greedy={after_greedy['report_path']}",
-            f"after_rule={after_rule['report_path']}",
-            "",
-        ],
-    )
+        after_rule = after_rule_suite["history_summary"]
+        after_rule_history_path = None
+        if include_eval_history:
+            after_rule_history_path = _save_history_report(
+                prefix="se_evalhist_after_rule",
+                title="After Training vs Rule-Based Histories",
+                summary=after_rule,
+            )
+            if after_rule_history_path is not None:
+                after_rule["report_path"] = str(after_rule_history_path)
+        _write_summary_snapshot(
+            "after_rule_done",
+            [
+                f"after_random={after_random['report_path']}",
+                f"after_greedy={after_greedy['report_path']}",
+                f"after_rule={after_rule['report_path']}",
+                "",
+            ],
+        )
 
-    print(f"[*] Evaluating after training vs self across 8 combos ({eval_matches} each)...")
-    after_self_suite = _run_8combo_opponent_eval_suite(
-        trainer=trainer,
-        rl_agent=learning_agent,
-        opponent_agent=learning_agent,
-        opponent_label="self",
-        suite_title="After Training vs Self",
-        history_tag="se_evalhist_after_self",
-        num_matches_per_combo=eval_matches,
-        card_data_path=card_data_path,
-        max_turns=max_turns,
-        scenario_report_prefix="se_after_self",
-        scenario_workers=scenario_workers,
-        use_belief_mcts=eval_belief_mcts,
-    )
-    after_self = after_self_suite["history_summary"]
-    after_self_history_path = None
-    if include_eval_history:
-        after_self_history_path = _save_history_report(
-            prefix="se_evalhist_after_self",
-            title="After Training vs Self Histories",
-            summary=after_self,
+        print(f"[*] Evaluating after training vs self across 8 combos ({eval_matches} each)...")
+        after_self_suite = _run_8combo_opponent_eval_suite(
+            trainer=trainer,
+            rl_agent=learning_agent,
+            opponent_agent=learning_agent,
+            opponent_label="self",
+            suite_title="After Training vs Self",
+            history_tag="se_evalhist_after_self",
+            num_matches_per_combo=eval_matches,
+            card_data_path=card_data_path,
+            max_turns=max_turns,
+            scenario_report_prefix="se_after_self",
+            scenario_workers=scenario_workers,
+            use_belief_mcts=eval_belief_mcts,
         )
-        if after_self_history_path is not None:
-            after_self["report_path"] = str(after_self_history_path)
-    _write_summary_snapshot(
-        "after_self_done",
-        [
-            f"after_random={after_random['report_path']}",
-            f"after_greedy={after_greedy['report_path']}",
-            f"after_rule={after_rule['report_path']}",
-            f"after_self={after_self['report_path']}",
-            "",
-        ],
-    )
+        after_self = after_self_suite["history_summary"]
+        after_self_history_path = None
+        if include_eval_history:
+            after_self_history_path = _save_history_report(
+                prefix="se_evalhist_after_self",
+                title="After Training vs Self Histories",
+                summary=after_self,
+            )
+            if after_self_history_path is not None:
+                after_self["report_path"] = str(after_self_history_path)
+        _write_summary_snapshot(
+            "after_self_done",
+            [
+                f"after_random={after_random['report_path']}",
+                f"after_greedy={after_greedy['report_path']}",
+                f"after_rule={after_rule['report_path']}",
+                f"after_self={after_self['report_path']}",
+                "",
+            ],
+        )
 
     report_lines = [
         "=== SeaEngine Train/Eval Experiment ===",

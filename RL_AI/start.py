@@ -12,6 +12,7 @@ import argparse
 import importlib
 import importlib.util
 import io
+import json
 import os
 import shutil
 import subprocess
@@ -53,6 +54,39 @@ def _format_elapsed(seconds: float) -> str:
     hours, remainder = divmod(int(seconds), 3600)
     minutes, whole_seconds = divmod(remainder, 60)
     return f"{hours:02d}:{minutes:02d}:{whole_seconds:02d} ({seconds:.1f}s)"
+
+
+def _parallel_opt_config_path() -> Path:
+    return Path.home() / ".seaengine_parallel_opt.json"
+
+
+def _load_parallel_opt_section(section: str) -> dict[str, str]:
+    path = _parallel_opt_config_path()
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    selected = payload.get("selected_env", {}) if isinstance(payload, dict) else {}
+    if not isinstance(selected, dict):
+        return {}
+    section_data = selected.get(section, {})
+    if not isinstance(section_data, dict):
+        return {}
+    resolved: dict[str, str] = {}
+    for key, value in section_data.items():
+        if not isinstance(key, str):
+            continue
+        if value is None:
+            continue
+        resolved[key] = str(value)
+    return resolved
+
+
+def _apply_parallel_opt_env(section: str) -> None:
+    for key, value in _load_parallel_opt_section(section).items():
+        os.environ.setdefault(key, value)
 
 
 def _publish_latest_artifact(src_path: str | Path | None, dst_path: Path) -> str | None:
@@ -301,11 +335,13 @@ def _ensure_dotnet() -> str:
 
 def _has_engine_binary() -> bool:
     home = Path.home()
-    candidates = [
+    for dll_path in [
         home / "RL_AI" / "SeaEngine" / "csharp" / "SeaEngine" / "bin" / "Release" / "net10.0" / "SeaEngine.dll",
         home / "RL_AI" / "SeaEngine" / "csharp" / "SeaEngine" / "bin" / "Debug" / "net10.0" / "SeaEngine.dll",
-    ]
-    return any(path.exists() for path in candidates)
+    ]:
+        if dll_path.exists() and (dll_path.parent / "Newtonsoft.Json.dll").exists():
+            return True
+    return False
 
 
 def _module_is_under_dir(module_name: str, base_dir: Path) -> bool:
@@ -545,6 +581,194 @@ def _build_csharp(dotnet_cmd: str) -> None:
     print("SeaEngine build ok")
 
 
+def _set_single_worker_defaults() -> None:
+    os.environ.setdefault("SEAENGINE_VECTOR_BACKEND", "local")
+    os.environ.setdefault("SEAENGINE_NUM_ENVS", "1")
+    os.environ.setdefault("SEAENGINE_LOCAL_THREADS", "0")
+    os.environ.setdefault("SEAENGINE_WORKERS", "0")
+    os.environ.setdefault("SEAENGINE_LOCAL_MAX_WORKERS", "0")
+    os.environ.setdefault("SEAENGINE_SCENARIO_WORKERS", "1")
+    os.environ.setdefault("SEAENGINE_PARALLEL_WORKERS", "1")
+    os.environ.setdefault("SEAENGINE_QUIET_WORKER_LOG", "1")
+    os.environ.setdefault("SEAENGINE_SUPPRESS_NATIVE_LOGS", "1")
+    os.environ.setdefault("SEAENGINE_FAST_POOL", "0")
+    os.environ.setdefault("SEAENGINE_TRAIN_MAX_TURNS", "100")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_MODE", "restore")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_SIMS", "1")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "2")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "1")
+
+
+def _parse_seed_candidates(raw_value: str, primary_seed: int) -> list[int]:
+    values: list[int] = []
+    for part in str(raw_value or "").split(","):
+        part = part.strip()
+        if not part:
+            continue
+        try:
+            values.append(int(part))
+        except ValueError:
+            print(f"[!] ignored invalid seed candidate: {part!r}")
+    if primary_seed not in values:
+        values.insert(0, int(primary_seed))
+    deduped: list[int] = []
+    seen = set()
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        deduped.append(value)
+    return deduped
+
+
+def _run_seed_sweep(
+    *,
+    base_seed: int,
+    candidates: list[int],
+    episodes: int,
+    first_gate_episodes: int,
+    min_first_win_rate: float,
+    min_final_win_rate: float,
+    max_turns: int,
+    update_interval: int,
+) -> int:
+    if not candidates:
+        raise ValueError("seed sweep needs at least one seed candidate")
+
+    for module_name in list(sys.modules):
+        if module_name == "RL_AI" or module_name.startswith("RL_AI."):
+            del sys.modules[module_name]
+    importlib.invalidate_caches()
+
+    from RL_AI.agents import SeaEngineRLAgent
+    from RL_AI.training.trainer import SeaEnginePPOTrainer
+    from RL_AI.training.experiment import (
+        _build_deficit_start_schedule,
+        _build_training_opponent_schedule,
+        _format_plan_counts,
+        _seed_with_offset,
+    )
+
+    num_envs = max(1, int(os.getenv("SEAENGINE_NUM_ENVS", "1") or "1"))
+    train_max_turns = min(max_turns, int(os.getenv("SEAENGINE_TRAIN_MAX_TURNS", "100") or "100"))
+    min_update_interval = int(os.getenv("SEAENGINE_MIN_UPDATE_INTERVAL", "32") or "32")
+    train_update_interval = max(update_interval, min_update_interval)
+    first_gate_episodes = max(1, min(int(first_gate_episodes), int(episodes)))
+    episodes = max(first_gate_episodes, int(episodes))
+
+    print(
+        f"[*] Seed sweep start | base_seed={base_seed} | candidates={candidates} | episodes={episodes} | "
+        f"first_gate={first_gate_episodes}@{min_first_win_rate:.1f}% | final_gate={min_final_win_rate:.1f}% | num_envs={num_envs}"
+    )
+
+    sweep_rows: list[dict[str, object]] = []
+    for candidate_seed in candidates:
+        agent = SeaEngineRLAgent(seed=candidate_seed, device="auto")
+        trainer = SeaEnginePPOTrainer(agent, train_action_seed=_seed_with_offset(base_seed, 707))
+        opponent_pool = trainer.build_default_opponent_pool(seed=_seed_with_offset(base_seed, 303))
+        schedule, counts = _build_training_opponent_schedule(
+            opponent_pool=opponent_pool,
+            train_episodes=episodes,
+            num_envs=num_envs,
+            save_interval=10**9,
+            seed=_seed_with_offset(base_seed, 404),
+        )
+        start_modes = _build_deficit_start_schedule(
+            train_episodes=episodes,
+            seed=_seed_with_offset(base_seed, 505),
+        )
+        print(f"[*] Seed {candidate_seed}: plan={_format_plan_counts(counts)}")
+
+        total_wins = total_losses = total_draws = 0
+        first_summary = trainer.train(
+            num_episodes=first_gate_episodes,
+            opponent_pool=opponent_pool,
+            opponent_schedule=schedule[:first_gate_episodes],
+            start_mode_schedule=start_modes[:first_gate_episodes],
+            max_turns=train_max_turns,
+            update_interval=train_update_interval,
+            progress_callback=None,
+            num_envs=num_envs,
+            log_interval=first_gate_episodes,
+            save_interval=10**9,
+        )
+        total_wins += int(first_summary.get("wins", 0))
+        total_losses += int(first_summary.get("losses", 0))
+        total_draws += int(first_summary.get("draws", 0))
+        first_rate = 100.0 * total_wins / max(1, total_wins + total_losses + total_draws)
+
+        if first_rate < min_first_win_rate:
+            print(f"[*] Seed {candidate_seed}: rejected after {first_gate_episodes} eps | win={first_rate:.1f}%")
+            sweep_rows.append(
+                {
+                    "seed": candidate_seed,
+                    "first_win_rate": first_rate,
+                    "final_win_rate": first_rate,
+                    "episodes": first_gate_episodes,
+                    "accepted": False,
+                }
+            )
+            continue
+
+        remaining = episodes - first_gate_episodes
+        if remaining > 0:
+            final_summary = trainer.train(
+                num_episodes=remaining,
+                opponent_pool=opponent_pool,
+                opponent_schedule=schedule[first_gate_episodes:episodes],
+                start_mode_schedule=start_modes[first_gate_episodes:episodes],
+                max_turns=train_max_turns,
+                update_interval=train_update_interval,
+                progress_callback=None,
+                num_envs=num_envs,
+                log_interval=remaining,
+                save_interval=10**9,
+                episode_offset=first_gate_episodes,
+            )
+            total_wins += int(final_summary.get("wins", 0))
+            total_losses += int(final_summary.get("losses", 0))
+            total_draws += int(final_summary.get("draws", 0))
+        final_rate = 100.0 * total_wins / max(1, total_wins + total_losses + total_draws)
+        accepted = final_rate >= min_final_win_rate
+        print(
+            f"[*] Seed {candidate_seed}: first={first_rate:.1f}% | final={final_rate:.1f}% | "
+            f"w/l/d={total_wins}/{total_losses}/{total_draws} | accepted={accepted}"
+        )
+        sweep_rows.append(
+            {
+                "seed": candidate_seed,
+                "first_win_rate": first_rate,
+                "final_win_rate": final_rate,
+                "episodes": episodes,
+                "accepted": accepted,
+            }
+        )
+
+    accepted_rows = [row for row in sweep_rows if bool(row.get("accepted"))]
+    pool = accepted_rows if accepted_rows else sweep_rows
+    selected = max(pool, key=lambda row: (float(row.get("final_win_rate", 0.0)), float(row.get("first_win_rate", 0.0))))
+    selected_seed = int(selected["seed"])
+    summary_path = Path.home() / "RL_AI" / "log" / "seed_sweep_summary.json"
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_path.write_text(
+        json.dumps(
+            {
+                "selected_seed": selected_seed,
+                "candidates": sweep_rows,
+                "episodes": episodes,
+                "first_gate_episodes": first_gate_episodes,
+                "min_first_win_rate": min_first_win_rate,
+                "min_final_win_rate": min_final_win_rate,
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    print(f"[*] Seed sweep selected seed={selected_seed} | summary={summary_path}")
+    return selected_seed
+
+
 def _run_train_eval(
     eval_matches: int,
     train_episodes: int,
@@ -556,17 +780,10 @@ def _run_train_eval(
     resume_episodes_completed: int = 0,
     resume_skip_pre_eval: bool = False,
     eval_belief_mcts: bool = True,
+    prepost_eval: bool = False,
 ) -> None:
-    os.environ.setdefault("SEAENGINE_VECTOR_BACKEND", "local")
-    os.environ.setdefault("SEAENGINE_LOCAL_THREADS", "1")
-    os.environ.setdefault("SEAENGINE_QUIET_WORKER_LOG", "1")
-    os.environ.setdefault("SEAENGINE_SUPPRESS_NATIVE_LOGS", "1")
-    os.environ.setdefault("SEAENGINE_FAST_POOL", "0")
-    os.environ.setdefault("SEAENGINE_TRAIN_MAX_TURNS", "100")
-    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_MODE", "restore")
-    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_SIMS", "2")
-    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "3")
-    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "2")
+    _set_single_worker_defaults()
+    _apply_parallel_opt_env("start")
 
     home = Path.home()
     if str(home) not in sys.path:
@@ -607,6 +824,7 @@ def _run_train_eval(
         resume_skip_pre_eval=resume_skip_pre_eval,
         summary_report_path=str(Path.home() / "RL_AI" / "log" / "start_summary.txt"),
         eval_belief_mcts=eval_belief_mcts,
+        skip_prepost_eval=not prepost_eval,
     )
 
     summary_copy = _publish_latest_artifact(
@@ -644,22 +862,64 @@ def main() -> int:
     parser.add_argument("--resume-episodes-completed", type=int, default=0)
     parser.add_argument("--resume-skip-pre-eval", action="store_true")
     parser.add_argument(
+        "--prepost-eval",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Run before/after evaluation suites",
+    )
+    parser.add_argument(
         "--eval-belief-mcts",
         action=argparse.BooleanOptionalAction,
         default=True,
         help="Use shallow belief-MCTS wrapper for evaluation suites only",
     )
+    parser.add_argument(
+        "--seed-sweep",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Run a short training sweep and use the most stable initial seed for the full run",
+    )
+    parser.add_argument(
+        "--seed-sweep-candidates",
+        type=str,
+        default="7,11,17,23,31",
+        help="Comma-separated candidate seeds for the short initial training sweep",
+    )
+    parser.add_argument(
+        "--seed-sweep-episodes",
+        type=int,
+        default=500,
+        help="Episodes per candidate for seed sweep",
+    )
+    parser.add_argument(
+        "--seed-sweep-first-gate-episodes",
+        type=int,
+        default=200,
+        help="Early rejection gate episodes per seed candidate",
+    )
+    parser.add_argument(
+        "--seed-sweep-min-first-win-rate",
+        type=float,
+        default=25.0,
+        help="Reject seed candidates below this early win rate",
+    )
+    parser.add_argument(
+        "--seed-sweep-min-final-win-rate",
+        type=float,
+        default=35.0,
+        help="Prefer seed candidates at or above this sweep win rate",
+    )
     args = parser.parse_args()
 
-    workspace_dir = Path.home() / "RL_AI"
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     default_log = Path.home() / "start.log"
     log_file = Path(args.log_file) if args.log_file else default_log
     _setup_logger(log_file)
 
+    _set_single_worker_defaults()
     dotnet_cmd = _ensure_dotnet()
 
     _ensure_python_deps()
+    _apply_parallel_opt_env("start")
 
     if not args.skip_unzip:
         _prepare_project_dir()
@@ -667,29 +927,49 @@ def main() -> int:
     print("[*] start.py launched")
     print(f"[*] pid={os.getpid()}")
     print(
-        f"[*] args: eval_matches_per_combo={args.eval_matches} (pre/post total {args.eval_matches * 32}), train_episodes={args.train_episodes}, "
+        f"[*] args: eval_matches_per_combo={args.eval_matches} (pre/post total {args.eval_matches * 32 if args.prepost_eval else 0}), train_episodes={args.train_episodes}, "
         f"max_turns={args.max_turns}, update_interval={args.update_interval}, seed={args.seed}, "
+        f"seed_sweep={args.seed_sweep}, seed_sweep_candidates={args.seed_sweep_candidates}, "
+        f"seed_sweep_episodes={args.seed_sweep_episodes}, "
         f"model_hidden_dim={os.environ.get('SEAENGINE_MODEL_HIDDEN_DIM', '192')}, "
-        f"belief_mcts_sims={os.environ.get('SEAENGINE_BELIEF_MCTS_SIMS', '2')}, "
-        f"belief_mcts_top_k={os.environ.get('SEAENGINE_BELIEF_MCTS_TOP_K', '3')}, "
+        f"belief_mcts_sims={os.environ.get('SEAENGINE_BELIEF_MCTS_SIMS', '1')}, "
+        f"belief_mcts_top_k={os.environ.get('SEAENGINE_BELIEF_MCTS_TOP_K', '2')}, "
         f"belief_mcts_rollout_steps={os.environ.get('SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS', '2')}, "
-        f"eval_belief_mcts={args.eval_belief_mcts}, belief_mcts_mode={os.environ.get('SEAENGINE_BELIEF_MCTS_MODE', 'restore')}, "
+        f"eval_belief_mcts={args.eval_belief_mcts}, prepost_eval={args.prepost_eval}, belief_mcts_mode={os.environ.get('SEAENGINE_BELIEF_MCTS_MODE', 'restore')}, "
         f"skip_unzip={args.skip_unzip}, skip_build={args.skip_build}"
     )
 
     if not args.skip_build:
         _build_csharp(dotnet_cmd)
 
+    selected_seed = int(args.seed)
+    if args.seed_sweep and args.resume_model_path:
+        print("[*] Seed sweep skipped because resume_model_path is set.")
+    elif args.seed_sweep and args.train_episodes > 0:
+        selected_seed = _run_seed_sweep(
+            base_seed=args.seed,
+            candidates=_parse_seed_candidates(args.seed_sweep_candidates, args.seed),
+            episodes=max(1, min(args.seed_sweep_episodes, args.train_episodes)),
+            first_gate_episodes=args.seed_sweep_first_gate_episodes,
+            min_first_win_rate=args.seed_sweep_min_first_win_rate,
+            min_final_win_rate=args.seed_sweep_min_final_win_rate,
+            max_turns=args.max_turns,
+            update_interval=args.update_interval,
+        )
+    else:
+        print(f"[*] Seed sweep disabled; using seed={selected_seed}.")
+
     _run_train_eval(
         eval_matches=args.eval_matches,
         train_episodes=args.train_episodes,
         max_turns=args.max_turns,
         update_interval=args.update_interval,
-        seed=args.seed,
+        seed=selected_seed,
         resume_model_path=args.resume_model_path,
         resume_episodes_completed=args.resume_episodes_completed,
         resume_skip_pre_eval=args.resume_skip_pre_eval,
         eval_belief_mcts=args.eval_belief_mcts,
+        prepost_eval=args.prepost_eval,
     )
     print("[*] start.py finished successfully")
     return 0

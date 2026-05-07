@@ -106,7 +106,13 @@ class PastSelfAgent(SeaEngineAgent):
 
 
 class SeaEnginePPOTrainer:
-    def __init__(self, agent: SeaEngineRLAgent, config: Optional[PPOConfig] = None) -> None:
+    def __init__(
+        self,
+        agent: SeaEngineRLAgent,
+        config: Optional[PPOConfig] = None,
+        *,
+        train_action_seed: Optional[int] = None,
+    ) -> None:
         self.agent = agent
         self.config = _ppo_config_from_env() if config is None else config
         self.agent.learning_rate = self.config.learning_rate
@@ -120,6 +126,17 @@ class SeaEnginePPOTrainer:
         self._layout_seed = int(os.getenv("SEAENGINE_LAYOUT_SEED", "17011"))
         self._layout_rng = random.Random(self._layout_seed)
         self._layout_mode = os.getenv("SEAENGINE_TRAIN_LAYOUT_MODE", "balanced").strip().lower()
+        agent_seed = getattr(agent, "seed", None)
+        if train_action_seed is not None:
+            self._train_action_seed = int(train_action_seed)
+        else:
+            env_action_seed = os.getenv("SEAENGINE_TRAIN_ACTION_SEED")
+            if env_action_seed is not None and str(env_action_seed).strip() != "":
+                self._train_action_seed = int(env_action_seed)
+            elif agent_seed is not None:
+                self._train_action_seed = int(agent_seed)
+            else:
+                self._train_action_seed = 17011
         
         # Standard Decks
         self.decks = {
@@ -448,6 +465,7 @@ class SeaEnginePPOTrainer:
         max_turns: int = 100,
     ) -> Dict[str, object]:
         num_envs = env.num_envs
+        action_rng = random.Random(self._train_action_seed + int(episode_start_idx) * 1009)
         opening_noise_turns = max(0, int(os.getenv("SEAENGINE_OPENING_NOISE_TURNS", "4")))
         opening_noise_prob = float(os.getenv("SEAENGINE_OPENING_NOISE_PROB", "0.25"))
         opening_teacher_prob = max(0.0, min(0.60, float(os.getenv("SEAENGINE_OPENING_TEACHER_PROB", "0.12"))))
@@ -671,7 +689,7 @@ class SeaEnginePPOTrainer:
                         opening_teacher_turns > 0
                         and int(snapshots[idx].get("turn", 0)) <= opening_teacher_turns
                         and len(legal_actions) > 1
-                        and random.random() < opening_teacher_prob
+                        and action_rng.random() < opening_teacher_prob
                     ):
                         teacher_index, teacher_action = opening_teacher_agents[idx].select_action(snapshots[idx], legal_actions)
                         chosen_index = int(teacher_index)
@@ -683,9 +701,9 @@ class SeaEnginePPOTrainer:
                         opening_noise_turns > 0
                         and int(snapshots[idx].get("turn", 0)) <= opening_noise_turns
                         and len(legal_actions) > 1
-                        and random.random() < opening_noise_prob
+                        and action_rng.random() < opening_noise_prob
                     ):
-                        chosen_index = random.randrange(len(legal_actions))
+                        chosen_index = action_rng.randrange(len(legal_actions))
                         chosen_action = legal_actions[chosen_index]
                         logits_tensor = torch.tensor(out.logits, dtype=torch.float32, device=self.agent.device)
                         chosen_log_prob = float(torch.log_softmax(logits_tensor, dim=0)[chosen_index].item())

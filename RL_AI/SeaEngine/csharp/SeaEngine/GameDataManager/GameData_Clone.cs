@@ -15,7 +15,12 @@ public partial class GameData
         var clonedPlayer2 = Player2.Clone(ctx);
 
         var board = new Board();
-        board.ReconstructFrom(ctx.AllClonedCards);
+        // Keep the original board iteration order intact.
+        // Many rules enumerate Board.Cards directly, so reconstructing from the
+        // player-zone clone order can subtly change action generation and event
+        // resolution even when the card set itself is identical.
+        var clonedBoardCards = Board.Cards.Select(ctx.GetOrClone).ToList();
+        board.ReconstructFrom(clonedBoardCards);
 
         var clonedActivePlayer = ActivePlayer == Player1 ? clonedPlayer1 : clonedPlayer2;
         var clonedWinner = Winner != null ? (Winner == Player1 ? clonedPlayer1 : clonedPlayer2) : null;
