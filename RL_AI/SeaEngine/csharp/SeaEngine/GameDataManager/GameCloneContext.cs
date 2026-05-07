@@ -6,7 +6,6 @@ public class GameCloneContext(int playerCapacity = 0, int cardCapacity = 0)
 {
     private readonly Dictionary<Player, Player> _playerMap = new(playerCapacity);
     private readonly Dictionary<Card, Card> _cardMap = new(cardCapacity);
-    private readonly List<Card> _clonedCards = new(cardCapacity);
 
     public void Register(Player original, Player cloned)
     {
@@ -16,7 +15,6 @@ public class GameCloneContext(int playerCapacity = 0, int cardCapacity = 0)
     public void Register(Card original, Card cloned)
     {
         _cardMap[original] = cloned;
-        _clonedCards.Add(cloned);
     }
 
     public Player GetCloned(Player original) => _playerMap[original];
@@ -48,6 +46,4 @@ public class GameCloneContext(int playerCapacity = 0, int cardCapacity = 0)
 
         return original.Clone(this);
     }
-
-    public IReadOnlyList<Card> AllClonedCards => _clonedCards;
 }

@@ -19,18 +19,10 @@ public class Board
     {
         _cards.Add(card);
         _cardById[card.Guid] = card;
-        if (card.Unit.IsPlaced)
-        {
-            var x = card.Unit.PosX;
-            var y = card.Unit.PosY;
-            if (x >= 0 && x < BoardSize && y >= 0 && y < BoardSize)
-                _grid[x, y] = card;
-        }
     }
 
     public void ReconstructFrom(IReadOnlyList<Card> cards)
     {
-        Clear();
         for (int i = 0; i < cards.Count; i++)
         {
             var card = cards[i];
@@ -46,13 +38,6 @@ public class Board
         }
     }
 
-    public void Clear()
-    {
-        _cards.Clear();
-        _cardById.Clear();
-        Array.Clear(_grid, 0, _grid.Length);
-    }
-
     public bool IsEmptyCell(int x, int y)
     {
         return _grid[x, y] == null;
@@ -66,6 +51,32 @@ public class Board
     public Card GetCardById(Uid guid)
     {
         return _cardById.TryGetValue(guid, out var card) ? card : throw new InvalidOperationException();
+    }
+
+    public void PlaceCard(Card card, int x, int y)
+    {
+        if (x is < 0 or >= BoardSize || y is < 0 or >= BoardSize)
+            throw new ArgumentOutOfRangeException($"Place Out of range({card.Guid})");
+        if (_grid[x, y] != null)
+            throw new InvalidOperationException($"Cell ({x}, {y}) is already occupied");
+        card.Unit.Place(x, y);
+        _grid[x, y] = card;
+    }
+
+    public void MoveCard(Card card, int x, int y)
+    {
+        if (x is < 0 or >= BoardSize || y is < 0 or >= BoardSize)
+            throw new ArgumentOutOfRangeException($"Move Out of range({card.Guid})");
+        _grid[card.Unit.PosX, card.Unit.PosY] = null;
+        card.Unit.Move(x, y);
+        _grid[x, y] = card;
+    }
+
+    public void WithdrawCard(Card card)
+    {
+        if (!card.Unit.IsPlaced) return;
+        _grid[card.Unit.PosX, card.Unit.PosY] = null;
+        card.Unit.Withdraw();
     }
 
     public override string ToString()

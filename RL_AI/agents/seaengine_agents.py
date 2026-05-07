@@ -710,7 +710,7 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
             base_agent,
             simulations=_env_int("SEAENGINE_BELIEF_MCTS_SIMS", 1),
             top_k=_env_int("SEAENGINE_BELIEF_MCTS_TOP_K", 2),
-            rollout_steps=_env_int("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", 1),
+            rollout_steps=_env_int("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", 2),
             mode="restore",
             c_puct=_env_float("SEAENGINE_BELIEF_MCTS_C_PUCT", 1.25),
             noise=_env_float("SEAENGINE_BELIEF_MCTS_NOISE", 0.02),
@@ -783,10 +783,7 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
             return policy_output.action_index, policy_output.action
 
         state_game = snapshot.get("_engine_game")
-        state_bytes = snapshot.get("_engine_state_bytes")
-        state_handle = snapshot.get("_engine_state_handle")
-        state_json = str(snapshot.get("_engine_state", ""))
-        if state_game is None and state_bytes is None and state_handle is None and not state_json:
+        if state_game is None:
             self.last_search = {
                 "mode": "policy_fallback",
                 "reason": "engine_state_unavailable",
@@ -874,28 +871,12 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
         root_player: str,
         state_game: Any = None,
         state_bytes: Any = None,
-        state_json: str,
+        state_json: str = "",
         state_handle: Any = None,
         player1_id: str = "P1",
         player2_id: str = "P2",
     ) -> float:
-        if state_handle is not None:
-            snapshot = session.restore_state_handle(
-                int(state_handle),
-                logger_mode="silent",
-                player1_id=player1_id,
-                player2_id=player2_id,
-            )
-        elif state_bytes is not None:
-            snapshot = session.restore_snapshot_bytes(
-                state_bytes,
-                logger_mode="silent",
-                player1_id=player1_id,
-                player2_id=player2_id,
-            )
-        elif state_json:
-            snapshot = session.restore_state(state_json, logger_mode="silent")
-        elif state_game is not None:
+        if state_game is not None:
             from RL_AI.SeaEngine.bridge.pythonnet_session import PythonNetSession
 
             clone_fn = getattr(state_game, "Clone", None)

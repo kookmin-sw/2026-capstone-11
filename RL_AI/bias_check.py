@@ -568,7 +568,7 @@ def _configure_runtime_env() -> str:
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_MODE", "restore")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_SIMS", "1")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "2")
-    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "1")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "2")
 
     home = Path.home()
     if str(home) not in sys.path:

@@ -596,7 +596,7 @@ def _set_single_worker_defaults() -> None:
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_MODE", "restore")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_SIMS", "1")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "2")
-    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "1")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "2")
 
 
 def _parse_seed_candidates(raw_value: str, primary_seed: int) -> list[int]:
@@ -619,6 +619,20 @@ def _parse_seed_candidates(raw_value: str, primary_seed: int) -> list[int]:
         seen.add(value)
         deduped.append(value)
     return deduped
+
+
+def _format_wld(summary: dict[str, object]) -> str:
+    wins = int(summary.get("wins", 0))
+    losses = int(summary.get("losses", 0))
+    draws = int(summary.get("draws", 0))
+    total = max(1, wins + losses + draws)
+    non_draw_total = max(1, wins + losses)
+    total_rate = 100.0 * wins / total
+    non_draw_rate = 100.0 * wins / non_draw_total
+    return (
+        f"w/l/d={wins}/{losses}/{draws} | "
+        f"win={total_rate:.1f}% | win(non-draw)={non_draw_rate:.1f}%"
+    )
 
 
 def _run_seed_sweep(
@@ -679,7 +693,6 @@ def _run_seed_sweep(
         )
         print(f"[*] Seed {candidate_seed}: plan={_format_plan_counts(counts)}")
 
-        total_wins = total_losses = total_draws = 0
         first_summary = trainer.train(
             num_episodes=first_gate_episodes,
             opponent_pool=opponent_pool,
@@ -692,18 +705,33 @@ def _run_seed_sweep(
             log_interval=first_gate_episodes,
             save_interval=10**9,
         )
-        total_wins += int(first_summary.get("wins", 0))
-        total_losses += int(first_summary.get("losses", 0))
-        total_draws += int(first_summary.get("draws", 0))
-        first_rate = 100.0 * total_wins / max(1, total_wins + total_losses + total_draws)
+        first_wins = int(first_summary.get("wins", 0))
+        first_losses = int(first_summary.get("losses", 0))
+        first_draws = int(first_summary.get("draws", 0))
+        first_total = max(1, first_wins + first_losses + first_draws)
+        first_non_draw_total = max(1, first_wins + first_losses)
+        first_rate = 100.0 * first_wins / first_total
+        first_non_draw_rate = 100.0 * first_wins / first_non_draw_total
+        first_wld = _format_wld(first_summary)
 
         if first_rate < min_first_win_rate:
-            print(f"[*] Seed {candidate_seed}: rejected after {first_gate_episodes} eps | win={first_rate:.1f}%")
+            print(
+                f"[*] Seed {candidate_seed}: rejected after {first_gate_episodes} eps | "
+                f"{first_wld}"
+            )
             sweep_rows.append(
                 {
                     "seed": candidate_seed,
                     "first_win_rate": first_rate,
+                    "first_non_draw_win_rate": first_non_draw_rate,
+                    "first_wins": first_wins,
+                    "first_losses": first_losses,
+                    "first_draws": first_draws,
                     "final_win_rate": first_rate,
+                    "final_non_draw_win_rate": first_non_draw_rate,
+                    "final_wins": first_wins,
+                    "final_losses": first_losses,
+                    "final_draws": first_draws,
                     "episodes": first_gate_episodes,
                     "accepted": False,
                 }
@@ -725,20 +753,36 @@ def _run_seed_sweep(
                 save_interval=10**9,
                 episode_offset=first_gate_episodes,
             )
-            total_wins += int(final_summary.get("wins", 0))
-            total_losses += int(final_summary.get("losses", 0))
-            total_draws += int(final_summary.get("draws", 0))
-        final_rate = 100.0 * total_wins / max(1, total_wins + total_losses + total_draws)
+            final_wins = first_wins + int(final_summary.get("wins", 0))
+            final_losses = first_losses + int(final_summary.get("losses", 0))
+            final_draws = first_draws + int(final_summary.get("draws", 0))
+        else:
+            final_wins = first_wins
+            final_losses = first_losses
+            final_draws = first_draws
+        final_total = max(1, final_wins + final_losses + final_draws)
+        final_non_draw_total = max(1, final_wins + final_losses)
+        final_rate = 100.0 * final_wins / final_total
+        final_non_draw_rate = 100.0 * final_wins / final_non_draw_total
         accepted = final_rate >= min_final_win_rate
         print(
-            f"[*] Seed {candidate_seed}: first={first_rate:.1f}% | final={final_rate:.1f}% | "
-            f"w/l/d={total_wins}/{total_losses}/{total_draws} | accepted={accepted}"
+            f"[*] Seed {candidate_seed}: first={first_rate:.1f}% (non-draw={first_non_draw_rate:.1f}%) | "
+            f"final={final_rate:.1f}% (non-draw={final_non_draw_rate:.1f}%) | "
+            f"w/l/d={final_wins}/{final_losses}/{final_draws} | accepted={accepted}"
         )
         sweep_rows.append(
             {
                 "seed": candidate_seed,
                 "first_win_rate": first_rate,
+                "first_non_draw_win_rate": first_non_draw_rate,
+                "first_wins": first_wins,
+                "first_losses": first_losses,
+                "first_draws": first_draws,
                 "final_win_rate": final_rate,
+                "final_non_draw_win_rate": final_non_draw_rate,
+                "final_wins": final_wins,
+                "final_losses": final_losses,
+                "final_draws": final_draws,
                 "episodes": episodes,
                 "accepted": accepted,
             }

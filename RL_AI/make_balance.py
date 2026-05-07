@@ -597,7 +597,7 @@ def _run_balance(
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_MODE", "restore")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_SIMS", "1")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "2")
-    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "1")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "2")
 
     dotnet_cmd = _ensure_dotnet()
     if dotnet_cmd:

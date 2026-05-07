@@ -27,7 +27,7 @@ public class DeployUnit : IEffect
         
         zone.RemoveCard(card);
 
-        data.GetCardById(source).Unit.Place(target.PosX, target.PosY);
+        data.Board.PlaceCard(card, target.PosX, target.PosY);
         
         owner.Trash.AddCard(card);
     }

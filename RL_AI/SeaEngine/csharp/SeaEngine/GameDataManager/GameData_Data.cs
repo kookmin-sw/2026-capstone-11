@@ -19,7 +19,7 @@ public partial class GameData
     [JsonIgnore] public readonly ILogger Logger;
     public string ActivePlayerId => ActivePlayer.Id;
     public readonly Board Board = new Board();
-    [JsonIgnore] public int TurnCnt = 0;
+    public int TurnCnt = 0;
 
     public GameData(string player1Id, string player2Id, ILogger logger)
     {
@@ -56,12 +56,7 @@ public partial class GameData
         }
     }
 
-    private static readonly JsonConverter[] SerializeConverters =
-    [
-        new CardZoneConverter(),
-        new CardConverter(),
-        new BoardConverter()
-    ];
+    private static readonly JsonConverter[] SerializeConverters = [new CardZoneConverter(), new CardConverter(), new BoardConverter()];
 
     public string Serialize()
     {

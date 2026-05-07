@@ -331,34 +331,13 @@ def _attach_engine_state_if_needed(session: PythonNetSession, snapshot: Dict[str
         needs_state = getattr(agent, "requires_engine_state", None)
         if callable(needs_state) and bool(needs_state()):
             try:
-                players = list(snapshot.get("players", []) or [])
-                if len(players) >= 2:
-                    snapshot["_engine_state_player1_id"] = str(players[0].get("id", "P1") or "P1")
-                    snapshot["_engine_state_player2_id"] = str(players[1].get("id", "P2") or "P2")
-                try:
-                    snapshot["_engine_state_handle"] = session.capture_state_handle()
-                except Exception:
-                    snapshot["_engine_state_bytes"] = session.capture_snapshot_bytes()
+                snapshot["_engine_game"] = session.fork_game()
             except Exception:
-                snapshot.pop("_engine_state_player1_id", None)
-                snapshot.pop("_engine_state_player2_id", None)
-                try:
-                    snapshot["_engine_state"] = session.capture_state()
-                except Exception:
-                    snapshot.pop("_engine_state", None)
+                snapshot.pop("_engine_game", None)
             return
 
 
 def _release_engine_state_if_needed(session: PythonNetSession, snapshot: Dict[str, object]) -> None:
-    handle = snapshot.pop("_engine_state_handle", None)
-    if handle is not None:
-        try:
-            session.release_state_handle(int(handle))
-        except Exception:
-            pass
-    snapshot.pop("_engine_state_bytes", None)
-    snapshot.pop("_engine_state_player1_id", None)
-    snapshot.pop("_engine_state_player2_id", None)
     snapshot.pop("_engine_game", None)
 
 
