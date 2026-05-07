@@ -15,7 +15,7 @@ public partial class GameData
         var clonedPlayer2 = Player2.Clone(ctx);
 
         var board = new Board();
-        board.ReconstructFrom(ctx.AllClonedCards);
+        board.ReconstructFrom(Board.Cards.Select(c => ctx.GetCloned(c)).ToList());
 
         var clonedActivePlayer = ActivePlayer == Player1 ? clonedPlayer1 : clonedPlayer2;
         var clonedWinner = Winner != null ? (Winner == Player1 ? clonedPlayer1 : clonedPlayer2) : null;
