@@ -79,11 +79,7 @@ namespace Game.Network
             byte[] buffer = new byte[Codec.HeaderSize + codec.GetSize(data)]; 
             PacketWriter writer = new(buffer);
 
-            writer.WriteUInt32(Codec.FlagBit.None);
-            writer.WriteInt32(handlerId);
-            writer.WriteInt32(0);
-            writer.WriteInt32(0);
-            
+            Codec.WriteSendHeader(ref writer, handlerId);
             codec.Write(ref writer, data);
 
             _reqDataQueue.Enqueue(NetOutEvent.Send(id, buffer));
@@ -94,11 +90,7 @@ namespace Game.Network
             byte[] buffer = new byte[Codec.HeaderSize + codec.GetSize(data)]; 
             PacketWriter writer = new(buffer);
 
-            writer.WriteUInt32(Codec.FlagBit.Respond);
-            writer.WriteInt32(handlerId);
-            writer.WriteInt32(queryNum);
-            writer.WriteInt32(0);
-            
+            Codec.WriteRespondHeader(ref writer, handlerId, queryNum);
             codec.Write(ref writer, data);
 
             _reqDataQueue.Enqueue(NetOutEvent.Send(id, buffer));
@@ -110,11 +102,7 @@ namespace Game.Network
             byte[] buffer = new byte[Codec.HeaderSize + codec.GetSize(data)]; 
             PacketWriter writer = new(buffer);
 
-            writer.WriteUInt32(Codec.FlagBit.Query);
-            writer.WriteInt32(handlerId);
-            writer.WriteInt32(queryNum);
-            writer.WriteInt32(0);
-            
+            Codec.WriteQueryHeader(ref writer, handlerId, queryNum);
             codec.Write(ref writer, data);
 
             _reqDataQueue.Enqueue(NetOutEvent.Send(id, buffer));

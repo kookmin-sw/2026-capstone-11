@@ -50,20 +50,41 @@ namespace Game.Network
             );
         }
 
+        public void SendMessage<T>(int handlerId, ConnId id, T data, IPacketCodec<T> codec) 
+            => NetStream.SendMessage(handlerId, id, data, codec);
+
+        public void SendRespond<T>(int handlerId, int queryNum, ConnId id, T data, IPacketCodec<T> codec) 
+            => NetStream.SendRespond(handlerId, queryNum, id, data, codec);
+
+        public Task<QueryTaskResult> AsyncSendQuery<T>(int handlerId, ConnId id, T data, IPacketCodec<T> codec, long expireTimeMs)
+        {
+            var (queryNum, task) = NetEvent.RegisterQueryTask(id, expireTimeMs);
+            NetStream.SendQuery(handlerId, queryNum, id, data, codec);
+
+            return task;
+        }
+        public Task<QueryTaskResult> AsyncSendQuery<T>(int handlerId, ConnId id, T data, IPacketCodec<T> codec, long expireTimeMs, 
+                                                        TaskCompletionSource<QueryTaskResult> tcs)
+        {
+            var (queryNum, task) = NetEvent.RegisterQueryTask(id, expireTimeMs, tcs);
+            NetStream.SendQuery(handlerId, queryNum, id, data, codec);
+
+            return task;
+        }
+        public Task<QueryTaskResult> AsyncSendQuery<T>(int handlerId, ConnId id, T data, IPacketCodec<T> codec, long expireTimeMs, 
+                                                        Action<ConnId, QueryTaskResult>? callBack)
+        {
+            var (queryNum, task) = NetEvent.RegisterQueryTask(id, expireTimeMs, callBack);
+            NetStream.SendQuery(handlerId, queryNum, id, data, codec);
+
+            return task;
+        }
+
         
         public void Send(int handlerId, int queryNum, ConnId id, byte[] raw)
             => NetStream.Send(handlerId, queryNum, id, raw);
-
-        public void SendMessage<T>(int handlerId, ConnId id, T data, IPacketCodec<T> codec) {}
-
-        public void SendRespond<T>(int handlerId, int queryNum, ConnId id, T data, IPacketCodec<T> codec) {}
-
-        
-
         public void BroadCast(int handlerId, int queryNum, byte[] raw)
             => NetStream.BroadCast(handlerId, queryNum, raw);
-        
-
         public void Disconnect(ConnId id)
         { 
             NetEvent.CancelAll(id);

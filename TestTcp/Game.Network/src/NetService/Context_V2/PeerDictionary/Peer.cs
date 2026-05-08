@@ -56,6 +56,7 @@ namespace Game.Network.Service
             _connId = connId;
             _info = info;
             _session = new();
+            _timer = 0;
         }
 
         public void SetState(State state)

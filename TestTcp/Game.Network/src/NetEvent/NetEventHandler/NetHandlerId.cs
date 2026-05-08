@@ -21,7 +21,8 @@ namespace Game.Network
 
 
 
-            public const int RequestTarget = 14;
+            public const int RequestReceiver = 14;
+            public const int RespondReceiver = 15;
         }
 
     }

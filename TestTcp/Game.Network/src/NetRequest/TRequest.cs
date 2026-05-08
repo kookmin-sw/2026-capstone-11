@@ -3,9 +3,6 @@ using System;
 
 namespace Game.Network.Service
 {
-    public class RequestHandlerWrapper {}
-
-
     public interface IRequest<TMessage, TResult>
     {
         void Request(TMessage msg, Action<TResult> succ, Action<string> fail);
@@ -13,7 +10,7 @@ namespace Game.Network.Service
 
     public interface IRequestHandler<TMessage, TResult>
     {
-        TResult Handle(ConnId connId, TMessage msg);
+        TResult? Handle(ConnId connId, TMessage msg);
     }
 
 

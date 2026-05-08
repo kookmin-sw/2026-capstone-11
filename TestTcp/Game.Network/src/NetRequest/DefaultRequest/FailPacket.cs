@@ -9,38 +9,38 @@ using System.Threading.Tasks;
 
 namespace Game.Network.Service
 {
-    public class FailRsp
+    public class FailPacket
     {
-        public static IPacketMeta<FailRsp> Meta = new FailRspMeta();
-        public static IPacketCodec<FailRsp> Codec = new FailRspCodec();
+        public static IPacketMeta<FailPacket> Meta = new FailPacketMeta();
+        public static IPacketCodec<FailPacket> Codec = new FailPacketCodec();
         public enum FailType : int
         {
             Default = default,
             FailDeserialize,
             NoDispatchRegistery,
-            WrongRequestArgument,
+            WrongArgument,
             ServerFault,
             CustomMessage,
         }
 
-        private static string GetMessage(FailType type)
+        public static string GetMessage(FailType type)
         {
             switch (type)
             {
                 case FailType.FailDeserialize: return "Message Deserialize Failed";
                 case FailType.NoDispatchRegistery: return "NoDispatchRegistery";
-                case FailType.WrongRequestArgument: return "Request Argument is wrong";
+                case FailType.WrongArgument: return "Argument is wrong";
                 case FailType.ServerFault: return "Server Fail";
                 default : return "Fail";
             }
         }
 
-        public FailRsp(FailType t, string s)
+        public FailPacket(FailType t, string s)
         {
             type = t;
             msg = (type == FailType.CustomMessage)? s : GetMessage(type);
         }
-        public FailRsp(FailType t)
+        public FailPacket(FailType t)
         {
             type = t;
             msg = GetMessage(type);
@@ -50,29 +50,29 @@ namespace Game.Network.Service
         public string msg;
     }
 
-    public class FailRspMeta : IPacketMeta<FailRsp>
+    public class FailPacketMeta : IPacketMeta<FailPacket>
     {
-        public int Id => RequestId.Constant.FailRsp;
+        public int Id => PacketId.Constant.FailRsp;
         public bool IsFixedSize => false;
     }
 
-    public class FailRspCodec : IPacketCodec<FailRsp>
+    public class FailPacketCodec : IPacketCodec<FailPacket>
     {
-        public int GetSize(FailRsp data)
+        public int GetSize(FailPacket data)
         {
             return 4 + 4 + Encoding.UTF8.GetByteCount(data.msg);
         }
-        public void Write(ref PacketWriter writer, FailRsp data)
+        public void Write(ref PacketWriter writer, FailPacket data)
         {
             writer.WriteInt32((int)data.type);
             writer.WriteString(data.msg);
         }
-        public FailRsp Read(ref PacketReader reader)
+        public FailPacket Read(ref PacketReader reader)
         {
-            var t = (FailRsp.FailType)reader.ReadInt32();
+            var t = (FailPacket.FailType)reader.ReadInt32();
             var s = reader.ReadString();
 
-            return new FailRsp(t, s);
+            return new FailPacket(t, s);
         }
     }
 }

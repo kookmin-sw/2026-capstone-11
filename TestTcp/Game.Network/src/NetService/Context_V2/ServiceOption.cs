@@ -1,4 +1,6 @@
 
+using System;
+
 namespace Game.Network
 {
     public class ServiceOption
@@ -7,10 +9,13 @@ namespace Game.Network
         public int maxSessionPerService;
         public int helloTimeOutMs;
 
+        // Peer Life Time
+        public int suspendTimeOutThres;
+        public int disconnectTimeOutThres;
+
         // About Ping
         public int pingIntervalMs;
         public int pingTimeOutMs;
-        public int pingFailCountToDisconnect;
 
         public ServiceOption(
             int MaxConnPerService,
@@ -18,7 +23,9 @@ namespace Game.Network
             int HelloTimeOutMs,
             int PingIntervalMs,
             int PingTimeOutMs,
-            int PingFailCountToDisconnect
+            int SuspendTimeOutThres,
+            int DisconnectTimeOutThres
+
         )
         {
             maxConnPerService = MaxConnPerService;
@@ -27,7 +34,12 @@ namespace Game.Network
             
             pingIntervalMs = PingIntervalMs;
             pingTimeOutMs = PingTimeOutMs;
-            pingFailCountToDisconnect = PingFailCountToDisconnect;
+
+            if (SuspendTimeOutThres > DisconnectTimeOutThres) throw new InvalidOperationException();
+
+            suspendTimeOutThres = SuspendTimeOutThres;
+            disconnectTimeOutThres = DisconnectTimeOutThres; 
+
         }
 
     }

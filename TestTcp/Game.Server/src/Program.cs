@@ -30,16 +30,17 @@ namespace Game.Server
                 HelloTimeOutMs: 3000,
                 PingIntervalMs: 3000,
                 PingTimeOutMs: 2500,
-                PingFailCountToDisconnect: 2 
+                SuspendTimeOutThres: 5000,
+                DisconnectTimeOutThres: 10000
             );
             
-            // var host = new HostService(server, 
-            //                             new DefaultBuilder(), 
-            //                             new DefaultPort(), 
-            //                             "HostServer",
-            //                             "DevID",
-            //                             "DevVersion"
-            //                             , opt);
+            var host = new HostService(server, 
+                                        new DefaultBuilder(), 
+                                        new DefaultPort(), 
+                                        "HostServer",
+                                        "DevID",
+                                        "DevVersion"
+                                        , opt);
 
             Session session = new(server);
             ChessGame game  = new(session);
@@ -79,7 +80,7 @@ namespace Game.Server
 
                     server.Tick();
                     game.Tick(TickTime);
-                    // host.Tick(TickTime);
+                    host.Tick(TickTime);
 
                     stopwatch.Stop();
 
