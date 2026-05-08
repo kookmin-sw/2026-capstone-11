@@ -15,7 +15,7 @@ namespace Game.Network.Service
             _other = context.Other;
 
 
-            _dispatch.Register()
+            // _dispatch.Register()
         }
 
 
