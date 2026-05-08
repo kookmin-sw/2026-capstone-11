@@ -358,18 +358,40 @@ def _suite_side_gap_abs(suite_pack: Optional[Dict[str, object]]) -> float:
     return abs(first_wins / first_n - second_wins / second_n)
 
 
-def _checkpoint_population_score(*, greedy_suite: Optional[Dict[str, object]], self_suite: Optional[Dict[str, object]]) -> Dict[str, float]:
+def _checkpoint_population_score(
+    *,
+    random_suite: Optional[Dict[str, object]],
+    greedy_suite: Optional[Dict[str, object]],
+    rule_suite: Optional[Dict[str, object]],
+    self_suite: Optional[Dict[str, object]],
+) -> Dict[str, float]:
+    random_wr = _suite_rl_win_rate(random_suite)
     greedy_wr = _suite_rl_win_rate(greedy_suite)
+    rule_wr = _suite_rl_win_rate(rule_suite)
     self_wr = _suite_rl_win_rate(self_suite)
-    worst_combo = min(_suite_worst_combo_rate(greedy_suite), _suite_worst_combo_rate(self_suite))
-    side_gap = max(_suite_side_gap_abs(greedy_suite), _suite_side_gap_abs(self_suite))
-    score = (0.45 * greedy_wr) + (0.25 * self_wr) + (0.20 * worst_combo) - (0.10 * side_gap)
+    worst_combo = min(
+        _suite_worst_combo_rate(random_suite),
+        _suite_worst_combo_rate(greedy_suite),
+        _suite_worst_combo_rate(rule_suite),
+        _suite_worst_combo_rate(self_suite),
+    )
+    side_gap = max(
+        _suite_side_gap_abs(random_suite),
+        _suite_side_gap_abs(greedy_suite),
+        _suite_side_gap_abs(rule_suite),
+        _suite_side_gap_abs(self_suite),
+    )
+    avg_wr = (random_wr + greedy_wr + rule_wr + self_wr) / 4.0
+    score = avg_wr + (0.20 * worst_combo) - (0.10 * side_gap)
     return {
         "score": score,
+        "random_wr": random_wr,
         "greedy_wr": greedy_wr,
+        "rule_wr": rule_wr,
         "self_wr": self_wr,
         "worst_combo_wr": worst_combo,
         "max_side_gap": side_gap,
+        "avg_wr": avg_wr,
     }
 
 
@@ -434,6 +456,17 @@ def _default_scenario_workers() -> int:
         except Exception:
             pass
     return 1
+
+
+def _default_num_envs() -> int:
+    env_num_envs = os.getenv("SEAENGINE_NUM_ENVS", "").strip()
+    if env_num_envs:
+        try:
+            return max(1, int(env_num_envs))
+        except Exception:
+            pass
+    cpu_count = os.cpu_count() or 8
+    return max(4, min(24, cpu_count))
 
 
 def _make_skipped_eval_summary(opponent_label: str) -> Dict[str, object]:
@@ -606,6 +639,25 @@ def _run_8combo_opponent_eval_suite(
     scenario_worker_count = max(1, int(scenario_workers or 1))
     parallel_scenarios = scenario_worker_count > 1
 
+    def _log_suite_completion(suite_results: list[Dict[str, object]], history_summary: Dict[str, object]) -> None:
+        episodes = sum(int(row.get("episodes", 0)) for row in suite_results)
+        rl_wins = sum(int(row.get("rl_wins", 0)) for row in suite_results)
+        opp_wins = sum(int(row.get("opp_wins", 0)) for row in suite_results)
+        draws = sum(int(row.get("draws", 0)) for row in suite_results)
+        avg_steps = float(history_summary.get("avg_steps", 0.0))
+        avg_final_turn = float(history_summary.get("avg_final_turn", 0.0))
+        total = max(1, rl_wins + opp_wins + draws)
+        rl_win_rate = 100.0 * rl_wins / total
+        opp_win_rate = 100.0 * opp_wins / total
+        draw_rate = 100.0 * draws / total
+        print(
+            f"[*] {suite_title} complete | episodes={episodes} | "
+            f"rl_wins={rl_wins} ({rl_win_rate:.1f}%) | "
+            f"opp_wins={opp_wins} ({opp_win_rate:.1f}%) | "
+            f"draws={draws} ({draw_rate:.1f}%) | "
+            f"avg_steps={avg_steps:.1f} | avg_turn={avg_final_turn:.1f}"
+        )
+
     def _run_single_scenario(
         idx: int,
         rl_deck_name: str,
@@ -685,6 +737,7 @@ def _run_8combo_opponent_eval_suite(
             "avg_final_turn": float(summary["avg_final_turn"]),
             "action_type_counts": dict(summary.get("action_type_counts", {})),
             "card_use_counts": dict(summary.get("card_use_counts", {})),
+            "belief_mcts_summary": dict(summary.get("belief_mcts_summary", {})),
             "report_path": summary["report_path"],
             "history_path": str(history_path),
             "histories": histories,
@@ -746,6 +799,7 @@ def _run_8combo_opponent_eval_suite(
             "histories": combined_histories,
             "report_path": "",
         }
+        _log_suite_completion(combo_results, history_summary)
         return {
             "results": combo_results,
             "text": "\n".join(suite_lines),
@@ -859,6 +913,7 @@ def _run_8combo_opponent_eval_suite(
         "histories": combined_histories,
         "report_path": "",
     }
+    _log_suite_completion(combo_results, history_summary)
     return {
         "results": combo_results,
         "text": "\n".join(suite_lines),
@@ -1196,16 +1251,17 @@ def run_saved_model_balance_experiment(
             "opp_wins": opp_wins,
             "draws": draws,
             "win_rate_percent": wr,
-            "avg_steps": avg_steps,
-            "avg_final_turn": avg_turn,
-            "action_type_counts": dict(sorted(action_counts.items())),
-            "card_use_counts": dict(card_counts.most_common()),
-            "leader_hp_stats": {},
-            "report_path": str(saved_scenario_report),
-            "history_path": None if scenario_history_path is None else str(scenario_history_path),
-            "shard_report_paths": [str(row.get("report_path", "")) for row in shard_rows if row.get("report_path")],
-            "shard_history_paths": [str(row.get("history_path", "")) for row in shard_rows if row.get("history_path")],
-        }
+                "avg_steps": avg_steps,
+                "avg_final_turn": avg_turn,
+                "action_type_counts": dict(sorted(action_counts.items())),
+                "card_use_counts": dict(card_counts.most_common()),
+                "leader_hp_stats": {},
+                "belief_mcts_summary": dict(summary.get("belief_mcts_summary", {})),
+                "report_path": str(saved_scenario_report),
+                "history_path": None if scenario_history_path is None else str(scenario_history_path),
+                "shard_report_paths": [str(row.get("report_path", "")) for row in shard_rows if row.get("report_path")],
+                "shard_history_paths": [str(row.get("history_path", "")) for row in shard_rows if row.get("history_path")],
+            }
 
     if parallel_scenarios:
         with ThreadPoolExecutor(max_workers=scenario_worker_count, thread_name_prefix="se-bal") as executor:
@@ -1285,6 +1341,9 @@ def run_saved_model_balance_experiment(
             f"card_use={_format_card_use_summary(scenario.get('card_use_counts', {}), episodes=episodes, avg_steps=float(scenario['avg_steps']))}, "
             f"eval_report={scenario['report_path']}"
         )
+        belief_summary = scenario.get("belief_mcts_summary")
+        if belief_summary:
+            lines.append(f"  belief_mcts_summary={json.dumps(belief_summary, ensure_ascii=False, sort_keys=True)}")
 
     total_n = max(1, int(aggregate["episodes"]))
     total_wr = (aggregate["rl_wins"] / total_n) * 100.0
@@ -1373,7 +1432,7 @@ def run_train_eval_experiment(
     resume_skip_pre_eval: bool = False,
     summary_report_path: Optional[str] = None,
     eval_belief_mcts: bool = True,
-    skip_prepost_eval: bool = True,
+    skip_prepost_eval: bool = False,
 ) -> Dict[str, object]:
     artifact_start_wall = time.time()
     resolved_device = _resolve_device(device)
@@ -1414,19 +1473,13 @@ def run_train_eval_experiment(
         opponent_pool = list(train_opponent_pool)
 
     if num_envs is None:
-        env_num_envs_raw = os.getenv("SEAENGINE_NUM_ENVS", "").strip()
-        if env_num_envs_raw:
-            try:
-                num_envs = max(1, int(env_num_envs_raw))
-            except ValueError:
-                num_envs = None
-    if num_envs is None:
-        num_envs = 1
+        num_envs = _default_num_envs()
     scenario_workers = _default_scenario_workers()
 
     checkpoint_interval = max(1, checkpoint_interval)
     save_interval = max(1, save_interval)
     checkpoint_eval_matches = 50 if checkpoint_eval_matches is None else max(1, checkpoint_eval_matches)
+    checkpoint_edge_eval_matches = max(1, checkpoint_eval_matches * 2)
     train_max_turns = min(max_turns, train_turn_cap)
     train_update_interval = max(update_interval, min_update_interval)
     resume_start_episodes = max(0, int(resume_episodes_completed or 0))
@@ -1455,7 +1508,7 @@ def run_train_eval_experiment(
     backend = os.getenv("SEAENGINE_VECTOR_BACKEND", "local")
     local_threads = os.getenv("SEAENGINE_LOCAL_THREADS", "1")
     print(
-        f"[*] Experiment start | eval_matches_per_combo={eval_matches} (per suite total {eval_matches * 8}, all pre/post suites total {0 if skip_prepost_eval else eval_matches * 32}) | train_episodes={train_episodes} | "
+        f"[*] Experiment start | eval_matches_per_combo={eval_matches} (per suite total {eval_matches * 8}, all checkpoint suites total {0 if skip_prepost_eval else checkpoint_edge_eval_matches * 64}) | train_episodes={train_episodes} | "
         f"max_turns={max_turns} | update_interval={update_interval} | num_envs={num_envs} | "
         f"vector_backend={backend} | local_threads={local_threads} | "
         f"device={resolved_device} | model_hidden_dim={getattr(learning_agent, 'hidden_dim', default_model_hidden_dim())} | "
@@ -1465,9 +1518,9 @@ def run_train_eval_experiment(
         f"ppo_clip={trainer.config.clip_epsilon} | ppo_epochs={trainer.config.update_epochs} | "
         f"layout_mode={getattr(trainer, '_layout_mode', 'balanced')} | layout_seed={getattr(trainer, '_layout_seed', '17011')} | "
         f"scenario_workers={scenario_workers} | "
-        f"prepost_eval={not skip_prepost_eval} | "
+        f"checkpoint_eval={not skip_prepost_eval} | "
         f"eval_belief_mcts={eval_belief_mcts} | "
-        f"checkpoint_eval_per_combo={checkpoint_eval_matches} (per suite total {checkpoint_eval_matches * 8}, all checkpoint suites total {checkpoint_eval_matches * 24})"
+        f"checkpoint_eval_per_combo={checkpoint_eval_matches} (middle checkpoints), edge_checkpoint_eval_per_combo={checkpoint_edge_eval_matches}"
     )
     print(f"[*] Opp plan total: {_format_plan_counts(training_opponent_counts)}")
     for plan_start in range(0, train_episodes, checkpoint_interval):
@@ -1516,7 +1569,7 @@ def run_train_eval_experiment(
             f"report={summary.get('report_path', '')}"
         )
 
-    def _compact_train_line(train_summary: Dict[str, object]) -> str:
+    def _compact_train_line(train_summary: Dict[str, object], *, label: str = "train") -> str:
         episodes = int(train_summary.get("episodes", 0))
         wins = int(train_summary.get("wins", 0))
         losses = int(train_summary.get("losses", 0))
@@ -1550,14 +1603,19 @@ def run_train_eval_experiment(
         parts.append(f"start_modes={train_summary.get('start_mode_stats', {})}")
         parts.append(f"burnin_profiles={train_summary.get('burnin_profile_stats', {})}")
         parts.append(f"layouts={train_summary.get('layout_stats', {})}")
-        return "train=" + " | ".join(parts)
+        return f"{label}=" + " | ".join(parts)
+
+    def _checkpoint_suite_matches(episodes_completed: int) -> int:
+        if episodes_completed in {0, train_episodes}:
+            return checkpoint_edge_eval_matches
+        return checkpoint_eval_matches
 
     _write_summary_snapshot(
         "initialized",
         [
-            "before_training=pending",
+            "checkpoint_0=pending",
             "training=pending",
-            "after_training=pending",
+            "checkpoint_10000=pending",
             f"training_layout_mode={getattr(trainer, '_layout_mode', 'balanced')}",
             f"training_layout_seed={getattr(trainer, '_layout_seed', '17011')}",
             "",
@@ -1590,8 +1648,105 @@ def run_train_eval_experiment(
         )
         print(message)
 
+    def _record_checkpoint_artifacts(
+        *,
+        episodes_completed: int,
+        train_summary: Dict[str, object],
+        random_suite: Dict[str, object],
+        greedy_suite: Dict[str, object],
+        rule_suite: Dict[str, object],
+        self_suite: Dict[str, object],
+    ) -> Dict[str, object]:
+        population_score = _checkpoint_population_score(
+            random_suite=random_suite,
+            greedy_suite=greedy_suite,
+            rule_suite=rule_suite,
+            self_suite=self_suite,
+        )
+        print(
+            f"[*] Checkpoint {episodes_completed}/{train_episodes} complete | "
+            f"random_wr={population_score['random_wr'] * 100.0:.1f}% | "
+            f"greedy_wr={population_score['greedy_wr'] * 100.0:.1f}% | "
+            f"rule_wr={population_score['rule_wr'] * 100.0:.1f}% | "
+            f"self_wr={population_score['self_wr'] * 100.0:.1f}% | "
+            f"worst_combo_wr={population_score['worst_combo_wr'] * 100.0:.1f}% | "
+            f"max_side_gap={population_score['max_side_gap'] * 100.0:.1f}pp | "
+            f"score={population_score['score']:.4f}"
+        )
+        checkpoint_text = "\n".join(
+            [
+                f"=== Checkpoint {episodes_completed} Episodes ===",
+                f"opponent_stats={train_summary.get('opponent_stats', {})}",
+                random_suite["text"],
+                greedy_suite["text"],
+                rule_suite["text"],
+                self_suite["text"],
+                "",
+                f"train_summary={train_summary}",
+                "",
+                "=== Population-Based Checkpoint Score ===",
+                f"score={population_score['score']:.4f}",
+                f"random_wr={population_score['random_wr'] * 100.0:.2f}%",
+                f"greedy_wr={population_score['greedy_wr'] * 100.0:.2f}%",
+                f"rule_wr={population_score['rule_wr'] * 100.0:.2f}%",
+                f"self_wr={population_score['self_wr'] * 100.0:.2f}%",
+                f"worst_combo_wr={population_score['worst_combo_wr'] * 100.0:.2f}%",
+                f"max_side_gap={population_score['max_side_gap'] * 100.0:.2f}pp",
+                "",
+            ]
+        )
+        checkpoint_path = save_report(checkpoint_text, _default_report_path(f"se_ckpt_{episodes_completed}"))
+        self_stats_text = "\n".join(
+            [
+                f"=== Opponent Stats @ {episodes_completed} ===",
+                f"episodes={episodes_completed}",
+                f"stats={train_summary.get('opponent_stats', {})}",
+                "",
+            ]
+        )
+        self_stats_path = save_report(self_stats_text, _default_report_path(f"se_selfstats_{episodes_completed}"))
+        import torch
+
+        if getattr(learning_agent, "model", None) is None:
+            learning_agent.ensure_model(state_dim=STATE_VECTOR_DIM)
+        model_path = trainer.model_dir / f"model_ep_{episodes_completed}.pt"
+        torch.save(learning_agent.model.state_dict(), model_path)
+        resume_state_path = _save_training_resume_state(
+            model_path=str(model_path),
+            episodes_completed=episodes_completed,
+            train_episodes=train_episodes,
+            checkpoint_interval=checkpoint_interval,
+            save_interval=save_interval,
+            seed=seed,
+            device=str(learning_agent.device),
+            report_path=str(checkpoint_path),
+        )
+        print(f"[*] Resume state saved: {resume_state_path}")
+        checkpoint_record = {
+            "episodes_completed": episodes_completed,
+            "train_summary": train_summary,
+            "random_suite_results": random_suite["results"],
+            "random_suite_text": random_suite["text"],
+            "greedy_suite_results": greedy_suite["results"],
+            "greedy_suite_text": greedy_suite["text"],
+            "rule_suite_results": rule_suite["results"],
+            "rule_suite_text": rule_suite["text"],
+            "self_suite_results": self_suite["results"],
+            "self_suite_text": self_suite["text"],
+            "population_score": population_score,
+            "report_path": str(checkpoint_path),
+            "self_stats_path": str(self_stats_path),
+            "model_path": str(model_path),
+        }
+        checkpoints.append(checkpoint_record)
+        return checkpoint_record
+
+    before_random_suite: Dict[str, object] = {"results": [], "text": "=== Checkpoint 0 vs Random (skipped) ==="}
+    before_greedy_suite: Dict[str, object] = {"results": [], "text": "=== Checkpoint 0 vs Greedy (skipped) ==="}
+    before_rule_suite: Dict[str, object] = {"results": [], "text": "=== Checkpoint 0 vs Rule-Based (skipped) ==="}
+    before_self_suite: Dict[str, object] = {"results": [], "text": "=== Checkpoint 0 vs Self (skipped) ==="}
     if skip_prepost_eval:
-        print("[*] Pre/post evaluation disabled; training-only run.")
+        print("[*] Checkpoint evaluation disabled; training-only run.")
         before_random = _make_skipped_eval_summary("random")
         before_random_history_path = None
         before_greedy = _make_skipped_eval_summary("greedy")
@@ -1611,15 +1766,16 @@ def run_train_eval_experiment(
         before_self = _make_skipped_eval_summary("self")
         before_self_history_path = None
     else:
-        print(f"[*] Evaluating before training vs random across 8 combos ({eval_matches} each)...")
+        before_matches = _checkpoint_suite_matches(0)
+        print(f"[*] Evaluating checkpoint 0 vs random across 8 combos ({before_matches} each)...")
         before_random_suite = _run_8combo_opponent_eval_suite(
             trainer=trainer,
             rl_agent=learning_agent,
             opponent_agent=random_eval_opponent,
             opponent_label="random",
-            suite_title="Before Training vs Random",
+            suite_title="Checkpoint 0 vs Random",
             history_tag="se_evalhist_before_random",
-            num_matches_per_combo=eval_matches,
+            num_matches_per_combo=_checkpoint_suite_matches(0),
             card_data_path=card_data_path,
             max_turns=max_turns,
             scenario_report_prefix="se_before_random",
@@ -1631,29 +1787,29 @@ def run_train_eval_experiment(
         if include_eval_history:
             before_random_history_path = _save_history_report(
                 prefix="se_evalhist_before_random",
-                title="Before Training vs Random Histories",
+                title="Checkpoint 0 vs Random Histories",
                 summary=before_random,
             )
             if before_random_history_path is not None:
                 before_random["report_path"] = str(before_random_history_path)
         _write_summary_snapshot(
-            "before_random_done",
+            "checkpoint_0_random_done",
             [
-                "before_training=random done",
-                f"before_random={before_random['report_path']}",
+                "checkpoint_0=random done",
+                f"checkpoint_0_random={before_random['report_path']}",
                 "",
             ],
         )
 
-        print(f"[*] Evaluating before training vs greedy across 8 combos ({eval_matches} each)...")
+        print(f"[*] Evaluating checkpoint 0 vs greedy across 8 combos ({before_matches} each)...")
         before_greedy_suite = _run_8combo_opponent_eval_suite(
             trainer=trainer,
             rl_agent=learning_agent,
             opponent_agent=greedy_eval_opponent,
             opponent_label="greedy",
-            suite_title="Before Training vs Greedy",
+            suite_title="Checkpoint 0 vs Greedy",
             history_tag="se_evalhist_before_greedy",
-            num_matches_per_combo=eval_matches,
+            num_matches_per_combo=_checkpoint_suite_matches(0),
             card_data_path=card_data_path,
             max_turns=max_turns,
             scenario_report_prefix="se_before_greedy",
@@ -1665,30 +1821,30 @@ def run_train_eval_experiment(
         if include_eval_history:
             before_greedy_history_path = _save_history_report(
                 prefix="se_evalhist_before_greedy",
-                title="Before Training vs Greedy Histories",
+                title="Checkpoint 0 vs Greedy Histories",
                 summary=before_greedy,
             )
             if before_greedy_history_path is not None:
                 before_greedy["report_path"] = str(before_greedy_history_path)
         _write_summary_snapshot(
-            "before_greedy_done",
+            "checkpoint_0_greedy_done",
             [
-                "before_training=greedy done",
-                f"before_random={before_random['report_path']}",
-                f"before_greedy={before_greedy['report_path']}",
+                "checkpoint_0=greedy done",
+                f"checkpoint_0_random={before_random['report_path']}",
+                f"checkpoint_0_greedy={before_greedy['report_path']}",
                 "",
             ],
         )
 
-        print(f"[*] Evaluating before training vs rule-based across 8 combos ({eval_matches} each)...")
+        print(f"[*] Evaluating checkpoint 0 vs rule-based across 8 combos ({before_matches} each)...")
         before_rule_suite = _run_8combo_opponent_eval_suite(
             trainer=trainer,
             rl_agent=learning_agent,
             opponent_agent=rule_eval_opponent,
             opponent_label="rule_based",
-            suite_title="Before Training vs Rule-Based",
+            suite_title="Checkpoint 0 vs Rule-Based",
             history_tag="se_evalhist_before_rule",
-            num_matches_per_combo=eval_matches,
+            num_matches_per_combo=_checkpoint_suite_matches(0),
             card_data_path=card_data_path,
             max_turns=max_turns,
             scenario_report_prefix="se_before_rule",
@@ -1700,31 +1856,31 @@ def run_train_eval_experiment(
         if include_eval_history:
             before_rule_history_path = _save_history_report(
                 prefix="se_evalhist_before_rule",
-                title="Before Training vs Rule-Based Histories",
+                title="Checkpoint 0 vs Rule-Based Histories",
                 summary=before_rule,
             )
             if before_rule_history_path is not None:
                 before_rule["report_path"] = str(before_rule_history_path)
         _write_summary_snapshot(
-            "before_rule_done",
+            "checkpoint_0_rule_done",
             [
-                "before_training=rule-based done",
-                f"before_random={before_random['report_path']}",
-                f"before_greedy={before_greedy['report_path']}",
-                f"before_rule={before_rule['report_path']}",
+                "checkpoint_0=rule-based done",
+                f"checkpoint_0_random={before_random['report_path']}",
+                f"checkpoint_0_greedy={before_greedy['report_path']}",
+                f"checkpoint_0_rule={before_rule['report_path']}",
                 "",
             ],
         )
 
-        print(f"[*] Evaluating before training vs self across 8 combos ({eval_matches} each)...")
+        print(f"[*] Evaluating checkpoint 0 vs self across 8 combos ({before_matches} each)...")
         before_self_suite = _run_8combo_opponent_eval_suite(
             trainer=trainer,
             rl_agent=learning_agent,
             opponent_agent=learning_agent,
             opponent_label="self",
-            suite_title="Before Training vs Self",
+            suite_title="Checkpoint 0 vs Self",
             history_tag="se_evalhist_before_self",
-            num_matches_per_combo=eval_matches,
+            num_matches_per_combo=_checkpoint_suite_matches(0),
             card_data_path=card_data_path,
             max_turns=max_turns,
             scenario_report_prefix="se_before_self",
@@ -1736,29 +1892,63 @@ def run_train_eval_experiment(
         if include_eval_history:
             before_self_history_path = _save_history_report(
                 prefix="se_evalhist_before_self",
-                title="Before Training vs Self Histories",
+                title="Checkpoint 0 vs Self Histories",
                 summary=before_self,
             )
             if before_self_history_path is not None:
                 before_self["report_path"] = str(before_self_history_path)
         _write_summary_snapshot(
-            "before_self_done",
+            "checkpoint_0_self_done",
             [
-                "before_training=self done",
-                f"before_random={before_random['report_path']}",
-                f"before_greedy={before_greedy['report_path']}",
-                f"before_rule={before_rule['report_path']}",
-                f"before_self={before_self['report_path']}",
+                "checkpoint_0=self done",
+                f"checkpoint_0_random={before_random['report_path']}",
+                f"checkpoint_0_greedy={before_greedy['report_path']}",
+                f"checkpoint_0_rule={before_rule['report_path']}",
+                f"checkpoint_0_self={before_self['report_path']}",
                 "",
             ],
         )
 
-    print("[*] Training starts...")
+    initial_train_summary: Dict[str, object] = {
+        "episodes": 0,
+        "wins": 0,
+        "losses": 0,
+        "draws": 0,
+        "updates": 0,
+        "opponents": [],
+        "opponent_stats": {},
+        "start_mode_stats": {},
+        "burnin_profile_stats": {},
+        "layout_stats": {},
+    }
+    total_train_summary: Dict[str, object] = {
+        "episodes": 0,
+        "wins": 0,
+        "losses": 0,
+        "draws": 0,
+        "updates": 0,
+        "train_elapsed_sec": 0.0,
+        "chunks": 0,
+    }
     checkpoints: list[Dict[str, object]] = []
+    _record_checkpoint_artifacts(
+        episodes_completed=0,
+        train_summary=initial_train_summary,
+        random_suite=before_random_suite,
+        greedy_suite=before_greedy_suite,
+        rule_suite=before_rule_suite,
+        self_suite=before_self_suite,
+    )
+
+    print("[*] Training starts...")
     episodes_completed = resume_start_episodes
     last_train_summary: Dict[str, object] = {}
     recovery_next_chunk = False
     prev_checkpoint_greedy_wr: Optional[float] = None
+    after_random_suite: Dict[str, object] = {"results": [], "text": f"=== Checkpoint {train_episodes} vs Random (skipped) ==="}
+    after_greedy_suite: Dict[str, object] = {"results": [], "text": f"=== Checkpoint {train_episodes} vs Greedy (skipped) ==="}
+    after_rule_suite: Dict[str, object] = {"results": [], "text": f"=== Checkpoint {train_episodes} vs Rule-Based (skipped) ==="}
+    after_self_suite: Dict[str, object] = {"results": [], "text": f"=== Checkpoint {train_episodes} vs Self (skipped) ==="}
     after_random = None
     after_greedy = None
     after_rule = None
@@ -1803,27 +1993,47 @@ def run_train_eval_experiment(
         train_summary["train_elapsed_sec"] = max(1e-9, time.perf_counter() - chunk_train_start)
         episodes_completed += chunk
         last_train_summary = train_summary
+        total_train_summary["episodes"] = int(total_train_summary.get("episodes", 0)) + int(train_summary.get("episodes", 0))
+        total_train_summary["wins"] = int(total_train_summary.get("wins", 0)) + int(train_summary.get("wins", 0))
+        total_train_summary["losses"] = int(total_train_summary.get("losses", 0)) + int(train_summary.get("losses", 0))
+        total_train_summary["draws"] = int(total_train_summary.get("draws", 0)) + int(train_summary.get("draws", 0))
+        total_train_summary["updates"] = int(total_train_summary.get("updates", 0)) + int(train_summary.get("updates", 0))
+        total_train_summary["train_elapsed_sec"] = float(total_train_summary.get("train_elapsed_sec", 0.0)) + float(train_summary.get("train_elapsed_sec", 0.0) or 0.0)
+        total_train_summary["chunks"] = int(total_train_summary.get("chunks", 0)) + 1
 
-        suite = None
-        rule_suite = None
-        self_suite = None
         if episodes_completed < train_episodes:
+            checkpoint_matches = _checkpoint_suite_matches(episodes_completed)
             print(
                 f"[*] Checkpoint {episodes_completed}/{train_episodes} -> "
-                f"evaluating greedy/rule-based/self across {checkpoint_eval_matches * 24} matches..."
+                f"evaluating random/greedy/rule-based/self across {checkpoint_matches * 32} matches..."
             )
-            suite = _run_8combo_opponent_eval_suite(
+            random_suite = _run_8combo_opponent_eval_suite(
+                trainer=trainer,
+                rl_agent=learning_agent,
+                opponent_agent=SeaEngineRandomAgent(seed=_seed_with_offset(seed, 404 + episodes_completed)),
+                opponent_label="random",
+                suite_title=f"Checkpoint {episodes_completed} vs Random",
+                history_tag=f"se_ckpt_{episodes_completed}_random",
+                checkpoint_episodes=episodes_completed,
+                num_matches_per_combo=checkpoint_matches,
+                card_data_path=card_data_path,
+                max_turns=max_turns,
+                scenario_report_prefix="se_ckpt_random",
+                scenario_workers=scenario_workers,
+                use_belief_mcts=eval_belief_mcts,
+            )
+            greedy_suite = _run_8combo_opponent_eval_suite(
                 trainer=trainer,
                 rl_agent=learning_agent,
                 opponent_agent=SeaEngineGreedyAgent(seed=_seed_with_offset(seed, 505 + episodes_completed)),
                 opponent_label="greedy",
                 suite_title=f"Checkpoint {episodes_completed} vs Greedy",
-                history_tag=f"se_ckpt_{episodes_completed}",
+                history_tag=f"se_ckpt_{episodes_completed}_greedy",
                 checkpoint_episodes=episodes_completed,
-                num_matches_per_combo=checkpoint_eval_matches,
+                num_matches_per_combo=checkpoint_matches,
                 card_data_path=card_data_path,
                 max_turns=max_turns,
-                scenario_report_prefix="se_ckpt",
+                scenario_report_prefix="se_ckpt_greedy",
                 scenario_workers=scenario_workers,
                 use_belief_mcts=eval_belief_mcts,
             )
@@ -1835,7 +2045,7 @@ def run_train_eval_experiment(
                 suite_title=f"Checkpoint {episodes_completed} vs Rule-Based",
                 history_tag=f"se_ckpt_{episodes_completed}_rule",
                 checkpoint_episodes=episodes_completed,
-                num_matches_per_combo=checkpoint_eval_matches,
+                num_matches_per_combo=checkpoint_matches,
                 card_data_path=card_data_path,
                 max_turns=max_turns,
                 scenario_report_prefix="se_ckpt_rule",
@@ -1850,84 +2060,22 @@ def run_train_eval_experiment(
                 suite_title=f"Checkpoint {episodes_completed} vs Self",
                 history_tag=f"se_ckpt_{episodes_completed}_self",
                 checkpoint_episodes=episodes_completed,
-                num_matches_per_combo=checkpoint_eval_matches,
+                num_matches_per_combo=checkpoint_matches,
                 card_data_path=card_data_path,
                 max_turns=max_turns,
                 scenario_report_prefix="se_ckpt_self",
                 scenario_workers=scenario_workers,
                 use_belief_mcts=eval_belief_mcts,
             )
-            checkpoint_text = "\n".join(
-                [
-                    f"=== Checkpoint {episodes_completed} Episodes ===",
-                    f"opponent_stats={train_summary.get('opponent_stats', {})}",
-                    suite["text"],
-                    rule_suite["text"],
-                    self_suite["text"],
-                    "",
-                    f"train_summary={train_summary}",
-                    "",
-                ]
+            _record_checkpoint_artifacts(
+                episodes_completed=episodes_completed,
+                train_summary=train_summary,
+                random_suite=random_suite,
+                greedy_suite=greedy_suite,
+                rule_suite=rule_suite,
+                self_suite=self_suite,
             )
-        else:
-            print(f"[*] Final checkpoint {episodes_completed}/{train_episodes} saved (no checkpoint eval suite).")
-            checkpoint_text = "\n".join(
-                [
-                    f"=== Checkpoint {episodes_completed} Episodes ===",
-                    f"opponent_stats={train_summary.get('opponent_stats', {})}",
-                    "=== Final checkpoint: checkpoint eval suite skipped ===",
-                    "",
-                    f"train_summary={train_summary}",
-                    "",
-                ]
-            )
-        population_score = _checkpoint_population_score(greedy_suite=suite, self_suite=self_suite)
-        checkpoint_text += (
-            "=== Population-Based Checkpoint Score ===\n"
-            f"score={population_score['score']:.4f}\n"
-            f"greedy_wr={population_score['greedy_wr'] * 100.0:.2f}%\n"
-            f"self_wr={population_score['self_wr'] * 100.0:.2f}%\n"
-            f"worst_combo_wr={population_score['worst_combo_wr'] * 100.0:.2f}%\n"
-            f"max_side_gap={population_score['max_side_gap'] * 100.0:.2f}pp\n"
-        )
-        checkpoint_path = save_report(checkpoint_text, _default_report_path(f"se_ckpt_{episodes_completed}"))
-        self_stats_text = "\n".join(
-            [
-                f"=== Opponent Stats @ {episodes_completed} ===",
-                f"episodes={episodes_completed}",
-                f"stats={train_summary.get('opponent_stats', {})}",
-                "",
-            ]
-        )
-        self_stats_path = save_report(self_stats_text, _default_report_path(f"se_selfstats_{episodes_completed}"))
-        checkpoints.append(
-            {
-                "episodes_completed": episodes_completed,
-                "train_summary": train_summary,
-                "suite_results": [] if suite is None else suite["results"],
-                "suite_text": "" if suite is None else suite["text"],
-                "rule_suite_results": [] if rule_suite is None else rule_suite["results"],
-                "rule_suite_text": "" if rule_suite is None else rule_suite["text"],
-                "self_suite_results": [] if self_suite is None else self_suite["results"],
-                "self_suite_text": "" if self_suite is None else self_suite["text"],
-                "population_score": population_score,
-                "report_path": str(checkpoint_path),
-                "self_stats_path": str(self_stats_path),
-            }
-        )
-        resume_state_path = _save_training_resume_state(
-            model_path=str(trainer.model_dir / f"model_ep_{episodes_completed}.pt"),
-            episodes_completed=episodes_completed,
-            train_episodes=train_episodes,
-            checkpoint_interval=checkpoint_interval,
-            save_interval=save_interval,
-            seed=seed,
-            device=str(learning_agent.device),
-            report_path=str(checkpoint_path),
-        )
-        print(f"[*] Resume state saved: {resume_state_path}")
-        if suite is not None:
-            greedy_rows = [row for row in suite["results"] if row.get("opponent") == "greedy"]
+            greedy_rows = [row for row in greedy_suite["results"] if row.get("opponent") == "greedy"]
             greedy_n = sum(int(row.get("episodes", 0)) for row in greedy_rows)
             greedy_w = sum(int(row.get("rl_wins", 0)) for row in greedy_rows)
             greedy_wr = 0.0 if greedy_n <= 0 else greedy_w / greedy_n
@@ -1951,15 +2099,16 @@ def run_train_eval_experiment(
         after_self = _make_skipped_eval_summary("self")
         after_self_history_path = None
     else:
-        print(f"[*] Evaluating after training vs random across 8 combos ({eval_matches} each)...")
+        after_matches = _checkpoint_suite_matches(train_episodes)
+        print(f"[*] Evaluating checkpoint {train_episodes} vs random across 8 combos ({after_matches} each)...")
         after_random_suite = _run_8combo_opponent_eval_suite(
             trainer=trainer,
             rl_agent=learning_agent,
             opponent_agent=SeaEngineRandomAgent(seed=_seed_with_offset(seed, 404)),
             opponent_label="random",
-            suite_title="After Training vs Random",
+            suite_title=f"Checkpoint {train_episodes} vs Random",
             history_tag="se_evalhist_after_random",
-            num_matches_per_combo=eval_matches,
+            num_matches_per_combo=after_matches,
             card_data_path=card_data_path,
             max_turns=max_turns,
             scenario_report_prefix="se_after_random",
@@ -1971,22 +2120,25 @@ def run_train_eval_experiment(
         if include_eval_history:
             after_random_history_path = _save_history_report(
                 prefix="se_evalhist_after_random",
-                title="After Training vs Random Histories",
+                title=f"Checkpoint {train_episodes} vs Random Histories",
                 summary=after_random,
             )
             if after_random_history_path is not None:
                 after_random["report_path"] = str(after_random_history_path)
-        _write_summary_snapshot("after_random_done", [f"after_random={after_random['report_path']}", ""])
+        _write_summary_snapshot(
+            "checkpoint_10000_random_done",
+            [f"checkpoint_10000_random={after_random['report_path']}", ""],
+        )
 
-        print(f"[*] Evaluating after training vs greedy across 8 combos ({eval_matches} each)...")
+        print(f"[*] Evaluating checkpoint {train_episodes} vs greedy across 8 combos ({after_matches} each)...")
         after_greedy_suite = _run_8combo_opponent_eval_suite(
             trainer=trainer,
             rl_agent=learning_agent,
             opponent_agent=SeaEngineGreedyAgent(seed=_seed_with_offset(seed, 505)),
             opponent_label="greedy",
-            suite_title="After Training vs Greedy",
+            suite_title=f"Checkpoint {train_episodes} vs Greedy",
             history_tag="se_evalhist_after_greedy",
-            num_matches_per_combo=eval_matches,
+            num_matches_per_combo=after_matches,
             card_data_path=card_data_path,
             max_turns=max_turns,
             scenario_report_prefix="se_after_greedy",
@@ -1998,25 +2150,29 @@ def run_train_eval_experiment(
         if include_eval_history:
             after_greedy_history_path = _save_history_report(
                 prefix="se_evalhist_after_greedy",
-                title="After Training vs Greedy Histories",
+                title=f"Checkpoint {train_episodes} vs Greedy Histories",
                 summary=after_greedy,
             )
             if after_greedy_history_path is not None:
                 after_greedy["report_path"] = str(after_greedy_history_path)
         _write_summary_snapshot(
-            "after_greedy_done",
-            [f"after_random={after_random['report_path']}", f"after_greedy={after_greedy['report_path']}", ""],
+            "checkpoint_10000_greedy_done",
+            [
+                f"checkpoint_10000_random={after_random['report_path']}",
+                f"checkpoint_10000_greedy={after_greedy['report_path']}",
+                "",
+            ],
         )
 
-        print(f"[*] Evaluating after training vs rule-based across 8 combos ({eval_matches} each)...")
+        print(f"[*] Evaluating checkpoint {train_episodes} vs rule-based across 8 combos ({after_matches} each)...")
         after_rule_suite = _run_8combo_opponent_eval_suite(
             trainer=trainer,
             rl_agent=learning_agent,
             opponent_agent=SeaEngineRuleBasedAgent(seed=_seed_with_offset(seed, 555)),
             opponent_label="rule_based",
-            suite_title="After Training vs Rule-Based",
+            suite_title=f"Checkpoint {train_episodes} vs Rule-Based",
             history_tag="se_evalhist_after_rule",
-            num_matches_per_combo=eval_matches,
+            num_matches_per_combo=after_matches,
             card_data_path=card_data_path,
             max_turns=max_turns,
             scenario_report_prefix="se_after_rule",
@@ -2028,30 +2184,30 @@ def run_train_eval_experiment(
         if include_eval_history:
             after_rule_history_path = _save_history_report(
                 prefix="se_evalhist_after_rule",
-                title="After Training vs Rule-Based Histories",
+                title=f"Checkpoint {train_episodes} vs Rule-Based Histories",
                 summary=after_rule,
             )
             if after_rule_history_path is not None:
                 after_rule["report_path"] = str(after_rule_history_path)
         _write_summary_snapshot(
-            "after_rule_done",
+            "checkpoint_10000_rule_done",
             [
-                f"after_random={after_random['report_path']}",
-                f"after_greedy={after_greedy['report_path']}",
-                f"after_rule={after_rule['report_path']}",
+                f"checkpoint_10000_random={after_random['report_path']}",
+                f"checkpoint_10000_greedy={after_greedy['report_path']}",
+                f"checkpoint_10000_rule={after_rule['report_path']}",
                 "",
             ],
         )
 
-        print(f"[*] Evaluating after training vs self across 8 combos ({eval_matches} each)...")
+        print(f"[*] Evaluating checkpoint {train_episodes} vs self across 8 combos ({after_matches} each)...")
         after_self_suite = _run_8combo_opponent_eval_suite(
             trainer=trainer,
             rl_agent=learning_agent,
             opponent_agent=learning_agent,
             opponent_label="self",
-            suite_title="After Training vs Self",
+            suite_title=f"Checkpoint {train_episodes} vs Self",
             history_tag="se_evalhist_after_self",
-            num_matches_per_combo=eval_matches,
+            num_matches_per_combo=after_matches,
             card_data_path=card_data_path,
             max_turns=max_turns,
             scenario_report_prefix="se_after_self",
@@ -2063,20 +2219,29 @@ def run_train_eval_experiment(
         if include_eval_history:
             after_self_history_path = _save_history_report(
                 prefix="se_evalhist_after_self",
-                title="After Training vs Self Histories",
+                title=f"Checkpoint {train_episodes} vs Self Histories",
                 summary=after_self,
             )
             if after_self_history_path is not None:
                 after_self["report_path"] = str(after_self_history_path)
         _write_summary_snapshot(
-            "after_self_done",
+            "checkpoint_10000_done",
             [
-                f"after_random={after_random['report_path']}",
-                f"after_greedy={after_greedy['report_path']}",
-                f"after_rule={after_rule['report_path']}",
-                f"after_self={after_self['report_path']}",
+                f"checkpoint_{train_episodes}=random done",
+                f"checkpoint_{train_episodes}_random={after_random['report_path']}",
+                f"checkpoint_{train_episodes}_greedy={after_greedy['report_path']}",
+                f"checkpoint_{train_episodes}_rule={after_rule['report_path']}",
+                f"checkpoint_{train_episodes}_self={after_self['report_path']}",
                 "",
             ],
+        )
+        _record_checkpoint_artifacts(
+            episodes_completed=train_episodes,
+            train_summary=last_train_summary or total_train_summary,
+            random_suite=after_random_suite,
+            greedy_suite=after_greedy_suite,
+            rule_suite=after_rule_suite,
+            self_suite=after_self_suite,
         )
 
     report_lines = [
@@ -2087,28 +2252,29 @@ def run_train_eval_experiment(
         f"update_interval={update_interval}",
         f"opponent_pool={[agent.name for agent in opponent_pool]}",
         "",
-        "=== Before Training vs Random ===",
+        "=== Checkpoint 0 vs Random ===",
         f"report={before_random['report_path']}",
         f"history={None if before_random_history_path is None else str(before_random_history_path)}",
         build_win_rate_report(before_random),
         "",
-        "=== Before Training vs Greedy ===",
+        "=== Checkpoint 0 vs Greedy ===",
         f"report={before_greedy['report_path']}",
         f"history={None if before_greedy_history_path is None else str(before_greedy_history_path)}",
         build_win_rate_report(before_greedy),
         "",
-        "=== Before Training vs Rule-Based ===",
+        "=== Checkpoint 0 vs Rule-Based ===",
         f"report={before_rule['report_path']}",
         f"history={None if before_rule_history_path is None else str(before_rule_history_path)}",
         build_win_rate_report(before_rule),
         "",
-        "=== Before Training vs Self ===",
+        "=== Checkpoint 0 vs Self ===",
         f"report={before_self['report_path']}",
         f"history={None if before_self_history_path is None else str(before_self_history_path)}",
         build_win_rate_report(before_self),
         "",
         "=== Training Summary ===",
-        str(last_train_summary),
+        f"train_total={total_train_summary}",
+        f"train_last_chunk={last_train_summary}",
         "",
         "=== Checkpoints ===",
         "\n".join(f"- ep {ckpt['episodes_completed']}: {ckpt['report_path']}" for ckpt in checkpoints),
@@ -2116,30 +2282,32 @@ def run_train_eval_experiment(
         "=== Population-Based Checkpoint Selection ===",
         "\n".join(
             f"- ep {ckpt['episodes_completed']}: score={dict(ckpt.get('population_score', {})).get('score', 0.0):.4f}, "
+            f"random_wr={dict(ckpt.get('population_score', {})).get('random_wr', 0.0) * 100.0:.2f}%, "
             f"greedy_wr={dict(ckpt.get('population_score', {})).get('greedy_wr', 0.0) * 100.0:.2f}%, "
+            f"rule_wr={dict(ckpt.get('population_score', {})).get('rule_wr', 0.0) * 100.0:.2f}%, "
             f"self_wr={dict(ckpt.get('population_score', {})).get('self_wr', 0.0) * 100.0:.2f}%, "
-            f"worst_combo={dict(ckpt.get('population_score', {})).get('worst_combo_wr', 0.0) * 100.0:.2f}%, "
+            f"worst_combo_wr={dict(ckpt.get('population_score', {})).get('worst_combo_wr', 0.0) * 100.0:.2f}%, "
             f"max_side_gap={dict(ckpt.get('population_score', {})).get('max_side_gap', 0.0) * 100.0:.2f}pp"
             for ckpt in checkpoints
         ),
         f"selected_checkpoint_ep={max(checkpoints, key=lambda ckpt: dict(ckpt.get('population_score', {})).get('score', -999.0))['episodes_completed'] if checkpoints else ''}",
         "",
-        "=== After Training vs Random ===",
+        "=== Checkpoint 10000 vs Random ===",
         f"report={after_random['report_path']}",
         f"history={None if after_random_history_path is None else str(after_random_history_path)}",
         build_win_rate_report(after_random),
         "",
-        "=== After Training vs Greedy ===",
+        "=== Checkpoint 10000 vs Greedy ===",
         f"report={after_greedy['report_path']}",
         f"history={None if after_greedy_history_path is None else str(after_greedy_history_path)}",
         build_win_rate_report(after_greedy),
         "",
-        "=== After Training vs Rule-Based ===",
+        "=== Checkpoint 10000 vs Rule-Based ===",
         f"report={after_rule['report_path']}",
         f"history={None if after_rule_history_path is None else str(after_rule_history_path)}",
         build_win_rate_report(after_rule),
         "",
-        "=== After Training vs Self ===",
+        "=== Checkpoint 10000 vs Self ===",
         f"report={after_self['report_path']}",
         f"history={None if after_self_history_path is None else str(after_self_history_path)}",
         build_win_rate_report(after_self),
@@ -2151,24 +2319,34 @@ def run_train_eval_experiment(
         checkpoint_lines = [
             f"checkpoint_count={len(checkpoints)}",
             *[
-                f"checkpoint_ep={ckpt['episodes_completed']} | report={ckpt['report_path']} | score={dict(ckpt.get('population_score', {})).get('score', 0.0):.4f}"
+                f"checkpoint_ep={ckpt['episodes_completed']} | report={ckpt['report_path']} | "
+                f"score={dict(ckpt.get('population_score', {})).get('score', 0.0):.4f} | "
+                f"random_wr={dict(ckpt.get('population_score', {})).get('random_wr', 0.0) * 100.0:.2f}% | "
+                f"greedy_wr={dict(ckpt.get('population_score', {})).get('greedy_wr', 0.0) * 100.0:.2f}% | "
+                f"rule_wr={dict(ckpt.get('population_score', {})).get('rule_wr', 0.0) * 100.0:.2f}% | "
+                f"self_wr={dict(ckpt.get('population_score', {})).get('self_wr', 0.0) * 100.0:.2f}% | "
+                f"worst_combo_wr={dict(ckpt.get('population_score', {})).get('worst_combo_wr', 0.0) * 100.0:.2f}% | "
+                f"max_side_gap={dict(ckpt.get('population_score', {})).get('max_side_gap', 0.0) * 100.0:.2f}pp"
                 for ckpt in checkpoints
             ],
         ]
         _write_summary_snapshot(
             "final",
             [
-                _compact_eval_line("before_random", before_random),
-                _compact_eval_line("before_greedy", before_greedy),
-                _compact_eval_line("before_rule", before_rule),
-                _compact_eval_line("before_self", before_self),
-                _compact_train_line(last_train_summary),
-                _compact_eval_line("after_random", after_random),
-                _compact_eval_line("after_greedy", after_greedy),
-                _compact_eval_line("after_rule", after_rule),
-                _compact_eval_line("after_self", after_self),
+                _compact_eval_line("checkpoint_0_random", before_random),
+                _compact_eval_line("checkpoint_0_greedy", before_greedy),
+                _compact_eval_line("checkpoint_0_rule", before_rule),
+                _compact_eval_line("checkpoint_0_self", before_self),
+                _compact_train_line(total_train_summary, label="train_total"),
+                _compact_train_line(last_train_summary, label="train_last_chunk"),
+                _compact_eval_line("checkpoint_10000_random", after_random),
+                _compact_eval_line("checkpoint_10000_greedy", after_greedy),
+                _compact_eval_line("checkpoint_10000_rule", after_rule),
+                _compact_eval_line("checkpoint_10000_self", after_self),
                 f"total_wall_time_sec={max(0.0, time.perf_counter() - artifact_start_wall):.1f}",
                 f"selected_checkpoint_ep={max(checkpoints, key=lambda ckpt: dict(ckpt.get('population_score', {})).get('score', -999.0))['episodes_completed'] if checkpoints else ''}",
+                f"train_total={total_train_summary}",
+                f"train_last_chunk={last_train_summary}",
                 *checkpoint_lines,
                 f"final_report={saved_path}",
                 "",
@@ -2287,12 +2465,12 @@ def run_checkpoint_training_experiment(
     )
     before_greedy_history_path = _save_history_report(
         prefix="se_ckpt_before_greedy_hist",
-        title="Before Training vs Greedy Histories",
+        title="Checkpoint 0 vs Greedy Histories",
         summary=before_greedy,
     )
     summary_lines.extend(
         [
-            "=== Before Training vs Greedy ===",
+            "=== Checkpoint 0 vs Greedy ===",
             f"report={before_greedy['report_path']}",
             f"history={None if before_greedy_history_path is None else str(before_greedy_history_path)}",
             build_win_rate_report(before_greedy),

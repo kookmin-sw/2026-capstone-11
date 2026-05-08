@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 from collections import Counter
 from contextlib import nullcontext
@@ -348,6 +349,24 @@ def _notify_observed_transition(agents: list[object], snapshot: Dict[str, Any], 
             observer(snapshot, action)
 
 
+def _collect_belief_mcts_summary(agent: object) -> Optional[Dict[str, Any]]:
+    summary_getter = getattr(agent, "get_search_summary", None)
+    if callable(summary_getter):
+        try:
+            return dict(summary_getter())
+        except Exception:
+            return None
+    inner = getattr(agent, "_belief_agent", None)
+    if inner is not None:
+        summary_getter = getattr(inner, "get_search_summary", None)
+        if callable(summary_getter):
+            try:
+                return dict(summary_getter())
+            except Exception:
+                return None
+    return None
+
+
 def evaluate_agents(
     p1_agent,
     p2_agent,
@@ -474,9 +493,21 @@ def evaluate_agents(
             "final_by_deck": {key: _numeric_stats(values) for key, values in sorted(final_hp_by_deck_values.items())},
         },
     }
+    belief_mcts_summary: Dict[str, Dict[str, Any]] = {}
+    for role, agent in (("p1", p1_agent), ("p2", p2_agent)):
+        collected = _collect_belief_mcts_summary(agent)
+        if collected:
+            belief_mcts_summary[role] = collected
+    if belief_mcts_summary:
+        summary["belief_mcts_summary"] = belief_mcts_summary
     if include_history:
         summary["histories"] = _select_representative_histories(histories, desired_history_total)
     report_text = build_win_rate_report(summary)
+    if belief_mcts_summary:
+        lines = [report_text, "", "[Belief MCTS Summary]"]
+        for role, stats in belief_mcts_summary.items():
+            lines.append(f"- {role}: {json.dumps(stats, ensure_ascii=False, sort_keys=True)}")
+        report_text = "\n".join(lines)
     saved_path = save_report(report_text, _default_evaluation_report_path() if report_path is None else report_path)
     summary["report_path"] = str(saved_path)
     return summary

@@ -588,6 +588,8 @@ def _run_balance(
 ) -> dict[str, object]:
     run_started_at = time.perf_counter()
     scenario_started_at: dict[str, float] = {}
+    scenario_last_logged_at: dict[str, float] = {}
+    scenario_last_logged_units: dict[str, int] = {}
     scenario_totals: dict[str, int] = {}
     progress_lock = threading.Lock()
     home = Path.home()
@@ -596,8 +598,9 @@ def _run_balance(
     os.environ.setdefault("SEAENGINE_SUPPRESS_NATIVE_LOGS", "1")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_MODE", "restore")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_SIMS", "1")
-    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "2")
-    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "2")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "3")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "1")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_CANDIDATE_MIXING_STRATEGY", "policy_prior_plus_heuristic_topk")
 
     dotnet_cmd = _ensure_dotnet()
     if dotnet_cmd:
@@ -621,11 +624,17 @@ def _run_balance(
         with progress_lock:
             if label not in scenario_started_at:
                 scenario_started_at[label] = time.perf_counter()
+                scenario_last_logged_at[label] = scenario_started_at[label]
+                scenario_last_logged_units[label] = 0
                 scenario_totals[label] = total
             if current != total and current % interval != 0:
                 return
-            scenario_elapsed = max(1e-9, time.perf_counter() - scenario_started_at[label])
-            scenario_speed = current / scenario_elapsed
+            now = time.perf_counter()
+            interval_units = max(1, current - scenario_last_logged_units[label])
+            interval_elapsed = max(1e-9, now - scenario_last_logged_at[label])
+            scenario_speed = interval_units / interval_elapsed
+            scenario_elapsed = max(1e-9, now - scenario_started_at[label])
+            scenario_avg_speed = current / scenario_elapsed
             overall_done = sum(
                 total if key != label else current
                 for key, total in scenario_totals.items()
@@ -634,9 +643,12 @@ def _run_balance(
             overall_speed = overall_done / overall_elapsed
             print(
                 f"[*] Balance progress | {label} | {current}/{total} "
-                f"| speed={scenario_speed:.2f} eps/s | overall={overall_speed:.2f} eps/s "
+                f"| Speed: {scenario_speed:.2f} eps/s | Avg: {scenario_avg_speed:.2f} eps/s "
+                f"| overall={overall_speed:.2f} eps/s "
                 f"| last_result={result} | matchup={matchup}"
             )
+            scenario_last_logged_at[label] = now
+            scenario_last_logged_units[label] = current
 
     result = run_saved_model_balance_experiment(
         model_path=str(model_path),
@@ -660,7 +672,7 @@ def _run_balance(
     print("=== SeaEngine Balance Experiment ===")
     total_elapsed = max(1e-9, time.perf_counter() - run_started_at)
     total_speed = total_matches / total_elapsed if total_matches > 0 else 0.0
-    print(f"avg speed: {total_speed:.2f} eps/s")
+    print(f"Avg Speed: {total_speed:.2f} eps/s")
     print(result["aggregate"])
     print(f"artifact summary: {summary_copy}")
     return result
@@ -694,13 +706,18 @@ def main() -> int:
     _setup_logger(log_file)
 
     os.environ.setdefault("SEAENGINE_VECTOR_BACKEND", "local")
-    os.environ.setdefault("SEAENGINE_NUM_ENVS", "1")
+    from RL_AI.start import _default_num_envs
+
+    os.environ.setdefault("SEAENGINE_NUM_ENVS", str(_default_num_envs()))
     os.environ.setdefault("SEAENGINE_LOCAL_THREADS", "0")
     os.environ.setdefault("SEAENGINE_WORKERS", "0")
     os.environ.setdefault("SEAENGINE_LOCAL_MAX_WORKERS", "0")
     os.environ.setdefault("SEAENGINE_SCENARIO_WORKERS", "1")
     os.environ.setdefault("SEAENGINE_PARALLEL_WORKERS", "1")
     os.environ.setdefault("SEAENGINE_FAST_POOL", "0")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_SIMS", "1")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "3")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "1")
     _ensure_python_deps()
     _apply_parallel_opt_env("make_balance")
     _prepare_project_dir()
@@ -714,8 +731,9 @@ def main() -> int:
         f"progress_interval={args.progress_interval}, scenario_workers={args.scenario_workers}, "
         f"scenario_shards={args.scenario_shards}, "
         f"belief_mcts_sims={os.environ.get('SEAENGINE_BELIEF_MCTS_SIMS', '1')}, "
-        f"belief_mcts_top_k={os.environ.get('SEAENGINE_BELIEF_MCTS_TOP_K', '2')}, "
-        f"belief_mcts_rollout_steps={os.environ.get('SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS', '2')}, "
+        f"belief_mcts_top_k={os.environ.get('SEAENGINE_BELIEF_MCTS_TOP_K', '3')}, "
+        f"belief_mcts_rollout_steps={os.environ.get('SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS', '1')}, "
+        f"belief_mcts_candidate_mixing_strategy={os.environ.get('SEAENGINE_BELIEF_MCTS_CANDIDATE_MIXING_STRATEGY', 'policy_prior_plus_heuristic_topk')}, "
         f"use_belief_mcts={args.use_belief_mcts}, belief_mcts_mode={os.environ.get('SEAENGINE_BELIEF_MCTS_MODE', 'restore')}, "
         f"include_history={not args.no_history and args.history_limit >= 0}, history_limit={args.history_limit}"
     )

@@ -52,7 +52,7 @@ RL_AI/server_ai_client.py
 
 ### `<start.py>`
 
-학습 전 RL vs random/greedy/rule-based/자기자신 8개 조합 50판씩 -> 총 1600판  
+checkpoint 0 RL vs random/greedy/rule-based/자기자신 8개 조합 100판씩 -> 총 3200판  
 1~2000판 학습(상대는 커리큘럼에 따라 횟수 다를 수 있음, 그리고 불리한 시작 상태도 함께 섞어서 학습한다)
 
 - 1~2000판: `normal 80% / slight 15% / heavy 5%`
@@ -72,14 +72,13 @@ RL_AI/server_ai_client.py
   - 또는 `hp_diff <= -3`이고 `board_diff <= -2`
 
 체크포인트 저장  
-체크포인트별 평가 1200판(greedy/rule-based/자기자신 상대로 8개 조합 50판씩)  
+2000 / 4000 / 6000 / 8000 checkpoint마다 random / greedy / rule-based / 자기자신 상대로 8개 조합 50판씩 -> 각 checkpoint당 총 1600판  
 2001~4000판 학습(12000판과 동일)  
 ...  
 8001~10000판 학습(12000판과 동일)  
 체크포인트 저장  
-10000판 학습 완료 후에는 체크포인트별 평가는 하지 않음 -> 학습 후 random/greedy/rule-based/자기자신으로 대응  
-학습 후 RL vs random/greedy/rule-based/자기자신 8개 조합 50판씩 -> 총 1600판  
-총 16400판
+10000판 학습 완료 시 checkpoint 10000 RL vs random/greedy/rule-based/자기자신 8개 조합 100판씩 -> 총 3200판  
+총 22800판(학습 10000판 + checkpoint 평가 12800판)
 
 ### `<make_balance.py>` (변경 없음)
 
@@ -103,10 +102,10 @@ checkpoint sweep 제외 기본 진단은 총 6400판
 
 ### `<start.py>`
 
-1. 학습 전 vs Random, Greedy, Rule-based, 자기자신 8조합 승률 및 정보 전체  
-2. 학습 후 vs Random, Greedy, Rule-based, 자기자신 8조합 승률 및 정보 전체  
+1. checkpoint 0 vs Random, Greedy, Rule-based, 자기자신 8조합 승률 및 정보 전체  
+2. checkpoint 10000 vs Random, Greedy, Rule-based, 자기자신 8조합 승률 및 정보 전체  
 3. 체크포인트별 vs Random, Greedy, Rule-based, 자기자신 8조합 승률 및 정보 전체  
-4. 학습 후 vs Random, Greedy, Rule-based, 자기자신 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석
+4. checkpoint 10000 vs Random, Greedy, Rule-based, 자기자신 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석
 
 ### `<make_balance.py>`
 
@@ -146,12 +145,11 @@ checkpoint sweep 제외 기본 진단은 총 6400판
 2. `~/RL_AI` 작업 디렉터리를 압축 해제한다.
 3. C# 빌드와 PythonNet 초기화를 수행한다.
 4. `SeaEnginePPOTrainer`로 학습을 진행한다.
-5. 학습 전 `random` / `greedy` / `rule-based` / `자기자신` 평가를 8개 조합 기준으로 각각 50판씩 수행한다.
+5. checkpoint 0 `random` / `greedy` / `rule-based` / `자기자신` 평가를 8개 조합 기준으로 각각 100판씩 수행한다.
 6. 학습을 10,000 episodes 돌린다.
-7. 2,000 에피소드마다 checkpoint를 저장하고, `2,000 / 4,000 / 6,000 / 8,000` checkpoint마다 `greedy` / `rule-based` / `자기자신` 기준 8개 조합 평가를 수행한다.
-8. 마지막 10,000 에피소드 checkpoint에서는 추가 checkpoint 평가를 하지 않는다.
-9. 학습 후 `random` / `greedy` / `rule-based` / `자기자신` 평가를 8개 조합 기준으로 각각 50판씩 수행한다.
-10. 결과 로그와 모델을 zip으로 묶는다.
+7. 2,000 에피소드마다 checkpoint를 저장하고, `2,000 / 4,000 / 6,000 / 8,000` checkpoint마다 `random` / `greedy` / `rule-based` / `자기자신` 기준 8개 조합 평가를 수행한다.
+8. 10,000 에피소드 checkpoint에서는 `random` / `greedy` / `rule-based` / `자기자신` 평가를 8개 조합 기준으로 각각 100판씩 수행한다.
+9. checkpoint 10000 평가를 마치면 결과 로그와 모델을 zip으로 묶는다.
 
 여기서 말하는 **8개 조합**은 다음 축의 조합이다.
 
@@ -430,7 +428,7 @@ python -u ~/start.py \
 옵션 설명:
 
 - `--eval-matches`
-  - 학습 전/후 평가 판수 per combo (random/greedy/rule-based/self 각각)
+  - checkpoint 0/10000 평가 판수 per combo (random/greedy/rule-based/self 각각)
   - 기본값: `50`
 - `--train-episodes`
   - 총 학습 에피소드 수
@@ -458,7 +456,7 @@ python -u ~/start.py \
 - C# 빌드
 - PythonNet 초기화
 - 학습
-- before/after 8개 조합 평가
+- checkpoint 0 / 10000 8개 조합 평가
 - 2000/4000/6000/8000 checkpoint의 greedy/rule-based/self 8개 조합 평가
 - 모델 zip / 로그 zip 정리
 

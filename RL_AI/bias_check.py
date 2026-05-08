@@ -567,8 +567,9 @@ def _configure_runtime_env() -> str:
     os.environ.setdefault("SEAENGINE_TRAIN_MAX_TURNS", "100")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_MODE", "restore")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_SIMS", "1")
-    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "2")
-    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "2")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "3")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "1")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_CANDIDATE_MIXING_STRATEGY", "policy_prior_plus_heuristic_topk")
 
     home = Path.home()
     if str(home) not in sys.path:
@@ -1113,6 +1114,7 @@ def _run_same_policy_suite(
             "avg_final_turn": float(summary["avg_final_turn"]),
             "action_type_counts": dict(summary.get("action_type_counts", {})),
             "card_use_counts": dict(summary.get("card_use_counts", {})),
+            "belief_mcts_summary": dict(summary.get("belief_mcts_summary", {})),
             "report_path": str(summary.get("report_path", "")),
             "history_path": None,
         }
@@ -1254,6 +1256,7 @@ def _run_head_to_head_suite(
             "avg_final_turn": float(summary["avg_final_turn"]),
             "action_type_counts": dict(summary.get("action_type_counts", {})),
             "card_use_counts": dict(summary.get("card_use_counts", {})),
+            "belief_mcts_summary": dict(summary.get("belief_mcts_summary", {})),
             "report_path": str(summary.get("report_path", "")),
             "history_path": None,
         }
@@ -1340,6 +1343,9 @@ def _format_suite_report(title: str, suite: Dict[str, Any]) -> str:
             f"avg_turn={float(row['avg_final_turn']):.1f}"
             + (f", history={history_path}" if history_path else "")
         )
+        belief_summary = row.get("belief_mcts_summary")
+        if belief_summary:
+            lines.append(f"  belief_mcts_summary={json.dumps(belief_summary, ensure_ascii=False, sort_keys=True)}")
     if suite.get("best") is not None:
         best = suite["best"]
         lines.append("")
@@ -1485,18 +1491,28 @@ def _make_speed_progress_callback(
     interval: int = 50,
 ) -> Callable[[int, int, str, str], None]:
     start = time.time()
+    last_logged_at = start
+    last_logged_units = 0
 
     def _callback(current: int, total: int, result: str, matchup: str) -> None:
+        nonlocal last_logged_at, last_logged_units
         should_print = current == 1 or current >= total or current % max(1, interval) == 0
         if not should_print:
             return
-        elapsed = max(1e-9, time.time() - start)
-        speed = current / elapsed
+        now = time.time()
+        interval_units = max(1, current - last_logged_units)
+        interval_elapsed = max(1e-9, now - last_logged_at)
+        speed = interval_units / interval_elapsed
+        elapsed = max(1e-9, now - start)
+        avg_speed = current / elapsed
         print(
-            f"[*] {task_name} progress: {current}/{total_units or total} {unit_label}={speed:.2f} | "
+            f"[*] {task_name} progress: {current}/{total_units or total} "
+            f"Speed: {speed:.2f} {unit_label} | Avg: {avg_speed:.2f} {unit_label} | "
             f"last={result} | matchup={matchup}",
             flush=True,
         )
+        last_logged_at = now
+        last_logged_units = current
 
     return _callback
 
@@ -1752,13 +1768,18 @@ def main() -> int:
     _setup_logger(log_file)
 
     os.environ.setdefault("SEAENGINE_VECTOR_BACKEND", "local")
-    os.environ.setdefault("SEAENGINE_NUM_ENVS", "1")
+    from RL_AI.start import _default_num_envs
+
+    os.environ.setdefault("SEAENGINE_NUM_ENVS", str(_default_num_envs()))
     os.environ.setdefault("SEAENGINE_LOCAL_THREADS", "0")
     os.environ.setdefault("SEAENGINE_WORKERS", "0")
     os.environ.setdefault("SEAENGINE_LOCAL_MAX_WORKERS", "0")
     os.environ.setdefault("SEAENGINE_SCENARIO_WORKERS", "1")
     os.environ.setdefault("SEAENGINE_PARALLEL_WORKERS", "1")
     os.environ.setdefault("SEAENGINE_FAST_POOL", "0")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_SIMS", "1")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "3")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "1")
     dotnet_cmd = _ensure_dotnet()
     _ensure_python_deps()
     _apply_parallel_opt_env("bias_check")
@@ -1774,8 +1795,9 @@ def main() -> int:
         f"parallel_workers={args.parallel_workers}, scenario_workers={args.scenario_workers}, seed={args.seed}, device={args.device}, "
         f"model_hidden_dim={os.environ.get('SEAENGINE_MODEL_HIDDEN_DIM', '192')}, "
         f"belief_mcts_sims={os.environ.get('SEAENGINE_BELIEF_MCTS_SIMS', '1')}, "
-        f"belief_mcts_top_k={os.environ.get('SEAENGINE_BELIEF_MCTS_TOP_K', '2')}, "
-        f"belief_mcts_rollout_steps={os.environ.get('SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS', '2')}, "
+        f"belief_mcts_top_k={os.environ.get('SEAENGINE_BELIEF_MCTS_TOP_K', '3')}, "
+        f"belief_mcts_rollout_steps={os.environ.get('SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS', '1')}, "
+        f"belief_mcts_candidate_mixing_strategy={os.environ.get('SEAENGINE_BELIEF_MCTS_CANDIDATE_MIXING_STRATEGY', 'policy_prior_plus_heuristic_topk')}, "
         f"use_belief_mcts={args.use_belief_mcts}, belief_mcts_mode={os.environ.get('SEAENGINE_BELIEF_MCTS_MODE', 'restore')}, "
         f"include_history={not args.no_history and args.history_limit >= 0}, history_limit={args.history_limit}, "
         f"skip_unzip={args.skip_unzip}, skip_build={args.skip_build}"

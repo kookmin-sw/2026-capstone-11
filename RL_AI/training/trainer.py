@@ -780,6 +780,8 @@ class SeaEnginePPOTrainer:
             opponent_pool = self.build_default_opponent_pool()
         
         train_start = time.perf_counter()
+        last_log_time = train_start
+        last_log_episodes = 0
         pending_buffer = RolloutBuffer()
         env = VectorSeaEngineEnv(num_envs=num_envs, card_data_path=card_data_path)
         env.start()
@@ -802,8 +804,6 @@ class SeaEnginePPOTrainer:
             
             # num_episodes가 num_envs로 나누어 떨어지지 않으면 맞춰서 반복
             for episode_start_idx in range(0, num_episodes, num_envs):
-                chunk_start = time.perf_counter()
-                chunk_episodes_before = results["episodes"]
                 actual_num_envs = min(num_envs, num_episodes - episode_start_idx)
                 env.num_envs = actual_num_envs # Adjust if last batch is smaller
                 batch_schedule = None
@@ -869,9 +869,12 @@ class SeaEnginePPOTrainer:
                 if log_interval > 0 and results["episodes"] % log_interval < actual_num_envs:
                     win_rate = (results["wins"] / results["episodes"]) * 100
                     loss = results.get("last_update", {}).get("policy_loss", 0.0)
-                    chunk_episodes = max(1, results["episodes"] - chunk_episodes_before)
-                    chunk_elapsed = max(1e-9, time.perf_counter() - chunk_start)
-                    speed = chunk_episodes / chunk_elapsed
+                    now = time.perf_counter()
+                    interval_episodes = max(1, results["episodes"] - last_log_episodes)
+                    interval_elapsed = max(1e-9, now - last_log_time)
+                    speed = interval_episodes / interval_elapsed
+                    total_elapsed = max(1e-9, now - train_start)
+                    avg_speed = results["episodes"] / total_elapsed if results["episodes"] > 0 else 0.0
                     opp_summary = ", ".join(
                         f"{self._short_opponent_name(name)}={count}"
                         for name, count in sorted(interval_opponents.items())
@@ -880,8 +883,11 @@ class SeaEnginePPOTrainer:
                         opp_summary = "-"
                     print(
                         f"[Ep {results['episodes']:>5}/{num_episodes}] "
-                        f"Win: {win_rate:>4.1f}% | Loss: {loss:>7.4f} | Speed: {speed:>5.1f} eps/s | Opp: {opp_summary}"
+                        f"Win: {win_rate:>4.1f}% | Loss: {loss:>7.4f} | "
+                        f"Speed: {speed:>5.1f} eps/s | Avg: {avg_speed:>5.1f} eps/s | Opp: {opp_summary}"
                     )
+                    last_log_time = now
+                    last_log_episodes = results["episodes"]
                     interval_opponents.clear()
 
                 # 6. Periodic Save

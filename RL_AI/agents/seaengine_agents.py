@@ -640,14 +640,14 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
         self,
         base_agent: SeaEngineRLAgent,
         *,
-        simulations: int = 2,
+        simulations: int = 1,
         top_k: int = 3,
         rollout_steps: int = 1,
         mode: str = "restore",
         c_puct: float = 1.25,
         noise: float = 0.02,
-        policy_weight: float = 0.70,
         value_weight: float = 0.05,
+        candidate_mixing_strategy: str = "policy_prior_plus_heuristic_topk",
         seed: Optional[int] = None,
     ) -> None:
         super().__init__("belief_mcts", seed=seed)
@@ -658,8 +658,9 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
         self.mode = "restore"
         self.c_puct = max(0.0, float(c_puct))
         self.noise = max(0.0, float(noise))
-        self.policy_weight = max(0.0, float(policy_weight))
         self.value_weight = max(0.0, float(value_weight))
+        self.candidate_mixing_strategy = str(candidate_mixing_strategy or "policy_prior_plus_heuristic_topk").strip().lower()
+        self.heuristic_agent = SeaEngineRuleBasedAgent(seed=seed)
         self.player1_deck = ""
         self.player2_deck = ""
         self.card_data_path: Optional[str] = None
@@ -667,7 +668,9 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
         self._replay_available = True
         self.last_output: Optional[SeaEngineRLAgentOutput] = None
         self.last_search: Dict[str, Any] = {}
+        self._search_stats: Dict[str, int] = {}
         self._search_session = None
+        self._reset_search_stats()
 
     @property
     def device(self):
@@ -706,16 +709,23 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
             except Exception:
                 return default
 
+        def _env_str(name: str, default: str) -> str:
+            raw = str(os.environ.get(name, default)).strip()
+            return raw or default
+
         return cls(
             base_agent,
             simulations=_env_int("SEAENGINE_BELIEF_MCTS_SIMS", 1),
-            top_k=_env_int("SEAENGINE_BELIEF_MCTS_TOP_K", 2),
-            rollout_steps=_env_int("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", 2),
+            top_k=_env_int("SEAENGINE_BELIEF_MCTS_TOP_K", 3),
+            rollout_steps=_env_int("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", 1),
             mode="restore",
             c_puct=_env_float("SEAENGINE_BELIEF_MCTS_C_PUCT", 1.25),
             noise=_env_float("SEAENGINE_BELIEF_MCTS_NOISE", 0.02),
-            policy_weight=_env_float("SEAENGINE_BELIEF_MCTS_POLICY_WEIGHT", 0.70),
             value_weight=_env_float("SEAENGINE_BELIEF_MCTS_VALUE_WEIGHT", 0.05),
+            candidate_mixing_strategy=_env_str(
+                "SEAENGINE_BELIEF_MCTS_CANDIDATE_MIXING_STRATEGY",
+                "policy_prior_plus_heuristic_topk",
+            ),
             seed=seed,
         )
 
@@ -732,12 +742,47 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
         self.card_data_path = card_data_path
         self._history = []
         self._replay_available = bool(replay_available)
+        self._reset_search_stats()
         if self._search_session is not None and card_data_path is not None:
             self._search_session.close()
             self._search_session = None
 
     def set_replay_available(self, enabled: bool) -> None:
         self._replay_available = bool(enabled)
+
+    def _reset_search_stats(self) -> None:
+        self._search_stats = {
+            "total_searches": 0,
+            "single_action": 0,
+            "restore_mcts": 0,
+            "policy_fallback": 0,
+            "engine_state_unavailable": 0,
+            "replay_failed": 0,
+            "failures_total": 0,
+            "changed_count": 0,
+        }
+
+    def get_search_summary(self) -> Dict[str, Any]:
+        total = int(self._search_stats.get("total_searches", 0))
+        changed = int(self._search_stats.get("changed_count", 0))
+        failures_total = int(self._search_stats.get("failures_total", 0))
+        summary = dict(self._search_stats)
+        summary["changed_rate"] = 0.0 if total <= 0 else changed / total
+        summary["avg_failures_per_search"] = 0.0 if total <= 0 else failures_total / total
+        summary["policy_fallback_rate"] = 0.0 if total <= 0 else float(summary.get("policy_fallback", 0)) / total
+        summary["restore_mcts_rate"] = 0.0 if total <= 0 else float(summary.get("restore_mcts", 0)) / total
+        return summary
+
+    def _record_search_stats(self, *, mode: str, reason: str = "", failures: int = 0, policy_choice: Any = None, chosen_index: Any = None) -> None:
+        stats = self._search_stats
+        stats["total_searches"] = int(stats.get("total_searches", 0)) + 1
+        if mode in stats:
+            stats[mode] = int(stats.get(mode, 0)) + 1
+        if reason in stats:
+            stats[reason] = int(stats.get(reason, 0)) + 1
+        stats["failures_total"] = int(stats.get("failures_total", 0)) + max(0, int(failures))
+        if policy_choice is not None and chosen_index is not None and int(policy_choice) != int(chosen_index):
+            stats["changed_count"] = int(stats.get("changed_count", 0)) + 1
 
     def requires_engine_state(self) -> bool:
         return True
@@ -779,22 +824,32 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
             policy_output = self.base_agent.compute_policy_output(snapshot, legal_actions)
         self.last_output = policy_output
         if len(legal_actions) == 1:
-            self.last_search = {"mode": "single_action", "chosen_index": policy_output.action_index}
+            self.last_search = {
+                "mode": "single_action",
+                "reason": "only_one_legal_action",
+                "policy_choice": policy_output.action_index,
+                "chosen_index": policy_output.action_index,
+            }
+            self._record_search_stats(mode="single_action", reason="only_one_legal_action", policy_choice=policy_output.action_index, chosen_index=policy_output.action_index)
+            self._log_last_search()
             return policy_output.action_index, policy_output.action
 
+        state_json = str(snapshot.get("_engine_state", ""))
         state_game = snapshot.get("_engine_game")
-        if state_game is None:
+        if not state_json and state_game is None:
             self.last_search = {
                 "mode": "policy_fallback",
                 "reason": "engine_state_unavailable",
+                "failures": 0,
+                "policy_choice": policy_output.action_index,
                 "chosen_index": policy_output.action_index,
             }
+            self._record_search_stats(mode="policy_fallback", reason="engine_state_unavailable", failures=0, policy_choice=policy_output.action_index, chosen_index=policy_output.action_index)
+            self._log_last_search()
             return policy_output.action_index, policy_output.action
 
         candidates = self._candidate_indices(policy_output, snapshot, legal_actions)
         root_player = str(snapshot.get("active_player", ""))
-        player1_id = str(snapshot.get("_engine_state_player1_id", "P1") or "P1")
-        player2_id = str(snapshot.get("_engine_state_player2_id", "P2") or "P2")
         scores = {idx: [] for idx in candidates}
         failures = 0
         session = self._search_session
@@ -814,12 +869,8 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
                             session,
                             candidate_signature,
                             root_player=root_player,
-                            state_game=state_game,
-                            state_bytes=state_bytes,
-                            state_handle=state_handle,
                             state_json=state_json,
-                            player1_id=player1_id,
-                            player2_id=player2_id,
+                            state_game=state_game,
                         )
                     except Exception:
                         failures += 1
@@ -833,8 +884,11 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
                 "mode": "policy_fallback",
                 "reason": "replay_failed",
                 "failures": failures,
+                "policy_choice": policy_output.action_index,
                 "chosen_index": policy_output.action_index,
             }
+            self._record_search_stats(mode="policy_fallback", reason="replay_failed", failures=failures, policy_choice=policy_output.action_index, chosen_index=policy_output.action_index)
+            self._log_last_search()
             return policy_output.action_index, policy_output.action
 
         chosen_index = max(candidates, key=lambda idx: (averaged[idx], float(policy_output.probabilities[idx])))
@@ -848,7 +902,31 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
             "policy_choice": policy_output.action_index,
             "chosen_index": chosen_index,
         }
+        self._record_search_stats(mode="restore_mcts", failures=failures, policy_choice=policy_output.action_index, chosen_index=chosen_index)
+        self._log_last_search()
         return chosen_index, legal_actions[chosen_index]
+
+    def _log_last_search(self) -> None:
+        if os.environ.get("SEAENGINE_BELIEF_MCTS_DEBUG", "0") != "1":
+            return
+        search = self.last_search or {}
+        mode = search.get("mode", "")
+        reason = search.get("reason", "")
+        failures = search.get("failures", "")
+        policy_choice = search.get("policy_choice", "")
+        chosen_index = search.get("chosen_index", "")
+        simulations = search.get("simulations", "")
+        rollout_steps = search.get("rollout_steps", "")
+        print(
+            "[belief_mcts] "
+            f"mode={mode} "
+            f"reason={reason} "
+            f"failures={failures} "
+            f"policy_choice={policy_choice} "
+            f"chosen_index={chosen_index} "
+            f"sims={simulations} "
+            f"rollout_steps={rollout_steps}"
+        )
 
     def _candidate_indices(
         self,
@@ -856,9 +934,26 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
         snapshot: Dict[str, Any],
         legal_actions: Sequence[Dict[str, Any]],
     ) -> list[int]:
-        del snapshot
         by_prior = sorted(range(len(legal_actions)), key=lambda idx: float(policy_output.probabilities[idx]), reverse=True)
-        return by_prior[: min(len(legal_actions), max(self.top_k, 1))]
+        by_heuristic = sorted(
+            range(len(legal_actions)),
+            key=lambda idx: self.heuristic_agent._score_action(snapshot, legal_actions[idx]),
+            reverse=True,
+        )
+        if self.candidate_mixing_strategy == "policy_prior_only":
+            return by_prior[: min(len(legal_actions), max(self.top_k, 1))]
+        if self.candidate_mixing_strategy == "heuristic_only":
+            return by_heuristic[: min(len(legal_actions), max(self.top_k, 1))]
+        selected: list[int] = []
+        for rows in (by_prior, by_heuristic):
+            for idx in rows:
+                if idx not in selected:
+                    selected.append(idx)
+                if len(selected) >= self.top_k:
+                    break
+            if len(selected) >= self.top_k:
+                break
+        return selected[: min(len(legal_actions), max(self.top_k, 1))]
 
     def _can_replay(self) -> bool:
         return self._replay_available and bool(self.player1_deck) and bool(self.player2_deck)
@@ -869,14 +964,14 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
         candidate_signature: Dict[str, Any],
         *,
         root_player: str,
-        state_game: Any = None,
-        state_bytes: Any = None,
         state_json: str = "",
-        state_handle: Any = None,
+        state_game: Any = None,
         player1_id: str = "P1",
         player2_id: str = "P2",
     ) -> float:
-        if state_game is not None:
+        if state_json:
+            snapshot = session.restore_state(state_json, logger_mode="silent")
+        elif state_game is not None:
             from RL_AI.SeaEngine.bridge.pythonnet_session import PythonNetSession
 
             clone_fn = getattr(state_game, "Clone", None)
@@ -905,8 +1000,7 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
                 actions = list(snapshot.get("actions", []))
                 if not actions:
                     break
-                rollout_output = self.base_agent.compute_policy_output(snapshot, actions)
-                rollout_action = actions[int(rollout_output.action_index)]
+                _idx, rollout_action = self.heuristic_agent.select_action(snapshot, actions)
                 snapshot = session.apply_action(str(rollout_action["uid"]))
             value_bias = self._estimate_value_bias(snapshot)
         return self._score_snapshot(snapshot, root_player=root_player) + (self.value_weight * value_bias)
