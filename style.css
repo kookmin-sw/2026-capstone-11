@@ -1,0 +1,221 @@
+@import url('https://fonts.googleapis.com/css2?family=New+Rocker&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Chiron+Sung+HK:ital,wght@0,200..900;1,200..900&family=New+Rocker&display=swap');
+
+html {
+    scroll-behavior: smooth;
+    word-break: keep-all;
+}
+
+body {
+    background-color: #11111b;
+
+    background-image: conic-gradient(#313244 25%,
+            transparent 0 50%,
+            #313244 0 75%,
+            transparent 0);
+
+    background-size: 250px 250px;
+
+    color: #cdd6f4;
+    font-family: "Pretendard";
+}
+
+#content {
+    background-color: #1e1e2e;
+    width: 750px;
+    margin: 0px auto;
+    padding: 30px 30px;
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+header {
+    text-align: center;
+    line-height: 10px;
+    font-weight: 600;
+    margin-bottom: 25px;
+    font-family: "Chiron Sung HK";
+}
+
+#crown {
+    transform: translateX(200px) translateY(15px) rotate(30deg);
+}
+
+h1 {
+    color: #cdd6f4;
+    font-size: 80px;
+    text-align: center;
+    font-family: "New Rocker", serif;
+    font-weight: 400;
+}
+
+h3 {
+    font-size: 25px;
+    text-align: center;
+    font-weight: 800;
+    margin: 15px auto;
+}
+
+strong {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 15px auto;
+}
+
+p {
+    display: block;
+    margin: 3px auto;
+    font-size: 15px;
+    line-height: 15px;
+}
+
+p.main-box {
+    width: 70%;
+}
+
+p::first-letter {
+    margin-left: 5px;
+}
+
+hr {
+    border: #7f849c solid 0.5px;
+    width: 80%;
+}
+
+hr.small {
+    border: #7f849c dashed 0.3px;
+    width: 80%;
+    margin: 15px auto;
+}
+
+img {
+    margin: 0px 15px;
+}
+
+img.s100 {
+    width: 600px;
+}
+
+img.s70 {
+    width: 420px;
+}
+
+img.s50 {
+    width: 300px;
+}
+
+img.s40 {
+    width: 240px;
+}
+
+img.profile {
+    height: 80px;
+    width: 80px;
+    object-fit: cover;
+    border-radius: 40px;
+}
+
+p.secret {
+    opacity: 0.05;
+}
+
+section {
+    scroll-margin-top: 50px;
+    margin-bottom: 10px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.sectionBox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+ul {
+    list-style: none;
+    padding-left: 20px;
+}
+
+li {
+    padding-left: 50px;
+    background-repeat: no-repeat;
+    background-position: left center;
+    background-size: 30px;
+    margin-bottom: 15px;
+}
+
+ul.introduceUl>li:nth-child(1) {
+    background-image: url('svgs/dim.svg');
+}
+
+ul.introduceUl>li:nth-child(2) {
+    background-image: url('svgs/people.svg');
+}
+
+ul.introduceUl2>li:nth-child(1) {
+    background-image: url('svgs/book.svg');
+}
+
+ul.introduceUl2>li:nth-child(2) {
+    background-image: url('svgs/clock.svg');
+}
+
+div.profile {
+    width: 500px;
+}
+
+.center {
+    text-align: center;
+}
+
+@keyframes fade-scroll {
+  from { opacity: 1; }
+  to { opacity: 0.5; }
+}
+
+.sidebar {
+    position: fixed;
+    width: 450px;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 10px;
+    background: #45475a;
+    padding: 0;
+    display: flex;
+    flex-direction: row;
+    gap: 0;
+    z-index: 1000;
+    transition: opacity 0.3s;
+}
+
+@supports (animation-timeline: scroll()){
+    .sidebar{
+        animation: fade-scroll linear both;
+        animation-timeline: scroll();
+        animation-range: 0px 100px;
+    }
+}
+
+.sidebar:hover {
+    animation-play-state: paused;
+    opacity: 1 !important;
+}
+
+.sidebar a {
+    color: #cdd6f4;
+    text-decoration: none;
+    font-size: 14px;
+    padding: 10px 10px;
+}
+
+.sidebar a:hover {
+    background: #6c7086;
+}
