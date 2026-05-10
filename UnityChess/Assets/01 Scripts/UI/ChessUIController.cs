@@ -5,10 +5,12 @@ using UnityEngine;
 using events.client;
 using events.ui;
 using ui.view.board;
+using ui.view.effect;
 using ui.view;
 using Core;
 using Core.StateManagement;
 using events.server;
+using core.UI;
 
 public enum SelectionState
 {
@@ -26,6 +28,7 @@ public class ChessUIController : MonoBehaviour
 {
     [SerializeField] private ChessGameManager gameManager;
     [SerializeField] private ChessUIEventBus eventBus;
+    [SerializeField] private ViewRegistry viewRegistry;
     [SerializeField] private BoardView boardView;
 
     private SelectionState state = SelectionState.None;
@@ -151,6 +154,10 @@ public class ChessUIController : MonoBehaviour
     
         selectedSource = source;
 
+        // 선택된 Source의 하이라이트 적용
+        ClearViewHighlights();
+        SetSourceHighlight();
+
         // 1) no-target action이면 즉시 확정
         if (gameManager.TryResolveNoTargetAction(source, out var noTargetAction))
         {
@@ -208,16 +215,55 @@ public class ChessUIController : MonoBehaviour
         }
     }
 
+    // 모든 유닛/카드 뷰 하이라이트를 비표시
+    private void ClearViewHighlights()
+    {
+        foreach (var id in viewRegistry.GetAllIds())
+        {
+            if (id.Type != ViewType.Unit && id.Type != ViewType.Card)
+                continue;
+            
+            (viewRegistry.Get(id) as BaseView).SetHighlight(OutlineType.None);
+        }
+    }
+
+    // 특정 뷰의 하이라이트를 표시
+    private void SetViewHighlight(ViewType type, EntityID id, OutlineType outlineType)
+    {
+        if (string.IsNullOrWhiteSpace(id.id))
+            return;
+
+        (viewRegistry.Get(new ViewID(type, id.id)) as BaseView).SetHighlight(outlineType);
+    }
+
+    // 선택한 Action Source의 하이라이트를 표시
+    private void SetSourceHighlight()
+    {
+        if (selectedSource.IsEmpty) 
+            return;
+        
+        SetViewHighlight(selectedSource.Type, selectedSource.Uid, OutlineType.Selected);
+    }
+
     // 현재 선택된 타겟과 양립 가능한 후보 타겟들만 하이라이트
     // TODO: 셀 하이라이트 대신 엔티티(유닛) 하이라이트로 변경
     private void RefreshEntityTargetHighlights()
     {
         boardView.Clear();
+        ClearViewHighlights();
+        // 선택된 Source는 항상 Selected된 상태
+        SetSourceHighlight();
 
         if (validTargetGroups.Count == 0)
             return;
 
         int nextIndex = selectedTargetIds.Count;
+
+        // 이미 선택된 Target의 Selected 상태 표시
+        foreach (var selectedId in selectedTargetIds)
+        {
+            SetViewHighlight(ViewType.Unit, selectedId, OutlineType.Selected);
+        }
 
         // 이미 고른 타겟들과 양립 가능한 그룹만 남긴다.
         var compatibleGroups = validTargetGroups
@@ -227,32 +273,24 @@ public class ChessUIController : MonoBehaviour
         if (compatibleGroups.Count == 0)
             return;
 
-        var remainingCandidateIds = new HashSet<string>(StringComparer.Ordinal);
-
+        // 4. 다음 순서의 후보만 Targetable
         foreach (var group in compatibleGroups)
         {
             if (group.Count <= nextIndex)
                 continue;
-            
-            remainingCandidateIds.Add(group[nextIndex].id);
-        }
 
-        var highlightCells = new HashSet<Vector2Int>();
+            var candidate = group[nextIndex];
 
-        foreach (var candidateUid in remainingCandidateIds)
-        {
-            if (!gameManager.State.TryGetUnit(new EntityID(candidateUid), out var unit))
+            if (selectedTargetIds.Contains(candidate))
+                continue;
+
+            if (!gameManager.State.TryGetUnit(candidate, out var unit))
                 continue;
 
             if (!unit.isPlaced)
                 continue;
 
-            highlightCells.Add(unit.position);
-        }
-
-        if (highlightCells.Count > 0)
-        {
-            boardView.Show(highlightCells, gameManager.State.IsLocalPlayer());
+            SetViewHighlight(ViewType.Unit, candidate, OutlineType.Targetable);
         }
     }
 
@@ -390,6 +428,8 @@ public class ChessUIController : MonoBehaviour
 
         if (boardView != null)
             boardView.Clear();
+        
+        ClearViewHighlights();
     }
 
     public void OnClickTurnEnd()

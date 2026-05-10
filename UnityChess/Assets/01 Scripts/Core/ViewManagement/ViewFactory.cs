@@ -161,7 +161,7 @@ namespace core.UI
                 var unitView = view as UnitView;
 
                 // 플레이어 자신의 유닛인지 확인하고 해당하는 스프라이트를 설정
-                unitView.unitSprite.sprite = isMyUnit ? SpriteDict[key][0] : SpriteDict[key][1];
+                unitView.SetUnitSprite(isMyUnit ? SpriteDict[key][0] : SpriteDict[key][1]);
                 SetClassSprite(unitView, isMyUnit);
             }
         }
@@ -182,11 +182,11 @@ namespace core.UI
                 );
 
                 var view = Create(data, handParent);
-                var key = new PrefabKey { Type = data.Type, defId = data.cardId };
 
-                var image = (view as CardView).gameObject.GetComponent<Image>();
-                
-                image.sprite = SpriteDict[key][0];
+                var key = new PrefabKey { Type = data.Type, defId = data.cardId };
+                var cardView = view as CardView;
+
+                cardView.SetCardSprite(SpriteDict[key][0]);
             }
         }
 

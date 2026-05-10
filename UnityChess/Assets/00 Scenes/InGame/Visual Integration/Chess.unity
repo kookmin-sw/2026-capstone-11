@@ -1900,11 +1900,11 @@ MonoBehaviour:
     m_Right: 0
     m_Top: 0
     m_Bottom: 0
-  m_ChildAlignment: 4
+  m_ChildAlignment: 5
   m_StartCorner: 0
   m_StartAxis: 0
   m_CellSize: {x: 160, y: 200}
-  m_Spacing: {x: -5, y: 0}
+  m_Spacing: {x: 5, y: 0}
   m_Constraint: 2
   m_ConstraintCount: 1
 --- !u!114 &454696268
@@ -2233,7 +2233,6 @@ GameObject:
   m_Component:
   - component: {fileID: 649486376}
   - component: {fileID: 649486378}
-  - component: {fileID: 649486377}
   m_Layer: 5
   m_Name: Hand
   m_TagString: Untagged
@@ -2258,39 +2257,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -200, y: 0}
-  m_SizeDelta: {x: 750, y: 200}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 1200, y: 200}
   m_Pivot: {x: 1, y: 0}
---- !u!114 &649486377
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 649486375}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
 --- !u!222 &649486378
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -7914,6 +7883,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ChessUIController
   gameManager: {fileID: 1470376623}
   eventBus: {fileID: 64190383}
+  viewRegistry: {fileID: 1306483363}
   boardView: {fileID: 427112746}
 --- !u!1 &1176488946
 GameObject:
@@ -8198,52 +8168,52 @@ MonoBehaviour:
       Type: 0
       defId: Or_L
     Sprites:
-    - {fileID: -2613175881816851041, guid: 64b6b5a84830977918f66a2970e6f18c, type: 3}
+    - {fileID: 220277949849798493, guid: e0c8d66b56144181682e9b5dbbde1a0d, type: 3}
   - key:
       Type: 0
       defId: Or_B
     Sprites:
-    - {fileID: 9072134411251793454, guid: 47c4f0dafce39c45e84da73d260e0ed5, type: 3}
+    - {fileID: 6749205797222702711, guid: e0c8d66b56144181682e9b5dbbde1a0d, type: 3}
   - key:
       Type: 0
       defId: Or_N
     Sprites:
-    - {fileID: -530422884134240213, guid: 91d2f4997987576cfbfdc076f4ae0545, type: 3}
+    - {fileID: 4960557203668177773, guid: e0c8d66b56144181682e9b5dbbde1a0d, type: 3}
   - key:
       Type: 0
       defId: Or_R
     Sprites:
-    - {fileID: -8946832148647028711, guid: 97c63e60cfda40583b6b9f1927bf4dad, type: 3}
+    - {fileID: 8073168511331195592, guid: e0c8d66b56144181682e9b5dbbde1a0d, type: 3}
   - key:
       Type: 0
       defId: Or_P
     Sprites:
-    - {fileID: 7288312711275504146, guid: 9322794bcf54b49dd8a89b8d7c1086b0, type: 3}
+    - {fileID: -3196089721793587971, guid: e0c8d66b56144181682e9b5dbbde1a0d, type: 3}
   - key:
       Type: 0
       defId: Cl_L
     Sprites:
-    - {fileID: 5602763524508712683, guid: 5a685744f7fe6b7da923b071b72cb769, type: 3}
+    - {fileID: -6659611600469109033, guid: 57aec9c9aac523c31a8c123c28819ddc, type: 3}
   - key:
       Type: 0
       defId: Cl_B
     Sprites:
-    - {fileID: 7204048752672984729, guid: 6d5eff275691b9b49a2f8e7830b1929c, type: 3}
+    - {fileID: 2293576223685294724, guid: 57aec9c9aac523c31a8c123c28819ddc, type: 3}
   - key:
       Type: 0
       defId: Cl_N
     Sprites:
-    - {fileID: 8062232646686010590, guid: fbe33de7d0bee7e1ab59fa05ecdef881, type: 3}
+    - {fileID: -6208988651138917291, guid: 57aec9c9aac523c31a8c123c28819ddc, type: 3}
   - key:
       Type: 0
       defId: Cl_R
     Sprites:
-    - {fileID: 1157379253900184843, guid: 5d48d92dbf501a9c0adb4cc8a181bad9, type: 3}
+    - {fileID: -7232823433658060, guid: 57aec9c9aac523c31a8c123c28819ddc, type: 3}
   - key:
       Type: 0
       defId: Cl_P
     Sprites:
-    - {fileID: 379060365057123580, guid: 6ae0e4ff1c4b1861ea1ffaa38ea892d5, type: 3}
+    - {fileID: 5424449175961738766, guid: 57aec9c9aac523c31a8c123c28819ddc, type: 3}
   - key:
       Type: 1
       defId: Or_L

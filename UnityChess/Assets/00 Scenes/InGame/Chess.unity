@@ -1778,7 +1778,6 @@ GameObject:
   m_Component:
   - component: {fileID: 454696266}
   - component: {fileID: 454696270}
-  - component: {fileID: 454696269}
   - component: {fileID: 454696268}
   - component: {fileID: 454696267}
   m_Layer: 5
@@ -1844,36 +1843,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Mask
   m_ShowMaskGraphic: 0
---- !u!114 &454696269
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 454696265}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 1
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
 --- !u!222 &454696270
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -8044,6 +8013,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ChessUIController
   gameManager: {fileID: 1470376623}
   eventBus: {fileID: 64190383}
+  viewRegistry: {fileID: 0}
   boardView: {fileID: 427112746}
 --- !u!1 &1176488946
 GameObject:
@@ -8307,6 +8277,7 @@ MonoBehaviour:
     Sprites:
     - {fileID: 2704376026786900859, guid: 52e7a95f5839e331ea1dbcf814edb07e, type: 3}
     - {fileID: 2064341472249257380, guid: 52e7a95f5839e331ea1dbcf814edb07e, type: 3}
+  auroraSprites: []
 --- !u!1 &1429430673
 GameObject:
   m_ObjectHideFlags: 0
@@ -8656,7 +8627,6 @@ MonoBehaviour:
   inputHandler: {fileID: 76979778}
   boardParent: {fileID: 427112741}
   handParent: {fileID: 454696266}
-  OppoHandParent: {fileID: 2096768992}
 --- !u!4 &1470376624
 Transform:
   m_ObjectHideFlags: 0
@@ -9369,6 +9339,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UI.HUD.ChessHUDController
   gameManager: {fileID: 1470376623}
   uiController: {fileID: 1157191416}
+  oppoCardCount: {fileID: 0}
   turnText: {fileID: 650406390}
   turnIndicators:
   - {fileID: 686115936}

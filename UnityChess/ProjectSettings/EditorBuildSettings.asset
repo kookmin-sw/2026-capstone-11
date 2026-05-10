@@ -11,5 +11,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/00 Scenes/InGame/Visual Integration/Chess.unity
     guid: 1b207c7c1ad98b855ab4d372b5fefea5
+  - enabled: 1
+    path: Assets/00 Scenes/InGame/Experiment.unity
+    guid: d8cbe54addc69e85d9fb11b463b0abd6
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

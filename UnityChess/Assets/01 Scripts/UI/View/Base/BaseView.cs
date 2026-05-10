@@ -1,10 +1,11 @@
 using events;
 using UnityEngine;
 using core.data;
+using ui.view.effect;
 
 namespace ui.view
 {
-    public abstract class BaseView : MonoBehaviour, IView
+    public abstract class BaseView : MonoBehaviour, IView, IHightlighter
     {
         [SerializeField] protected BaseViewData viewData;
         [SerializeField] protected IEventBus eventBus;
@@ -34,6 +35,8 @@ namespace ui.view
             // 뷰에서 카드 정의를 받아서 초기화하는 용도
             definition = def;
         }
+
+        public abstract void SetHighlight(OutlineType type);
 
         public abstract void Subscribe();
 

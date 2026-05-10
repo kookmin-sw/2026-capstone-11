@@ -1,9 +1,12 @@
 using System;
+using Animations;
 using entity.targetable;
 using events;
 using events.client;
 using ui.tooltip;
+using ui.view.effect;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace ui.view.card
 {
@@ -23,9 +26,12 @@ namespace ui.view.card
     /// <summary>
     /// 카드 뷰의 공통 클래스
     /// </summary>
-    public class CardView : BaseView, IHoverable
+    public class CardView : BaseView, IHoverable, IHightlighter
     {
         public CardViewData data;
+        public Image image;
+        public CardAnimator cardAnimator;
+        public CardOutliner cardOutliner;
 
         public override void Init(BaseViewData baseData, IEventBus eventBus)
         {
@@ -38,6 +44,18 @@ namespace ui.view.card
             return TooltipBuilder.CardTooltip(definition);
         }
 
+        public void SetCardSprite(Sprite sprite)
+        {
+            image.sprite = sprite;
+            cardOutliner.Init(sprite);
+        }
+
+        public override void SetHighlight(OutlineType type)
+        {
+            cardOutliner.SetHighlight(type);
+            cardAnimator.SetSelected(type == OutlineType.Selected);
+        }
+
         public void OnSelected()
         {
             Debug.Log("Card selected: " + data.cardId);
@@ -48,7 +66,7 @@ namespace ui.view.card
             eventBus.Subscribe<IClientEvents.CardSelectedEvent>(OnSelected);
         }
 
-        private void OnSelected(IClientEvents.CardSelectedEvent @event)
+        private void OnSelected(IClientEvents.CardSelectedEvent evt)
         {
             throw new NotImplementedException();
         }

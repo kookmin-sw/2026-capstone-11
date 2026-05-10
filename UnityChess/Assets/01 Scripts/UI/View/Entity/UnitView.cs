@@ -6,6 +6,7 @@ using events.server;
 using events.client;
 using Game.Network;
 using core.data;
+using ui.view.effect;
 
 namespace ui.view.unit
 {
@@ -38,11 +39,12 @@ namespace ui.view.unit
         }
     }
 
-    public class UnitView : BaseView, IHoverable, ISelectable
+    public class UnitView : BaseView, IHoverable, ISelectable, IHightlighter
     {
         public UnitViewData data;
         public SpriteRenderer unitSprite;
         public SpriteRenderer classSprite;
+        public UnitOutliner unitOutliner;
 
         public override void Init(BaseViewData baseData, IEventBus eventBus)
         {
@@ -51,6 +53,13 @@ namespace ui.view.unit
 
             // 유닛 뷰에게 필요한 이벤트 구독
             Subscribe();
+        }
+
+        public void SetUnitSprite(Sprite sprite)
+        {
+            unitSprite.sprite = sprite;
+
+            unitOutliner.Init(unitSprite.sprite);
         }
 
         // ITargetable 인터페이스 구현
@@ -62,7 +71,12 @@ namespace ui.view.unit
         public void OnSelected()
         {
             Debug.Log("Unit selected: " + data.cardId);
-            
+        }
+
+        // IHilighter 인터페이스 구현
+        public override void SetHighlight(OutlineType type)
+        {
+            unitOutliner.SetHighlight(type);
         }
 
         public void OnDisable()
