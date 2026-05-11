@@ -1,11 +1,11 @@
 using UnityEngine;
 using TMPro;
 using System.Linq;
-using Unity.VisualScripting;
-using System.Text;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using PlayFab;
+using UnityEngine.SceneManagement;
+using DG.Tweening;
 
 public class PlayFabAccountUI : MonoBehaviour
 {
@@ -21,7 +21,12 @@ public class PlayFabAccountUI : MonoBehaviour
     [SerializeField] private TMP_InputField loginEmailInput;
     [SerializeField] private TMP_InputField loginPasswordInput;
 
+    [Header("Button")]
+    [SerializeField] private Button loginButton;
+    [SerializeField] private Button logoutButton;
 
+    [Header("Lobby Scene")]
+    [SerializeField] private string LobbyScene;
 
     [Header("Info Field")]
     [SerializeField] private TMP_Text InfoField;
@@ -29,11 +34,23 @@ public class PlayFabAccountUI : MonoBehaviour
     [Header("API Call Guard Button")]
     [SerializeField] private List<Button> ButtonToGuard;
 
-    private bool APICallGuardFlag = false;
+    [Header("Hard Logout toggle (for test)")]
+    [SerializeField] private bool hardLogout = false;
 
-    public void Start()
+    private bool APICallGuardFlag = false;
+    private Tween infoTween;
+
+    private void Start()
     {
-        UpdateInfoField();
+        InfoField.text = "";
+    }
+
+    private void SwitchButton()
+    {
+        bool isLoggedin = PlayFabAccountManager.Instance.IsLoggedIn;
+
+        loginButton.gameObject.SetActive(!isLoggedin);
+        logoutButton.gameObject.SetActive(isLoggedin);
     }
 
     public void GuardButton()
@@ -52,26 +69,12 @@ public class PlayFabAccountUI : MonoBehaviour
 
     public void UpdateInfoField()
     {
-        if (!PlayFabAccountManager.Instance.IsLoggedIn)
-        {
-            InfoField.text = "No Account LogIn";
-            return;
-        }
+        infoTween?.Kill();
 
-        string msg = "PlayFabId="
-        + PlayFabAccountManager.Instance.PlayFabId + " \n " 
-        + "DisplayName=" 
-        + PlayFabAccountManager.Instance.InGameDisplayName + " \n "
-        + "SessionTick="
-        + PlayFabAccountManager.Instance.SessionTicket + " \n "
-        + "EntityID=" 
-        + PlayFabAccountManager.Instance.EntityId + "\n" 
-        + "EntityType="
-        + PlayFabAccountManager.Instance.EntityType + "\n"
-        + "EntityToken="
-        + PlayFabAccountManager.Instance.EntityToken + "\n";
-
-        InfoField.text = msg;
+        InfoField.text = PlayFabAccountManager.Instance.IsLoggedIn ?
+            "로그인 성공!" : "로그인 실패!";
+        
+        infoTween = InfoField.DOColor(Color.clear, 5f);
     }
 
     public void OnClickRegister()
@@ -117,12 +120,14 @@ public class PlayFabAccountUI : MonoBehaviour
                 Debug.Log("회원가입 성공");
                 UpdateInfoField();
                 ReleaseButton();
+                SwitchButton();
             },
             onFail: error =>
             {
                 Debug.Log("회원가입 실패: " + error);
                 UpdateInfoField();
                 ReleaseButton();
+                SwitchButton();
             });
     }
 
@@ -148,12 +153,25 @@ public class PlayFabAccountUI : MonoBehaviour
                 Debug.Log("로그인 성공");
                 UpdateInfoField();
                 ReleaseButton();
+                SwitchButton();
             },
             onFail: error =>
             {
                 Debug.Log("로그인 실패: " + error);
                 UpdateInfoField();
                 ReleaseButton();
+                SwitchButton();
             });
+    }
+
+    public void OnCkickLogout()
+    {
+        if (APICallGuardFlag) return;
+
+        GuardButton();
+        PlayFabAccountManager.Instance.Logout(hardLogout);
+
+        ReleaseButton();
+        SwitchButton();
     }
 }
