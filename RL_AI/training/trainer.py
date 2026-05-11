@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import random
 import time
@@ -40,14 +41,19 @@ from RL_AI.training.storage import RolloutBuffer, RolloutStep
 
 @dataclass
 class PPOConfig:
-    learning_rate: float = 3e-4
+    # A smaller step keeps late training from blowing up KL / gradients.
+    learning_rate: float = 1e-4
     gamma: float = 0.99
     gae_lambda: float = 0.95
     clip_epsilon: float = 0.2
     value_loss_coef: float = 0.5
-    entropy_coef: float = 0.01
+    # Keep some exploration, but reduce late-stage policy churn.
+    entropy_coef: float = 0.006
     update_epochs: int = 2
+    # Allow larger per-step gradients, but still clip them.
     max_grad_norm: float = 0.5
+    # Stop PPO updates before they move policy too far.
+    target_kl: float = 0.08
 
 
 def _ppo_config_from_env() -> PPOConfig:
@@ -61,6 +67,7 @@ def _ppo_config_from_env() -> PPOConfig:
         "entropy_coef": ("SEAENGINE_PPO_ENTROPY", float),
         "update_epochs": ("SEAENGINE_PPO_UPDATE_EPOCHS", int),
         "max_grad_norm": ("SEAENGINE_PPO_MAX_GRAD_NORM", float),
+        "target_kl": ("SEAENGINE_PPO_TARGET_KL", float),
     }
     for field_name, (env_name, caster) in overrides.items():
         raw_value = os.getenv(env_name)
@@ -81,6 +88,19 @@ class PastSelfAgent(SeaEngineAgent):
         self.model = None
         self.model_path = model_path
         self.hidden_dim = default_model_hidden_dim() if hidden_dim is None else int(hidden_dim)
+
+    def ensure_loaded(self) -> None:
+        if self.model is not None:
+            return
+        from RL_AI.SeaEngine.observation import build_fixed_state_vector, ACTION_FEATURE_DIM
+        from RL_AI.agents import PPOActorCritic
+
+        state_dict = torch.load(self.model_path, map_location=self.device)
+        self.hidden_dim = infer_hidden_dim_from_state_dict(state_dict, fallback=self.hidden_dim)
+        state_dim = len(build_fixed_state_vector({}))
+        self.model = PPOActorCritic(state_dim, ACTION_FEATURE_DIM, hidden_dim=self.hidden_dim).to(self.device)
+        load_state_dict_flexible(self.model, state_dict)
+        self.model.eval()
 
     def select_action(self, snapshot: Dict[str, Any], legal_actions: Sequence[Dict[str, Any]]) -> Tuple[int, Dict[str, Any]]:
         if self.model is None:
@@ -126,6 +146,7 @@ class SeaEnginePPOTrainer:
         self._layout_seed = int(os.getenv("SEAENGINE_LAYOUT_SEED", "17011"))
         self._layout_rng = random.Random(self._layout_seed)
         self._layout_mode = os.getenv("SEAENGINE_TRAIN_LAYOUT_MODE", "balanced").strip().lower()
+        self._current_training_episode = 0
         agent_seed = getattr(agent, "seed", None)
         if train_action_seed is not None:
             self._train_action_seed = int(train_action_seed)
@@ -233,25 +254,52 @@ class SeaEnginePPOTrainer:
                 weights.append(1.0 / (1.0 + float(seen)) ** 0.5)
             return self._layout_rng.choices(layouts, weights=weights, k=1)[0]
 
-        if mode == "focused":
-            focus_ratio_raw = os.getenv("SEAENGINE_TRAIN_LAYOUT_FOCUS_RATIO", "0.20")
+        if mode == "hard_mixed":
+            focus_ratio_raw = os.getenv("SEAENGINE_TRAIN_LAYOUT_HARD_RATIO", "0.40")
             try:
-                focus_ratio = max(0.0, min(0.80, float(focus_ratio_raw)))
+                focus_ratio = max(0.0, min(0.55, float(focus_ratio_raw)))
             except ValueError:
-                focus_ratio = 0.20
+                focus_ratio = 0.40
             if focus_ratio <= 0.0 or self._layout_rng.random() >= focus_ratio:
                 return self._balanced_match_layout(layout_index)
 
-            focus_layouts = [
-                {"player1_is_ai": True, "ai_deck": "Charlotte", "opp_deck": "Orange"},
+            # Focus on the actual bottleneck: Charlotte vs Orange.
+            hard_layouts = [
                 {"player1_is_ai": False, "ai_deck": "Charlotte", "opp_deck": "Orange"},
-                {"player1_is_ai": True, "ai_deck": "Charlotte", "opp_deck": "Charlotte"},
+                {"player1_is_ai": True, "ai_deck": "Charlotte", "opp_deck": "Orange"},
+                {"player1_is_ai": False, "ai_deck": "Orange", "opp_deck": "Charlotte"},
+                {"player1_is_ai": True, "ai_deck": "Orange", "opp_deck": "Charlotte"},
                 {"player1_is_ai": False, "ai_deck": "Charlotte", "opp_deck": "Charlotte"},
             ]
-            weights = [0.35, 0.35, 0.15, 0.15]
-            return self._layout_rng.choices(focus_layouts, weights=weights, k=1)[0]
+            weights = [0.50, 0.30, 0.08, 0.06, 0.06]
+            return self._layout_rng.choices(hard_layouts, weights=weights, k=1)[0]
+
+        if mode == "focused":
+            return self._balanced_match_layout(layout_index)
 
         return self._balanced_match_layout(layout_index)
+
+    def _is_tactical_imitation_candidate(self, snapshot: Dict[str, object], legal_actions: Sequence[Dict[str, object]]) -> bool:
+        if len(legal_actions) <= 1:
+            return False
+        active_player = str(snapshot.get("active_player", ""))
+        own_leader_hp = 99
+        for card in snapshot.get("board", []):
+            if str(card.get("owner", "")) != active_player:
+                continue
+            if str(card.get("role", "")) != "Leader":
+                continue
+            try:
+                own_leader_hp = int(card.get("hp", 99))
+            except Exception:
+                own_leader_hp = 99
+            break
+        if own_leader_hp <= 4:
+            return True
+        action_effects = {str(action.get("effect_id", "")) for action in legal_actions}
+        if "DefaultAttack" in action_effects:
+            return True
+        return len(legal_actions) >= 8
 
     def _extend_buffer(self, dst: RolloutBuffer, src: RolloutBuffer) -> None:
         for step in src.steps:
@@ -398,7 +446,7 @@ class SeaEnginePPOTrainer:
         returns = torch.tensor([s.return_value for s in buffer.steps], dtype=torch.float32, device=self.agent.device)
         old_log_probs = torch.tensor([s.old_log_prob for s in buffer.steps], dtype=torch.float32, device=self.agent.device)
         imitation_weights = torch.tensor([float(getattr(s, "imitation_weight", 0.0)) for s in buffer.steps], dtype=torch.float32, device=self.agent.device)
-        imitation_coef = max(0.0, float(os.getenv("SEAENGINE_IMITATION_COEF", "0.03")))
+        imitation_coef = max(0.0, float(os.getenv("SEAENGINE_IMITATION_COEF", "0.015")))
 
         policy_loss_total = 0.0
         value_loss_total = 0.0
@@ -407,8 +455,12 @@ class SeaEnginePPOTrainer:
         clip_fraction_total = 0.0
         grad_norm_total = 0.0
         batch_size = len(buffer)
-        
-        for _ in range(self.config.update_epochs):
+
+        actual_update_epochs = 0
+        kl_early_stop = False
+        skipped_nonfinite = False
+
+        for epoch_idx in range(self.config.update_epochs):
             log_prob, entropy, value = self.agent.evaluate_action_batch(
                 state_vectors,
                 action_feature_vectors_list,
@@ -422,33 +474,64 @@ class SeaEnginePPOTrainer:
             entropy_loss = entropy.mean()
             approx_kl = (old_log_probs - log_prob).mean()
             clip_fraction = ((ratio - 1.0).abs() > self.config.clip_epsilon).float().mean()
+
+            approx_kl_value = float(approx_kl.detach().item())
+            clip_fraction_value = float(clip_fraction.detach().item())
+            if epoch_idx > 0 and self.config.target_kl > 0.0 and approx_kl_value > self.config.target_kl:
+                kl_early_stop = True
+                approx_kl_total += approx_kl_value
+                clip_fraction_total += clip_fraction_value
+                break
+
             imitation_loss = torch.tensor(0.0, dtype=torch.float32, device=self.agent.device)
             imitation_mass = imitation_weights.sum()
             if imitation_coef > 0.0 and float(imitation_mass.item()) > 0.0:
                 imitation_loss = -(log_prob * imitation_weights).sum() / imitation_mass
 
-            loss = policy_loss + self.config.value_loss_coef * value_loss - self.config.entropy_coef * entropy_loss + imitation_coef * imitation_loss
+            loss = (
+                policy_loss
+                + self.config.value_loss_coef * value_loss
+                - self.config.entropy_coef * entropy_loss
+                + imitation_coef * imitation_loss
+            )
+
+            if not torch.isfinite(loss):
+                skipped_nonfinite = True
+                self.agent.optimizer.zero_grad(set_to_none=True)
+                break
 
             self.agent.optimizer.zero_grad()
             loss.backward()
             grad_norm = torch.nn.utils.clip_grad_norm_(self.agent.model.parameters(), self.config.max_grad_norm)
 
+            grad_norm_value = float(grad_norm.detach().item())
+            if not math.isfinite(grad_norm_value):
+                skipped_nonfinite = True
+                self.agent.optimizer.zero_grad(set_to_none=True)
+                break
+
             self.agent.optimizer.step()
 
+            actual_update_epochs += 1
             policy_loss_total += float(policy_loss.item())
             value_loss_total += float(value_loss.item())
             entropy_total += float(entropy_loss.item())
-            approx_kl_total += float(approx_kl.item())
-            clip_fraction_total += float(clip_fraction.item())
-            grad_norm_total += float(grad_norm.item())
+            approx_kl_total += approx_kl_value
+            clip_fraction_total += clip_fraction_value
+            grad_norm_total += grad_norm_value
+
+        denom = max(1, actual_update_epochs)
 
         return {
-            "policy_loss": policy_loss_total / self.config.update_epochs,
-            "value_loss": value_loss_total / self.config.update_epochs,
-            "entropy": entropy_total / self.config.update_epochs,
-            "approx_kl": approx_kl_total / self.config.update_epochs,
-            "clip_fraction": clip_fraction_total / self.config.update_epochs,
-            "grad_norm": grad_norm_total / self.config.update_epochs,
+            "policy_loss": policy_loss_total / denom,
+            "value_loss": value_loss_total / denom,
+            "entropy": entropy_total / denom,
+            "approx_kl": approx_kl_total / denom,
+            "clip_fraction": clip_fraction_total / denom,
+            "grad_norm": grad_norm_total / denom,
+            "actual_update_epochs": actual_update_epochs,
+            "kl_early_stop": kl_early_stop,
+            "skipped_nonfinite": skipped_nonfinite,
         }
 
     def collect_vector_episodes(
@@ -468,8 +551,9 @@ class SeaEnginePPOTrainer:
         action_rng = random.Random(self._train_action_seed + int(episode_start_idx) * 1009)
         opening_noise_turns = max(0, int(os.getenv("SEAENGINE_OPENING_NOISE_TURNS", "4")))
         opening_noise_prob = float(os.getenv("SEAENGINE_OPENING_NOISE_PROB", "0.25"))
-        opening_teacher_prob = max(0.0, min(0.60, float(os.getenv("SEAENGINE_OPENING_TEACHER_PROB", "0.12"))))
+        opening_teacher_prob = max(0.0, min(0.35, float(os.getenv("SEAENGINE_OPENING_TEACHER_PROB", "0.08"))))
         opening_teacher_turns = max(0, int(os.getenv("SEAENGINE_OPENING_TEACHER_TURNS", str(opening_noise_turns))))
+        tactical_teacher_prob = max(0.0, min(0.25, float(os.getenv("SEAENGINE_TACTICAL_TEACHER_PROB", "0.06"))))
         opening_teacher_agents = [SeaEngineRuleBasedAgent(seed=episode_start_idx + 14001 + i) for i in range(num_envs)]
         configs = []
         opponents = []
@@ -536,7 +620,7 @@ class SeaEnginePPOTrainer:
             for i in range(num_envs):
                 start_mode_lookup[i] = "normal"
 
-        burnin_turn_limits = {"normal": 0, "slight": 3, "heavy": 5}
+        burnin_turn_limits = {"normal": 0, "slight": 4, "heavy": 7}
         burnin_actions = [0] * num_envs
         burnin_turn_ends = [0] * num_envs
         burnin_done = [start_mode_lookup[i] == "normal" for i in range(num_envs)]
@@ -685,21 +769,29 @@ class SeaEnginePPOTrainer:
                     chosen_index = out.action_index
                     chosen_log_prob = out.log_prob
                     imitation_weight = 0.0
-                    if (
+                    turn = int(snapshots[idx].get("turn", 0))
+                    use_opening_teacher = (
                         opening_teacher_turns > 0
-                        and int(snapshots[idx].get("turn", 0)) <= opening_teacher_turns
+                        and turn <= opening_teacher_turns
                         and len(legal_actions) > 1
                         and action_rng.random() < opening_teacher_prob
-                    ):
+                    )
+                    use_tactical_teacher = (
+                        not use_opening_teacher
+                        and len(legal_actions) > 1
+                        and self._is_tactical_imitation_candidate(snapshots[idx], legal_actions)
+                        and action_rng.random() < tactical_teacher_prob
+                    )
+                    if use_opening_teacher or use_tactical_teacher:
                         teacher_index, teacher_action = opening_teacher_agents[idx].select_action(snapshots[idx], legal_actions)
                         chosen_index = int(teacher_index)
                         chosen_action = teacher_action
                         logits_tensor = torch.tensor(out.logits, dtype=torch.float32, device=self.agent.device)
                         chosen_log_prob = float(torch.log_softmax(logits_tensor, dim=0)[chosen_index].item())
-                        imitation_weight = 1.0
+                        imitation_weight = 0.50 if use_opening_teacher else 0.35
                     if (
                         opening_noise_turns > 0
-                        and int(snapshots[idx].get("turn", 0)) <= opening_noise_turns
+                        and turn <= opening_noise_turns
                         and len(legal_actions) > 1
                         and action_rng.random() < opening_noise_prob
                     ):
@@ -782,6 +874,9 @@ class SeaEnginePPOTrainer:
         train_start = time.perf_counter()
         last_log_time = train_start
         last_log_episodes = 0
+        early_loss_episodes = max(0, int(os.getenv("SEAENGINE_EARLY_LOSS_EPISODES", "100") or "0"))
+        early_loss_enabled = os.getenv("SEAENGINE_EARLY_LOSS_LOG", "1").strip().lower() not in {"0", "false", "no", "off"}
+        last_early_loss_update_logged = 0
         pending_buffer = RolloutBuffer()
         env = VectorSeaEngineEnv(num_envs=num_envs, card_data_path=card_data_path)
         env.start()
@@ -806,9 +901,22 @@ class SeaEnginePPOTrainer:
             for episode_start_idx in range(0, num_episodes, num_envs):
                 actual_num_envs = min(num_envs, num_episodes - episode_start_idx)
                 env.num_envs = actual_num_envs # Adjust if last batch is smaller
+                self._current_training_episode = episode_offset + episode_start_idx + 1
                 batch_schedule = None
                 if opponent_schedule is not None:
                     batch_schedule = list(opponent_schedule[episode_start_idx:episode_start_idx + actual_num_envs])
+                if batch_schedule:
+                    opponent_lookup = {agent.name: agent for agent in opponent_pool}
+                    for self_name in sorted({name for name in batch_schedule if str(name).startswith("self_ep_")}):
+                        self_agent = opponent_lookup.get(self_name)
+                        if self_agent is None:
+                            continue
+                        ensure_loaded = getattr(self_agent, "ensure_loaded", None)
+                        if callable(ensure_loaded):
+                            try:
+                                ensure_loaded()
+                            except Exception as exc:
+                                print(f"[!] self prewarm skipped for {self_name}: {exc}")
                 
                 try:
                     collect_pack = self.collect_vector_episodes(
@@ -863,6 +971,27 @@ class SeaEnginePPOTrainer:
                 if len(pending_buffer) > 0 and (results["episodes"] % update_interval < actual_num_envs or results["episodes"] >= num_episodes):
                     results["last_update"] = self.update_from_buffer(pending_buffer)
                     results["updates"] += 1
+                    if (
+                        early_loss_enabled
+                        and early_loss_episodes > 0
+                        and results["episodes"] <= early_loss_episodes
+                        and results["updates"] != last_early_loss_update_logged
+                    ):
+                        update = dict(results.get("last_update", {}) or {})
+                        print(
+                            f"[EarlyLoss Ep {results['episodes']:>4}/{min(num_episodes, early_loss_episodes)} "
+                            f"Upd {results['updates']:>3}] "
+                            f"policy_loss={float(update.get('policy_loss', 0.0)):+.6f} | "
+                            f"value_loss={float(update.get('value_loss', 0.0)):.6f} | "
+                            f"entropy={float(update.get('entropy', 0.0)):.6f} | "
+                            f"approx_kl={float(update.get('approx_kl', 0.0)):+.6f} | "
+                            f"clip_fraction={float(update.get('clip_fraction', 0.0)):.6f} | "
+                            f"grad_norm={float(update.get('grad_norm', 0.0)):.6f} | "
+                            f"epochs={int(update.get('actual_update_epochs', 0) or 0)} | "
+                            f"kl_stop={bool(update.get('kl_early_stop', False))} | "
+                            f"nonfinite={bool(update.get('skipped_nonfinite', False))}"
+                        )
+                        last_early_loss_update_logged = results["updates"]
                     pending_buffer.clear()
 
                 # 5. Periodic Output (200 episodes)
@@ -884,7 +1013,7 @@ class SeaEnginePPOTrainer:
                     print(
                         f"[Ep {results['episodes']:>5}/{num_episodes}] "
                         f"Win: {win_rate:>4.1f}% | Loss: {loss:>7.4f} | "
-                        f"Speed: {speed:>5.1f} eps/s | Avg: {avg_speed:>5.1f} eps/s | Opp: {opp_summary}"
+                        f"TrainSpeed: {speed:>5.1f} eps/s | TrainAvg: {avg_speed:>5.1f} eps/s | Opp: {opp_summary}"
                     )
                     last_log_time = now
                     last_log_episodes = results["episodes"]
@@ -905,7 +1034,7 @@ class SeaEnginePPOTrainer:
 
             total_elapsed = max(1e-9, time.perf_counter() - train_start)
             avg_speed = results["episodes"] / total_elapsed if results["episodes"] > 0 else 0.0
-            print(f"[*] Training Finished! Avg Speed: {avg_speed:.1f} eps/s")
+            print(f"[*] Training Finished! Train Avg Speed: {avg_speed:.1f} eps/s")
 
         finally:
             env.close()

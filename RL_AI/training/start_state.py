@@ -79,11 +79,11 @@ def sample_burnin_profile(target_mode: str, *, seed: Optional[int] = None) -> st
         return "fixed"
     rng = random.Random(seed)
     if normalized_mode == "heavy":
-        profiles = ["br", "rb", "bg", "gb", "gg", "rr"]
-        weights = [0.25, 0.20, 0.18, 0.12, 0.15, 0.10]
+        profiles = ["br", "rb", "bg", "gb", "bb", "gg", "rr"]
+        weights = [0.30, 0.22, 0.18, 0.10, 0.08, 0.07, 0.05]
     else:
-        profiles = ["rg", "gr", "rb", "br", "rr", "gg"]
-        weights = [0.25, 0.20, 0.20, 0.15, 0.12, 0.08]
+        profiles = ["rg", "gr", "rb", "br", "gb", "gg", "rr"]
+        weights = [0.22, 0.18, 0.18, 0.17, 0.10, 0.08, 0.07]
     return rng.choices(profiles, weights=weights, k=1)[0]
 
 

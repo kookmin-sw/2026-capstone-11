@@ -716,6 +716,162 @@ def _status_summary_ctx(card: Dict[str, Any]) -> tuple[float, float, float, floa
     return _status_summary(card)
 
 
+def _action_source_card_ctx(ctx: _SnapshotContext, action: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    return ctx.board_by_uid.get(str(action.get("source", "")))
+
+
+def _action_target_card_ctx(ctx: _SnapshotContext, action: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    target = action.get("target", {})
+    target_type = str(target.get("type", "None"))
+    if target_type in {"Unit", "Card", "Unit2"}:
+        return ctx.board_by_uid.get(str(target.get("guid", "")))
+    return None
+
+
+def _target_value_score_ctx(
+    ctx: _SnapshotContext,
+    source: Optional[Dict[str, Any]],
+    target_card: Optional[Dict[str, Any]],
+    action: Optional[Dict[str, Any]] = None,
+) -> float:
+    """Heuristic target priority in roughly [0, 1.5]. Used only as an input feature."""
+    if target_card is None:
+        return 0.0
+
+    target_owner = target_card.get("owner")
+    is_enemy = target_owner != ctx.player_id
+    role = _role_from_card(target_card)
+    hp = float(target_card.get("hp", 0.0))
+    max_hp = max(1.0, float(target_card.get("max_hp", 1.0)))
+    target_atk = float(target_card.get("effective_atk", 0.0))
+    source_atk = float(source.get("effective_atk", 0.0)) if source else 0.0
+    source_hp = float(source.get("hp", 0.0)) if source else 0.0
+
+    role_value = {
+        "Leader": 1.00,
+        "Rook": 0.72,
+        "Bishop": 0.66,
+        "Knight": 0.58,
+        "Pawn": 0.34,
+    }.get(role, 0.25)
+
+    kill_bonus = 0.0
+    if is_enemy and source is not None and source_atk >= hp > 0:
+        kill_bonus = 0.30 + 0.20 * role_value
+
+    trade_bonus = 0.0
+    if is_enemy and source is not None:
+        if target_atk < source_hp:
+            trade_bonus = 0.12
+        elif target_atk >= source_hp:
+            trade_bonus = -0.08
+
+    threat_bonus = 0.0
+    if is_enemy and target_atk >= 4.0:
+        threat_bonus += 0.08
+
+    low_hp_bonus = 0.08 if is_enemy and hp <= 2.0 else 0.0
+    leader_bonus = 0.35 if is_enemy and role == "Leader" else 0.0
+    friendly_penalty = -0.35 if not is_enemy else 0.0
+    hp_factor = max(0.0, min(1.0, hp / max_hp))
+
+    score = 0.12 + role_value * 0.38 + _normalize_ratio(target_atk, 10.0) * 0.18
+    score += kill_bonus + trade_bonus + threat_bonus + low_hp_bonus + leader_bonus + friendly_penalty
+    score += (1.0 - hp_factor) * 0.07 if is_enemy else 0.0
+    return max(0.0, min(1.5, score))
+
+
+def _same_source_competition_features_ctx(
+    ctx: _SnapshotContext,
+    action: Dict[str, Any],
+    source: Optional[Dict[str, Any]],
+    target_card: Optional[Dict[str, Any]],
+    can_kill_target: float,
+    target_value_score: float,
+) -> List[float]:
+    """Expose same-source alternatives, target ranking, and opportunity cost."""
+    source_uid = str(action.get("source", ""))
+    sibling_actions = list(ctx.action_map.get(source_uid, [])) if source_uid else []
+    if not sibling_actions:
+        sibling_actions = [action]
+
+    attack_actions = [a for a in sibling_actions if str(a.get("effect_id", "")) == "DefaultAttack"]
+    move_actions = [a for a in sibling_actions if str(a.get("effect_id", "")) == "DefaultMove"]
+    deploy_actions = [a for a in sibling_actions if str(a.get("effect_id", "")) == "DeployUnit"]
+    skill_actions = [
+        a for a in sibling_actions
+        if str(a.get("effect_id", "")) not in {"DeployUnit", "DefaultMove", "DefaultAttack", "TurnEnd"}
+    ]
+
+    target_scores: List[float] = []
+    kill_scores: List[float] = []
+    has_leader_target = 0.0
+
+    for sibling in sibling_actions:
+        sibling_source = _action_source_card_ctx(ctx, sibling) or source
+        sibling_target = _action_target_card_ctx(ctx, sibling)
+        score = _target_value_score_ctx(ctx, sibling_source, sibling_target, sibling)
+
+        if sibling_target is not None:
+            target_scores.append(score)
+
+            sibling_target_hp = float(sibling_target.get("hp", 0.0))
+            sibling_source_atk = float(sibling_source.get("effective_atk", 0.0)) if sibling_source else 0.0
+
+            if sibling_source_atk >= sibling_target_hp > 0:
+                kill_scores.append(score)
+
+            if sibling_target.get("owner") != ctx.player_id and _role_from_card(sibling_target) == "Leader":
+                has_leader_target = 1.0
+
+    max_target_score = max(target_scores, default=0.0)
+    max_kill_score = max(kill_scores, default=0.0)
+
+    better_target_margin = max(0.0, max_target_score - target_value_score)
+    better_kill_margin = max(0.0, max_kill_score - target_value_score) if can_kill_target < 0.5 else 0.0
+
+    has_better_target = 1.0 if better_target_margin > 1e-6 else 0.0
+    has_better_kill = 1.0 if better_kill_margin > 1e-6 else 0.0
+
+    rank_ratio = 0.0
+    is_best_target = 0.0
+
+    if target_scores and target_card is not None:
+        sorted_scores = sorted(target_scores, reverse=True)
+        rank_index = sum(1 for score in sorted_scores if score > target_value_score + 1e-6)
+        rank_ratio = 1.0 if len(sorted_scores) == 1 else 1.0 - (rank_index / float(len(sorted_scores) - 1))
+        is_best_target = 1.0 if rank_index == 0 else 0.0
+
+    effect_id = str(action.get("effect_id", ""))
+    is_attack = 1.0 if effect_id == "DefaultAttack" else 0.0
+    is_move = 1.0 if effect_id == "DefaultMove" else 0.0
+    is_deploy = 1.0 if effect_id == "DeployUnit" else 0.0
+    is_skill = 1.0 if effect_id not in {"DeployUnit", "DefaultMove", "DefaultAttack", "TurnEnd"} else 0.0
+
+    return [
+        _normalize_ratio(float(len(sibling_actions)), 20.0),
+        _normalize_ratio(float(len(attack_actions)), 10.0),
+        _normalize_ratio(float(len(move_actions)), 10.0),
+        _normalize_ratio(float(len(deploy_actions)), 10.0),
+        _normalize_ratio(float(len(skill_actions)), 10.0),
+        has_leader_target,
+        _normalize_ratio(float(len(kill_scores)), 10.0),
+        _normalize_ratio(max_target_score, 1.5),
+        _normalize_ratio(max_kill_score, 1.5),
+        _normalize_ratio(target_value_score, 1.5),
+        rank_ratio,
+        is_best_target,
+        has_better_target,
+        has_better_kill,
+        _normalize_ratio(better_target_margin, 1.5),
+        _normalize_ratio(better_kill_margin, 1.5),
+        is_attack,
+        is_move,
+        is_deploy,
+        is_skill,
+    ]
+
+
 def _build_global_vector_ctx(ctx: _SnapshotContext) -> List[float]:
     own_player = ctx.own_player
     enemy_player = ctx.enemy_player
@@ -947,6 +1103,15 @@ def _encode_action_features_ctx(ctx: _SnapshotContext, action: Dict[str, Any]) -
     source_survives_trade = 1.0 if target_card and source is not None and float(target_card.get("effective_atk", 0.0)) < float(source.get("hp", 0.0)) else 0.0
     target_is_low_hp = 1.0 if target_card and target_hp <= 2.0 else 0.0
     source_from_hand = 1.0 if source is not None and not source.get("is_placed") else 0.0
+    target_value_score = _target_value_score_ctx(ctx, source, target_card, action)
+    same_source_features = _same_source_competition_features_ctx(
+        ctx,
+        action,
+        source,
+        target_card,
+        can_kill_target,
+        target_value_score,
+    )
 
     return [
         *_effect_one_hot(effect_id),
@@ -987,6 +1152,7 @@ def _encode_action_features_ctx(ctx: _SnapshotContext, action: Dict[str, Any]) -
         source_from_hand,
         _normalize_ratio(source_adjacent_enemies, 6.0),
         _normalize_ratio(target_incoming_attackers, 6.0),
+        *same_source_features,
     ]
 
 

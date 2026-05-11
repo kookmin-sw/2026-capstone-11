@@ -47,6 +47,7 @@ def _setup_logger(log_file: Path) -> None:
     sys.stdout = _Tee(sys.stdout, f)
     sys.stderr = _Tee(sys.stderr, f)
     print(f"[*] log file: {log_file}")
+    print(f"[*] script start time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
 
 def _format_elapsed(seconds: float) -> str:
@@ -64,8 +65,8 @@ def _apply_parallel_opt_env(section: str) -> None:
 
 def _dotnet_root_from_cmd(dotnet_cmd: str) -> str:
     try:
-        info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
-        for line in info.stdout.splitlines():
+        info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, encoding="utf-8", errors="replace", check=True)
+        for line in (info.stdout or "").splitlines():
             if "Base Path:" in line:
                 base_path = line.split("Base Path:", 1)[1].strip()
                 return str(Path(base_path).resolve().parents[1])
@@ -81,6 +82,33 @@ def _dotnet_executable(root: Path) -> Path:
     return root / ("dotnet.exe" if os.name == "nt" else "dotnet")
 
 
+def _dotnet_required_sdk_major() -> int:
+    raw = os.getenv("SEAENGINE_DOTNET_SDK_MAJOR", "10").strip()
+    try:
+        return max(0, int(raw))
+    except ValueError:
+        return 10
+
+
+def _dotnet_has_required_sdk(dotnet_cmd: str) -> bool:
+    required = _dotnet_required_sdk_major()
+    if required <= 0:
+        return True
+    try:
+        info = subprocess.run(
+            [dotnet_cmd, "--list-sdks"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=True,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError, PermissionError, OSError):
+        return False
+    prefix = f"{required}."
+    return any(line.strip().startswith(prefix) for line in (info.stdout or "").splitlines())
+
+
 def _set_dotnet_env(dotnet_cmd: str) -> None:
     dotnet_root = _dotnet_root_from_cmd(dotnet_cmd)
     os.environ["DOTNET_CMD"] = dotnet_cmd
@@ -94,8 +122,11 @@ def _set_dotnet_env(dotnet_cmd: str) -> None:
 
 def _try_dotnet(dotnet_cmd: str) -> bool:
     try:
-        info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
-        first_line = next((line.strip() for line in info.stdout.splitlines() if line.strip().startswith("Version:")), "")
+        info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, encoding="utf-8", errors="replace", check=True)
+        first_line = next((line.strip() for line in (info.stdout or "").splitlines() if line.strip().startswith("Version:")), "")
+        if not _dotnet_has_required_sdk(dotnet_cmd):
+            print(f"[!] dotnet found but missing .NET {_dotnet_required_sdk_major()} SDK: {dotnet_cmd}")
+            return False
         _set_dotnet_env(dotnet_cmd)
         print(f"dotnet ok: {dotnet_cmd}" + (f" ({first_line})" if first_line else ""))
         return True
@@ -104,12 +135,62 @@ def _try_dotnet(dotnet_cmd: str) -> bool:
 
 
 def _install_home_dotnet() -> str:
-    if os.name == "nt":
-        return ""
     home_dotnet = Path.home() / ".dotnet"
     dotnet_cmd = _dotnet_executable(home_dotnet)
-    install_script = home_dotnet / "dotnet-install.sh"
     home_dotnet.mkdir(parents=True, exist_ok=True)
+
+    if os.name == "nt":
+        install_script = home_dotnet / "dotnet-install.ps1"
+        if not install_script.exists():
+            print("[*] installing dotnet SDK to ~/.dotnet via dotnet-install.ps1...")
+            download_command = [
+                "powershell",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                f"Invoke-WebRequest -Uri 'https://dot.net/v1/dotnet-install.ps1' -OutFile '{install_script}'",
+            ]
+            completed = subprocess.run(
+                download_command,
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            if completed.stdout:
+                print(completed.stdout)
+            if completed.stderr:
+                print(completed.stderr)
+
+        if not install_script.exists():
+            print("[!] dotnet-install.ps1 download failed; ~/.dotnet install unavailable.")
+            return ""
+
+        install_commands = [
+            ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(install_script), "-Version", "10.0.107", "-InstallDir", str(home_dotnet), "-NoPath"],
+            ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(install_script), "-Channel", "10.0", "-Quality", "GA", "-InstallDir", str(home_dotnet), "-NoPath"],
+        ]
+        for command in install_commands:
+            completed = subprocess.run(
+                command,
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            if completed.stdout:
+                print(completed.stdout)
+            if completed.stderr:
+                print(completed.stderr)
+            if completed.returncode == 0 and dotnet_cmd.exists() and _try_dotnet(str(dotnet_cmd)):
+                return str(dotnet_cmd)
+            print(f"[!] home dotnet install step failed: {' '.join(command)} :: exit {completed.returncode}")
+        return ""
+
+    install_script = home_dotnet / "dotnet-install.sh"
 
     if not install_script.exists():
         print("[*] installing dotnet SDK to ~/.dotnet via dotnet-install.sh...")
@@ -178,7 +259,7 @@ def _ensure_dotnet() -> str:
 
 
 def _default_scenario_workers() -> int:
-    return 1
+    return 2
 
 
 def _env_positive_int(name: str) -> int:
@@ -506,6 +587,9 @@ def _resolve_model_path(model_path: str) -> Path:
         pt_candidates = sorted(extract_dir.rglob("*.pt"), key=lambda p: p.stat().st_mtime)
         if not pt_candidates:
             raise FileNotFoundError(f"No .pt model found inside zip: {zip_path}")
+        preferred = [p for p in pt_candidates if p.name == "best_model.pt"]
+        if preferred:
+            return preferred[-1]
         preferred = [p for p in pt_candidates if p.name == "model_ep_10000.pt"]
         if preferred:
             return preferred[-1]
@@ -516,13 +600,17 @@ def _resolve_model_path(model_path: str) -> Path:
         return _extract_zip_model(path) if path.suffix.lower() == ".zip" else path
 
     models_dir = Path.home() / "RL_AI" / "models"
+    best_model = models_dir / "best_model.pt"
+    if best_model.exists():
+        return best_model
+
     direct_model = models_dir / "model_ep_10000.pt"
     if direct_model.exists():
         return direct_model
 
     zip_candidates = sorted(models_dir.glob("*.zip"), key=lambda p: p.stat().st_mtime)
     if not zip_candidates:
-        raise FileNotFoundError("No model_ep_10000.pt or model zip found in ~/RL_AI/models")
+        raise FileNotFoundError("No best_model.pt, model_ep_10000.pt, or model zip found in ~/RL_AI/models")
 
     return _extract_zip_model(zip_candidates[-1])
 
@@ -591,6 +679,7 @@ def _run_balance(
     scenario_last_logged_at: dict[str, float] = {}
     scenario_last_logged_units: dict[str, int] = {}
     scenario_totals: dict[str, int] = {}
+    scenario_progress: dict[str, int] = {}
     progress_lock = threading.Lock()
     home = Path.home()
     if str(home) not in sys.path:
@@ -598,7 +687,7 @@ def _run_balance(
     os.environ.setdefault("SEAENGINE_SUPPRESS_NATIVE_LOGS", "1")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_MODE", "restore")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_SIMS", "1")
-    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "3")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "2")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "1")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_CANDIDATE_MIXING_STRATEGY", "policy_prior_plus_heuristic_topk")
 
@@ -627,6 +716,7 @@ def _run_balance(
                 scenario_last_logged_at[label] = scenario_started_at[label]
                 scenario_last_logged_units[label] = 0
                 scenario_totals[label] = total
+                scenario_progress[label] = 0
             if current != total and current % interval != 0:
                 return
             now = time.perf_counter()
@@ -635,16 +725,18 @@ def _run_balance(
             scenario_speed = interval_units / interval_elapsed
             scenario_elapsed = max(1e-9, now - scenario_started_at[label])
             scenario_avg_speed = current / scenario_elapsed
-            overall_done = sum(
-                total if key != label else current
-                for key, total in scenario_totals.items()
-            )
-            overall_elapsed = max(1e-9, time.perf_counter() - run_started_at)
+            scenario_progress[label] = max(0, min(current, total))
+            overall_done = max(0, min(int(total_matches), sum(scenario_progress.values())))
+            overall_total = max(1, int(total_matches))
+            overall_elapsed = max(1e-9, now - run_started_at)
             overall_speed = overall_done / overall_elapsed
+            remaining = max(0, overall_total - overall_done)
+            eta = remaining / overall_speed if overall_speed > 1e-9 else 0.0
             print(
                 f"[*] Balance progress | {label} | {current}/{total} "
-                f"| Speed: {scenario_speed:.2f} eps/s | Avg: {scenario_avg_speed:.2f} eps/s "
-                f"| overall={overall_speed:.2f} eps/s "
+                f"| ScenarioSpeed: {scenario_speed:.2f} eps/s | ScenarioAvg: {scenario_avg_speed:.2f} eps/s "
+                f"| overall={overall_done}/{overall_total} "
+                f"({overall_speed:.2f} eps/s, eta={_format_elapsed(eta)}) "
                 f"| last_result={result} | matchup={matchup}"
             )
             scenario_last_logged_at[label] = now
@@ -672,7 +764,9 @@ def _run_balance(
     print("=== SeaEngine Balance Experiment ===")
     total_elapsed = max(1e-9, time.perf_counter() - run_started_at)
     total_speed = total_matches / total_elapsed if total_matches > 0 else 0.0
+    per_combo_matches = total_matches // 8 if total_matches >= 0 else 0
     print(f"Avg Speed: {total_speed:.2f} eps/s")
+    print(f"[*] per combo matches: {per_combo_matches}")
     print(result["aggregate"])
     print(f"artifact summary: {summary_copy}")
     return result
@@ -681,8 +775,8 @@ def _run_balance(
 def main() -> int:
     parser = argparse.ArgumentParser(description="SeaEngine saved-model balance runner")
     parser.add_argument("--model-path", type=str, default="")
-    parser.add_argument("--total-matches", type=int, default=2000)
-    parser.add_argument("--max-turns", type=int, default=100)
+    parser.add_argument("--total-matches", type=int, default=4000, help="Total matches across the 8 balance scenarios (default 4000 = 500 each)")
+    parser.add_argument("--max-turns", type=int, default=70)
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--device", type=str, default="auto")
     parser.add_argument("--progress-interval", type=int, default=50)
@@ -705,18 +799,18 @@ def main() -> int:
     log_file = Path(args.log_file) if args.log_file else default_log
     _setup_logger(log_file)
 
-    os.environ.setdefault("SEAENGINE_VECTOR_BACKEND", "local")
+    os.environ.setdefault("SEAENGINE_VECTOR_BACKEND", "isolated")
     from RL_AI.start import _default_num_envs
 
     os.environ.setdefault("SEAENGINE_NUM_ENVS", str(_default_num_envs()))
     os.environ.setdefault("SEAENGINE_LOCAL_THREADS", "0")
     os.environ.setdefault("SEAENGINE_WORKERS", "0")
     os.environ.setdefault("SEAENGINE_LOCAL_MAX_WORKERS", "0")
-    os.environ.setdefault("SEAENGINE_SCENARIO_WORKERS", "1")
+    os.environ.setdefault("SEAENGINE_SCENARIO_WORKERS", "2")
     os.environ.setdefault("SEAENGINE_PARALLEL_WORKERS", "1")
     os.environ.setdefault("SEAENGINE_FAST_POOL", "0")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_SIMS", "1")
-    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "3")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "2")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "1")
     _ensure_python_deps()
     _apply_parallel_opt_env("make_balance")
@@ -725,13 +819,13 @@ def main() -> int:
     print("[*] make_balance.py launched")
     print(f"[*] pid={os.getpid()}")
     print(
-        f"[*] args: model_path={args.model_path or '(auto-latest)'}, total_matches={args.total_matches}, "
+        f"[*] args: model_path={args.model_path or '(auto-latest)'}, total_matches={args.total_matches}, per_combo_matches={args.total_matches // 8 if args.total_matches >= 0 else 0}, "
         f"max_turns={args.max_turns}, seed={args.seed}, device={args.device}, "
         f"model_hidden_dim={os.environ.get('SEAENGINE_MODEL_HIDDEN_DIM', '192')}, "
         f"progress_interval={args.progress_interval}, scenario_workers={args.scenario_workers}, "
         f"scenario_shards={args.scenario_shards}, "
         f"belief_mcts_sims={os.environ.get('SEAENGINE_BELIEF_MCTS_SIMS', '1')}, "
-        f"belief_mcts_top_k={os.environ.get('SEAENGINE_BELIEF_MCTS_TOP_K', '3')}, "
+        f"belief_mcts_top_k={os.environ.get('SEAENGINE_BELIEF_MCTS_TOP_K', '2')}, "
         f"belief_mcts_rollout_steps={os.environ.get('SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS', '1')}, "
         f"belief_mcts_candidate_mixing_strategy={os.environ.get('SEAENGINE_BELIEF_MCTS_CANDIDATE_MIXING_STRATEGY', 'policy_prior_plus_heuristic_topk')}, "
         f"use_belief_mcts={args.use_belief_mcts}, belief_mcts_mode={os.environ.get('SEAENGINE_BELIEF_MCTS_MODE', 'restore')}, "

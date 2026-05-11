@@ -75,9 +75,10 @@ class VectorSeaEngineEnv:
         self.num_envs = num_envs
         self.card_data_path = card_data_path
 
-        self.backend = os.getenv("SEAENGINE_VECTOR_BACKEND", "local").strip().lower()
-        if self.backend not in {"local", "process"}:
+        self.backend = os.getenv("SEAENGINE_VECTOR_BACKEND", "isolated").strip().lower()
+        if self.backend not in {"local", "process", "isolated"}:
             self.backend = "local"
+        self._isolated_env = None
 
         # SEAENGINE_LOCAL_THREADS supports:
         # - "0"/"false"/"off": disable local thread pool
@@ -121,6 +122,12 @@ class VectorSeaEngineEnv:
         self._waiting_cmds: List[Tuple[int, tuple]] = []
 
     def start(self):
+        if self.backend == "isolated":
+            from RL_AI.SeaEngine.bridge.process_vector_env import ProcessVectorSeaEngineEnv
+
+            self._isolated_env = ProcessVectorSeaEngineEnv(num_envs=self.num_envs, card_data_path=self.card_data_path)
+            self._isolated_env.start()
+            return
         if self.backend == "process":
             for _ in range(self.num_envs):
                 parent_conn, child_conn = mp.Pipe()
@@ -148,6 +155,16 @@ class VectorSeaEngineEnv:
             self._executor_workers = 0
 
     def describe_parallelism(self) -> Dict[str, Any]:
+        if self.backend == "isolated":
+            if self._isolated_env is not None:
+                return self._isolated_env.describe_parallelism()
+            return {
+                "backend": "isolated",
+                "num_envs": self.num_envs,
+                "workers": self.num_envs,
+                "threaded": False,
+                "worker_scope": "spawned_pythonnet_session_per_process",
+            }
         if self.backend == "process":
             return {
                 "backend": "process",
@@ -163,7 +180,36 @@ class VectorSeaEngineEnv:
             "worker_scope": "cpu_threadpool_for_pythonnet_calls",
         }
 
+    def restart_worker(self, index: int) -> None:
+        if self.backend == "isolated" and self._isolated_env is not None:
+            self._isolated_env.restart_worker(index)
+            return
+        if self.backend == "process":
+            if 0 <= index < len(self.processes):
+                try:
+                    self.processes[index].terminate()
+                except Exception:
+                    pass
+                try:
+                    self.processes[index].join(timeout=2)
+                except Exception:
+                    pass
+                try:
+                    self.pipes[index].close()
+                except Exception:
+                    pass
+                parent_conn, child_conn = mp.Pipe()
+                p = mp.Process(target=_worker_loop, args=(child_conn, self.card_data_path), daemon=True)
+                p.start()
+                self.pipes[index] = parent_conn
+                self.processes[index] = p
+
     def init_games(self, configs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        if self.backend == "isolated" and self._isolated_env is None:
+            self.start()
+        if self.backend == "isolated" and self._isolated_env is not None:
+            self._isolated_env.num_envs = self.num_envs
+            return self._isolated_env.init_games(configs)
         if self.backend == "process":
             limit = min(len(self.pipes), len(configs))
             for i in range(limit):
@@ -182,6 +228,12 @@ class VectorSeaEngineEnv:
         return [f.result() for f in futures]
 
     def step_async(self, cmds: List[Optional[tuple]]):
+        if self.backend == "isolated" and self._isolated_env is None:
+            self.start()
+        if self.backend == "isolated" and self._isolated_env is not None:
+            self._isolated_env.num_envs = self.num_envs
+            self._isolated_env.step_async(cmds)
+            return
         if self.backend == "process":
             self._waiting_pipes = []
             limit = min(len(self.pipes), len(cmds))
@@ -200,6 +252,10 @@ class VectorSeaEngineEnv:
                 self._waiting_cmds.append((i, cmd))
 
     def step_wait(self) -> Dict[int, Dict[str, Any]]:
+        if self.backend == "isolated" and self._isolated_env is None:
+            self.start()
+        if self.backend == "isolated" and self._isolated_env is not None:
+            return self._isolated_env.step_wait()
         if self.backend == "process":
             res = {}
             for i, pipe in self._waiting_pipes:
@@ -247,6 +303,14 @@ class VectorSeaEngineEnv:
         return res
 
     def close(self):
+        if self.backend == "isolated":
+            if self._isolated_env is None:
+                return
+            try:
+                self._isolated_env.close()
+            finally:
+                self._isolated_env = None
+            return
         if self.backend == "process":
             for pipe in self.pipes:
                 try:

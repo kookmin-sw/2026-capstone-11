@@ -16,6 +16,8 @@ RL_AI/start.py
   -> RL_AI/training/experiment.py
   -> RL_AI/training/trainer.py
   -> RL_AI/SeaEngine/bridge/vector_env.py
+  -> RL_AI/SeaEngine/bridge/process_vector_env.py
+  -> RL_AI/SeaEngine/bridge/process_env_worker.py
   -> RL_AI/SeaEngine/bridge/pythonnet_session.py
   -> RL_AI/SeaEngine/csharp/SeaEngine
 
@@ -40,6 +42,7 @@ RL_AI/server_ai_client.py
 핵심 포인트는 다음과 같다.
 
 - 학습은 PythonNet으로 C# DLL을 프로세스 내부에서 직접 호출한다.
+- `SEAENGINE_VECTOR_BACKEND=isolated` 기본값은 spawn 기반 worker process로 C# SeaEngine 세션을 분리해 안정성을 높인다.
 - 평가와 분석은 checkpoint별로 side/deck breakdown, 행동 패턴, 기보(history)를 남긴다.
 - 서버 플레이는 TCP app-level packet 형식의 JSON 상태를 읽어서 action Uid를 응답한다.
 - 로그와 산출물은 `log/`, `models/` 아래에 남기고, 실행별 zip으로 묶는다.
@@ -52,12 +55,21 @@ RL_AI/server_ai_client.py
 
 ### `<start.py>`
 
-checkpoint 0 RL vs random/greedy/rule-based/자기자신 8개 조합 100판씩 -> 총 3200판  
-1~2000판 학습(상대는 커리큘럼에 따라 횟수 다를 수 있음, 그리고 불리한 시작 상태도 함께 섞어서 학습한다)
+기본 실행은 `train_episodes=10000`, `max_turns=70`, `checkpoint_interval=2500`이다.  
+checkpoint 0은 RL vs random/greedy/rule-based/자기자신 8개 조합 100판씩 평가하고,
+옵션 `--skip-initial-eval`을 주면 이 초기 평가만 생략하고 바로 학습을 시작할 수 있다.
 
-- 1~2000판: `normal 80% / slight 15% / heavy 5%`
-- 2001~6000판: `normal 70% / slight 20% / heavy 10%`
-- 6001~10000판: `normal 60% / slight 25% / heavy 15%`
+학습 중 checkpoint 평가는 다음 기준으로 수행한다.
+
+- checkpoint 0 / 10000: 8개 조합 기준 더 많은 판수로 평가
+- checkpoint 2500 / 5000 / 7500: 8개 조합 기준 기본 판수로 평가
+- 학습은 총 10000판으로 끝난다
+
+학습은 random, greedy, rule-based, 최근 self-play를 섞는 커리큘럼이며,
+불리한 시작 상태도 함께 섞어서 학습한다.
+
+- 1~5000판: `normal 80% / slight 15% / heavy 5%`
+- 5001~10000판: `normal 70% / slight 20% / heavy 10%`
 
 정의는 다음과 같다.
 
@@ -71,19 +83,16 @@ checkpoint 0 RL vs random/greedy/rule-based/자기자신 8개 조합 100판씩 -
   - `hp_diff <= -5` 또는 `board_diff <= -3`
   - 또는 `hp_diff <= -3`이고 `board_diff <= -2`
 
-체크포인트 저장  
-2000 / 4000 / 6000 / 8000 checkpoint마다 random / greedy / rule-based / 자기자신 상대로 8개 조합 50판씩 -> 각 checkpoint당 총 1600판  
-2001~4000판 학습(12000판과 동일)  
-...  
-8001~10000판 학습(12000판과 동일)  
-체크포인트 저장  
-10000판 학습 완료 시 checkpoint 10000 RL vs random/greedy/rule-based/자기자신 8개 조합 100판씩 -> 총 3200판  
-총 22800판(학습 10000판 + checkpoint 평가 12800판)
+체크포인트 저장은 2500판마다 수행된다.
+
+- 2500 / 5000 / 7500 checkpoint: random / greedy / rule-based / 자기자신 상대로 8개 조합 50판씩
+- 10000 checkpoint: random / greedy / rule-based / 자기자신 상대로 8개 조합 100판씩
+- 총 학습: 10000판
 
 ### `<make_balance.py>` (변경 없음)
 
-학습된 RL vs 학습된 RL, 8개 조합 250판씩  
-총 2000판
+학습된 RL vs 학습된 RL, 8개 조합 500판씩  
+총 4000판
 
 ### `<bias_check.py>`
 
@@ -94,7 +103,7 @@ RL/RL 8개 조합 50판씩 -> 400판
 normalize vs raw 비교 8개 조합 50판씩 -> 800판  
 normalize-raw agree rate 8개 조합 50판씩 -> 800판  
 random/greedy/rule-based/RL 각각 slight deficit / heavy deficit 8조합 50판씩 -> 3200판  
-checkpoint sweep 제외 기본 진단은 총 6400판
+기본 진단은 현재 `total-matches=400`, `comeback-matches=200`, `ablation-matches=400`, `mirror-matches=400`이다.
 
 ---
 
@@ -149,7 +158,7 @@ checkpoint sweep 제외 기본 진단은 총 6400판
 6. 학습을 10,000 episodes 돌린다.
 7. 2,000 에피소드마다 checkpoint를 저장하고, `2,000 / 4,000 / 6,000 / 8,000` checkpoint마다 `random` / `greedy` / `rule-based` / `자기자신` 기준 8개 조합 평가를 수행한다.
 8. 10,000 에피소드 checkpoint에서는 `random` / `greedy` / `rule-based` / `자기자신` 평가를 8개 조합 기준으로 각각 100판씩 수행한다.
-9. checkpoint 10000 평가를 마치면 결과 로그와 모델을 zip으로 묶는다.
+9. checkpoint 20000 평가를 마치면 결과 로그와 모델을 zip으로 묶는다.
 
 여기서 말하는 **8개 조합**은 다음 축의 조합이다.
 
@@ -191,8 +200,8 @@ checkpoint sweep 제외 기본 진단은 총 6400판
 기본적으로는:
 
 - `RL vs RL` self-play
-- 총 2000판
-- 8개 조합 x 250판씩
+- 총 16000판
+- 8개 조합 x 2000판씩
   - 선공 / 후공
   - 내 덱: 귤 / 샤를로테
   - 상대 덱: 귤 / 샤를로테
@@ -339,7 +348,7 @@ AI가 action Uid를 응답하는 TCP 클라이언트다.
 - population score 기준으로는 최종 10000 checkpoint보다 중간 checkpoint가 더 균형적일 수 있으며, 최근 분석에서는 6000 checkpoint가 비교적 안정적으로 보였다.
 - 샤를로테, 특히 `샤를로테/후공/다른 덱` 약점은 여전히 강하게 남아 있다.
 
-`make_balance.py` 기준 RL vs RL 2000판 결과는 다음과 같다.
+`make_balance.py` 기준 RL vs RL 16000판 결과는 다음과 같다.
 
 - 전체 RL 승률: 48.65%
 - RL wins / opponent wins / draws: 973 / 1027 / 0
@@ -419,7 +428,7 @@ nohup bash -lc 'cd ~ && python -u ~/start.py' > ~/start.log 2>&1 &
 ```bash
 python -u ~/start.py \
   --eval-matches 50 \
-  --train-episodes 10000 \
+  --train-episodes 20000 \
   --max-turns 100 \
   --update-interval 16 \
   --seed 7
@@ -428,11 +437,11 @@ python -u ~/start.py \
 옵션 설명:
 
 - `--eval-matches`
-  - checkpoint 0/10000 평가 판수 per combo (random/greedy/rule-based/self 각각)
+  - checkpoint 0/20000 평가 판수 per combo (random/greedy/rule-based/self 각각)
   - 기본값: `50`
 - `--train-episodes`
   - 총 학습 에피소드 수
-  - 기본값: `10000`
+  - 기본값: `20000`
 - `--max-turns`
   - 평가 시 허용 최대 턴 수
   - 기본값: `100`
@@ -457,7 +466,7 @@ python -u ~/start.py \
 - PythonNet 초기화
 - 학습
 - checkpoint 0 / 10000 8개 조합 평가
-- 2000/4000/6000/8000 checkpoint의 greedy/rule-based/self 8개 조합 평가
+- 2500/5000/7500 checkpoint의 random/greedy/rule-based/self 8개 조합 평가
 - 모델 zip / 로그 zip 정리
 
 DLPC에서 홈 디렉터리 wrapper를 쓴다면 동일하게 `~/start.py`를 실행하면 된다.
@@ -481,8 +490,8 @@ nohup bash -lc 'cd ~ && python -u ~/make_balance.py' > ~/make_balance.log 2>&1 &
 ```bash
 python -u ~/make_balance.py \
   --model-path ~/RL_AI/models/model_ep_10000.pt \
-  --total-matches 2000 \
-  --max-turns 100 \
+  --total-matches 4000 \
+  --max-turns 70 \
   --seed 7 \
   --device auto
 ```
@@ -494,10 +503,10 @@ python -u ~/make_balance.py \
   - `.pt` 또는 `.zip` 가능
 - `--total-matches`
   - 총 평가 판수
-  - 기본값: `2000`
+  - 기본값: `4000`
 - `--max-turns`
   - 한 판의 최대 턴 수
-  - 기본값: `100`
+  - 기본값: `70`
 - `--seed`
   - 난수 시드
   - 기본값: `7`
@@ -510,16 +519,18 @@ python -u ~/make_balance.py \
 
 `make_balance.py`는 다음 규칙으로 모델을 고른다.
 
-1. `~/RL_AI/models/model_ep_10000.pt`
-2. `~/RL_AI/models/*.zip` 중 최신 파일
-3. zip 안의 `model_ep_10000.pt`
-4. 없으면 zip 안의 최신 `.pt`
+1. `~/RL_AI/models/best_model.pt`
+2. `~/RL_AI/models/model_ep_10000.pt`
+3. `~/RL_AI/models/*.zip` 중 최신 파일
+4. zip 안의 `best_model.pt`
+5. zip 안의 `model_ep_10000.pt`
+6. 없으면 zip 안의 최신 `.pt`
 
 `make_balance.py`는 현재 다음을 고정으로 평가한다.
 
 - self-play
-- 8개 조합 x 250판
-- 총 2000판
+- 8개 조합 x 500판
+- 총 4000판
 
 DLPC에서 홈 디렉터리 wrapper를 쓴다면 동일하게 `~/make_balance.py`를 실행하면 된다.
 
@@ -591,7 +602,7 @@ python -u ~/bias_check.py \
 
 - 최신 모델 zip/pt 자동 탐색
 - 5개 checkpoint만 추출
-  - 2000 / 4000 / 6000 / 8000 / 10000
+  - 2500 / 5000 / 7500 / 10000
 - random/random, greedy/greedy, RL/RL 평가
 - normalize vs raw 비교
 - normalize-raw agree rate 측정

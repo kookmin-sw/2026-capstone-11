@@ -6,7 +6,6 @@ running focused experiments for:
   - random/random, greedy/greedy, RL/RL self-play comparisons
   - normalized vs raw performance comparison
   - normalized-raw agreement measurement
-  - checkpoint-by-checkpoint side-gap tracking
 
 It intentionally does not modify start.py.
 """
@@ -57,6 +56,7 @@ def _setup_logger(log_file: Path) -> None:
     sys.stdout = _Tee(sys.stdout, f)
     sys.stderr = _Tee(sys.stderr, f)
     print(f"[*] log file: {log_file}")
+    print(f"[*] script start time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
 
 def _format_elapsed(seconds: float) -> str:
@@ -74,8 +74,8 @@ def _apply_parallel_opt_env(section: str) -> None:
 
 def _dotnet_root_from_cmd(dotnet_cmd: str) -> str:
     try:
-        info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
-        for line in info.stdout.splitlines():
+        info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, encoding="utf-8", errors="replace", check=True)
+        for line in (info.stdout or "").splitlines():
             if "Base Path:" in line:
                 base_path = line.split("Base Path:", 1)[1].strip()
                 return str(Path(base_path).resolve().parents[1])
@@ -91,6 +91,33 @@ def _dotnet_executable(root: Path) -> Path:
     return root / ("dotnet.exe" if os.name == "nt" else "dotnet")
 
 
+def _dotnet_required_sdk_major() -> int:
+    raw = os.getenv("SEAENGINE_DOTNET_SDK_MAJOR", "10").strip()
+    try:
+        return max(0, int(raw))
+    except ValueError:
+        return 10
+
+
+def _dotnet_has_required_sdk(dotnet_cmd: str) -> bool:
+    required = _dotnet_required_sdk_major()
+    if required <= 0:
+        return True
+    try:
+        info = subprocess.run(
+            [dotnet_cmd, "--list-sdks"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=True,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError, PermissionError, OSError):
+        return False
+    prefix = f"{required}."
+    return any(line.strip().startswith(prefix) for line in (info.stdout or "").splitlines())
+
+
 def _set_dotnet_env(dotnet_cmd: str) -> None:
     dotnet_root = _dotnet_root_from_cmd(dotnet_cmd)
     os.environ["DOTNET_CMD"] = dotnet_cmd
@@ -104,8 +131,11 @@ def _set_dotnet_env(dotnet_cmd: str) -> None:
 
 def _try_dotnet(dotnet_cmd: str) -> bool:
     try:
-        info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
-        first_line = next((line.strip() for line in info.stdout.splitlines() if line.strip().startswith("Version:")), "")
+        info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, encoding="utf-8", errors="replace", check=True)
+        first_line = next((line.strip() for line in (info.stdout or "").splitlines() if line.strip().startswith("Version:")), "")
+        if not _dotnet_has_required_sdk(dotnet_cmd):
+            print(f"[!] dotnet found but missing .NET {_dotnet_required_sdk_major()} SDK: {dotnet_cmd}")
+            return False
         _set_dotnet_env(dotnet_cmd)
         print(f"dotnet ok: {dotnet_cmd}" + (f" ({first_line})" if first_line else ""))
         return True
@@ -114,12 +144,62 @@ def _try_dotnet(dotnet_cmd: str) -> bool:
 
 
 def _install_home_dotnet() -> str:
-    if os.name == "nt":
-        return ""
     home_dotnet = Path.home() / ".dotnet"
     dotnet_cmd = _dotnet_executable(home_dotnet)
-    install_script = home_dotnet / "dotnet-install.sh"
     home_dotnet.mkdir(parents=True, exist_ok=True)
+
+    if os.name == "nt":
+        install_script = home_dotnet / "dotnet-install.ps1"
+        if not install_script.exists():
+            print("[*] installing dotnet SDK to ~/.dotnet via dotnet-install.ps1...")
+            download_command = [
+                "powershell",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                f"Invoke-WebRequest -Uri 'https://dot.net/v1/dotnet-install.ps1' -OutFile '{install_script}'",
+            ]
+            completed = subprocess.run(
+                download_command,
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            if completed.stdout:
+                print(completed.stdout)
+            if completed.stderr:
+                print(completed.stderr)
+
+        if not install_script.exists():
+            print("[!] dotnet-install.ps1 download failed; ~/.dotnet install unavailable.")
+            return ""
+
+        install_commands = [
+            ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(install_script), "-Version", "10.0.107", "-InstallDir", str(home_dotnet), "-NoPath"],
+            ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(install_script), "-Channel", "10.0", "-Quality", "GA", "-InstallDir", str(home_dotnet), "-NoPath"],
+        ]
+        for command in install_commands:
+            completed = subprocess.run(
+                command,
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            if completed.stdout:
+                print(completed.stdout)
+            if completed.stderr:
+                print(completed.stderr)
+            if completed.returncode == 0 and dotnet_cmd.exists() and _try_dotnet(str(dotnet_cmd)):
+                return str(dotnet_cmd)
+            print(f"[!] home dotnet install step failed: {' '.join(command)} :: exit {completed.returncode}")
+        return ""
+
+    install_script = home_dotnet / "dotnet-install.sh"
 
     if not install_script.exists():
         print("[*] installing dotnet SDK to ~/.dotnet via dotnet-install.sh...")
@@ -546,30 +626,47 @@ def _build_csharp(dotnet_cmd: str) -> None:
     engine_csproj = project_root / "SeaEngine" / "SeaEngine.csproj"
 
     if not dotnet_cmd:
-        if _has_engine_binary():
-            print("[!] dotnet unavailable; using existing SeaEngine.dll without rebuilding.")
-            return
-        raise RuntimeError("dotnet is unavailable and no prebuilt SeaEngine.dll was found.")
+        raise RuntimeError("dotnet is unavailable and SeaEngine must be rebuilt.")
 
     if engine_csproj.exists():
-        subprocess.run([dotnet_cmd, "build", str(engine_csproj), "-c", "Release", "-v", "q"], check=True)
+        env = os.environ.copy()
+        env.setdefault("DOTNET_CLI_UI_LANGUAGE", "en")
+        completed = subprocess.run(
+            [dotnet_cmd, "build", str(engine_csproj), "-c", "Release", "-v", "q"],
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            env=env,
+        )
+        if completed.stdout:
+            print(completed.stdout)
+        if completed.stderr:
+            print(completed.stderr)
+        if completed.returncode != 0:
+            completed.check_returncode()
     else:
         raise FileNotFoundError(f"Missing engine project: {engine_csproj}")
     print("SeaEngine build ok")
 
 
 def _configure_runtime_env() -> str:
-    os.environ.setdefault("SEAENGINE_VECTOR_BACKEND", "local")
+    os.environ.setdefault("SEAENGINE_VECTOR_BACKEND", "isolated")
     os.environ.setdefault("SEAENGINE_LOCAL_THREADS", "0")
     os.environ.setdefault("SEAENGINE_QUIET_WORKER_LOG", "1")
     os.environ.setdefault("SEAENGINE_SUPPRESS_NATIVE_LOGS", "1")
     os.environ.setdefault("SEAENGINE_FAST_POOL", "0")
-    os.environ.setdefault("SEAENGINE_TRAIN_MAX_TURNS", "100")
+    os.environ.setdefault("SEAENGINE_TRAIN_MAX_TURNS", "70")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_MODE", "restore")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_SIMS", "1")
-    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "3")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "2")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "1")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_CANDIDATE_MIXING_STRATEGY", "policy_prior_plus_heuristic_topk")
+    os.environ.setdefault("SEAENGINE_SAVE_SCENARIO_REPORTS", "0")
+    os.environ.setdefault("SEAENGINE_SAVE_SCENARIO_HISTORIES", "0")
+    os.environ.setdefault("SEAENGINE_EVAL_HISTORY_LIMIT", "50")
+    os.environ.setdefault("SEAENGINE_LOG_ARCHIVE_MODE", "compact")
 
     home = Path.home()
     if str(home) not in sys.path:
@@ -631,7 +728,16 @@ def _resolve_model_source(model_path: str | None) -> Path:
         return path
 
     model_dir = Path.home() / "RL_AI" / "models"
-    latest = _latest_file(list(model_dir.glob("model_*.zip")) + list(model_dir.glob("model_*.pt")))
+    best_model = model_dir / "best_model.pt"
+    if best_model.exists():
+        return best_model
+
+    latest = _latest_file(
+        list(model_dir.glob("model_*.zip"))
+        + list(model_dir.glob("model_*.pt"))
+        + list(model_dir.glob("start_model.zip"))
+        + list(model_dir.glob("start_latest.zip"))
+    )
     if latest is None:
         raise FileNotFoundError(f"No model archive or pt file found in {model_dir}")
     return latest
@@ -643,6 +749,9 @@ def _extract_model_archive(archive_path: Path, dest_dir: Path) -> list[Path]:
     dest_dir.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(archive_path) as zf:
         zf.extractall(dest_dir)
+    best_files = sorted(dest_dir.glob("best_model.pt"))
+    if best_files:
+        return best_files
     pt_files = sorted(dest_dir.glob("model_ep_*.pt"), key=_episode_from_name)
     if not pt_files:
         pt_files = sorted(dest_dir.glob("*.pt"))
@@ -1049,6 +1158,10 @@ def _run_same_policy_suite(
 ) -> Dict[str, Any]:
     from RL_AI.training import evaluate_agents
 
+    local_history_limit = None if history_limit is None else min(100, max(0, int(history_limit)))
+    if local_history_limit is None:
+        local_history_limit = 100
+
     scenarios = _scenario_definitions(label)
     per = total_matches // len(scenarios)
     rem = total_matches % len(scenarios)
@@ -1079,7 +1192,7 @@ def _run_same_policy_suite(
             max_turns=max_turns,
             report_path=str(scenario_report_path),
             include_history=include_history,
-            history_limit=history_limit,
+            history_limit=local_history_limit,
             match_context={
                 "mode_label": label,
                 "side_label": str(scenario["side_name"]),
@@ -1204,6 +1317,10 @@ def _run_head_to_head_suite(
 ) -> Dict[str, Any]:
     from RL_AI.training import evaluate_agents
 
+    local_history_limit = None if history_limit is None else min(100, max(0, int(history_limit)))
+    if local_history_limit is None:
+        local_history_limit = 100
+
     scenarios = _scenario_definitions(label)
     per = total_matches // len(scenarios)
     rem = total_matches % len(scenarios)
@@ -1228,7 +1345,7 @@ def _run_head_to_head_suite(
             max_turns=max_turns,
             report_path=str(scenario_report_path),
             include_history=include_history,
-            history_limit=history_limit,
+            history_limit=local_history_limit,
             match_context={
                 "mode_label": label,
                 "side_label": str(scenario["side_name"]),
@@ -1431,6 +1548,52 @@ class _BiasCheckRLAgentWrapper:
     def sampling_mode(self, enabled: bool):
         return self._agent.sampling_mode(enabled)
 
+    def requires_engine_state(self) -> bool:
+        if self._belief_agent is None:
+            return False
+        getter = getattr(self._belief_agent, "requires_engine_state", None)
+        if callable(getter):
+            try:
+                return bool(getter())
+            except Exception:
+                return True
+        return True
+
+    def reset_search_history(self, *args, **kwargs):
+        if self._belief_agent is None:
+            return None
+        method = getattr(self._belief_agent, "reset_search_history", None)
+        if callable(method):
+            return method(*args, **kwargs)
+        return None
+
+    def set_replay_available(self, enabled: bool):
+        if self._belief_agent is None:
+            return None
+        method = getattr(self._belief_agent, "set_replay_available", None)
+        if callable(method):
+            return method(enabled)
+        return None
+
+    def observe_transition(self, snapshot: Dict[str, Any], action: Dict[str, Any]):
+        if self._belief_agent is None:
+            return None
+        method = getattr(self._belief_agent, "observe_transition", None)
+        if callable(method):
+            return method(snapshot, action)
+        return None
+
+    def get_search_summary(self) -> Dict[str, Any]:
+        if self._belief_agent is None:
+            return {}
+        method = getattr(self._belief_agent, "get_search_summary", None)
+        if callable(method):
+            try:
+                return dict(method())
+            except Exception:
+                return {}
+        return {}
+
     def select_action(self, snapshot: Dict[str, Any], legal_actions: Sequence[Dict[str, Any]]):
         if self.observation_mode == "auto":
             if self._belief_agent is not None:
@@ -1505,9 +1668,14 @@ def _make_speed_progress_callback(
         speed = interval_units / interval_elapsed
         elapsed = max(1e-9, now - start)
         avg_speed = current / elapsed
+        expected_total = max(1, int(total_units or total))
+        current_units = max(0, min(current, expected_total))
+        remaining = max(0, expected_total - current_units)
+        eta = remaining / avg_speed if avg_speed > 1e-9 else 0.0
         print(
-            f"[*] {task_name} progress: {current}/{total_units or total} "
+            f"[*] {task_name} progress: {current_units}/{expected_total} "
             f"Speed: {speed:.2f} {unit_label} | Avg: {avg_speed:.2f} {unit_label} | "
+            f"Elapsed: {_format_elapsed(elapsed)} | ETA: {_format_elapsed(eta)} | "
             f"last={result} | matchup={matchup}",
             flush=True,
         )
@@ -1518,7 +1686,7 @@ def _make_speed_progress_callback(
 
 
 def _default_scenario_workers() -> int:
-    return 1
+    return 2
 
 
 def _env_positive_int(name: str) -> int:
@@ -1555,7 +1723,7 @@ def _resolve_checkpoint_paths(extracted_paths: Sequence[Path], checkpoint_limit:
         [p for p in extracted_paths if p.is_file() and p.name.startswith("model_ep_") and p.suffix == ".pt"],
         key=_episode_from_name,
     )
-    selected_episodes = {2000, 4000, 6000, 8000, 10000}
+    selected_episodes = {5000, 10000}
     checkpoints = [p for p in checkpoints if _episode_from_name(p) in selected_episodes]
     if checkpoint_limit > 0:
         checkpoints = checkpoints[:checkpoint_limit]
@@ -1588,7 +1756,7 @@ def _run_bias_task(task: Dict[str, Any]) -> Dict[str, Any]:
     device = str(task["device"])
     seed = int(task["seed"])
     card_data_path = task.get("card_data_path")
-    max_turns = int(task.get("max_turns", 100))
+    max_turns = int(task.get("max_turns", 70))
     use_belief_mcts = bool(task.get("use_belief_mcts", False))
 
     print(f"[*] task start: {task_name} ({task_kind})")
@@ -1661,37 +1829,6 @@ def _run_bias_task(task: Dict[str, Any]) -> Dict[str, Any]:
             "result": result,
         }
 
-    if task_kind == "checkpoint":
-        total_matches = int(task["total_matches"])
-        include_history = bool(task.get("include_history", True))
-        history_limit = task.get("history_limit")
-        history_limit = None if history_limit is None else int(history_limit)
-        scenario_workers = int(task.get("scenario_workers", 1))
-        model_path = Path(task["model_path"])
-        state_dict = _load_state_dict(model_path)
-        agent_factory = _make_rl_agent_factory(
-            state_dict=state_dict,
-            observation_mode="python_canonical",
-            device=device,
-            use_belief_mcts=use_belief_mcts,
-        )
-        result = _run_same_policy_suite(
-            label=label,
-            agent_factory=agent_factory,
-            total_matches=total_matches,
-            card_data_path=card_data_path,
-            max_turns=max_turns,
-            seed=seed,
-            include_history=include_history,
-            history_limit=history_limit,
-            scenario_workers=scenario_workers,
-        )
-        return {
-            "task_name": task_name,
-            "task_kind": task_kind,
-            "result": result,
-        }
-
     if task_kind == "head_to_head":
         total_matches = int(task["total_matches"])
         include_history = bool(task.get("include_history", False))
@@ -1741,8 +1878,6 @@ def main() -> int:
     parser.add_argument("--comeback-matches", type=int, default=200, help="Total matches for comeback deficit suites (greedy/rule-based/self, across 8 combos)")
     parser.add_argument("--ablation-matches", type=int, default=400, help="Total matches for normalized vs raw performance suite")
     parser.add_argument("--mirror-matches", type=int, default=400, help="Total matches for normalized-raw agreement measurement")
-    parser.add_argument("--checkpoint-matches", type=int, default=400, help="Total matches per checkpoint side-gap suite")
-    parser.add_argument("--checkpoint-limit", type=int, default=0, help="Limit number of checkpoint files (0 = all)")
     parser.add_argument("--parallel-workers", type=int, default=0, help="Number of process workers for bias suites (0 = auto)")
     parser.add_argument("--scenario-workers", type=int, default=0, help="Number of scenario workers inside each suite (0 = auto)")
     parser.add_argument("--no-history", action="store_true", help="Skip representative history reports for faster large bias sweeps")
@@ -1767,19 +1902,23 @@ def main() -> int:
     log_file = Path(args.log_file) if args.log_file else default_log
     _setup_logger(log_file)
 
-    os.environ.setdefault("SEAENGINE_VECTOR_BACKEND", "local")
+    os.environ.setdefault("SEAENGINE_VECTOR_BACKEND", "isolated")
     from RL_AI.start import _default_num_envs
 
     os.environ.setdefault("SEAENGINE_NUM_ENVS", str(_default_num_envs()))
     os.environ.setdefault("SEAENGINE_LOCAL_THREADS", "0")
     os.environ.setdefault("SEAENGINE_WORKERS", "0")
     os.environ.setdefault("SEAENGINE_LOCAL_MAX_WORKERS", "0")
-    os.environ.setdefault("SEAENGINE_SCENARIO_WORKERS", "1")
+    os.environ.setdefault("SEAENGINE_SCENARIO_WORKERS", "2")
     os.environ.setdefault("SEAENGINE_PARALLEL_WORKERS", "1")
     os.environ.setdefault("SEAENGINE_FAST_POOL", "0")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_SIMS", "1")
-    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "3")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "2")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "1")
+    os.environ.setdefault("SEAENGINE_SAVE_SCENARIO_REPORTS", "0")
+    os.environ.setdefault("SEAENGINE_SAVE_SCENARIO_HISTORIES", "0")
+    os.environ.setdefault("SEAENGINE_EVAL_HISTORY_LIMIT", "50")
+    os.environ.setdefault("SEAENGINE_LOG_ARCHIVE_MODE", "compact")
     dotnet_cmd = _ensure_dotnet()
     _ensure_python_deps()
     _apply_parallel_opt_env("bias_check")
@@ -1791,11 +1930,10 @@ def main() -> int:
     print(
         f"[*] args: model_path={args.model_path or '<latest>'}, compare_model_path={args.compare_model_path or '<none>'}, total_matches={args.total_matches}, comeback_matches={args.comeback_matches}, "
         f"ablation_matches={args.ablation_matches}, mirror_matches={args.mirror_matches}, "
-        f"checkpoint_matches={args.checkpoint_matches}, checkpoint_limit={args.checkpoint_limit}, "
         f"parallel_workers={args.parallel_workers}, scenario_workers={args.scenario_workers}, seed={args.seed}, device={args.device}, "
         f"model_hidden_dim={os.environ.get('SEAENGINE_MODEL_HIDDEN_DIM', '192')}, "
         f"belief_mcts_sims={os.environ.get('SEAENGINE_BELIEF_MCTS_SIMS', '1')}, "
-        f"belief_mcts_top_k={os.environ.get('SEAENGINE_BELIEF_MCTS_TOP_K', '3')}, "
+        f"belief_mcts_top_k={os.environ.get('SEAENGINE_BELIEF_MCTS_TOP_K', '2')}, "
         f"belief_mcts_rollout_steps={os.environ.get('SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS', '1')}, "
         f"belief_mcts_candidate_mixing_strategy={os.environ.get('SEAENGINE_BELIEF_MCTS_CANDIDATE_MIXING_STRATEGY', 'policy_prior_plus_heuristic_topk')}, "
         f"use_belief_mcts={args.use_belief_mcts}, belief_mcts_mode={os.environ.get('SEAENGINE_BELIEF_MCTS_MODE', 'restore')}, "
@@ -1832,10 +1970,16 @@ def main() -> int:
             temp_dir_mgr = tempfile.TemporaryDirectory(prefix="rl_ai_bias_check_")
             extract_root = Path(temp_dir_mgr.name)
             extracted = _extract_model_archive(model_source, extract_root)
-            extracted_checkpoints = _resolve_checkpoint_paths(extracted, args.checkpoint_limit)
-            if not extracted_checkpoints:
+            extracted_checkpoints = _resolve_checkpoint_paths(extracted, 0)
+            best_candidates = [p for p in extracted if p.is_file() and p.name == "best_model.pt"]
+            if best_candidates:
+                current_model_path = best_candidates[-1]
+            elif extracted_checkpoints:
+                current_model_path = extracted_checkpoints[-1]
+            elif extracted:
+                current_model_path = extracted[-1]
+            else:
                 raise FileNotFoundError(f"No model_ep_*.pt found inside {model_source}")
-            current_model_path = extracted_checkpoints[-1]
         else:
             current_model_path = model_source
             extracted_checkpoints = [model_source]
@@ -1846,7 +1990,13 @@ def main() -> int:
                 compare_extract_root = Path(compare_temp_dir_mgr.name)
                 compare_extracted = _extract_model_archive(compare_model_source, compare_extract_root)
                 compare_checkpoints = _resolve_checkpoint_paths(compare_extracted, 0)
-                compare_model_path = compare_checkpoints[-1] if compare_checkpoints else compare_extracted[-1]
+                compare_best = [p for p in compare_extracted if p.is_file() and p.name == "best_model.pt"]
+                if compare_best:
+                    compare_model_path = compare_best[-1]
+                elif compare_checkpoints:
+                    compare_model_path = compare_checkpoints[-1]
+                else:
+                    compare_model_path = compare_extracted[-1]
             else:
                 compare_model_path = compare_model_source
 
@@ -1855,10 +2005,6 @@ def main() -> int:
         if compare_model_path is not None:
             print(f"[*] compare model source: {compare_model_source}")
             print(f"[*] compare model: {compare_model_path}")
-        print(f"[*] checkpoint files: {len(extracted_checkpoints)}")
-        if extracted_checkpoints:
-            print(f"[*] checkpoints first/last: {extracted_checkpoints[0].name} / {extracted_checkpoints[-1].name}")
-
         device = _resolve_device(args.device)
         parallel_workers = _resolve_parallel_workers(args.parallel_workers, device)
         parallel_workers = max(1, min(parallel_workers, 8))
@@ -1876,7 +2022,7 @@ def main() -> int:
                 "agent_kind": "random",
                 "total_matches": args.total_matches,
                 "card_data_path": None,
-                "max_turns": 100,
+                "max_turns": 70,
                 "seed": args.seed,
                 "device": device,
                 "scenario_workers": scenario_workers,
@@ -1889,7 +2035,7 @@ def main() -> int:
                 "agent_kind": "greedy",
                 "total_matches": args.total_matches,
                 "card_data_path": None,
-                "max_turns": 100,
+                "max_turns": 70,
                 "seed": args.seed + 100,
                 "device": device,
                 "scenario_workers": scenario_workers,
@@ -1902,7 +2048,7 @@ def main() -> int:
                 "agent_kind": "rule_based",
                 "total_matches": args.total_matches,
                 "card_data_path": None,
-                "max_turns": 100,
+                "max_turns": 70,
                 "seed": args.seed + 150,
                 "device": device,
                 "scenario_workers": scenario_workers,
@@ -1917,7 +2063,7 @@ def main() -> int:
                 "model_path": str(current_model_path),
                 "total_matches": args.total_matches,
                 "card_data_path": None,
-                "max_turns": 100,
+                "max_turns": 70,
                 "seed": args.seed + 200,
                 "device": device,
                 "scenario_workers": scenario_workers,
@@ -1932,7 +2078,7 @@ def main() -> int:
                 "burnin_profile": "mixed",
                 "total_matches": args.total_matches,
                 "card_data_path": None,
-                "max_turns": 100,
+                "max_turns": 70,
                 "seed": args.seed + 210,
                 "device": device,
                 "scenario_workers": scenario_workers,
@@ -1947,7 +2093,7 @@ def main() -> int:
                 "burnin_profile": "mixed",
                 "total_matches": args.total_matches,
                 "card_data_path": None,
-                "max_turns": 100,
+                "max_turns": 70,
                 "seed": args.seed + 220,
                 "device": device,
                 "scenario_workers": scenario_workers,
@@ -1962,7 +2108,7 @@ def main() -> int:
                 "burnin_profile": "mixed",
                 "total_matches": args.comeback_matches,
                 "card_data_path": None,
-                "max_turns": 100,
+                "max_turns": 70,
                 "seed": args.seed + 310,
                 "device": device,
                 "scenario_workers": scenario_workers,
@@ -1977,7 +2123,7 @@ def main() -> int:
                 "burnin_profile": "mixed",
                 "total_matches": args.comeback_matches,
                 "card_data_path": None,
-                "max_turns": 100,
+                "max_turns": 70,
                 "seed": args.seed + 320,
                 "device": device,
                 "scenario_workers": scenario_workers,
@@ -1992,7 +2138,7 @@ def main() -> int:
                 "burnin_profile": "mixed",
                 "total_matches": args.comeback_matches,
                 "card_data_path": None,
-                "max_turns": 100,
+                "max_turns": 70,
                 "seed": args.seed + 330,
                 "device": device,
                 "scenario_workers": scenario_workers,
@@ -2007,7 +2153,7 @@ def main() -> int:
                 "burnin_profile": "mixed",
                 "total_matches": args.comeback_matches,
                 "card_data_path": None,
-                "max_turns": 100,
+                "max_turns": 70,
                 "seed": args.seed + 340,
                 "device": device,
                 "scenario_workers": scenario_workers,
@@ -2024,7 +2170,7 @@ def main() -> int:
                 "model_path": str(current_model_path),
                 "total_matches": args.comeback_matches,
                 "card_data_path": None,
-                "max_turns": 100,
+                "max_turns": 70,
                 "seed": args.seed + 410,
                 "device": device,
                 "scenario_workers": scenario_workers,
@@ -2041,7 +2187,7 @@ def main() -> int:
                 "model_path": str(current_model_path),
                 "total_matches": args.comeback_matches,
                 "card_data_path": None,
-                "max_turns": 100,
+                "max_turns": 70,
                 "seed": args.seed + 420,
                 "device": device,
                 "scenario_workers": scenario_workers,
@@ -2056,7 +2202,7 @@ def main() -> int:
                 "model_path": str(current_model_path),
                 "total_matches": args.ablation_matches,
                 "card_data_path": None,
-                "max_turns": 100,
+                "max_turns": 70,
                 "seed": args.seed + 101,
                 "device": device,
                 "scenario_workers": scenario_workers,
@@ -2071,7 +2217,7 @@ def main() -> int:
                 "model_path": str(current_model_path),
                 "total_matches": args.ablation_matches,
                 "card_data_path": None,
-                "max_turns": 100,
+                "max_turns": 70,
                 "seed": args.seed + 202,
                 "device": device,
                 "scenario_workers": scenario_workers,
@@ -2085,7 +2231,7 @@ def main() -> int:
                 "model_path": str(current_model_path),
                 "total_matches": args.mirror_matches,
                 "card_data_path": None,
-                "max_turns": 100,
+                "max_turns": 70,
                 "seed": args.seed + 303,
                 "device": device,
                 "scenario_workers": scenario_workers,
@@ -2098,33 +2244,12 @@ def main() -> int:
                 "model_path": str(current_model_path),
                 "total_matches": args.mirror_matches,
                 "card_data_path": None,
-                "max_turns": 100,
+                "max_turns": 70,
                 "seed": args.seed + 404,
                 "device": device,
                 "scenario_workers": scenario_workers,
             },
         ]
-
-        if extracted_checkpoints:
-            print("[*] Running checkpoint side-gap sweep...")
-        for ckpt_idx, ckpt_path in enumerate(extracted_checkpoints):
-            task_specs.append(
-                {
-                    "task_name": f"ckpt_{_episode_from_name(ckpt_path)}",
-                    "kind": "checkpoint",
-                    "label": f"ckpt_{_episode_from_name(ckpt_path)}",
-                    "model_path": str(ckpt_path),
-                    "total_matches": args.checkpoint_matches,
-                    "card_data_path": None,
-                    "max_turns": 100,
-                    "seed": args.seed + 5000 + ckpt_idx,
-                    "device": device,
-                    "scenario_workers": scenario_workers,
-                    "episode": _episode_from_name(ckpt_path),
-                    "checkpoint_path": str(ckpt_path),
-                    "include_history": True,
-                }
-            )
 
         if compare_model_path is not None:
             task_specs.append(
@@ -2136,7 +2261,7 @@ def main() -> int:
                     "opp_model_path": str(compare_model_path),
                     "total_matches": args.total_matches,
                     "card_data_path": None,
-                    "max_turns": 100,
+                    "max_turns": 70,
                     "seed": args.seed + 7000,
                     "device": device,
                     "scenario_workers": scenario_workers,
@@ -2145,9 +2270,9 @@ def main() -> int:
             )
 
         for task in task_specs:
-            if str(task.get("agent_kind")) == "rl" or str(task.get("kind")) in {"mirror", "checkpoint", "head_to_head"}:
+            if str(task.get("agent_kind")) == "rl" or str(task.get("kind")) in {"mirror", "head_to_head"}:
                 task["use_belief_mcts"] = bool(args.use_belief_mcts)
-            if str(task.get("kind")) in {"same_policy", "checkpoint", "head_to_head"}:
+            if str(task.get("kind")) in {"same_policy", "head_to_head"}:
                 task["history_limit"] = history_limit
                 if bool(task.get("include_history", False)):
                     task["include_history"] = include_histories
@@ -2188,26 +2313,6 @@ def main() -> int:
         normalize_raw_agree_canonical = task_results["normalize_raw_agree_canonical"]
         normalize_raw_agree_raw = task_results["normalize_raw_agree_raw"]
 
-        checkpoint_rows: list[Dict[str, Any]] = []
-        for task in task_specs:
-            if str(task["kind"]) != "checkpoint":
-                continue
-            suite = task_results[str(task["task_name"])]
-            checkpoint_rows.append(
-                {
-                    "path": str(task["checkpoint_path"]),
-                    "episode": int(task["episode"]),
-                    "suite": suite,
-                }
-            )
-            agg = suite["aggregate"]
-            history_count = sum(1 for row in suite.get("results", []) if row.get("history_path"))
-            print(
-                f"[*] checkpoint {Path(str(task['checkpoint_path'])).name}: self_wr={agg['self_win_rate_percent']:.1f}% | "
-                f"side_gap={agg['side_gap_percent']:.1f}pp | avg_steps={agg['avg_steps']:.1f} | "
-                f"history_files={history_count}"
-            )
-
         report_lines = [
             "=== SeaEngine Bias Check ===",
             f"model_source={model_source}",
@@ -2247,19 +2352,8 @@ def main() -> int:
                 f"raw: states={normalize_raw_agree_raw['states']}, agree={normalize_raw_agree_raw['agreement']}, "
                 f"agreement_rate={normalize_raw_agree_raw['agreement_rate']:.2f}%, "
                 f"uid_agreement_rate={normalize_raw_agree_raw.get('uid_agreement_rate', 0.0):.2f}%",
-                "",
-                "=== Checkpoint Side Gap ===",
             ]
         )
-        for row in checkpoint_rows:
-            agg = row["suite"]["aggregate"]
-            history_count = sum(1 for r in row["suite"].get("results", []) if r.get("history_path"))
-            report_lines.append(
-                f"- ep {row['episode']:>5}: self_wr={agg['self_win_rate_percent']:.2f}%, "
-                f"opp_wr={agg['opp_win_rate_percent']:.2f}%, side_gap={agg['side_gap_percent']:.2f}pp, "
-                f"avg_steps={agg['avg_steps']:.2f}, avg_turn={agg['avg_final_turn']:.2f}, "
-                f"path={row['path']}, history_files={history_count}"
-            )
 
         if compare_model_path is not None and "model_a_vs_model_b" in task_results:
             report_lines.extend(

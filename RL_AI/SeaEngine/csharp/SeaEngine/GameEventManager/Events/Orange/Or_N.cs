@@ -9,7 +9,7 @@ public class Or_N : IEvent
 {
     //[파괴 시] 망상 전파 :
     // 이동 범위 내 모든 적 유닛에게
-    // 2피해를 줍니다.
+    // 1피해를 줍니다.
     public string Id => "Or_N";
     public string Timing => "OnDestroy";
 
@@ -25,7 +25,7 @@ public class Or_N : IEvent
         foreach (Card? e in enemy)
         {
             if(e.Unit.Hp <= 0) continue;
-            CombatUtils.Damage(e, 2, data);
+            CombatUtils.Damage(e, 1, data);
         }
         return true;
     }

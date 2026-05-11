@@ -127,7 +127,86 @@ def _move_area_for_card(card: Dict[str, Any]) -> set[tuple[int, int]]:
                 if not (0 <= cx < BOARD_SIZE and 0 <= cy < BOARD_SIZE):
                     break
                 cells.add((cx, cy))
+    elif role == "Rook":
+        for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            cx, cy = x, y
+            while True:
+                cx += dx
+                cy += dy
+                if not (0 <= cx < BOARD_SIZE and 0 <= cy < BOARD_SIZE):
+                    break
+                cells.add((cx, cy))
     return cells
+
+
+def _leader_pos(snapshot: Dict[str, Any], owner_id: str) -> tuple[int, int] | None:
+    leader = _leader_card(snapshot, owner_id)
+    if leader is None:
+        return None
+    x = int(leader.get("pos_x", -1))
+    y = int(leader.get("pos_y", -1))
+    if x < 0 or y < 0:
+        return None
+    return x, y
+
+
+def _occupied_cells(snapshot: Dict[str, Any]) -> set[tuple[int, int]]:
+    cells: set[tuple[int, int]] = set()
+    for card in snapshot.get("board", []):
+        if not bool(card.get("is_placed", False)):
+            continue
+        x = int(card.get("pos_x", -1))
+        y = int(card.get("pos_y", -1))
+        if 0 <= x < BOARD_SIZE and 0 <= y < BOARD_SIZE:
+            cells.add((x, y))
+    return cells
+
+
+def _leader_escape_cells(snapshot: Dict[str, Any], owner_id: str) -> int:
+    pos = _leader_pos(snapshot, owner_id)
+    if pos is None:
+        return 0
+    occupied = _occupied_cells(snapshot)
+    x, y = pos
+    count = 0
+    for dx in (-1, 0, 1):
+        for dy in (-1, 0, 1):
+            if dx == 0 and dy == 0:
+                continue
+            nx, ny = x + dx, y + dy
+            if not (0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE):
+                continue
+            if (nx, ny) in occupied:
+                continue
+            count += 1
+    return count
+
+
+def _leader_threat_count(snapshot: Dict[str, Any], target_owner_id: str) -> int:
+    pos = _leader_pos(snapshot, target_owner_id)
+    if pos is None:
+        return 0
+    enemy_id = _find_enemy_id(snapshot, target_owner_id)
+    if not enemy_id:
+        return 0
+    count = 0
+    for card in snapshot.get("board", []):
+        if str(card.get("owner", "")) != enemy_id:
+            continue
+        if not bool(card.get("is_placed", False)):
+            continue
+        if pos in _move_area_for_card(card):
+            count += 1
+    return count
+
+
+def _material_pressure(snapshot: Dict[str, Any], ai_id: str) -> float:
+    enemy_id = _find_enemy_id(snapshot, ai_id)
+    ai_units = float(_placed_units(snapshot, ai_id))
+    enemy_units = float(_placed_units(snapshot, enemy_id)) if enemy_id else 0.0
+    ai_hand = float(_hand_count(snapshot, ai_id))
+    enemy_hand = float(_hand_count(snapshot, enemy_id)) if enemy_id else 0.0
+    return 0.04 * (ai_units - enemy_units) + 0.015 * (ai_hand - enemy_hand)
 
 
 def _leader_support_score(snapshot: Dict[str, Any], owner_id: str) -> int:
@@ -241,6 +320,39 @@ def _clip(value: float, lo: float, hi: float) -> float:
     return max(lo, min(hi, value))
 
 
+def _live_nonleader_keys(snapshot: Dict[str, Any], owner_id: str) -> set[str]:
+    keys: set[str] = set()
+    for card in snapshot.get("board", []):
+        if str(card.get("owner", "")) != owner_id:
+            continue
+        if not bool(card.get("is_placed", False)):
+            continue
+        if _card_role(card) == "Leader":
+            continue
+        if _safe_float(card.get("hp", 0.0), 0.0) <= 0.0:
+            continue
+
+        uid = str(card.get("uid", card.get("guid", ""))).strip()
+        if uid:
+            keys.add(uid)
+    return keys
+
+
+def _count_action_type(snapshot: Dict[str, Any], effect_id: str) -> int:
+    return sum(
+        1
+        for action in snapshot.get("actions", [])
+        if str(action.get("effect_id", "")) == effect_id
+    )
+
+
+def _has_non_end_action(snapshot: Dict[str, Any]) -> bool:
+    return any(
+        str(action.get("effect_id", "")) != "TurnEnd"
+        for action in snapshot.get("actions", [])
+    )
+
+
 def dense_reward_from_transition(
     prev_snapshot: Dict[str, Any],
     next_snapshot: Dict[str, Any],
@@ -260,36 +372,86 @@ def dense_reward_from_transition(
     prev_enemy_units = _placed_units(prev_snapshot, enemy_id) if enemy_id else 0
     next_enemy_units = _placed_units(next_snapshot, enemy_id) if enemy_id else 0
 
-    # Leader pressure matters the most.
     enemy_leader_delta = prev_enemy_leader_hp - next_enemy_leader_hp
     ai_leader_delta = prev_ai_leader_hp - next_ai_leader_hp
-
-    # Board control and tempo.
     board_delta = (next_ai_units - prev_ai_units) - (next_enemy_units - prev_enemy_units)
 
     reward = 0.0
-    reward += 0.08 * enemy_leader_delta
-    reward -= 0.10 * ai_leader_delta
-    reward += 0.02 * board_delta
+    reward += 0.090 * enemy_leader_delta
+    reward -= 0.100 * ai_leader_delta
+    reward += 0.030 * board_delta
+
+    if enemy_leader_delta > 0.0:
+        reward += 0.025
+    if next_enemy_leader_hp <= 0.0 and prev_enemy_leader_hp > 0.0:
+        reward += 0.20
+
+    if enemy_id:
+        prev_enemy_live = _live_nonleader_keys(prev_snapshot, enemy_id)
+        next_enemy_live = _live_nonleader_keys(next_snapshot, enemy_id)
+        prev_ai_live = _live_nonleader_keys(prev_snapshot, ai_id)
+        next_ai_live = _live_nonleader_keys(next_snapshot, ai_id)
+
+        enemy_kills = max(0, len(prev_enemy_live - next_enemy_live))
+        own_losses = max(0, len(prev_ai_live - next_ai_live))
+
+        reward += 0.090 * float(enemy_kills)
+        reward -= 0.060 * float(own_losses)
+
+    prev_enemy_threat = _leader_threat_count(prev_snapshot, enemy_id) if enemy_id else 0
+    next_enemy_threat = _leader_threat_count(next_snapshot, enemy_id) if enemy_id else 0
+    prev_own_threat = _leader_threat_count(prev_snapshot, ai_id)
+    next_own_threat = _leader_threat_count(next_snapshot, ai_id)
+    reward += _clip(0.012 * float(next_enemy_threat - prev_enemy_threat), -0.015, 0.025)
+    reward -= _clip(0.018 * float(next_own_threat - prev_own_threat), -0.020, 0.035)
+
+    prev_own_escape = _leader_escape_cells(prev_snapshot, ai_id)
+    next_own_escape = _leader_escape_cells(next_snapshot, ai_id)
+    prev_enemy_escape = _leader_escape_cells(prev_snapshot, enemy_id) if enemy_id else 0
+    next_enemy_escape = _leader_escape_cells(next_snapshot, enemy_id) if enemy_id else 0
+    reward += _clip(0.005 * float(next_own_escape - prev_own_escape), -0.015, 0.015)
+    reward += _clip(0.005 * float(prev_enemy_escape - next_enemy_escape), -0.015, 0.015)
+    if next_own_escape <= 1 and next_own_threat > 0:
+        reward -= 0.025
 
     if action_effect_id == "DefaultAttack":
-        reward += 0.01
+        reward += 0.030
     elif action_effect_id == "DeployUnit":
-        reward += 0.005
+        reward += 0.014
     elif action_effect_id == "TurnEnd":
-        reward -= 0.005
+        reward -= 0.012
+
+        attack_actions = _count_action_type(prev_snapshot, "DefaultAttack")
+        deploy_actions = _count_action_type(prev_snapshot, "DeployUnit")
+        if attack_actions > 0:
+            reward -= 0.050
+        if deploy_actions > 0 and _hand_count(prev_snapshot, ai_id) >= 3:
+            reward -= 0.025
+        if _has_non_end_action(prev_snapshot):
+            reward -= 0.015
+    elif action_effect_id in {"DefaultMove", "PawnGeneric"}:
+        reward -= 0.002
 
     prev_advantage = _advantage_score(prev_snapshot, ai_id)
     next_advantage = _advantage_score(next_snapshot, ai_id)
+    improvement = next_advantage - prev_advantage
     if prev_advantage < 0.0:
-        improvement = next_advantage - prev_advantage
-        reward += _clip(0.04 * improvement, -0.04, 0.05)
-        if next_advantage > prev_advantage:
-            reward += 0.01
+        deficit_scale = 1.0
+        if prev_advantage < -1.0:
+            deficit_scale = 1.15
+        if prev_advantage < -1.8:
+            deficit_scale = 1.25
+        reward += _clip(0.025 * deficit_scale * improvement, -0.035, 0.045)
+        if improvement > 0.0:
+            reward += 0.006
         if prev_advantage < -1.0 and next_advantage >= 0.0:
-            reward += 0.04
+            reward += 0.025
     elif next_advantage < prev_advantage:
-        reward -= _clip(0.01 * (prev_advantage - next_advantage), 0.0, 0.02)
+        reward -= _clip(0.008 * (prev_advantage - next_advantage), 0.0, 0.020)
+
+    prev_pressure = _material_pressure(prev_snapshot, ai_id)
+    next_pressure = _material_pressure(next_snapshot, ai_id)
+    reward += _clip(0.010 * (next_pressure - prev_pressure), -0.012, 0.015)
 
     prev_support = _leader_support_score(prev_snapshot, ai_id)
     next_support = _leader_support_score(next_snapshot, ai_id)
@@ -311,8 +473,7 @@ def dense_reward_from_transition(
             reward -= UNSUPPORTED_LEADER_PENALTY
 
         if action_effect_id == "TurnEnd":
-            has_non_end = any(str(action.get("effect_id", "")) != "TurnEnd" for action in prev_snapshot.get("actions", []))
-            if has_non_end:
+            if _has_non_end_action(prev_snapshot):
                 reward -= BAD_PASS_PENALTY
 
         if next_progress > prev_progress and next_support == 0:
@@ -331,7 +492,7 @@ def dense_reward_from_transition(
     if int(next_snapshot.get("turn", 0)) > STAGNATION_TURN_START and progress_signal < STAGNATION_TRANSITION_THRESHOLD:
         reward -= STAGNATION_PENALTY
 
-    return _clip(reward, -0.25, 0.25)
+    return _clip(reward, -0.35, 0.35)
 
 
 def terminal_reward_for_player(result: str, player_id: str, *, final_turn: int | None = None) -> float:

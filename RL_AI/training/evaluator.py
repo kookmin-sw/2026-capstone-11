@@ -386,6 +386,7 @@ def evaluate_agents(
     start_focus_player: str = "P1",
     burnin_profile: str = "fixed",
     burnin_seed: Optional[int] = None,
+    save_report_file: bool = True,
 ) -> Dict[str, object]:
     p1_wins = 0
     p2_wins = 0
@@ -508,8 +509,11 @@ def evaluate_agents(
         for role, stats in belief_mcts_summary.items():
             lines.append(f"- {role}: {json.dumps(stats, ensure_ascii=False, sort_keys=True)}")
         report_text = "\n".join(lines)
-    saved_path = save_report(report_text, _default_evaluation_report_path() if report_path is None else report_path)
-    summary["report_path"] = str(saved_path)
+    if save_report_file:
+        saved_path = save_report(report_text, _default_evaluation_report_path() if report_path is None else report_path)
+        summary["report_path"] = str(saved_path)
+    else:
+        summary["report_path"] = ""
     return summary
 
 

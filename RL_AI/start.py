@@ -47,6 +47,7 @@ def _setup_logger(log_file: Path) -> None:
     sys.stdout = _Tee(sys.stdout, f)
     sys.stderr = _Tee(sys.stderr, f)
     print(f"[*] log file: {log_file}")
+    print(f"[*] script start time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
 
 def _format_elapsed(seconds: float) -> str:
@@ -212,8 +213,8 @@ def _ensure_workspace_venv() -> str:
 
 def _dotnet_root_from_cmd(dotnet_cmd: str) -> str:
     try:
-        info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
-        for line in info.stdout.splitlines():
+        info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, encoding="utf-8", errors="replace", check=True)
+        for line in (info.stdout or "").splitlines():
             if "Base Path:" in line:
                 base_path = line.split("Base Path:", 1)[1].strip()
                 base_dir = Path(base_path).resolve().parents[1]
@@ -230,6 +231,33 @@ def _dotnet_executable(root: Path) -> Path:
     return root / ("dotnet.exe" if os.name == "nt" else "dotnet")
 
 
+def _dotnet_required_sdk_major() -> int:
+    raw = os.getenv("SEAENGINE_DOTNET_SDK_MAJOR", "10").strip()
+    try:
+        return max(0, int(raw))
+    except ValueError:
+        return 10
+
+
+def _dotnet_has_required_sdk(dotnet_cmd: str) -> bool:
+    required = _dotnet_required_sdk_major()
+    if required <= 0:
+        return True
+    try:
+        info = subprocess.run(
+            [dotnet_cmd, "--list-sdks"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=True,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError, PermissionError, OSError):
+        return False
+    prefix = f"{required}."
+    return any(line.strip().startswith(prefix) for line in (info.stdout or "").splitlines())
+
+
 def _set_dotnet_env(dotnet_cmd: str) -> None:
     dotnet_root = _dotnet_root_from_cmd(dotnet_cmd)
     os.environ["DOTNET_CMD"] = dotnet_cmd
@@ -243,8 +271,11 @@ def _set_dotnet_env(dotnet_cmd: str) -> None:
 
 def _try_dotnet(dotnet_cmd: str) -> bool:
     try:
-        info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, check=True)
-        first_line = next((line.strip() for line in info.stdout.splitlines() if line.strip().startswith("Version:")), "")
+        info = subprocess.run([dotnet_cmd, "--info"], capture_output=True, text=True, encoding="utf-8", errors="replace", check=True)
+        first_line = next((line.strip() for line in (info.stdout or "").splitlines() if line.strip().startswith("Version:")), "")
+        if not _dotnet_has_required_sdk(dotnet_cmd):
+            print(f"[!] dotnet found but missing .NET {_dotnet_required_sdk_major()} SDK: {dotnet_cmd}")
+            return False
         _set_dotnet_env(dotnet_cmd)
         print(f"dotnet ok: {dotnet_cmd}" + (f" ({first_line})" if first_line else ""))
         return True
@@ -253,12 +284,62 @@ def _try_dotnet(dotnet_cmd: str) -> bool:
 
 
 def _install_home_dotnet() -> str:
-    if os.name == "nt":
-        return ""
     home_dotnet = Path.home() / ".dotnet"
     dotnet_cmd = _dotnet_executable(home_dotnet)
-    install_script = home_dotnet / "dotnet-install.sh"
     home_dotnet.mkdir(parents=True, exist_ok=True)
+
+    if os.name == "nt":
+        install_script = home_dotnet / "dotnet-install.ps1"
+        if not install_script.exists():
+            print("[*] installing dotnet SDK to ~/.dotnet via dotnet-install.ps1...")
+            download_command = [
+                "powershell",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                f"Invoke-WebRequest -Uri 'https://dot.net/v1/dotnet-install.ps1' -OutFile '{install_script}'",
+            ]
+            completed = subprocess.run(
+                download_command,
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            if completed.stdout:
+                print(completed.stdout)
+            if completed.stderr:
+                print(completed.stderr)
+
+        if not install_script.exists():
+            print("[!] dotnet-install.ps1 download failed; ~/.dotnet install unavailable.")
+            return ""
+
+        install_commands = [
+            ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(install_script), "-Version", "10.0.107", "-InstallDir", str(home_dotnet), "-NoPath"],
+            ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(install_script), "-Channel", "10.0", "-Quality", "GA", "-InstallDir", str(home_dotnet), "-NoPath"],
+        ]
+        for command in install_commands:
+            completed = subprocess.run(
+                command,
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            if completed.stdout:
+                print(completed.stdout)
+            if completed.stderr:
+                print(completed.stderr)
+            if completed.returncode == 0 and dotnet_cmd.exists() and _try_dotnet(str(dotnet_cmd)):
+                return str(dotnet_cmd)
+            print(f"[!] home dotnet install step failed: {' '.join(command)} :: exit {completed.returncode}")
+        return ""
+
+    install_script = home_dotnet / "dotnet-install.sh"
 
     if not install_script.exists():
         print("[*] installing dotnet SDK to ~/.dotnet via dotnet-install.sh...")
@@ -569,40 +650,70 @@ def _prepare_project_dir() -> None:
 
 def _build_csharp(dotnet_cmd: str) -> None:
     if not dotnet_cmd:
-        if _has_engine_binary():
-            print("[!] dotnet unavailable; using existing SeaEngine.dll without rebuilding.")
-            return
-        raise RuntimeError("dotnet is unavailable and no prebuilt SeaEngine.dll was found.")
+        raise RuntimeError("dotnet is unavailable and SeaEngine must be rebuilt.")
     home = Path.home()
     project_root = home / "RL_AI" / "SeaEngine" / "csharp"
     engine_csproj = project_root / "SeaEngine" / "SeaEngine.csproj"
 
-    subprocess.run([dotnet_cmd, "build", str(engine_csproj), "-c", "Release", "-v", "q"], check=True)
+    env = os.environ.copy()
+    env.setdefault("DOTNET_CLI_UI_LANGUAGE", "en")
+    completed = subprocess.run(
+        [dotnet_cmd, "build", str(engine_csproj), "-c", "Release", "-v", "q"],
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        env=env,
+    )
+    if completed.stdout:
+        print(completed.stdout)
+    if completed.stderr:
+        print(completed.stderr)
+    if completed.returncode != 0:
+        completed.check_returncode()
     print("SeaEngine build ok")
 
 
 def _default_num_envs() -> int:
-    cpu_count = os.cpu_count() or 8
-    return max(4, min(24, cpu_count))
+    return 4
 
 
 def _set_single_worker_defaults() -> None:
-    os.environ.setdefault("SEAENGINE_VECTOR_BACKEND", "local")
+    os.environ.setdefault("SEAENGINE_VECTOR_BACKEND", "isolated")
     os.environ.setdefault("SEAENGINE_NUM_ENVS", str(_default_num_envs()))
     os.environ.setdefault("SEAENGINE_LOCAL_THREADS", "0")
     os.environ.setdefault("SEAENGINE_WORKERS", "0")
     os.environ.setdefault("SEAENGINE_LOCAL_MAX_WORKERS", "0")
-    os.environ.setdefault("SEAENGINE_SCENARIO_WORKERS", "1")
+    os.environ.setdefault("SEAENGINE_SCENARIO_WORKERS", "2")
     os.environ.setdefault("SEAENGINE_PARALLEL_WORKERS", "1")
     os.environ.setdefault("SEAENGINE_QUIET_WORKER_LOG", "1")
     os.environ.setdefault("SEAENGINE_SUPPRESS_NATIVE_LOGS", "1")
     os.environ.setdefault("SEAENGINE_FAST_POOL", "0")
-    os.environ.setdefault("SEAENGINE_TRAIN_MAX_TURNS", "100")
+    os.environ.setdefault("SEAENGINE_TRAIN_MAX_TURNS", "70")
+    os.environ.setdefault("SEAENGINE_TRAIN_LAYOUT_MODE", "hard_mixed")
+    os.environ.setdefault("SEAENGINE_TRAIN_LAYOUT_HARD_RATIO", "0.40")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_MODE", "restore")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_SIMS", "1")
-    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "3")
+    os.environ.setdefault("SEAENGINE_BELIEF_MCTS_TOP_K", "2")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", "1")
     os.environ.setdefault("SEAENGINE_BELIEF_MCTS_CANDIDATE_MIXING_STRATEGY", "policy_prior_plus_heuristic_topk")
+    os.environ.setdefault("SEAENGINE_OPENING_NOISE_TURNS", "2")
+    os.environ.setdefault("SEAENGINE_OPENING_NOISE_PROB", "0.08")
+    os.environ.setdefault("SEAENGINE_OPENING_TEACHER_PROB", "0.18")
+    os.environ.setdefault("SEAENGINE_OPENING_TEACHER_TURNS", "5")
+    os.environ.setdefault("SEAENGINE_TACTICAL_TEACHER_PROB", "0.16")
+    os.environ.setdefault("SEAENGINE_IMITATION_COEF", "0.05")
+    os.environ.setdefault("SEAENGINE_EARLY_LOSS_LOG", "1")
+    os.environ.setdefault("SEAENGINE_EARLY_LOSS_EPISODES", "100")
+    os.environ.setdefault("SEAENGINE_PPO_LR", "0.00015")
+    os.environ.setdefault("SEAENGINE_PPO_ENTROPY", "0.004")
+    os.environ.setdefault("SEAENGINE_PPO_TARGET_KL", "0.08")
+    os.environ.setdefault("SEAENGINE_PPO_MAX_GRAD_NORM", "0.5")
+    os.environ.setdefault("SEAENGINE_SAVE_SCENARIO_REPORTS", "0")
+    os.environ.setdefault("SEAENGINE_SAVE_SCENARIO_HISTORIES", "0")
+    os.environ.setdefault("SEAENGINE_EVAL_HISTORY_LIMIT", "50")
+    os.environ.setdefault("SEAENGINE_LOG_ARCHIVE_MODE", "compact")
 
 
 def _format_wld(summary: dict[str, object]) -> str:
@@ -627,6 +738,7 @@ def _run_train_eval(
     resume_model_path: str = "",
     resume_episodes_completed: int = 0,
     eval_belief_mcts: bool = True,
+    skip_initial_eval: bool = False,
 ) -> None:
     _set_single_worker_defaults()
     _apply_parallel_opt_env("start")
@@ -658,17 +770,20 @@ def _run_train_eval(
     print(f"trainer source: {seaengine_trainer_module.__file__}")
     print(f"pythonnet source: {pythonnet_session_module.__file__}")
 
+    checkpoint_interval = 2500
+
     result = run_train_eval_experiment(
         eval_matches=eval_matches,
         train_episodes=train_episodes,
         max_turns=max_turns,
         update_interval=update_interval,
-        checkpoint_interval=2000,
+        checkpoint_interval=checkpoint_interval,
         seed=seed,
         resume_model_path=resume_model_path or None,
         resume_episodes_completed=resume_episodes_completed if resume_model_path else None,
         summary_report_path=str(Path.home() / "RL_AI" / "log" / "start_summary.txt"),
         eval_belief_mcts=eval_belief_mcts,
+        skip_initial_eval=skip_initial_eval,
     )
 
     summary_copy = _publish_latest_artifact(
@@ -696,7 +811,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="SeaEngine train/eval runner")
     parser.add_argument("--eval-matches", type=int, default=50)
     parser.add_argument("--train-episodes", type=int, default=10000)
-    parser.add_argument("--max-turns", type=int, default=100)
+    parser.add_argument("--max-turns", type=int, default=70)
     parser.add_argument("--update-interval", type=int, default=16)
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--skip-unzip", action="store_true")
@@ -709,6 +824,12 @@ def main() -> int:
         action=argparse.BooleanOptionalAction,
         default=True,
         help="Use shallow belief-MCTS wrapper for evaluation suites only",
+    )
+    parser.add_argument(
+        "--skip-initial-eval",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Skip checkpoint 0 initial evaluation and start training immediately.",
     )
     args = parser.parse_args()
 
@@ -728,15 +849,16 @@ def main() -> int:
     print("[*] start.py launched")
     print(f"[*] pid={os.getpid()}")
     print(
-        f"[*] args: eval_matches_per_combo={args.eval_matches} (checkpoint total {args.eval_matches * 32}), train_episodes={args.train_episodes}, "
+        f"[*] args: eval_matches_per_combo={args.eval_matches}, train_episodes={args.train_episodes}, checkpoint_interval=2500, "
         f"max_turns={args.max_turns}, update_interval={args.update_interval}, seed={args.seed}, "
         f"model_hidden_dim={os.environ.get('SEAENGINE_MODEL_HIDDEN_DIM', '192')}, "
         f"belief_mcts_sims={os.environ.get('SEAENGINE_BELIEF_MCTS_SIMS', '1')}, "
-        f"belief_mcts_top_k={os.environ.get('SEAENGINE_BELIEF_MCTS_TOP_K', '3')}, "
+        f"belief_mcts_top_k={os.environ.get('SEAENGINE_BELIEF_MCTS_TOP_K', '2')}, "
         f"belief_mcts_rollout_steps={os.environ.get('SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS', '1')}, "
         f"belief_mcts_candidate_mixing_strategy={os.environ.get('SEAENGINE_BELIEF_MCTS_CANDIDATE_MIXING_STRATEGY', 'policy_prior_plus_heuristic_topk')}, "
         f"eval_belief_mcts={args.eval_belief_mcts}, belief_mcts_mode={os.environ.get('SEAENGINE_BELIEF_MCTS_MODE', 'restore')}, "
-        f"skip_unzip={args.skip_unzip}, skip_build={args.skip_build}"
+        f"skip_unzip={args.skip_unzip}, skip_build={args.skip_build}, "
+        f"skip_initial_eval={args.skip_initial_eval}"
     )
 
     if not args.skip_build:
@@ -751,6 +873,7 @@ def main() -> int:
         resume_model_path=args.resume_model_path,
         resume_episodes_completed=args.resume_episodes_completed,
         eval_belief_mcts=args.eval_belief_mcts,
+        skip_initial_eval=args.skip_initial_eval,
     )
     print("[*] start.py finished successfully")
     return 0

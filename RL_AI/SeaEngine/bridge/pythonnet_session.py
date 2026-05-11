@@ -309,10 +309,33 @@ class PythonNetSession:
 
             PythonNetSession._clr_initialized = True
 
+    def _reset_game_refs(self, *, collect_gc: bool = False) -> None:
+        try:
+            if self._logger is not None and self._logger_mode == "simple":
+                end_logging = getattr(self._logger, "EndLogging", None)
+                if callable(end_logging):
+                    with self._suppress_native_output():
+                        try:
+                            end_logging()
+                        except Exception:
+                            pass
+        finally:
+            self._game = None
+            self._logger = None
+            self._logger_mode = "silent"
+            self._turn_counter = 1
+            if collect_gc:
+                try:
+                    import System
+
+                    System.GC.Collect()
+                    System.GC.WaitForPendingFinalizers()
+                    System.GC.Collect()
+                except Exception:
+                    pass
+
     def close(self) -> None:
-        self._game = None
-        self._logger = None
-        self._logger_mode = "silent"
+        self._reset_game_refs(collect_gc=False)
 
     @classmethod
     def wrap_game(
@@ -356,6 +379,9 @@ class PythonNetSession:
             raise RuntimeError("SeaEngine logger types are not initialized")
         if PythonNetSession._rl_exporter_type is not None and PythonNetSession._rl_export_method is None:
             PythonNetSession._rl_export_method = PythonNetSession._rl_exporter_type.GetMethod("Export")
+
+        reset_gc = os.getenv("SEAENGINE_GC_ON_GAME_RESET", "0").strip().lower() in {"1", "true", "yes", "on"}
+        self._reset_game_refs(collect_gc=reset_gc)
 
         if self._loader is None:
             with self._suppress_native_output():

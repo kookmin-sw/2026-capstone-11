@@ -233,7 +233,7 @@ def _benchmark_training(
     _ = SeaEnginePPOTrainer  # keep import explicit for clarity
     previous = _apply_env(
         {
-            "SEAENGINE_VECTOR_BACKEND": "local",
+            "SEAENGINE_VECTOR_BACKEND": "isolated",
             "SEAENGINE_FAST_POOL": "0",
             "SEAENGINE_QUIET_WORKER_LOG": "1",
             "SEAENGINE_SUPPRESS_NATIVE_LOGS": "1",

@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
 import os
 import random
+import shutil
 import threading
 import re
 from pathlib import Path
@@ -99,10 +100,23 @@ def _zip_new_log_txt_files(
     log_dir = Path(__file__).resolve().parent.parent / "log"
     if not log_dir.exists():
         return None
-    txt_files = [
-        p for p in log_dir.glob("*.txt")
-        if p.is_file() and p.stat().st_mtime >= since_timestamp - 1.0
-    ]
+    archive_mode = os.getenv("SEAENGINE_LOG_ARCHIVE_MODE", "compact").strip().lower()
+    compact_mode = archive_mode != "full"
+    txt_files = []
+    for p in log_dir.glob("*.txt"):
+        if not p.is_file() or p.stat().st_mtime < since_timestamp - 1.0:
+            continue
+        if compact_mode:
+            name = p.name
+            if name.endswith("_hist.txt"):
+                continue
+            if name.startswith("se_evalhist_"):
+                continue
+            if name.startswith("se_before_"):
+                continue
+            if name.startswith("se_after_"):
+                continue
+        txt_files.append(p)
     if not txt_files:
         return None
     txt_files.sort(key=lambda p: p.name)
@@ -137,10 +151,6 @@ def _zip_new_model_files(
     ]
     if not model_files:
         return None
-    selected_episodes = {2000, 4000, 6000, 8000, 10000}
-    filtered_model_files = [p for p in model_files if _episode_from_name(p) in selected_episodes]
-    if filtered_model_files:
-        model_files = filtered_model_files
     model_files.sort(key=lambda p: p.name)
     zip_path = _default_model_zip_path() if output_path is None else output_path
     zip_path.parent.mkdir(parents=True, exist_ok=True)
@@ -195,67 +205,63 @@ def _build_training_opponent_schedule(
     schedule: list[str] = []
     total_counts: Counter[str] = Counter()
 
-    def _weights_for_progress(progress: float, self_names: list[str]) -> Dict[str, float]:
-        # The curriculum keeps greedy in the loop at every stage,
-        # while gradually increasing self-play to improve robustness.
-        weights: Dict[str, float]
-        if progress <= 0.15:
-            weights = {"random": 0.55, "greedy": 0.25, "rule_based": 0.10}
-        elif progress <= 0.35:
-            weights = {"random": 0.40, "greedy": 0.30, "rule_based": 0.15}
-        elif progress <= 0.60:
-            weights = {"random": 0.28, "greedy": 0.30, "rule_based": 0.17}
-        elif progress <= 0.80:
-            weights = {"random": 0.20, "greedy": 0.25, "rule_based": 0.20}
+    def _weights_for_episode(ep: int) -> Dict[str, float]:
+        # Deadline/score-focused schedule: emphasize greedy/rule-based opponents.
+        return {
+            "random": 0.05,
+            "greedy": 0.475,
+            "rule_based": 0.475,
+            "__self_total__": 0.0,
+        }
+
+    def _expand_self_weights(weights: Dict[str, float], self_names: list[str]) -> Dict[str, float]:
+        expanded = {k: v for k, v in weights.items() if k != "__self_total__"}
+        self_total = float(weights.get("__self_total__", 0.0))
+        if self_names and self_total > 0.0:
+            recent = self_names[-8:]
+            per_self = self_total / max(1, len(recent))
+            for name in recent:
+                expanded[name] = per_self
         else:
-            weights = {"random": 0.15, "greedy": 0.25, "rule_based": 0.20}
-
-        if self_names:
-            # Use a broader band of recent snapshots to avoid locking onto
-            # a tiny set of rote self-play lines.
-            recent_self_names = self_names[-12:]
-            remaining = max(0.0, 1.0 - sum(weights.values()))
-            self_weight = remaining / len(recent_self_names) if recent_self_names and remaining > 0 else 0.0
-            for self_name in recent_self_names:
-                weights[self_name] = self_weight
-
-        total = sum(weights.values())
+            expanded["greedy"] = expanded.get("greedy", 0.0) + self_total * 0.45
+            expanded["rule_based"] = expanded.get("rule_based", 0.0) + self_total * 0.55
+        total = sum(expanded.values())
         if total <= 0:
             return {"random": 1.0}
-        return {name: value / total for name, value in weights.items()}
+        return {k: v / total for k, v in expanded.items()}
 
-    for episode_start in range(0, train_episodes, num_envs):
-        actual_num_envs = min(num_envs, train_episodes - episode_start)
-        progress = (episode_start + actual_num_envs) / max(1, train_episodes)
+    chunk_start = 0
+    chunk_size = max(1, int(save_interval))
+    while chunk_start < train_episodes:
+        chunk_end = min(train_episodes, chunk_start + chunk_size)
         self_names = [name for name in current_pool_names if name.startswith("self_ep_")]
-        target_weights = _weights_for_progress(progress, self_names)
-
-        weighted_names = []
-        weighted_probs = []
-        for name in current_pool_names:
-            if name in target_weights:
-                weighted_names.append(name)
-                weighted_probs.append(target_weights[name])
-
-        if not weighted_names:
-            weighted_names = list(current_pool_names)
-            weighted_probs = [1.0 for _ in weighted_names]
-
-        weight_sum = sum(weighted_probs)
-        if weight_sum <= 0:
-            weighted_probs = [1.0 / max(1, len(weighted_names)) for _ in weighted_names]
+        weights = _expand_self_weights(_weights_for_episode(chunk_start + 1), self_names)
+        available_names = [name for name in current_pool_names if name in weights]
+        if not available_names:
+            available_names = list(current_pool_names) or ["random"]
+        available_probs = [weights.get(name, 0.0) for name in available_names]
+        prob_sum = sum(available_probs)
+        if prob_sum <= 0:
+            available_probs = [1.0 / len(available_names) for _ in available_names]
         else:
-            weighted_probs = [w / weight_sum for w in weighted_probs]
+            available_probs = [p / prob_sum for p in available_probs]
 
-        batch = rng.choices(weighted_names, weights=weighted_probs, k=actual_num_envs)
-        schedule.extend(batch)
-        total_counts.update(batch)
+        chunk_len = chunk_end - chunk_start
+        chunk_schedule = rng.choices(available_names, weights=available_probs, k=chunk_len)
+        block = max(1, num_envs * 8)
+        for block_start in range(0, len(chunk_schedule), block):
+            block_slice = chunk_schedule[block_start:block_start + block]
+            rng.shuffle(block_slice)
+            chunk_schedule[block_start:block_start + block] = block_slice
 
-        global_episodes = episode_start + actual_num_envs
-        if save_interval > 0 and global_episodes % save_interval < actual_num_envs:
-            current_pool_names.append(f"self_ep_{global_episodes}")
+        schedule.extend(chunk_schedule)
+        total_counts.update(chunk_schedule)
 
-    return schedule, total_counts
+        chunk_start = chunk_end
+        if save_interval > 0 and chunk_start < train_episodes:
+            current_pool_names.append(f"self_ep_{chunk_start}")
+
+    return schedule[:train_episodes], total_counts
 
 
 def _build_deficit_start_schedule(
@@ -265,15 +271,27 @@ def _build_deficit_start_schedule(
 ) -> list[str]:
     rng = random.Random(seed)
     schedule: list[str] = []
-    for episode in range(1, train_episodes + 1):
-        if episode <= 2000:
-            weights = {"normal": 0.80, "slight": 0.15, "heavy": 0.05}
-        elif episode <= 6000:
-            weights = {"normal": 0.70, "slight": 0.20, "heavy": 0.10}
-        else:
-            weights = {"normal": 0.60, "slight": 0.25, "heavy": 0.15}
-        schedule.append(rng.choices(list(weights.keys()), weights=list(weights.values()), k=1)[0])
-    return schedule
+
+    def _weights(ep: int) -> Dict[str, float]:
+        if ep <= 2500:
+            return {"normal": 0.82, "slight": 0.14, "heavy": 0.04}
+        if ep <= 5000:
+            return {"normal": 0.72, "slight": 0.22, "heavy": 0.06}
+        if ep <= 7500:
+            return {"normal": 0.65, "slight": 0.27, "heavy": 0.08}
+        return {"normal": 0.60, "slight": 0.30, "heavy": 0.10}
+
+    block_size = max(1, min(1000, max(1, train_episodes // 20)))
+    for start in range(1, train_episodes + 1, block_size):
+        end = min(train_episodes, start + block_size - 1)
+        block_len = end - start + 1
+        weights = _weights(start)
+        names = list(weights.keys())
+        probs = [weights[name] for name in names]
+        block = rng.choices(names, weights=probs, k=block_len)
+        rng.shuffle(block)
+        schedule.extend(block)
+    return schedule[:train_episodes]
 
 
 def _build_recovery_schedule(
@@ -358,6 +376,13 @@ def _suite_side_gap_abs(suite_pack: Optional[Dict[str, object]]) -> float:
     return abs(first_wins / first_n - second_wins / second_n)
 
 
+def _suite_has_results(suite_pack: Optional[Dict[str, object]]) -> bool:
+    if not suite_pack:
+        return False
+    rows = list(suite_pack.get("results", []))
+    return any(int(row.get("episodes", 0)) > 0 for row in rows)
+
+
 def _checkpoint_population_score(
     *,
     random_suite: Optional[Dict[str, object]],
@@ -369,20 +394,29 @@ def _checkpoint_population_score(
     greedy_wr = _suite_rl_win_rate(greedy_suite)
     rule_wr = _suite_rl_win_rate(rule_suite)
     self_wr = _suite_rl_win_rate(self_suite)
-    worst_combo = min(
-        _suite_worst_combo_rate(random_suite),
-        _suite_worst_combo_rate(greedy_suite),
-        _suite_worst_combo_rate(rule_suite),
-        _suite_worst_combo_rate(self_suite),
+    active_suites = [suite for suite in (random_suite, greedy_suite, rule_suite, self_suite) if _suite_has_results(suite)]
+
+    target_suites = [suite for suite in (greedy_suite, rule_suite) if _suite_has_results(suite)]
+    if target_suites:
+        target_wrs = [_suite_rl_win_rate(suite) for suite in target_suites]
+        avg_wr = sum(target_wrs) / len(target_wrs)
+        worst_combo = min(_suite_worst_combo_rate(suite) for suite in target_suites)
+        side_gap = max(_suite_side_gap_abs(suite) for suite in target_suites)
+    elif active_suites:
+        active_wrs = [_suite_rl_win_rate(suite) for suite in active_suites]
+        avg_wr = sum(active_wrs) / len(active_wrs)
+        worst_combo = min(_suite_worst_combo_rate(suite) for suite in active_suites)
+        side_gap = max(_suite_side_gap_abs(suite) for suite in active_suites)
+    else:
+        worst_combo = 0.0
+        side_gap = 1.0
+        avg_wr = 0.0
+    score = (
+        0.40 * greedy_wr
+        + 0.40 * rule_wr
+        + 0.20 * worst_combo
+        - 0.05 * side_gap
     )
-    side_gap = max(
-        _suite_side_gap_abs(random_suite),
-        _suite_side_gap_abs(greedy_suite),
-        _suite_side_gap_abs(rule_suite),
-        _suite_side_gap_abs(self_suite),
-    )
-    avg_wr = (random_wr + greedy_wr + rule_wr + self_wr) / 4.0
-    score = avg_wr + (0.20 * worst_combo) - (0.10 * side_gap)
     return {
         "score": score,
         "random_wr": random_wr,
@@ -455,7 +489,7 @@ def _default_scenario_workers() -> int:
             return max(1, int(env_workers))
         except Exception:
             pass
-    return 1
+    return 2
 
 
 def _default_num_envs() -> int:
@@ -483,6 +517,14 @@ def _make_skipped_eval_summary(opponent_label: str) -> Dict[str, object]:
         "card_use_counts": {},
         "report_path": "skipped",
         "histories": [],
+    }
+
+
+def _make_skipped_eval_suite(opponent_label: str, *, title: str = "") -> Dict[str, object]:
+    return {
+        "results": [],
+        "text": title or f"=== Skipped vs {opponent_label} ===",
+        "history_summary": _make_skipped_eval_summary(opponent_label),
     }
 
 
@@ -619,6 +661,9 @@ def _run_8combo_opponent_eval_suite(
     burnin_profile: str = "fixed",
     scenario_workers: int = 1,
     use_belief_mcts: bool = True,
+    history_limit: Optional[int] = None,
+    save_scenario_reports: Optional[bool] = None,
+    save_scenario_histories: Optional[bool] = None,
 ) -> Dict[str, object]:
     deck_pairs = [
         ("귤", trainer.decks["Orange"]),
@@ -638,6 +683,17 @@ def _run_8combo_opponent_eval_suite(
     combined_histories: list[Dict[str, object]] = []
     scenario_worker_count = max(1, int(scenario_workers or 1))
     parallel_scenarios = scenario_worker_count > 1
+    if save_scenario_reports is None:
+        save_scenario_reports = os.getenv("SEAENGINE_SAVE_SCENARIO_REPORTS", "0") == "1"
+    if save_scenario_histories is None:
+        save_scenario_histories = os.getenv("SEAENGINE_SAVE_SCENARIO_HISTORIES", "0") == "1"
+    env_history_limit = os.getenv("SEAENGINE_EVAL_HISTORY_LIMIT", "").strip()
+    if history_limit is None and env_history_limit:
+        try:
+            history_limit = int(env_history_limit)
+        except ValueError:
+            history_limit = None
+    local_history_limit = 50 if history_limit is None else min(50, max(0, int(history_limit)))
 
     def _log_suite_completion(suite_results: list[Dict[str, object]], history_summary: Dict[str, object]) -> None:
         episodes = sum(int(row.get("episodes", 0)) for row in suite_results)
@@ -680,17 +736,23 @@ def _run_8combo_opponent_eval_suite(
             p1_deck, p2_deck = opp_deck, rl_deck
 
         scenario_label = f"{opponent_label}/{rl_deck_name}/{side_name}/{relation_name}"
-        scenario_report_path = _scenario_report_path(label=scenario_label, report_path=None, prefix=scenario_report_prefix)
+        scenario_report_path = (
+            _scenario_report_path(label=scenario_label, report_path=None, prefix=scenario_report_prefix)
+            if save_scenario_reports
+            else None
+        )
         summary = evaluate_agents(
             p1_agent,
             p2_agent,
             num_matches=scenario_matches,
-            report_path=str(scenario_report_path),
+            report_path=str(scenario_report_path) if scenario_report_path is not None else None,
             card_data_path=card_data_path,
             player1_deck=p1_deck,
             player2_deck=p2_deck,
             max_turns=max_turns,
-            include_history=True,
+            include_history=save_scenario_histories,
+            history_limit=local_history_limit if save_scenario_histories else 0,
+            save_report_file=save_scenario_reports,
             match_context={
                 "mode_label": opponent_label,
                 "side_label": side_name,
@@ -725,7 +787,10 @@ def _run_8combo_opponent_eval_suite(
         for match_history in histories:
             history_lines.append(_format_match_history(match_history))
             history_lines.append("")
-        save_report("\n".join(history_lines).rstrip() + "\n", history_path)
+        if save_scenario_histories:
+            save_report("\n".join(history_lines).rstrip() + "\n", history_path)
+        else:
+            history_path = ""
         return {
             "index": idx,
             "label": scenario_label,
@@ -821,17 +886,23 @@ def _run_8combo_opponent_eval_suite(
                     p1_deck, p2_deck = opp_deck, rl_deck
 
                 scenario_label = f"{opponent_label}/{rl_deck_name}/{side_name}/{relation_name}"
-                scenario_report_path = _scenario_report_path(label=scenario_label, report_path=None, prefix=scenario_report_prefix)
+                scenario_report_path = (
+                    _scenario_report_path(label=scenario_label, report_path=None, prefix=scenario_report_prefix)
+                    if save_scenario_reports
+                    else None
+                )
                 summary = evaluate_agents(
                     p1_agent,
                     p2_agent,
                     num_matches=num_matches_per_combo,
-                    report_path=str(scenario_report_path),
+                    report_path=str(scenario_report_path) if scenario_report_path is not None else None,
                     card_data_path=card_data_path,
                     player1_deck=p1_deck,
                     player2_deck=p2_deck,
                     max_turns=max_turns,
-                    include_history=True,
+                    include_history=save_scenario_histories,
+                    history_limit=local_history_limit if save_scenario_histories else 0,
+                    save_report_file=save_scenario_reports,
                     match_context={
                         "mode_label": opponent_label,
                         "side_label": side_name,
@@ -867,7 +938,10 @@ def _run_8combo_opponent_eval_suite(
                 for match_history in histories:
                     history_lines.append(_format_match_history(match_history))
                     history_lines.append("")
-                save_report("\n".join(history_lines).rstrip() + "\n", history_path)
+                if save_scenario_histories:
+                    save_report("\n".join(history_lines).rstrip() + "\n", history_path)
+                else:
+                    history_path = ""
 
                 total_episodes += int(summary["episodes"])
                 total_rl_wins += rl_wins
@@ -954,7 +1028,7 @@ def run_saved_model_balance_experiment(
     *,
     model_path: str,
     total_matches: int = 2000,
-    max_turns: int = 100,
+    max_turns: int = 70,
     card_data_path: Optional[str] = None,
     seed: Optional[int] = None,
     device: Optional[str] = "auto",
@@ -980,6 +1054,7 @@ def run_saved_model_balance_experiment(
     scenario_shard_count = max(1, int(scenario_shards or 1))
     parallel_scenarios = scenario_worker_count > 1 or scenario_shard_count > 1
     opponent_mode_normalized = str(opponent_mode or "greedy").strip().lower()
+    local_history_limit = 100 if history_limit is None else min(100, max(0, int(history_limit)))
 
     def _build_opponent_agent() -> SeaEngineAgent:
         if opponent_mode_normalized in {"self", "rl", "self_play", "selfplay"}:
@@ -1415,7 +1490,7 @@ def run_train_eval_experiment(
     eval_rule_agent: Optional[SeaEngineAgent] = None,
     eval_matches: int = 100,
     train_episodes: int = 10000,
-    max_turns: int = 100,
+    max_turns: int = 70,
     update_interval: int = 16,
     card_data_path: Optional[str] = None,
     player1_deck: str = "",
@@ -1423,8 +1498,8 @@ def run_train_eval_experiment(
     seed: Optional[int] = None,
     report_path: Optional[str] = None,
     num_envs: Optional[int] = None,
-    save_interval: int = 1000,
-    checkpoint_interval: int = 1000,
+    save_interval: int = 2500,
+    checkpoint_interval: int = 2500,
     checkpoint_eval_matches: Optional[int] = None,
     include_eval_history: bool = True,
     resume_model_path: Optional[str] = None,
@@ -1433,6 +1508,7 @@ def run_train_eval_experiment(
     summary_report_path: Optional[str] = None,
     eval_belief_mcts: bool = True,
     skip_prepost_eval: bool = False,
+    skip_initial_eval: bool = False,
 ) -> Dict[str, object]:
     artifact_start_wall = time.time()
     resolved_device = _resolve_device(device)
@@ -1445,7 +1521,7 @@ def run_train_eval_experiment(
     trainer = SeaEnginePPOTrainer(learning_agent)
 
     # Fast-path defaults for large-scale simulation throughput.
-    train_turn_cap = int(os.getenv("SEAENGINE_TRAIN_MAX_TURNS", "100"))
+    train_turn_cap = int(os.getenv("SEAENGINE_TRAIN_MAX_TURNS", "70"))
     min_update_interval = int(os.getenv("SEAENGINE_MIN_UPDATE_INTERVAL", "32"))
     fast_pool_enabled = os.getenv("SEAENGINE_FAST_POOL", "0") == "1"
 
@@ -1505,10 +1581,13 @@ def run_train_eval_experiment(
         seed=_seed_with_offset(seed, 505),
     )
 
-    backend = os.getenv("SEAENGINE_VECTOR_BACKEND", "local")
+    backend = os.getenv("SEAENGINE_VECTOR_BACKEND", "isolated")
     local_threads = os.getenv("SEAENGINE_LOCAL_THREADS", "1")
+    middle_checkpoint_count = max(0, (train_episodes - 1) // checkpoint_interval)
+    total_checkpoint_suite_matches = checkpoint_edge_eval_matches * 64 + middle_checkpoint_count * checkpoint_eval_matches * 16
+    final_checkpoint_label = f"checkpoint_{train_episodes}"
     print(
-        f"[*] Experiment start | eval_matches_per_combo={eval_matches} (per suite total {eval_matches * 8}, all checkpoint suites total {0 if skip_prepost_eval else checkpoint_edge_eval_matches * 64}) | train_episodes={train_episodes} | "
+        f"[*] Experiment start | eval_matches_per_combo={eval_matches} (per suite total {eval_matches * 8}, all checkpoint suites total {0 if skip_prepost_eval else total_checkpoint_suite_matches}) | train_episodes={train_episodes} | "
         f"max_turns={max_turns} | update_interval={update_interval} | num_envs={num_envs} | "
         f"vector_backend={backend} | local_threads={local_threads} | "
         f"device={resolved_device} | model_hidden_dim={getattr(learning_agent, 'hidden_dim', default_model_hidden_dim())} | "
@@ -1519,8 +1598,9 @@ def run_train_eval_experiment(
         f"layout_mode={getattr(trainer, '_layout_mode', 'balanced')} | layout_seed={getattr(trainer, '_layout_seed', '17011')} | "
         f"scenario_workers={scenario_workers} | "
         f"checkpoint_eval={not skip_prepost_eval} | "
+        f"skip_initial_eval={skip_initial_eval} | "
         f"eval_belief_mcts={eval_belief_mcts} | "
-        f"checkpoint_eval_per_combo={checkpoint_eval_matches} (middle checkpoints), edge_checkpoint_eval_per_combo={checkpoint_edge_eval_matches}"
+        f"checkpoint_eval_per_combo={checkpoint_eval_matches} (middle greedy/rule checkpoints), edge_checkpoint_eval_per_combo={checkpoint_edge_eval_matches}"
     )
     print(f"[*] Opp plan total: {_format_plan_counts(training_opponent_counts)}")
     for plan_start in range(0, train_episodes, checkpoint_interval):
@@ -1615,7 +1695,7 @@ def run_train_eval_experiment(
         [
             "checkpoint_0=pending",
             "training=pending",
-            "checkpoint_10000=pending",
+            f"{final_checkpoint_label}=pending",
             f"training_layout_mode={getattr(trainer, '_layout_mode', 'balanced')}",
             f"training_layout_seed={getattr(trainer, '_layout_seed', '17011')}",
             "",
@@ -1625,11 +1705,38 @@ def run_train_eval_experiment(
     def log_eval_progress(stage: str):
         if not _verbose_experiment_logs():
             return None
+        started_at = time.perf_counter()
+        last_logged_at = started_at
+        last_logged_matches = 0
+
+        def _format_short_elapsed(seconds: float) -> str:
+            seconds = max(0, int(seconds))
+            hours, rem = divmod(seconds, 3600)
+            minutes, secs = divmod(rem, 60)
+            if hours:
+                return f"{hours:02d}:{minutes:02d}:{secs:02d}"
+            return f"{minutes:02d}:{secs:02d}"
+
         def _callback(current: int, total: int, result: str, matchup: str) -> None:
+            nonlocal last_logged_at, last_logged_matches
             interval = max(1, _progress_print_interval(total))
             if current % interval != 0 and current != total:
                 return
-            print(f"[{stage}] {current}/{total} matches complete | matchup={matchup} | last_result={result}")
+            now = time.perf_counter()
+            interval_matches = max(1, current - last_logged_matches)
+            interval_elapsed = max(1e-9, now - last_logged_at)
+            eval_speed = interval_matches / interval_elapsed
+            elapsed = max(1e-9, now - started_at)
+            eval_avg = current / elapsed
+            remaining = max(0, total - current)
+            eta = remaining / eval_avg if eval_avg > 1e-9 else 0.0
+            print(
+                f"[{stage}] {current}/{total} matches complete | "
+                f"EvalSpeed: {eval_speed:.2f} eps/s | EvalAvg: {eval_avg:.2f} eps/s | "
+                f"ETA: {_format_short_elapsed(eta)} | matchup={matchup} | last_result={result}"
+            )
+            last_logged_at = now
+            last_logged_matches = current
 
         return _callback
 
@@ -1755,6 +1862,24 @@ def run_train_eval_experiment(
         before_rule_history_path = None
         before_self = _make_skipped_eval_summary("self")
         before_self_history_path = None
+    elif skip_initial_eval:
+        print("[*] Skipping checkpoint 0 initial evaluations; training starts immediately.")
+        before_random = _make_skipped_eval_summary("random")
+        before_random_history_path = None
+        before_greedy = _make_skipped_eval_summary("greedy")
+        before_greedy_history_path = None
+        before_rule = _make_skipped_eval_summary("rule_based")
+        before_rule_history_path = None
+        before_self = _make_skipped_eval_summary("self")
+        before_self_history_path = None
+        _write_summary_snapshot(
+            "checkpoint_0_skipped",
+            [
+                "checkpoint_0=skipped",
+                "reason=skip_initial_eval",
+                "",
+            ],
+        )
     elif resume_model_path and resume_skip_pre_eval:
         print("[*] Resume mode: skipping before-training evaluations.")
         before_random = _make_skipped_eval_summary("random")
@@ -2005,22 +2130,11 @@ def run_train_eval_experiment(
             checkpoint_matches = _checkpoint_suite_matches(episodes_completed)
             print(
                 f"[*] Checkpoint {episodes_completed}/{train_episodes} -> "
-                f"evaluating random/greedy/rule-based/self across {checkpoint_matches * 32} matches..."
+                f"evaluating greedy/rule-based only across {checkpoint_matches * 16} matches..."
             )
-            random_suite = _run_8combo_opponent_eval_suite(
-                trainer=trainer,
-                rl_agent=learning_agent,
-                opponent_agent=SeaEngineRandomAgent(seed=_seed_with_offset(seed, 404 + episodes_completed)),
-                opponent_label="random",
-                suite_title=f"Checkpoint {episodes_completed} vs Random",
-                history_tag=f"se_ckpt_{episodes_completed}_random",
-                checkpoint_episodes=episodes_completed,
-                num_matches_per_combo=checkpoint_matches,
-                card_data_path=card_data_path,
-                max_turns=max_turns,
-                scenario_report_prefix="se_ckpt_random",
-                scenario_workers=scenario_workers,
-                use_belief_mcts=eval_belief_mcts,
+            random_suite = _make_skipped_eval_suite(
+                "random",
+                title=f"=== Checkpoint {episodes_completed} vs Random (skipped) ===",
             )
             greedy_suite = _run_8combo_opponent_eval_suite(
                 trainer=trainer,
@@ -2052,20 +2166,9 @@ def run_train_eval_experiment(
                 scenario_workers=scenario_workers,
                 use_belief_mcts=eval_belief_mcts,
             )
-            self_suite = _run_8combo_opponent_eval_suite(
-                trainer=trainer,
-                rl_agent=learning_agent,
-                opponent_agent=learning_agent,
-                opponent_label="self",
-                suite_title=f"Checkpoint {episodes_completed} vs Self",
-                history_tag=f"se_ckpt_{episodes_completed}_self",
-                checkpoint_episodes=episodes_completed,
-                num_matches_per_combo=checkpoint_matches,
-                card_data_path=card_data_path,
-                max_turns=max_turns,
-                scenario_report_prefix="se_ckpt_self",
-                scenario_workers=scenario_workers,
-                use_belief_mcts=eval_belief_mcts,
+            self_suite = _make_skipped_eval_suite(
+                "self",
+                title=f"=== Checkpoint {episodes_completed} vs Self (skipped) ===",
             )
             _record_checkpoint_artifacts(
                 episodes_completed=episodes_completed,
@@ -2126,8 +2229,8 @@ def run_train_eval_experiment(
             if after_random_history_path is not None:
                 after_random["report_path"] = str(after_random_history_path)
         _write_summary_snapshot(
-            "checkpoint_10000_random_done",
-            [f"checkpoint_10000_random={after_random['report_path']}", ""],
+            f"{final_checkpoint_label}_random_done",
+            [f"{final_checkpoint_label}_random={after_random['report_path']}", ""],
         )
 
         print(f"[*] Evaluating checkpoint {train_episodes} vs greedy across 8 combos ({after_matches} each)...")
@@ -2156,10 +2259,10 @@ def run_train_eval_experiment(
             if after_greedy_history_path is not None:
                 after_greedy["report_path"] = str(after_greedy_history_path)
         _write_summary_snapshot(
-            "checkpoint_10000_greedy_done",
+            f"{final_checkpoint_label}_greedy_done",
             [
-                f"checkpoint_10000_random={after_random['report_path']}",
-                f"checkpoint_10000_greedy={after_greedy['report_path']}",
+                f"{final_checkpoint_label}_random={after_random['report_path']}",
+                f"{final_checkpoint_label}_greedy={after_greedy['report_path']}",
                 "",
             ],
         )
@@ -2190,11 +2293,11 @@ def run_train_eval_experiment(
             if after_rule_history_path is not None:
                 after_rule["report_path"] = str(after_rule_history_path)
         _write_summary_snapshot(
-            "checkpoint_10000_rule_done",
+            f"{final_checkpoint_label}_rule_done",
             [
-                f"checkpoint_10000_random={after_random['report_path']}",
-                f"checkpoint_10000_greedy={after_greedy['report_path']}",
-                f"checkpoint_10000_rule={after_rule['report_path']}",
+                f"{final_checkpoint_label}_random={after_random['report_path']}",
+                f"{final_checkpoint_label}_greedy={after_greedy['report_path']}",
+                f"{final_checkpoint_label}_rule={after_rule['report_path']}",
                 "",
             ],
         )
@@ -2225,13 +2328,13 @@ def run_train_eval_experiment(
             if after_self_history_path is not None:
                 after_self["report_path"] = str(after_self_history_path)
         _write_summary_snapshot(
-            "checkpoint_10000_done",
+            f"{final_checkpoint_label}_done",
             [
-                f"checkpoint_{train_episodes}=random done",
-                f"checkpoint_{train_episodes}_random={after_random['report_path']}",
-                f"checkpoint_{train_episodes}_greedy={after_greedy['report_path']}",
-                f"checkpoint_{train_episodes}_rule={after_rule['report_path']}",
-                f"checkpoint_{train_episodes}_self={after_self['report_path']}",
+                f"{final_checkpoint_label}=random done",
+                f"{final_checkpoint_label}_random={after_random['report_path']}",
+                f"{final_checkpoint_label}_greedy={after_greedy['report_path']}",
+                f"{final_checkpoint_label}_rule={after_rule['report_path']}",
+                f"{final_checkpoint_label}_self={after_self['report_path']}",
                 "",
             ],
         )
@@ -2243,6 +2346,20 @@ def run_train_eval_experiment(
             rule_suite=after_rule_suite,
             self_suite=after_self_suite,
         )
+
+    best_checkpoint_ep: str = ""
+    best_model_path: str = ""
+    if checkpoints:
+        best_checkpoint = max(
+            checkpoints,
+            key=lambda ckpt: dict(ckpt.get("population_score", {})).get("score", -999.0),
+        )
+        best_checkpoint_ep = str(int(best_checkpoint.get("episodes_completed", 0) or 0))
+        candidate_model_path = trainer.model_dir / f"model_ep_{best_checkpoint_ep}.pt"
+        if candidate_model_path.exists():
+            best_model_path = str(trainer.model_dir / "best_model.pt")
+            shutil.copy2(candidate_model_path, best_model_path)
+            print(f"[*] Best checkpoint copied: {candidate_model_path} -> {best_model_path}")
 
     report_lines = [
         "=== SeaEngine Train/Eval Experiment ===",
@@ -2290,24 +2407,25 @@ def run_train_eval_experiment(
             f"max_side_gap={dict(ckpt.get('population_score', {})).get('max_side_gap', 0.0) * 100.0:.2f}pp"
             for ckpt in checkpoints
         ),
-        f"selected_checkpoint_ep={max(checkpoints, key=lambda ckpt: dict(ckpt.get('population_score', {})).get('score', -999.0))['episodes_completed'] if checkpoints else ''}",
+        f"selected_checkpoint_ep={best_checkpoint_ep}",
+        f"best_model_path={best_model_path}",
         "",
-        "=== Checkpoint 10000 vs Random ===",
+        f"=== {final_checkpoint_label.replace('_', ' ').title()} vs Random ===",
         f"report={after_random['report_path']}",
         f"history={None if after_random_history_path is None else str(after_random_history_path)}",
         build_win_rate_report(after_random),
         "",
-        "=== Checkpoint 10000 vs Greedy ===",
+        f"=== {final_checkpoint_label.replace('_', ' ').title()} vs Greedy ===",
         f"report={after_greedy['report_path']}",
         f"history={None if after_greedy_history_path is None else str(after_greedy_history_path)}",
         build_win_rate_report(after_greedy),
         "",
-        "=== Checkpoint 10000 vs Rule-Based ===",
+        f"=== {final_checkpoint_label.replace('_', ' ').title()} vs Rule-Based ===",
         f"report={after_rule['report_path']}",
         f"history={None if after_rule_history_path is None else str(after_rule_history_path)}",
         build_win_rate_report(after_rule),
         "",
-        "=== Checkpoint 10000 vs Self ===",
+        f"=== {final_checkpoint_label.replace('_', ' ').title()} vs Self ===",
         f"report={after_self['report_path']}",
         f"history={None if after_self_history_path is None else str(after_self_history_path)}",
         build_win_rate_report(after_self),
@@ -2339,12 +2457,13 @@ def run_train_eval_experiment(
                 _compact_eval_line("checkpoint_0_self", before_self),
                 _compact_train_line(total_train_summary, label="train_total"),
                 _compact_train_line(last_train_summary, label="train_last_chunk"),
-                _compact_eval_line("checkpoint_10000_random", after_random),
-                _compact_eval_line("checkpoint_10000_greedy", after_greedy),
-                _compact_eval_line("checkpoint_10000_rule", after_rule),
-                _compact_eval_line("checkpoint_10000_self", after_self),
+                _compact_eval_line(f"{final_checkpoint_label}_random", after_random),
+                _compact_eval_line(f"{final_checkpoint_label}_greedy", after_greedy),
+                _compact_eval_line(f"{final_checkpoint_label}_rule", after_rule),
+                _compact_eval_line(f"{final_checkpoint_label}_self", after_self),
                 f"total_wall_time_sec={max(0.0, time.perf_counter() - artifact_start_wall):.1f}",
-                f"selected_checkpoint_ep={max(checkpoints, key=lambda ckpt: dict(ckpt.get('population_score', {})).get('score', -999.0))['episodes_completed'] if checkpoints else ''}",
+                f"selected_checkpoint_ep={best_checkpoint_ep}",
+                f"best_model_path={best_model_path}",
                 f"train_total={total_train_summary}",
                 f"train_last_chunk={last_train_summary}",
                 *checkpoint_lines,
@@ -2407,7 +2526,7 @@ def run_checkpoint_training_experiment(
     eval_matches: int = 100,
     total_train_episodes: int = 600,
     eval_interval: int = 100,
-    max_turns: int = 100,
+    max_turns: int = 70,
     update_interval: int = 8,
     card_data_path: Optional[str] = None,
     player1_deck: str = "",

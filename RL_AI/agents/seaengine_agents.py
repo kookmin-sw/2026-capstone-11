@@ -356,8 +356,9 @@ class PPOActorCritic(nn.Module):
         self.unit_proj = nn.Linear(self.unit_dim, hidden_dim)
         self.hand_proj = nn.Linear(self.hand_dim, hidden_dim)
         
-        # Type embeddings
-        self.type_emb = nn.Parameter(torch.randn(3, hidden_dim))
+        # Type embeddings:
+        # 0 = global, 1 = board/unit, 2 = hand, 3 = legal action
+        self.type_emb = nn.Parameter(torch.randn(4, hidden_dim))
         
         # Transformer Encoder
         encoder_layer = nn.TransformerEncoderLayer(
@@ -369,7 +370,7 @@ class PPOActorCritic(nn.Module):
         )
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=1)
         
-        # Action Encoder
+        # Action token projection
         self.action_encoder = nn.Sequential(
             nn.Linear(action_dim, hidden_dim),
             nn.LayerNorm(hidden_dim),
@@ -393,33 +394,75 @@ class PPOActorCritic(nn.Module):
         is_batched = state_tensor.dim() > 1
         if not is_batched:
             state_tensor = state_tensor.unsqueeze(0)
-        
+
         batch_size = state_tensor.shape[0]
-        
-        # Split tokens
+
+        # Split state tokens
         global_part = state_tensor[:, :self.global_dim]
-        board_part = state_tensor[:, self.global_dim : self.global_dim + self.num_units * self.unit_dim].reshape(batch_size, self.num_units, self.unit_dim)
-        hand_part = state_tensor[:, self.global_dim + self.num_units * self.unit_dim :].reshape(batch_size, self.num_hand, self.hand_dim)
-        
-        # Project and embed
+        board_part = state_tensor[
+            :,
+            self.global_dim : self.global_dim + self.num_units * self.unit_dim,
+        ].reshape(batch_size, self.num_units, self.unit_dim)
+        hand_part = state_tensor[
+            :,
+            self.global_dim + self.num_units * self.unit_dim :,
+        ].reshape(batch_size, self.num_hand, self.hand_dim)
+
+        # Project state tokens
         g_token = self.global_proj(global_part).unsqueeze(1) + self.type_emb[0]
         u_tokens = self.unit_proj(board_part) + self.type_emb[1]
         h_tokens = self.hand_proj(hand_part) + self.type_emb[2]
-        
-        all_tokens = torch.cat([g_token, u_tokens, h_tokens], dim=1)
-        attended = self.transformer(all_tokens)
-        
+
+        state_tokens = torch.cat([g_token, u_tokens, h_tokens], dim=1)
+        state_token_count = state_tokens.shape[1]
+
+        # Project legal actions as Transformer tokens.
+        # Unbatched: action_tensor = [A, action_dim]
+        # Batched:   action_tensor = [B, A, action_dim]
+        if action_tensor.dim() == 2:
+            action_hidden = self.action_encoder(action_tensor).unsqueeze(0)
+            action_pad_mask = torch.zeros(
+                (batch_size, action_hidden.shape[1]),
+                dtype=torch.bool,
+                device=action_hidden.device,
+            )
+        else:
+            action_hidden = self.action_encoder(action_tensor)
+
+            # Padded action rows are all-zero vectors in batch inference/training.
+            # Mask them so padded action tokens do not affect state/action attention.
+            action_pad_mask = action_tensor.abs().sum(dim=-1).eq(0.0)
+
+        a_tokens = action_hidden + self.type_emb[3]
+        all_tokens = torch.cat([state_tokens, a_tokens], dim=1)
+
+        # Only action padding is masked. State padding remains as before because
+        # fixed zero-filled board/hand slots were already part of the model.
+        state_pad_mask = torch.zeros(
+            (batch_size, state_token_count),
+            dtype=torch.bool,
+            device=all_tokens.device,
+        )
+        transformer_pad_mask = torch.cat([state_pad_mask, action_pad_mask], dim=1)
+
+        attended = self.transformer(
+            all_tokens,
+            src_key_padding_mask=transformer_pad_mask,
+        )
+
         state_context = attended[:, 0]
-        action_hidden = self.action_encoder(action_tensor)
-        
+        action_context = attended[:, state_token_count:]
+
         if not is_batched:
-            repeated_state = state_context.expand(action_hidden.shape[0], -1)
-            logits = self.policy_head(torch.cat([repeated_state, action_hidden], dim=-1)).squeeze(-1)
+            action_context = action_context.squeeze(0)
+            repeated_state = state_context.expand(action_context.shape[0], -1)
+            logits = self.policy_head(torch.cat([repeated_state, action_context], dim=-1)).squeeze(-1)
             value = self.value_head(state_context).squeeze(-1)
         else:
-            logits = self.policy_head(torch.cat([state_context.unsqueeze(1).expand(-1, action_hidden.shape[1], -1), action_hidden], dim=-1)).squeeze(-1)
+            repeated_state = state_context.unsqueeze(1).expand(-1, action_context.shape[1], -1)
+            logits = self.policy_head(torch.cat([repeated_state, action_context], dim=-1)).squeeze(-1)
             value = self.value_head(state_context).squeeze(-1)
-            
+
         return logits, value
 
 
@@ -716,7 +759,7 @@ class SeaEngineBeliefMCTSAgent(SeaEngineAgent):
         return cls(
             base_agent,
             simulations=_env_int("SEAENGINE_BELIEF_MCTS_SIMS", 1),
-            top_k=_env_int("SEAENGINE_BELIEF_MCTS_TOP_K", 3),
+            top_k=_env_int("SEAENGINE_BELIEF_MCTS_TOP_K", 2),
             rollout_steps=_env_int("SEAENGINE_BELIEF_MCTS_ROLLOUT_STEPS", 1),
             mode="restore",
             c_puct=_env_float("SEAENGINE_BELIEF_MCTS_C_PUCT", 1.25),
@@ -1126,6 +1169,13 @@ def load_state_dict_flexible(model: nn.Module, state_dict: Dict[str, torch.Tenso
             and source_tensor.ndim == 2
             and current_tensor.ndim == 2
         ):
+            merged = current_tensor.clone()
+            rows = min(merged.shape[0], source_tensor.shape[0])
+            cols = min(merged.shape[1], source_tensor.shape[1])
+            merged[:rows, :cols] = source_tensor[:rows, :cols]
+            compatible_state[key] = merged
+            continue
+        if key == "type_emb" and source_tensor.ndim == 2 and current_tensor.ndim == 2:
             merged = current_tensor.clone()
             rows = min(merged.shape[0], source_tensor.shape[0])
             cols = min(merged.shape[1], source_tensor.shape[1])
