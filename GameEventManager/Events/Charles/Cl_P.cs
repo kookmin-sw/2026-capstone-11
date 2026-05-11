@@ -12,7 +12,7 @@ public class Cl_P : IEvent
     // 이 유닛을 파괴합니다.
     
     public string Id => "Cl_P";
-    public string Timing => "TurnStart";
+    public string Timing => "TurnEnd";
 
     public bool Apply(Uid source, GameData data)
     {

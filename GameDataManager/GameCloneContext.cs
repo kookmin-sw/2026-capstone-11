@@ -23,12 +23,12 @@ public class GameCloneContext(int playerCapacity = 0, int cardCapacity = 0)
 
     public Player? TryGetClonedPlayer(Player original)
     {
-        return _playerMap.TryGetValue(original, out var cloned) ? cloned : null;
+        return _playerMap.GetValueOrDefault(original);
     }
 
     public Card? TryGetClonedCard(Card original)
     {
-        return _cardMap.TryGetValue(original, out var cloned) ? cloned : null;
+        return _cardMap.GetValueOrDefault(original);
     }
 
     public Player GetOrClone(Player original)
@@ -47,4 +47,4 @@ public class GameCloneContext(int playerCapacity = 0, int cardCapacity = 0)
         return original.Clone(this);
     }
 
-    }
+}

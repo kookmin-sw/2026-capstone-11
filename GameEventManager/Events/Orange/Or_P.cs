@@ -6,12 +6,12 @@ namespace SeaEngine.GameEventManager.Events.Orange;
 [Event]
 public class Or_P : IEvent
 {
-    //[턴 종료] 요정의 영토 :
+    //[턴 시작] 요정의 영토 :
     // 이 유닛이 상대편 영역에 있다면
     // 카드를 한 장 뽑습니다
     
     public string Id => "Or_P";
-    public string Timing => "TurnEnd";
+    public string Timing => "TurnStart";
 
     public bool Apply(Uid source, GameData data)
     {
