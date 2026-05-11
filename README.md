@@ -156,9 +156,9 @@ random/greedy/rule-based/RL 각각 slight deficit / heavy deficit 8조합 50판�
 4. `SeaEnginePPOTrainer`로 학습을 진행한다.
 5. checkpoint 0 `random` / `greedy` / `rule-based` / `자기자신` 평가를 8개 조합 기준으로 각각 100판씩 수행한다.
 6. 학습을 10,000 episodes 돌린다.
-7. 2,000 에피소드마다 checkpoint를 저장하고, `2,000 / 4,000 / 6,000 / 8,000` checkpoint마다 `random` / `greedy` / `rule-based` / `자기자신` 기준 8개 조합 평가를 수행한다.
+7. 2,500 에피소드마다 checkpoint를 저장하고, `2,500 / 5,000 / 7,500` checkpoint마다 `random` / `greedy` / `rule-based` / `자기자신` 기준 8개 조합 평가를 수행한다.
 8. 10,000 에피소드 checkpoint에서는 `random` / `greedy` / `rule-based` / `자기자신` 평가를 8개 조합 기준으로 각각 100판씩 수행한다.
-9. checkpoint 20000 평가를 마치면 결과 로그와 모델을 zip으로 묶는다.
+9. 10,000 에피소드 평가를 마치면 결과 로그와 모델을 zip으로 묶는다.
 
 여기서 말하는 **8개 조합**은 다음 축의 조합이다.
 
@@ -200,8 +200,8 @@ random/greedy/rule-based/RL 각각 slight deficit / heavy deficit 8조합 50판�
 기본적으로는:
 
 - `RL vs RL` self-play
-- 총 16000판
-- 8개 조합 x 2000판씩
+- 총 4000판
+- 8개 조합 x 500판씩
   - 선공 / 후공
   - 내 덱: 귤 / 샤를로테
   - 상대 덱: 귤 / 샤를로테
@@ -348,7 +348,7 @@ AI가 action Uid를 응답하는 TCP 클라이언트다.
 - population score 기준으로는 최종 10000 checkpoint보다 중간 checkpoint가 더 균형적일 수 있으며, 최근 분석에서는 6000 checkpoint가 비교적 안정적으로 보였다.
 - 샤를로테, 특히 `샤를로테/후공/다른 덱` 약점은 여전히 강하게 남아 있다.
 
-`make_balance.py` 기준 RL vs RL 16000판 결과는 다음과 같다.
+`make_balance.py` 기준 RL vs RL 결과는 다음과 같다.
 
 - 전체 RL 승률: 48.65%
 - RL wins / opponent wins / draws: 973 / 1027 / 0
@@ -428,8 +428,8 @@ nohup bash -lc 'cd ~ && python -u ~/start.py' > ~/start.log 2>&1 &
 ```bash
 python -u ~/start.py \
   --eval-matches 50 \
-  --train-episodes 20000 \
-  --max-turns 100 \
+  --train-episodes 10000 \
+  --max-turns 70 \
   --update-interval 16 \
   --seed 7
 ```
@@ -437,14 +437,14 @@ python -u ~/start.py \
 옵션 설명:
 
 - `--eval-matches`
-  - checkpoint 0/20000 평가 판수 per combo (random/greedy/rule-based/self 각각)
+  - checkpoint 0/10000 평가 판수 per combo (random/greedy/rule-based/self 각각)
   - 기본값: `50`
 - `--train-episodes`
   - 총 학습 에피소드 수
-  - 기본값: `20000`
+  - 기본값: `10000`
 - `--max-turns`
   - 평가 시 허용 최대 턴 수
-  - 기본값: `100`
+  - 기본값: `70`
 - `--update-interval`
   - PPO 업데이트 주기
   - 기본값: `16`
@@ -455,6 +455,8 @@ python -u ~/start.py \
   - `RL_AI.zip` 압축 해제를 건너뜀
 - `--skip-build`
   - C# 빌드를 건너뜀
+- `--skip-initial-eval`
+  - checkpoint 0 초기 평가만 건너뜀
 - `--log-file`
   - 외부 로그 파일 경로를 직접 지정
 
