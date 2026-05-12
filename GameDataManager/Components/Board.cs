@@ -32,7 +32,7 @@ public class Board
             {
                 var x = card.Unit.PosX;
                 var y = card.Unit.PosY;
-                if (x >= 0 && x < BoardSize && y >= 0 && y < BoardSize)
+                if (x is >= 0 and < BoardSize && y is >= 0 and < BoardSize)
                     _grid[x, y] = card;
             }
         }
@@ -63,6 +63,19 @@ public class Board
         _grid[card.Unit.PosX, card.Unit.PosY] = null;
         card.Unit.Move(x, y);
         _grid[x, y] = card;
+    }
+
+    public void SwapCards(Card card1, Card card2)
+    {
+        int x1 = card1.Unit.PosX;
+        int y1 = card1.Unit.PosY;
+        
+        _grid[card1.Unit.PosX, card1.Unit.PosY] = null;
+        _grid[card2.Unit.PosX, card2.Unit.PosY] = null;
+        card1.Unit.Move(card2.Unit.PosX, card2.Unit.PosY);
+        card2.Unit.Move(x1, y1);
+        _grid[card1.Unit.PosX, card1.Unit.PosY] = card1;
+        _grid[card2.Unit.PosX, card2.Unit.PosY] = card2;
     }
 
     public void WithdrawCard(Card card)

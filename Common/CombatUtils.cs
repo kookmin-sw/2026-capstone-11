@@ -1,5 +1,6 @@
 using SeaEngine.GameDataManager;
 using SeaEngine.GameDataManager.Components;
+using SeaEngine.GameEventManager;
 
 namespace SeaEngine.Common;
 
@@ -7,7 +8,12 @@ public static class CombatUtils
 {
     public static bool Attack(Card attacker, Card defender, GameData data)
     {
-        return Damage(defender, attacker.Unit.Atk, data);
+        data.TriggerBeforeAttackEvent(attacker.Data.EventId, attacker.Guid, defender.Guid);
+        data.TriggerBeforeAttackedEvent(defender.Data.EventId, attacker.Guid, defender.Guid);
+        var isDestroyed = Damage(defender, attacker.Unit.Atk, data);
+        data.TriggerAfterAttackEvent(attacker.Data.EventId, attacker.Guid, defender.Guid);
+        data.TriggerAfterAttackedEvent(defender.Data.EventId, attacker.Guid, defender.Guid);
+        return isDestroyed;
     }
 
     public static bool Damage(Card target, int amount, GameData data)

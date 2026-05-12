@@ -1,5 +1,6 @@
 using System.Reflection;
 using SeaEngine.GameEffectManager;
+using SeaEngine.GameEventManager.Events;
 
 namespace SeaEngine.GameEventManager;
 
@@ -44,5 +45,15 @@ public class EventRegistry
         if (_instance?._registry.TryGetValue(timing, out var events) == true)
             return events.Values;
         return [];
+    }
+
+    public static IAttackEvent? GetAttackEvent(string id)
+    {
+        
+        if (_instance == null) Init();
+        if (_instance == null) return null;
+        if (!_instance._registry.TryGetValue("Attack", out var events))
+            return null;
+        return events.GetValueOrDefault(id) as IAttackEvent;
     }
 }
