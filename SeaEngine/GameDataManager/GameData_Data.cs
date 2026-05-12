@@ -93,4 +93,33 @@ public partial class GameData
             }
         }
     }
+    
+    public void TriggerBeforeAttackEvent(string eventId, Uid source, Uid target)
+    {
+        if (EventRegistry.GetAttackEvent(eventId)?.BeforeAttack(source, target,this) ?? false)
+        {
+            Logger.LogEvent(eventId, "BeforeAttack", source);
+        }
+    }
+    public void TriggerAfterAttackEvent(string eventId, Uid source, Uid target)
+    {
+        if (EventRegistry.GetAttackEvent(eventId)?.AfterAttack(source, target,this) ?? false)
+        {
+            Logger.LogEvent(eventId, "AfterAttack", source);
+        }
+    }
+    public void TriggerBeforeAttackedEvent(string eventId, Uid source, Uid target)
+    {
+        if (EventRegistry.GetAttackEvent(eventId)?.BeforeAttacked(source, target,this) ?? false)
+        {
+            Logger.LogEvent(eventId, "BeforeAttacked", source);
+        }
+    }
+    public void TriggerAfterAttackedEvent(string eventId, Uid source, Uid target)
+    {
+        if (EventRegistry.GetAttackEvent(eventId)?.AfterAttacked(source, target,this) ?? false)
+        {
+            Logger.LogEvent(eventId, "AfterAttacked", source);
+        }
+    }
 }

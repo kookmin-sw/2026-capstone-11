@@ -58,6 +58,8 @@ public partial class Game
         Logger.LogAction(selectedAction, Data);
         EffectRegistry.Get(selectedAction.EffectId).Apply(selectedAction.Source, selectedAction.Target, Data);
         
+        Data.TriggerEventToAll("Always");
+        Data.TriggerBuffEventToAll("Always");
         UpdateActions();
     }
 }
