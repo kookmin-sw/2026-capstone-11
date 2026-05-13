@@ -6,16 +6,24 @@ using System.Collections.Generic;
 using PlayFab;
 using UnityEngine.SceneManagement;
 using DG.Tweening;
+using Title.UI;
 
 public class PlayFabAccountUI : MonoBehaviour
 {
+
+    [SerializeField] private TitleInputController controller;
+
+    [Header("Panel")]
+    [SerializeField] private GameObject registerPanel;
+    [SerializeField] private GameObject loginPanel;
+    
+
     [Header("Register")]
     [SerializeField] private TMP_InputField registerUsernameInput;
     [SerializeField] private TMP_InputField registerDisplaynameInput;
     [SerializeField] private TMP_InputField registerEmailInput;
     [SerializeField] private TMP_InputField registerPasswordInput;
     [SerializeField] private TMP_InputField registerPasswordCheck;
-    
 
     [Header("Login")]
     [SerializeField] private TMP_InputField loginEmailInput;
@@ -24,12 +32,12 @@ public class PlayFabAccountUI : MonoBehaviour
     [Header("Button")]
     [SerializeField] private Button loginButton;
     [SerializeField] private Button logoutButton;
-
-    [Header("Lobby Scene")]
-    [SerializeField] private string LobbyScene;
+    [SerializeField] private Button registerButton;
+    [SerializeField] private List<Button> closePanelButton;
 
     [Header("Info Field")]
     [SerializeField] private TMP_Text InfoField;
+    [SerializeField] private TMP_Text NameField;
 
     [Header("API Call Guard Button")]
     [SerializeField] private List<Button> ButtonToGuard;
@@ -43,6 +51,16 @@ public class PlayFabAccountUI : MonoBehaviour
     private void Start()
     {
         InfoField.text = "";
+        NameField.text = "";
+
+        loginButton.onClick.AddListener(() => controller.SetState(TitleState.LoginPanelOpened));
+        logoutButton.onClick.AddListener(() => controller.SetState(TitleState.WaitingForInput));
+        registerButton.onClick.AddListener(() => controller.SetState(TitleState.RegisterPanelOpened));
+
+        foreach (var btn in closePanelButton)
+        {
+            btn.onClick.AddListener(() => controller.SetState(TitleState.WaitingForInput));
+        }
     }
 
     private void SwitchButton()
@@ -51,6 +69,22 @@ public class PlayFabAccountUI : MonoBehaviour
 
         loginButton.gameObject.SetActive(!isLoggedin);
         logoutButton.gameObject.SetActive(isLoggedin);
+        registerButton.gameObject.SetActive(!isLoggedin);
+    }
+
+    private void ClearLoginInputField()
+    {
+        loginEmailInput.text = string.Empty;
+        loginPasswordInput.text = string.Empty;
+    }
+
+    private void ClearRegisterInputField()
+    {
+        registerUsernameInput.text = string.Empty;
+        registerDisplaynameInput.text = string.Empty;
+        registerEmailInput.text = string.Empty;
+        registerPasswordInput.text = string.Empty;
+        registerPasswordCheck.text = string.Empty;
     }
 
     public void GuardButton()
@@ -71,8 +105,11 @@ public class PlayFabAccountUI : MonoBehaviour
     {
         infoTween?.Kill();
 
-        InfoField.text = PlayFabAccountManager.Instance.IsLoggedIn ?
-            "로그인 성공!" : "로그인 실패!";
+        bool isLoggedIn = PlayFabAccountManager.Instance.IsLoggedIn; 
+        InfoField.text = isLoggedIn ? "로그인 성공!" : "로그인 실패!";
+
+        if (isLoggedIn) 
+            NameField.text = "환영합니다, " + PlayFabAccountManager.Instance.InGameDisplayName + "님";
         
         infoTween = InfoField.DOColor(Color.clear, 5f);
     }
@@ -121,6 +158,8 @@ public class PlayFabAccountUI : MonoBehaviour
                 UpdateInfoField();
                 ReleaseButton();
                 SwitchButton();
+                ClearRegisterInputField();
+                registerPanel.SetActive(false);
             },
             onFail: error =>
             {
@@ -154,6 +193,8 @@ public class PlayFabAccountUI : MonoBehaviour
                 UpdateInfoField();
                 ReleaseButton();
                 SwitchButton();
+                ClearLoginInputField();
+                loginPanel.SetActive(false);
             },
             onFail: error =>
             {
@@ -173,5 +214,7 @@ public class PlayFabAccountUI : MonoBehaviour
 
         ReleaseButton();
         SwitchButton();
+
+        NameField.text = "";
     }
 }
