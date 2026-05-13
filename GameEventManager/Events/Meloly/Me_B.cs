@@ -12,7 +12,7 @@ public class Me_B : IAttackEvent
 
     public bool Apply(Uid source, GameData data)
     {
-        return true;
+        return false;
     }
 
     public bool BeforeAttack(Uid source, Uid target, GameData data)
