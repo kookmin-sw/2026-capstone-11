@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Linq;
 using PlayFab;
 using PlayFab.MultiplayerModels;
 using UnityEngine;
@@ -6,27 +7,47 @@ using UnityEngine;
 public class PlayFabMatchManager : MonoBehaviour
 {
     public static PlayFabMatchManager Instance;
-    private const float _LeastPollingTime = 6.0f; 
 
+    private const float _LeastPollingTime = 6.0f;
 
+    [Header("Matchmaking")]
     [SerializeField] private string _matchQueueName = "TestMatchQueue";
     [SerializeField] private int _giveUpTime = 60;
-    [SerializeField][Range(6, 30)] private float _ticketPollingTime;
+    [SerializeField][Range(6, 30)] private float _ticketPollingTime = 6.0f;
+
+    [Header("MPS")]
+    [SerializeField] private string _gamePortName = "game_port";
+
+    [Header("Region Selection Rule")]
+    [SerializeField] private string _regionName = "KoreaCentral";
+    [SerializeField] private int _dummyLatencyMs = 50;
+
+    [Header("Game Start")]
+    [SerializeField] private DedicateModeStarter _dedicateModeStarter;
 
     private string _ticketId = null;
     private string _matchId = null;
-    private bool _isMatchRequested = false;
+
+    private bool _isCreateTicketRequested = false;
+    private bool _isTicketPolling = false;
+
     private Coroutine _ticketPollingCoroutine = null;
 
-    public bool IsMatchTicketSuccess => _ticketId != null;
+    public bool IsMatchTicketSuccess => !string.IsNullOrEmpty(_ticketId);
+    public bool IsMatching => IsMatchTicketSuccess && _isTicketPolling;
 
-    void Awake()
+    public string ServerAddress { get; private set; }
+    public int ServerPort { get; private set; }
+
+    private void Awake()
     {
         if (Instance != null)
         {
             Destroy(gameObject);
+            return;
         }
-        else Instance = this;
+
+        Instance = this;
     }
 
     public void OnMatchMakingRequest()
@@ -37,13 +58,13 @@ public class PlayFabMatchManager : MonoBehaviour
             return;
         }
 
-        if (_isMatchRequested)
+        if (_isCreateTicketRequested || _isTicketPolling)
         {
             Debug.Log("이미 매치 요청 중");
             return;
         }
 
-        _isMatchRequested = true;
+        _isCreateTicketRequested = true;
 
         PlayFabMultiplayerAPI.CreateMatchmakingTicket(
             new CreateMatchmakingTicketRequest
@@ -55,67 +76,205 @@ public class PlayFabMatchManager : MonoBehaviour
                         Id = PlayFabAccountManager.Instance.EntityId,
                         Type = PlayFabAccountManager.Instance.EntityType,
                     },
-                },
-                GiveUpAfterSeconds = _giveUpTime,
 
+                    Attributes = new MatchmakingPlayerAttributes
+                    {
+                        DataObject = new
+                        {
+                            Latencies = new object[]
+                            {
+                                new
+                                {
+                                    region = _regionName,
+                                    latency = _dummyLatencyMs
+                                }
+                            }
+                        }
+                    }
+                },
+
+                GiveUpAfterSeconds = _giveUpTime,
                 QueueName = _matchQueueName
             },
-            (result) =>
+            result =>
             {
                 _ticketId = result.TicketId;
-                _isMatchRequested = false;
+                _matchId = null;
+
+                _isCreateTicketRequested = false;
+                _isTicketPolling = true;
+
+                if (_ticketPollingCoroutine != null)
+                    StopCoroutine(_ticketPollingCoroutine);
+
                 _ticketPollingCoroutine = StartCoroutine(TicketPolling());
 
                 Debug.Log($"매치 메이킹 티켓 생성 TicketId={_ticketId}");
             },
-            (Error) =>
+            error =>
             {
                 _ticketId = null;
-                _isMatchRequested = false;
+                _matchId = null;
 
-                Debug.Log($"매치 메이킹 요청 실패 Error : {Error}");
+                _isCreateTicketRequested = false;
+                _isTicketPolling = false;
+
+                Debug.LogError($"매치 메이킹 요청 실패: {error.GenerateErrorReport()}");
             }
-
         );
     }
 
-    public IEnumerator TicketPolling()
+    private IEnumerator TicketPolling()
     {
-        // TODO: 이거 고치기
-        while (_ticketId != null && _isMatchRequested != false)
+        while (!string.IsNullOrEmpty(_ticketId) && _isTicketPolling)
         {
+            bool requestDone = false;
 
-        PlayFabMultiplayerAPI.GetMatchmakingTicket(
-            new GetMatchmakingTicketRequest
+            PlayFabMultiplayerAPI.GetMatchmakingTicket(
+                new GetMatchmakingTicketRequest
+                {
+                    TicketId = _ticketId,
+                    QueueName = _matchQueueName,
+                },
+                result =>
+                {
+                    requestDone = true;
+
+                    string status = result.Status;
+                    Debug.Log($"Matchmaking Status: {status}");
+
+                    if (status == "Matched")
+                    {
+                        _matchId = result.MatchId;
+                        _isTicketPolling = false;
+
+                        Debug.Log($"매치 성공 MatchId={_matchId}");
+
+                        RequestMatchDetails();
+                        return;
+                    }
+
+                    if (status == "Canceled" || status == "Failed")
+                    {
+                        Debug.LogWarning($"매치메이킹 종료 Status={status}");
+
+                        _ticketId = null;
+                        _matchId = null;
+                        _isTicketPolling = false;
+                    }
+                },
+                error =>
+                {
+                    requestDone = true;
+
+                    Debug.LogError($"티켓 폴링 실패: {error.GenerateErrorReport()}");
+
+                    _ticketId = null;
+                    _matchId = null;
+                    _isTicketPolling = false;
+                }
+            );
+
+            yield return new WaitUntil(() => requestDone || !_isTicketPolling);
+
+            if (!_isTicketPolling)
+                break;
+
+            float waitTime = Mathf.Max(_LeastPollingTime, _ticketPollingTime);
+            yield return new WaitForSecondsRealtime(waitTime);
+        }
+
+        _ticketPollingCoroutine = null;
+    }
+
+    private void RequestMatchDetails()
+    {
+        if (string.IsNullOrEmpty(_matchId))
+        {
+            Debug.LogError("MatchId가 없어서 GetMatch 요청 불가");
+            return;
+        }
+
+        PlayFabMultiplayerAPI.GetMatch(
+            new GetMatchRequest
             {
-                TicketId = _ticketId,
+                MatchId = _matchId,
                 QueueName = _matchQueueName,
+                ReturnMemberAttributes = false,
+                EscapeObject = false
             },
-            (result) =>
+            result =>
             {
-                var status = result.Status;
-                if (status != "Matched") return;
+                if (result.ServerDetails == null)
+                {
+                    Debug.LogError(
+                        "GetMatch 성공했지만 ServerDetails가 없음. " +
+                        "Queue의 Server Allocation, BuildId/BuildAlias, RegionSelectionRule 설정 확인 필요"
+                    );
+                    return;
+                }
 
-                _matchId = result.MatchId;
-                if (_ticketPollingCoroutine != null) StopCoroutine(_ticketPollingCoroutine); 
-                // StartMatch()!!
+                var server = result.ServerDetails;
+
+                string address = !string.IsNullOrEmpty(server.Fqdn)
+                    ? server.Fqdn
+                    : server.IPV4Address;
+
+                if (string.IsNullOrEmpty(address))
+                {
+                    Debug.LogError("ServerDetails에 Fqdn/IPV4Address가 없음");
+                    return;
+                }
+
+                var selectedPort =
+                    server.Ports?.FirstOrDefault(p => p.Name == _gamePortName)
+                    ?? server.Ports?.FirstOrDefault();
+
+                if (selectedPort == null)
+                {
+                    Debug.LogError("ServerDetails에 Port 정보가 없음");
+                    return;
+                }
+
+                ServerAddress = address;
+                ServerPort = selectedPort.Num;
+
+                Debug.Log(
+                    $"MPS 서버 할당 성공\n" +
+                    $"Address={ServerAddress}\n" +
+                    $"PortName={selectedPort.Name}\n" +
+                    $"Port={ServerPort}\n" +
+                    $"Region={server.Region}\n" +
+                    $"ServerId={server.ServerId}"
+                );
+
+                StartGameWithAllocatedServer();
             },
-            (error) =>
+            error =>
             {
-                if (_ticketPollingCoroutine != null) StopCoroutine(_ticketPollingCoroutine); 
+                Debug.LogError($"GetMatch 실패: {error.GenerateErrorReport()}");
             }
         );
+    }
 
-            if (_ticketPollingTime < _LeastPollingTime)
-                yield return new WaitForSecondsRealtime(_LeastPollingTime);
-            else 
-                yield return new WaitForSecondsRealtime(_ticketPollingTime);
+    private void StartGameWithAllocatedServer()
+    {
+        if (_dedicateModeStarter == null)
+        {
+            Debug.LogError("DedicateModeStarter 참조가 없음. Inspector에 연결 필요");
+            return;
         }
+
+        _dedicateModeStarter.StartDedicateModeFromMatchmaking(ServerAddress, ServerPort);
     }
 
     public void OnCancelMatchMaking()
     {
-        if (!_isMatchRequested || !IsMatchTicketSuccess) return;
+        if (string.IsNullOrEmpty(_ticketId))
+        {
+            Debug.Log("취소할 매치 티켓이 없음");
+            return;
+        }
 
         PlayFabMultiplayerAPI.CancelMatchmakingTicket(
             new CancelMatchmakingTicketRequest
@@ -123,17 +282,26 @@ public class PlayFabMatchManager : MonoBehaviour
                 QueueName = _matchQueueName,
                 TicketId = _ticketId
             },
-            (result) =>
+            result =>
             {
                 _ticketId = null;
-                _isMatchRequested = false;
-                Debug.Log("취소 성공");
+                _matchId = null;
+
+                _isCreateTicketRequested = false;
+                _isTicketPolling = false;
+
+                if (_ticketPollingCoroutine != null)
+                {
+                    StopCoroutine(_ticketPollingCoroutine);
+                    _ticketPollingCoroutine = null;
+                }
+
+                Debug.Log("매치메이킹 취소 성공");
             },
-            (Error) =>
+            error =>
             {
-                Debug.Log($"취소 실패 {Error}");
+                Debug.LogError($"매치메이킹 취소 실패: {error.GenerateErrorReport()}");
             }
         );
     }
-
 }

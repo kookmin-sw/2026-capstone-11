@@ -14,12 +14,8 @@ using UnityEngine.Purchasing;
 using UnityEngine.SceneManagement;
 
 
-
-
 public class DedicateModeStarter : MonoBehaviour
 {
-
-
     [Header("Ref to UI Input")]
     [SerializeField] private TMP_InputField IPaddrInputField;
     [SerializeField] private TMP_InputField PortNumInputField;
@@ -33,40 +29,113 @@ public class DedicateModeStarter : MonoBehaviour
 
     public void OnClickStartDedicateMode()
     {
-        string IPAddrInput = IPaddrInputField.text;
-        string portNumInput = PortNumInputField.text;
-        string deckInput = DeckInputField.text;
+        string hostInput = IPaddrInputField.text.Trim();
+        string portNumInput = PortNumInputField.text.Trim();
+        string deckInput = DeckInputField.text.Trim();
 
-        if (!IPAddress.TryParse(IPAddrInput, out var ipAddr))
+        if (!IsValidHost(hostInput))
         {
-            Debug.Log("Wrong IPAddress Input!");
+            Debug.Log("Wrong IPAddress / Host Input!");
             return;
         }
 
-        if (!int.TryParse(portNumInput, out var portNum) || portNum < 0)
+        if (!TryParsePort(portNumInput, out int portNum))
         {
             Debug.Log("Wrong PortNum Input!");
             return;
         }
 
+        StartDedicateMode(hostInput, portNum, deckInput);
+    }
+
+    /// <summary>
+    /// PlayFab MPS 매칭 성공 후 호출하는 진입점.
+    /// UI의 IP/Port 입력값을 쓰지 않고, MPS에서 받은 주소와 포트를 사용한다.
+    /// </summary>
+    public void StartDedicateModeFromMatchmaking(string serverAddress, int serverPort)
+    {
+        if (string.IsNullOrWhiteSpace(serverAddress))
+        {
+            Debug.LogError("MPS ServerAddress is empty.");
+            return;
+        }
+
+        if (serverPort <= 0 || serverPort > 65535)
+        {
+            Debug.LogError($"Wrong MPS ServerPort: {serverPort}");
+            return;
+        }
+
+        string deckInput = DeckInputField != null ? DeckInputField.text.Trim() : string.Empty;
+
+        StartDedicateMode(serverAddress, serverPort, deckInput);
+    }
+
+    private void StartDedicateMode(string hostAddress, int portNum, string deckInput)
+    {
+        StopGameLoad();
+
+        SetupPlayerName();
+        SetupPlayerDeck(deckInput);
+
+        GameInitParam.Instance.IpAddr = hostAddress;
+        GameInitParam.Instance.PortNum = portNum;
+
+        Debug.Log($"Start Dedicated Mode. Address={hostAddress}, Port={portNum}");
+
+        NetworkManagerUnity.Instance.Init();
+
+        _gameLoadCoroutine = StartCoroutine(GameLoadCoroutine());
+        _gameLoadTimeoutCoroutine = StartCoroutine(GameLoadTimeoutCoroutine());
+    }
+
+    private void SetupPlayerName()
+    {
         if (!PlayFabAccountManager.Instance.IsLoggedIn)
         {
             Debug.Log("No Playfab LogIn.");
             string pcID = SystemInfo.deviceUniqueIdentifier;
             GameInitParam.Instance.Player1Name = "Jimmy, The Mind of PlaceHolder" + pcID;
         }
-        else GameInitParam.Instance.Player1Name = PlayFabAccountManager.Instance.InGameDisplayName;
+        else
+        {
+            GameInitParam.Instance.Player1Name = PlayFabAccountManager.Instance.InGameDisplayName;
+        }
+    }
 
-        if (deckInput == "Or") GameInitParam.Instance.Player1Deck = "[\"Or_L\", \"Or_B\", \"Or_R\", \"Or_N\", \"Or_P\", \"Or_P\", \"Or_P\"]";
-        else GameInitParam.Instance.Player1Deck = "[\"Cl_L\", \"Cl_B\", \"Cl_R\", \"Cl_N\", \"Cl_P\", \"Cl_P\", \"Cl_P\"]";
+    private void SetupPlayerDeck(string deckInput)
+    {
+        if (deckInput == "Or")
+        {
+            GameInitParam.Instance.Player1Deck =
+                "[\"Or_L\", \"Or_B\", \"Or_R\", \"Or_N\", \"Or_P\", \"Or_P\", \"Or_P\"]";
+        }
+        else
+        {
+            GameInitParam.Instance.Player1Deck =
+                "[\"Cl_L\", \"Cl_B\", \"Cl_R\", \"Cl_N\", \"Cl_P\", \"Cl_P\", \"Cl_P\"]";
+        }
+    }
 
-        GameInitParam.Instance.IpAddr = ipAddr.ToString();
-        GameInitParam.Instance.PortNum = portNum;
+    private bool IsValidHost(string host)
+    {
+        if (string.IsNullOrWhiteSpace(host))
+            return false;
 
-        NetworkManagerUnity.Instance.Init();
+        // IP 직접 입력 허용
+        if (IPAddress.TryParse(host, out _))
+            return true;
 
-        _gameLoadCoroutine = StartCoroutine(GameLoadCoroutine());
-        _gameLoadTimeoutCoroutine = StartCoroutine(GameLoadTimeoutCoroutine());
+        // PlayFab MPS GetMatch 결과는 Fqdn이 올 수 있으므로 도메인도 허용
+        return Uri.CheckHostName(host) == UriHostNameType.Dns;
+    }
+
+    private bool TryParsePort(string portText, out int port)
+    {
+        if (!int.TryParse(portText, out port))
+            return false;
+
+        return port > 0 && port <= 65535;
     }
 
     private void StopGameLoad()
@@ -76,6 +145,7 @@ public class DedicateModeStarter : MonoBehaviour
             StopCoroutine(_gameLoadCoroutine);
             _gameLoadCoroutine = null;
         }
+
         if (_gameLoadTimeoutCoroutine != null)
         {
             StopCoroutine(_gameLoadTimeoutCoroutine);
@@ -86,6 +156,7 @@ public class DedicateModeStarter : MonoBehaviour
     private IEnumerator GameLoadTimeoutCoroutine()
     {
         yield return new WaitForSecondsRealtime(30f);
+
         Debug.Log("GameLoad Timeout: 30초 초과로 로딩 중단");
         StopGameLoad();
     }
@@ -95,19 +166,31 @@ public class DedicateModeStarter : MonoBehaviour
         yield return ConnectCoroutine();
         yield return SessionEnterCoroutine();
 
-        if (_gameLoadTimeoutCoroutine != null) StopCoroutine(GameLoadTimeoutCoroutine());
+        if (_gameLoadTimeoutCoroutine != null)
+        {
+            StopCoroutine(_gameLoadTimeoutCoroutine);
+            _gameLoadTimeoutCoroutine = null;
+        }
 
         DontDestroyOnLoad(GameInitParam.Instance);
         DontDestroyOnLoad(NetworkManagerUnity.Instance);
+
         SceneManager.LoadScene(gameSceneName);
+
+        _gameLoadCoroutine = null;
     }
 
     private IEnumerator ConnectCoroutine()
     {
         var wait = new WaitForCallback();
+
         NetworkManagerUnity.Instance.Session.Events.OnConnectHello = wait.Complete;
 
-        _ = NetworkManagerUnity.Instance.Net.ConnectTo(GameInitParam.Instance.IpAddr, GameInitParam.Instance.PortNum, 9999);
+        _ = NetworkManagerUnity.Instance.Net.ConnectTo(
+            GameInitParam.Instance.IpAddr,
+            GameInitParam.Instance.PortNum,
+            9999
+        );
 
         yield return wait;
 
@@ -117,10 +200,23 @@ public class DedicateModeStarter : MonoBehaviour
     private IEnumerator SessionEnterCoroutine()
     {
         var wait = new WaitForCallback();
-        NetworkManagerUnity.Instance.Session.EnterSession(GameInitParam.Instance.Player1Name, (raw) => { wait.Complete(); }, (msg) => { Debug.Log(msg); });
+
+        NetworkManagerUnity.Instance.Session.EnterSession(
+            GameInitParam.Instance.Player1Name,
+            raw =>
+            {
+                wait.Complete();
+            },
+            msg =>
+            {
+                Debug.Log(msg);
+            }
+        );
 
         yield return wait;
-        yield return new WaitForSecondsRealtime(1.0f); // 서버 틱 맞추기 위해 대기
+
+        // 서버 틱 맞추기 위해 대기
+        yield return new WaitForSecondsRealtime(1.0f);
 
         var waitQuery = new WaitForCallback();
 
@@ -130,23 +226,35 @@ public class DedicateModeStarter : MonoBehaviour
         PacketWriter writer = new(buffer);
         SimpleReq.Codec.Write(ref writer, req);
 
-        NetworkManagerUnity.Instance.Session.QueryDataRegister(buffer, 5000,
-            (result) =>
+        NetworkManagerUnity.Instance.Session.QueryDataRegister(
+            buffer,
+            5000,
+            result =>
             {
                 if (result.IsResponded)
                 {
                     PacketReader reader = new(result.AnswerRaw);
                     var rsp = SimpleRsp.Codec.Read(ref reader);
-                    if (rsp.IsAccepted) waitQuery.Complete();
-                    else { Debug.Log(rsp.Msg); StopGameLoad(); }
+
+                    if (rsp.IsAccepted)
+                    {
+                        waitQuery.Complete();
+                    }
+                    else
+                    {
+                        Debug.Log(rsp.Msg);
+                        StopGameLoad();
+                    }
+
                     return;
                 }
+
                 Debug.Log("SessionEnter Req. is Expired");
                 StopGameLoad();
-            });
+            }
+        );
 
         yield return waitQuery;
         yield return new WaitForSecondsRealtime(1.0f);
     }
-
 }

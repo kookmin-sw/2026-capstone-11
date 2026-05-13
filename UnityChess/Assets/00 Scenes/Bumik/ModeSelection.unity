@@ -681,7 +681,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 63808211}
-  - component: {fileID: 63808210}
+  - component: {fileID: 63808212}
   m_Layer: 0
   m_Name: PlayFabMatchManager
   m_TagString: Untagged
@@ -689,18 +689,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &63808210
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 63808209}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 57b6f6f3b669547f1a563e8e00ab43eb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayFabMatchManager
 --- !u!4 &63808211
 Transform:
   m_ObjectHideFlags: 0
@@ -716,6 +704,25 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &63808212
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 63808209}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f7e2c2edb5bb10fb86dac52005c008d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayFabMatchManager
+  _matchQueueName: TestMatchQueue
+  _giveUpTime: 60
+  _ticketPollingTime: 6
+  _gamePortName: game_port
+  _regionName: KoreaCentral
+  _dummyLatencyMs: 50
+  _dedicateModeStarter: {fileID: 304439361}
 --- !u!1 &75073072
 GameObject:
   m_ObjectHideFlags: 0
@@ -4225,7 +4232,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 63808210}
+      - m_Target: {fileID: 63808212}
         m_TargetAssemblyTypeName: PlayFabMatchManager, Assembly-CSharp
         m_MethodName: OnCancelMatchMaking
         m_Mode: 1
@@ -5666,7 +5673,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 63808210}
+      - m_Target: {fileID: 63808212}
         m_TargetAssemblyTypeName: PlayFabMatchManager, Assembly-CSharp
         m_MethodName: OnMatchMakingRequest
         m_Mode: 1
@@ -10849,7 +10856,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1813597577}
-  - component: {fileID: 1813597576}
+  - component: {fileID: 1813597578}
   m_Layer: 0
   m_Name: PlayFabAccountManager
   m_TagString: Untagged
@@ -10857,18 +10864,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1813597576
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1813597575}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 57b6f6f3b669547f1a563e8e00ab43eb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayFabAccountManager
 --- !u!4 &1813597577
 Transform:
   m_ObjectHideFlags: 0
@@ -10884,6 +10879,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1813597578
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1813597575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57b6f6f3b669547f1a563e8e00ab43eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayFabAccountManager
 --- !u!1 &1828415399
 GameObject:
   m_ObjectHideFlags: 0
