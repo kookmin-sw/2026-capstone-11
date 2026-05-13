@@ -6,6 +6,7 @@ namespace Game.Network.Service
         private DispatchMap _dispatch;
         private IPeerDictReader _other; 
 
+        private MatchList _matchList = new();
 
 
 
@@ -17,6 +18,8 @@ namespace Game.Network.Service
 
             // _dispatch.Register()
         }
+
+    
 
 
 

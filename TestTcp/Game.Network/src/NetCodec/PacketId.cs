@@ -8,6 +8,7 @@ namespace Game.Network.Service
     {
         public static class Constant
         {
+            public const int EmptyAcceptPacket = 0x0000_0000;
             public const int SimpleReq = 0x0000_0001;
             public const int SimpleRsp = 0x0001_0001;
             public const int FailRsp = 0x0000_0002;

@@ -8,6 +8,7 @@ using Game.Network;
 using Game.Network.Protocol;
 using Game.Network.Service;
 using Game.Server.Chess;
+using Microsoft.Playfab.Gaming.GSDK.CSharp;
 using SeaEngine.Common;
 using SeaEngine.Logger;
 
@@ -21,7 +22,13 @@ namespace Game.Server
         {
             Log.SetLogger(Console.WriteLine);
 
-            var server = NetworkManager.CreateNetworkManager(TransferConfig.ServerPortNum, 10);
+            var cts = new CancellationTokenSource();
+
+            bool localMode = Environment.GetEnvironmentVariable("LOCAL_DEV") == "1";
+            var PlayfabRunner = new PlayfabRun(cts, 9000, localMode);
+
+            // Initalization
+            var server = NetworkManager.CreateNetworkManager(PlayfabRunner.GamePort, 10);
             server.Start();
 
             var opt = new ServiceOption(
@@ -45,11 +52,18 @@ namespace Game.Server
             Session session = new(server);
             ChessGame game  = new(session);
 
-            var cts = new CancellationTokenSource();
+
+            // Check Ready
+            if (!PlayfabRunner.ReadyForPlayers())
+            {
+                await server.StopAsync();
+                return;
+            }
+
 
             var inputTask = Task.Run(() =>
             {
-                while (true)
+                while (!cts.IsCancellationRequested)
                 {
                     var line = Console.ReadLine();
                     if (line != null && line.Trim().Equals("q", StringComparison.OrdinalIgnoreCase))

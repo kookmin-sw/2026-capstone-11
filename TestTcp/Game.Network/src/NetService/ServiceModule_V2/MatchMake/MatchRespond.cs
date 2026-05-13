@@ -25,10 +25,10 @@ namespace Game.Network.Service
 
     public class MatchCreateRespond
     {
-        
+        public MatchId created;
     }
 
-    public class MatchReadyRespond
+    public class MatchReadyRespond : EmptyAcceptPacket
     {
         
     }

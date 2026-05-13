@@ -19,7 +19,15 @@
 </ItemGroup>
 
 <ItemGroup>
+    <PackageReference Include="com.playfab.csharpgsdk" Version="0.11.210519" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+</ItemGroup>
+
+<ItemGroup>
+  <Content Include="db/**">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+  </Content>
 </ItemGroup>
 
 
