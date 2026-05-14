@@ -1,0 +1,360 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fd4471c7ab9211bba71819f295981f9, type: 3}
+  m_Name: CardUnitDB
+  m_EditorClassIdentifier: Assembly-CSharp::core.data.CardUnitDB
+  cards:
+  - cardId: Or_L
+    name: "\uADE4 \uACF5\uC8FC\uB2D8"
+    leaderId: Or_L
+    unitClass: 4
+    attack: 3
+    hp: 7
+    effectId: 
+    eventId: 
+  - cardId: Or_B
+    name: "\uADE4 \uC9C1\uC7A5\uC778?"
+    leaderId: Or_L
+    unitClass: 3
+    attack: 1
+    hp: 2
+    effectId: 
+    eventId: 
+  - cardId: Or_N
+    name: "\uB9DD\uC0C1\uC758 \uAE30\uC0AC\uB2D8"
+    leaderId: Or_L
+    unitClass: 2
+    attack: 2
+    hp: 3
+    effectId: 
+    eventId: 
+  - cardId: Or_R
+    name: "\uADE4 \uB098\uBB34"
+    leaderId: Or_L
+    unitClass: 1
+    attack: 1
+    hp: 1
+    effectId: 
+    eventId: 
+  - cardId: Or_P
+    name: "\uADE4 \uC694\uC815"
+    leaderId: Or_L
+    unitClass: 0
+    attack: 1
+    hp: 1
+    effectId: PawnGeneric
+    eventId: 
+  - cardId: Cl_L
+    name: "\uC0E4\uB97C\uB85C\uD14C"
+    leaderId: Cl_L
+    unitClass: 4
+    attack: 3
+    hp: 10
+    effectId: 
+    eventId: 
+  - cardId: Cl_B
+    name: "\uBC14\uC774\uC62C\uB81B"
+    leaderId: Cl_L
+    unitClass: 3
+    attack: 2
+    hp: 3
+    effectId: 
+    eventId: Cl_Blitz
+  - cardId: Cl_N
+    name: "\uC544\uC774\uB9B0"
+    leaderId: Cl_L
+    unitClass: 2
+    attack: 2
+    hp: 3
+    effectId: 
+    eventId: 
+  - cardId: Cl_R
+    name: "\uB9B4\uB9AC\uC544"
+    leaderId: Cl_L
+    unitClass: 1
+    attack: 1
+    hp: 3
+    effectId: 
+    eventId: Cl_Blitz
+  - cardId: Cl_P
+    name: "\uBBF8\uC2A4\uD2F0\uC544"
+    leaderId: Cl_L
+    unitClass: 0
+    attack: 1
+    hp: 1
+    effectId: PawnGeneric
+    eventId: 
+  - cardId: Me_L
+    name: "\uBA5C\uB85C\uB9AC"
+    leaderId: Me_L
+    unitClass: 4
+    attack: 2
+    hp: 8
+    effectId: 
+    eventId: 
+  - cardId: Me_B
+    name: "\uC778\uD399\uC2E4\uB9AC\uC544"
+    leaderId: Me_L
+    unitClass: 3
+    attack: 1
+    hp: 3
+    effectId: 
+    eventId: 
+  - cardId: Me_N
+    name: "\uD558\uC774\uC7AC\uD0A4"
+    leaderId: Me_L
+    unitClass: 2
+    attack: 2
+    hp: 3
+    effectId: 
+    eventId: 
+  - cardId: Me_R
+    name: "\uB514\uB3C4\uC2A4"
+    leaderId: Me_L
+    unitClass: 1
+    attack: 0
+    hp: 3
+    effectId: 
+    eventId: 
+  - cardId: Me_P
+    name: "\uC774\uBE0C"
+    leaderId: Me_L
+    unitClass: 0
+    attack: 1
+    hp: 1
+    effectId: PawnGeneric
+    eventId: 
+  - cardId: Tr_L
+    name: "\uD2B8\uB80C\uD2B8"
+    leaderId: Tr_L
+    unitClass: 4
+    attack: 2
+    hp: 7
+    effectId: 
+    eventId: 
+  - cardId: Tr_B
+    name: "\uD154\uB9AC\uC2DC\uC544"
+    leaderId: Tr_L
+    unitClass: 3
+    attack: 0
+    hp: 3
+    effectId: 
+    eventId: Tr_Hard
+  - cardId: Tr_N
+    name: "\uBCA1\uC2DC\uC544"
+    leaderId: Tr_L
+    unitClass: 2
+    attack: 2
+    hp: 3
+    effectId: 
+    eventId: 
+  - cardId: Tr_R
+    name: "\uCE74\uC774\uBC84"
+    leaderId: Tr_L
+    unitClass: 1
+    attack: 0
+    hp: 3
+    effectId: 
+    eventId: Tr_Hard
+  - cardId: Tr_P
+    name: "\uBAA8\uB2C8"
+    leaderId: Tr_L
+    unitClass: 0
+    attack: 1
+    hp: 1
+    effectId: PawnGeneric
+    eventId: 
+  effects:
+  - effectId: PawnGeneric
+    name: "\uACF5\uACA9 \uC9C0\uB839"
+    text: "\uC120\uD0DD\uD55C \uC544\uAD70 \uC720\uB2DB\uC774 \uADF8 \uC720\uB2DB\uC758
+      \uC774\uB3D9 \uBC94\uC704 \uB0B4 \uC801\uC744 \uD558\uB098 \uC120\uD0DD\uD574
+      \uACF5\uACA9\uD569\uB2C8\uB2E4."
+  - effectId: Or_L
+    name: "\uC81C\uC655\uC758 \uC704\uC5C4"
+    text: "\uCE74\uB4DC\uB97C \uD55C \uC7A5 \uBF51\uC2B5\uB2C8\uB2E4. \uC544\uAD70
+      \uC720\uB2DB\uC744 \uC120\uD0DD\uD574 \uCCB4\uB825\uC744 1 \uD68C\uBCF5\uC2DC\uD0B5\uB2C8\uB2E4."
+  - effectId: Or_B
+    name: "\uCD9C\uADFC\uC774\uB2E4"
+    text: "\uC544\uAD70 \uB9AC\uB354\uB97C \uC774 \uC720\uB2DB\uC758 \uC774\uB3D9\uBC94\uC704
+      \uC548 \uC6D0\uD558\uB294 \uCE78\uC73C\uB85C \uC774\uB3D9\uC2DC\uD0B5\uB2C8\uB2E4."
+  - effectId: Or_N
+    name: "\uD48D\uCC28 \uB3CC\uACA9"
+    text: "\uC774\uB3D9\uBC94\uC704 \uB0B4 \uC801\uC744 \uD558\uB098 \uC120\uD0DD\uD574
+      \uACF5\uACA9\uD569\uB2C8\uB2E4. \uC801 \uC720\uB2DB\uC774 \uC774 \uACF5\uACA9\uC73C\uB85C
+      \uD30C\uAD34\uB418\uC5C8\uB2E4\uBA74 \uC774\uB3D9\uBC94\uC704 \uB0B4 \uBAA8\uB4E0
+      \uC801\uC744 \uACF5\uACA9\uD569\uB2C8\uB2E4."
+  - effectId: Or_R
+    name: "\uBFCC\uB9AC \uBC15\uAE30"
+    text: "\uC774 \uC720\uB2DB\uC774 \uC774\uBC88 \uD134 \uAE30\uBCF8 \uC774\uB3D9\uC744
+      \uC218\uD589\uD558\uC9C0 \uC54A\uC558\uB2E4\uBA74, \uC774\uB3D9\uBC94\uC704
+      \uB0B4 \uC120\uD0DD\uB41C \uC801 \uD558\uB098\uC640 \uC774 \uC720\uB2DB\uC740
+      \uB2E4\uC74C \uC0C1\uB300 \uD134 \uC885\uB8CC\uAE4C\uC9C0 \uAE30\uBCF8 \uC774\uB3D9\uC744
+      \uC218\uD589\uD560 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4."
+  - effectId: Cl_L
+    name: "\uC11C\uB9AC \uC601\uC5ED"
+    text: "\uCE74\uB4DC\uB97C \uD55C \uC7A5 \uBF51\uC2B5\uB2C8\uB2E4. \uC774\uB3D9\uBC94\uC704
+      \uB0B4 \uC544\uAD70\uC744 \uD558\uB098 \uC120\uD0DD\uD574 \uCCB4\uB825\uC744
+      3 \uD68C\uBCF5\uC2DC\uD0B5\uB2C8\uB2E4."
+  - effectId: Cl_B
+    name: "\uB77C\uC774\uD2B8\uB2DD \uCCB4\uC778"
+    text: "\uC774\uB3D9\uBC94\uC704 \uC548\uC5D0 \uC720\uB2DB\uC774 3\uAE30 \uC774\uC0C1
+      \uC874\uC7AC\uD55C\uB2E4\uBA74 \uD134 \uC885\uB8CC\uC2DC\uAE4C\uC9C0 \uACF5\uACA9\uB825\uC744
+      +1 \uC5BB\uC2B5\uB2C8\uB2E4. \uC774\uB3D9\uBC94\uC704 \uB0B4 \uC801\uC744 \uBAA8\uB450
+      \uACF5\uACA9\uD569\uB2C8\uB2E4."
+  - effectId: Cl_N
+    name: "\uC5BC\uC74C \uCE7C\uB0A0"
+    text: "\uC774\uB3D9\uBC94\uC704 \uB0B4 \uC801\uC744 \uD558\uB098 \uC120\uD0DD\uD574
+      \uACF5\uACA9\uD569\uB2C8\uB2E4. \uACF5\uACA9\uBC1B\uC740 \uC801\uC740 \uB2E4\uC74C
+      \uD134 \uB05D\uAE4C\uC9C0 \uACF5\uACA9\uB825 -3\uC744 \uC5BB\uC2B5\uB2C8\uB2E4."
+  - effectId: Cl_R
+    name: "\uBC88\uAC1C \uB3CC\uACA9"
+    text: "\uC774\uB3D9\uBC94\uC704 \uB0B4 \uC801\uC744 \uD558\uB098 \uC120\uD0DD\uD574
+      \uACF5\uACA9\uD569\uB2C8\uB2E4. \uC120\uD0DD\uD55C \uC801 \uBC29\uD5A5\uC73C\uB85C
+      \uD55C \uCE78 \uC774\uB3D9\uD569\uB2C8\uB2E4. \uC774\uB3D9\uD560 \uC218 \uC5C6\uC5C8\uB2E4\uBA74,
+      \uC120\uD0DD\uD55C \uC801\uC744 \uB2E4\uC2DC \uACF5\uACA9\uD569\uB2C8\uB2E4."
+  - effectId: Me_L
+    name: "\uC5F0\uC0B0\uB825 \uD761\uC218"
+    text: "\uAC10\uC5FC\uB41C \uC801\uC758 \uC218 + 1\uB9CC\uD07C \uC774 \uC720\uB2DB\uC758
+      \uCCB4\uB825\uC744 \uD68C\uBCF5\uD569\uB2C8\uB2E4. \uCE74\uB4DC\uB97C \uD55C
+      \uC7A5 \uBF51\uC2B5\uB2C8\uB2E4."
+  - effectId: Me_B
+    name: "\uAC10\uC5FC \uC804\uD30C"
+    text: "\uC774\uB3D9\uBC94\uC704 \uB0B4 \uC801\uC744 \uD558\uB098 \uC120\uD0DD\uD574
+      \uACF5\uACA9\uD569\uB2C8\uB2E4. \uADF8 \uC720\uB2DB\uC5D0 \uC0C1\uD558\uC88C\uC6B0\uB85C
+      \uC778\uC811\uD55C \uC801\uC774 1\uD134 \uAC10\uC5FC\uB429\uB2C8\uB2E4."
+  - effectId: Me_N
+    name: "\uB0A9\uCE58"
+    text: "\uC774\uB3D9\uBC94\uC704 \uB0B4 \uC720\uB2DB\uC744 \uD558\uB098 \uC120\uD0DD\uD574
+      \uC774 \uC720\uB2DB\uACFC \uC704\uCE58\uB97C \uC11C\uB85C \uBCC0\uACBD\uD569\uB2C8\uB2E4.
+      \uADF8 \uC720\uB2DB\uC774 \uC801\uC774\uB77C\uBA74 1\uD134 \uAC10\uC5FC\uB429\uB2C8\uB2E4."
+  - effectId: Me_R
+    name: "\uACFC\uBD80\uD558 \uACF5\uACA9"
+    text: "\uC801\uC744 \uD558\uB098 \uC120\uD0DD\uD569\uB2C8\uB2E4. \uADF8 \uC801\uC5D0\uAC8C
+      \uAC10\uC5FC\uB41C \uC801\uC758 \uC218\uB9CC\uD07C \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
+  - effectId: Tr_L
+    name: "\uC5F0\uC0B0\uB825 \uC9C0\uC6D0"
+    text: "\uAE30\uBCF8\uC774\uB3D9 \uD69F\uC218\uB97C \uBAA8\uB450 \uC18C\uBAA8\uD55C
+      \uC544\uAD70 \uC720\uB2DB \uD558\uB098\uB97C \uC120\uD0DD\uD574, \uD134 \uC885\uB8CC
+      \uC2DC\uAE4C\uC9C0 \uACF5\uACA9\uB825\uC744 +2 \uBD80\uC5EC\uD569\uB2C8\uB2E4.
+      \uCE74\uB4DC\uB97C \uD55C \uC7A5 \uBF51\uC2B5\uB2C8\uB2E4."
+  - effectId: Tr_B
+    name: "\uBE68\uB9AC\uBE68\uB9AC!"
+    text: "\uC544\uAD70 \uC720\uB2DB\uC744 \uD558\uB098 \uC120\uD0DD\uD569\uB2C8\uB2E4.
+      \uADF8 \uC720\uB2DB\uC774 \uC0C1\uB300\uD3B8 \uBC29\uD5A5\uC73C\uB85C \uD55C
+      \uCE78 \uC774\uB3D9\uD569\uB2C8\uB2E4."
+  - effectId: Tr_N
+    name: "\uD30C\uC77C \uACA9\uB9AC"
+    text: "\uB9AC\uB354\uAC00 \uC544\uB2CC \uB2E4\uB978 \uC544\uAD70 \uC720\uB2DB
+      \uD558\uB098\uB97C \uC120\uD0DD\uD569\uB2C8\uB2E4. \uADF8 \uC720\uB2DB\uC744
+      \uD30C\uAD34\uD558\uACE0 \uD574\uB2F9 \uCE74\uB4DC\uB97C \uC190\uC73C\uB85C
+      \uAC00\uC838\uC635\uB2C8\uB2E4.(\uC5B4\uB514\uC5D0 \uC788\uB4E0)"
+  - effectId: Tr_R
+    name: "\uC554\uD638 \uBC29\uBCBD"
+    text: "\uC774\uB3D9 \uBC94\uC704 \uB0B4 \uC801\uC744 \uD558\uB098 \uC120\uD0DD\uD569\uB2C8\uB2E4.
+      \uC774 \uC720\uB2DB\uC774 \uAE30\uBCF8\uC774\uB3D9 \uD69F\uC218\uB97C \uBAA8\uB450
+      \uC18C\uBAA8\uD588\uB2E4\uBA74, \uADF8 \uC720\uB2DB\uC740 \uB2E4\uC74C \uD134
+      \uB3D9\uC548 \uC774\uB3D9\uD560 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4."
+  events:
+  - eventId: Or_L
+    name: "\uADE4 \uBA39\uAE30"
+    timing: "\uD134 \uC885\uB8CC"
+    text: "\uC790\uC2E0 \uCCB4\uB825\uC744 1 \uD68C\uBCF5\uD569\uB2C8\uB2E4."
+  - eventId: Or_B
+    name: "\uB9DD\uC0C1 \uAC15\uD654"
+    timing: "\uD30C\uAD34 \uC2DC"
+    text: "\uB0B4 \uB9AC\uB354\uC758 \uCCB4\uB825\uC744 2 \uD68C\uBCF5\uD569\uB2C8\uB2E4."
+  - eventId: Or_N
+    name: "\uACE0\uADC0\uD55C \uD76C\uC0DD"
+    timing: "\uD30C\uAD34 \uC2DC"
+    text: "\uC774\uB3D9\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801 \uC720\uB2DB\uC5D0\uAC8C
+      \uD53C\uD574\uB97C 2 \uC90D\uB2C8\uB2E4."
+  - eventId: Or_R
+    name: "\uADE4 \uBC1C\uC0AC"
+    timing: "\uD134 \uC885\uB8CC"
+    text: "\uC774 \uC720\uB2DB\uC774 \uC774\uB3D9\uBC94\uC704 \uB0B4 \uC801\uC744
+      \uBAA8\uB450 \uACF5\uACA9\uD569\uB2C8\uB2E4"
+  - eventId: Or_P
+    name: "\uADE4 \uC694\uC815"
+    timing: "\uD134 \uC2DC\uC791"
+    text: "\uC774 \uC720\uB2DB\uC774 \uC0C1\uB300\uD3B8 \uC601\uC5ED\uC5D0 \uC788\uB2E4\uBA74
+      \uCE74\uB4DC\uB97C \uD55C \uC7A5 \uBF51\uC2B5\uB2C8\uB2E4."
+  - eventId: Cl_L
+    name: Eisprinzessin
+    timing: "\uD134 \uC2DC\uC791"
+    text: "\uC774\uB3D9\uBC94\uC704 \uC548\uC5D0 \uC544\uAD70 \uB098\uC774\uD2B8\uAC00
+      \uC788\uC73C\uBA74 \uC790\uC2E0 \uCCB4\uB825\uC744 2 \uD68C\uBCF5\uD569\uB2C8\uB2E4."
+  - eventId: Cl_N
+    name: Eisritterin
+    timing: "\uD134 \uC2DC\uC791"
+    text: "\uC774 \uC720\uB2DB\uC774 \uC544\uAD70 \uB9AC\uB354\uC758 \uC774\uB3D9\uBC94\uC704
+      \uC548\uC5D0 \uC788\uC73C\uBA74 \uC774\uBC88 \uD134 \uB05D\uAE4C\uC9C0 \uACF5\uACA9\uB825
+      +1\uC744 \uC5BB\uC2B5\uB2C8\uB2E4."
+  - eventId: Cl_P
+    name: Mistiltein
+    timing: "\uD134 \uC885\uB8CC"
+    text: "\uC774 \uC720\uB2DB\uC774 \uC0C1\uB300\uD3B8 \uC601\uC5ED\uC5D0 \uC788\uB2E4\uBA74
+      \uC801 \uC720\uB2DB \uBAA8\uB450\uC5D0\uAC8C 2\uB370\uBBF8\uC9C0\uB97C \uC8FC\uACE0
+      \uC774 \uC720\uB2DB\uC744 \uD30C\uAD34\uD569\uB2C8\uB2E4."
+  - eventId: Cl_Blitz
+    name: Blitzschwert
+    timing: "\uD134 \uC2DC\uC791"
+    text: "\uC774\uB3D9\uBC94\uC704 \uC548\uC5D0 \uC544\uAD70 \uAD70\uC8FC\uAC00
+      \uC788\uC73C\uBA74 \uC774\uBC88 \uD134 \uB05D\uAE4C\uC9C0 \uACF5\uACA9\uB825
+      +1\uC744 \uC5BB\uC2B5\uB2C8\uB2E4."
+  - eventId: Me_L
+    name: "\uC9C0\uBC30\uC758 \uBAA9\uC18C\uB9AC"
+    timing: "\uD134 \uC885\uB8CC"
+    text: "\uAC10\uC5FC\uB41C \uBAA8\uB4E0 \uC801 \uC720\uB2DB\uC5D0\uAC8C \uD53C\uD574\uB97C
+      1\uB9CC\uD07C \uC90D\uB2C8\uB2E4."
+  - eventId: Me_B
+    name: "\uAC10\uC5FC\uC758 \uC6D0\uCC9C"
+    timing: "\uC0C1\uC2DC"
+    text: "\uC774 \uC720\uB2DB\uC5D0\uAC8C \uACF5\uACA9\uBC1B\uC740 \uC801\uC740
+      1\uD134 \uAC10\uC5FC\uB429\uB2C8\uB2E4."
+  - eventId: Me_N
+    name: "\uB3C4\uB451\uC9C8"
+    timing: "\uD134 \uC2DC\uC791"
+    text: "\uC774 \uC720\uB2DB\uC758 \uC774\uB3D9 \uBC94\uC704 \uB0B4 \uAC10\uC5FC\uB41C
+      \uC801\uC774 \uC788\uB2E4\uBA74 \uCE74\uB4DC\uB97C \uBF51\uC2B5\uB2C8\uB2E4."
+  - eventId: Me_R
+    name: "\uC219\uC8FC \uD544\uC694"
+    timing: "\uD134 \uC885\uB8CC"
+    text: "\uC774\uB3D9 \uBC94\uC704 \uB0B4\uC5D0 \uAC10\uC5FC\uB41C \uC801\uC774
+      \uC5C6\uC73C\uBA74, \uD53C\uD574\uB97C 1 \uBC1B\uC2B5\uB2C8\uB2E4."
+  - eventId: Me_P
+    name: "\uC815\uBCF4 \uB3C4\uCCAD"
+    timing: "\uD134 \uC885\uB8CC"
+    text: "\uC774 \uC720\uB2DB\uC774 \uC0C1\uB300\uD3B8 \uC601\uC5ED\uC5D0 \uC788\uB2E4\uBA74,
+      \uBAA8\uB4E0 \uC0C1\uB300 \uC720\uB2DB\uC744 2\uD134 \uAC10\uC5FC\uC2DC\uD0A4\uACE0
+      \uC774 \uC720\uB2DB\uC744 \uD30C\uAD34\uD569\uB2C8\uB2E4."
+  - eventId: Tr_L
+    name: "\uC704\uCE58 \uC0AC\uC218"
+    timing: "\uD134 \uC885\uB8CC"
+    text: "\uC544\uC9C1 \uC774\uB3D9 \uAC00\uB2A5\uD55C \uBAA8\uB4E0 \uC720\uB2DB\uC758
+      \uCCB4\uB825\uC744 2 \uD68C\uBCF5\uC2DC\uD0B5\uB2C8\uB2E4."
+  - eventId: Tr_N
+    name: "\uB530\uB054!"
+    timing: "\uD134 \uC885\uB8CC"
+    text: "\uC774 \uC720\uB2DB\uC774 \uC774\uB3D9\uD560 \uC218 \uC788\uB294 \uC0C1\uD0DC\uB77C\uBA74,
+      \uC774\uB3D9 \uBC94\uC704 \uB0B4 \uC801\uC744 \uBAA8\uB450 \uACF5\uACA9\uD569\uB2C8\uB2E4."
+  - eventId: Tr_P
+    name: "\uD750\uB984 \uAD00\uC81C"
+    timing: "\uD134 \uC2DC\uC791"
+    text: "\uC774 \uC720\uB2DB\uC774 \uC0C1\uB300\uD3B8 \uC601\uC5ED\uC5D0 \uC788\uB2E4\uBA74,
+      \uBAA8\uB4E0 \uC544\uAD70\uC774 \uC774\uBC88 \uD134\uC5D0 \uD55C \uBC88 \uB354
+      \uC774\uB3D9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."
+  - eventId: Tr_Hard
+    name: "\uB2E8\uB2E8\uD55C \uBCF4\uC548"
+    timing: "\uC0C1\uC2DC"
+    text: "\uC774 \uC720\uB2DB\uC774 \uC774\uB3D9\uD560 \uC218 \uC788\uB294 \uC0C1\uD0DC\uB77C\uBA74,
+      \uACF5\uACA9\uB825\uC744 3 \uC5BB\uC2B5\uB2C8\uB2E4."
