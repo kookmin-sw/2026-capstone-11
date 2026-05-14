@@ -272,38 +272,9 @@ public class DedicateModeStarter : MonoBehaviour
     
     public void OnClickStartDedicateFast()
     {
-        if (!IPAddress.TryParse(ip, out var ipAddr))
-        {
-            Debug.Log("Wrong IPAddress Input!");
-            return;
-        }
-
-        if (!int.TryParse(port, out var portNum) || portNum < 0)
-        {
-            Debug.Log("Wrong PortNum Input!");
-            return;
-        }
-
-        if (!PlayFabAccountManager.Instance.IsLoggedIn)
-        {
-            Debug.Log("No Playfab LogIn.");
-            string pcID = SystemInfo.deviceUniqueIdentifier;
-            GameInitParam.Instance.Player1Name = "Jimmy, The Mind of PlaceHolder" + pcID;
-        }
-        else GameInitParam.Instance.Player1Name = PlayFabAccountManager.Instance.InGameDisplayName;
-
         deck = decks[PlayerPrefs.GetInt("SelectedDeckIndex", 0)].deckId;
 
-        if (deck == "Or") GameInitParam.Instance.Player1Deck = "[\"Or_L\", \"Or_B\", \"Or_R\", \"Or_N\", \"Or_P\", \"Or_P\", \"Or_P\"]";
-        else GameInitParam.Instance.Player1Deck = "[\"Cl_L\", \"Cl_B\", \"Cl_R\", \"Cl_N\", \"Cl_P\", \"Cl_P\", \"Cl_P\"]";
-
-        GameInitParam.Instance.IpAddr = ipAddr.ToString();
-        GameInitParam.Instance.PortNum = portNum;
-
-        NetworkManagerUnity.Instance.Init();
-
-        _gameLoadCoroutine = StartCoroutine(GameLoadCoroutine());
-        _gameLoadTimeoutCoroutine = StartCoroutine(GameLoadTimeoutCoroutine());
+        StartDedicateMode(ip, int.Parse(port), deck);
     }
 
     public void SetDeck(string deckId)
