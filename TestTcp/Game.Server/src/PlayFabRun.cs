@@ -1,3 +1,4 @@
+using Game.Network;
 using Microsoft.Playfab.Gaming.GSDK.CSharp;
 
 namespace Game.Server
@@ -36,7 +37,7 @@ namespace Game.Server
             if (config != null && config.TryGetValue(PortKey, out var raw) && int.TryParse(raw, out var port))
                 GamePort = port;
             else
-                GameserverSDK.LogMessage("Set fallbackPort");
+                Log.WriteLog("Set fallbackPort");
                 GamePort = fallbackPort;
         }
 

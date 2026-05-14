@@ -21,17 +21,20 @@ namespace Game.Server
         public const int ServerKillTimer = 30000;
         static async Task Main()
         {
-            Log.SetLogger(GameserverSDK.LogMessage);
+        
 
             var cts = new CancellationTokenSource();
 
             bool localMode = Environment.GetEnvironmentVariable("LOCAL_DEV") == "1";
 
-            GameserverSDK.LogMessage("Before server.Start()");    
+            if (localMode) Log.SetLogger(Console.WriteLine); 
+            else Log.SetLogger(GameserverSDK.LogMessage);
+
+            Log.WriteLog("Before server.Start()");    
 
             var PlayfabRunner = new PlayfabRun(cts, 9000, localMode);
 
-            GameserverSDK.LogMessage("After server.Start()");
+            Log.WriteLog("After server.Start()");
 
             // Initalization
             var server = NetworkManager.CreateNetworkManager(PlayfabRunner.GamePort, 10);
@@ -58,7 +61,7 @@ namespace Game.Server
             Session session = new(server);
             ChessGame game = new(session);
 
-            GameserverSDK.LogMessage("Before ReadyForPlayers()");
+            Log.WriteLog("Before ReadyForPlayers()");
             // Check Ready
             if (!PlayfabRunner.ReadyForPlayers())
             {
@@ -96,7 +99,7 @@ namespace Game.Server
                 long delta = 0;
                 int kill_timer = 0;
 
-                Console.WriteLine("Server Running");
+                Log.WriteLog("Server Running");
 
                 while (!cts.IsCancellationRequested)
                 {
@@ -130,7 +133,7 @@ namespace Game.Server
             finally
             {
                 await server.StopAsync();
-                Console.WriteLine("Server stopped.");
+                Log.WriteLog("Server stopped.");
             }
         }
     }
