@@ -10,7 +10,16 @@ namespace Game.Network.Service
 
     public interface IRequestHandler<TMessage, TResult>
     {
-        TResult Handle(ConnId connId, TMessage msg);
+        TResult? Handle(ConnId connId, TMessage msg);
     }
+
+
+
+
+
+
+
+
+
 
 }

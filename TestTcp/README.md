@@ -13,9 +13,20 @@ dotnet run --project ./Game.Server/Game.Server.csproj
 ```
 
 ## 서버 빌드
+
+#### 로컬 빌드
+
+```shell
+LOCAL_DEV=1 dotnet run --project Game.Server/Game.Server.csproj
 ```
-dotnet build ./Game.Server/Game.Server.csproj -c Debug
+
+#### PlayFab 배포
+
+```shell
+dotnet publish Game.Server/Game.Server.csproj -r win-x64 --self-contained true -c Release
+
 ```
+
 
 ## 네트워크 DLL 빌드 및 Unity 적용
 ```

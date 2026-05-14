@@ -3,84 +3,70 @@ using Game.Network.Protocol;
 
 namespace Game.Network.Service
 {
-    public class PeerEntranceRequestCodec : IPacketCodec<PeerEntranceReq>
+    public class PeerEnterReqCodec : IPacketCodec<PeerEnterReq>
     {
-        public int GetSize(PeerEntranceReq value)
+        public int GetSize(PeerEnterReq value)
         {
             return ConnInfo.Codec.GetSize(value.Info);
         }
 
-        public void Write(ref PacketWriter writer, PeerEntranceReq value)
+        public void Write(ref PacketWriter writer, PeerEnterReq value)
             => ConnInfo.Codec.Write(ref writer, value.Info);
 
-        public PeerEntranceReq Read(ref PacketReader reader) 
-            => new PeerEntranceReq(ConnInfo.Codec.Read(ref reader));
+        public PeerEnterReq Read(ref PacketReader reader)
+            => new PeerEnterReq(ConnInfo.Codec.Read(ref reader));
+    }
+
+    public class PeerEnterReqMeta : IPacketMeta<PeerEnterReq>
+    {
+        public int Id => PacketId.Constant.PeerEnterReq;
     }
 
 
-    public class PeerEntranceReq
+    public class PeerEnterReq
     {
-        public static PeerEntranceRequestCodec Codec = new();
+        public static IPacketCodec<PeerEnterReq> Codec = new PeerEnterReqCodec();
+        public static IPacketMeta<PeerEnterReq> Meta = new PeerEnterReqMeta();
+
         public readonly ConnInfo Info;
-        public PeerEntranceReq(ConnInfo info)
+        public PeerEnterReq(ConnInfo info)
         {
             Info = info;
         }
     }
 
-
-    public class PeerEntranceResponseCodec : IPacketCodec<PeerEntranceRsp>
+    public class PeerEnterRsp
     {
-        public int GetSize(PeerEntranceRsp value)
+        public static IPacketCodec<PeerEnterRsp> Codec = new PeerEnterRspCodec();
+        public static IPacketMeta<PeerEnterRsp> Meta = new PeerEnterRspMeta();
+
+        public ConnInfo RemotePeerInfo;
+        public PeerEnterRsp(ConnInfo connInfo)
         {
-            return 4 
-                    + 4 
-                    + Encoding.UTF8.GetByteCount(value.Msg) 
-                    + ConnInfo.Codec.GetSize(value.RemotePeerInfo); 
+            RemotePeerInfo = connInfo;
+        }
+    }
+
+    public class PeerEnterRspMeta : IPacketMeta<PeerEnterRsp>
+    {
+        public int Id => PacketId.Constant.PeerEnterRsp;
+    }
+
+    public class PeerEnterRspCodec : IPacketCodec<PeerEnterRsp>
+    {
+        public int GetSize(PeerEnterRsp value)
+        {
+            return ConnInfo.Codec.GetSize(value.RemotePeerInfo);
         }
 
-        public void Write(ref PacketWriter writer, PeerEntranceRsp value)
+        public void Write(ref PacketWriter writer, PeerEnterRsp value)
         {
-            writer.WriteInt32((int)value.result);
-            writer.WriteString(value.Msg);
             ConnInfo.Codec.Write(ref writer, value.RemotePeerInfo);
         }
-        public PeerEntranceRsp Read(ref PacketReader reader)
+        public PeerEnterRsp Read(ref PacketReader reader)
         {
-            var result = (PeerEntranceRsp.Result) reader.ReadInt32();
-            string msg = reader.ReadString();
-            ConnInfo info = ConnInfo.Codec.Read(ref reader);
-            return new PeerEntranceRsp(result, info, msg);
+            return new PeerEnterRsp(ConnInfo.Codec.Read(ref reader));
         }
     };
-
-    public class PeerEntranceRsp
-    {
-        public static PeerEntranceResponseCodec Codec = new();
-        public enum Result : int
-        {
-            Fail,
-            Succ 
-        }
-
-        public Result result;
-        public string Msg;
-        public ConnInfo RemotePeerInfo;
-        public PeerEntranceRsp(bool isSucc, ConnInfo connInfo, string msg = "")
-        {
-            result = (isSucc) ? Result.Succ : Result.Fail;
-            Msg = msg;
-            RemotePeerInfo = connInfo;
-        }
-        public PeerEntranceRsp(Result r, ConnInfo connInfo, string msg = "")
-        {
-            result = r;
-            Msg= msg;
-            RemotePeerInfo = connInfo;
-        }
-
-        public bool IsSucc => result == Result.Succ;
-    }
-    
 
 }

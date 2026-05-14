@@ -22,7 +22,8 @@ namespace Game.Client
                 HelloTimeOutMs: 3000,
                 PingIntervalMs: 3000,
                 PingTimeOutMs: 2500,
-                PingFailCountToDisconnect: 2
+                SuspendTimeOutThres: 5000,
+                DisconnectTimeOutThres: 10000
             );
 
             var client = new ClientService(server, 
@@ -53,53 +54,27 @@ namespace Game.Client
                     }
                     else if (line != null && line.Trim().Equals("p", StringComparison.OrdinalIgnoreCase))
                     {
-                        client.PeerEnter.Request(
+                        client.RequestPeerEnter(
                         (rsp) =>
                         {
-                            if(rsp.IsSucc)
-                            {
-                                Console.WriteLine("Succ");
-                                Console.WriteLine(rsp.RemotePeerInfo.PlatformName);
-                                Console.WriteLine(rsp.RemotePeerInfo.AccountId);
-                                Console.WriteLine(rsp.RemotePeerInfo.AppVersion);
-                            }
-                            else
-                            {
-                                Console.WriteLine(rsp.Msg);
-                            }
+
+                            Console.WriteLine("Succ");
+                            Console.WriteLine(rsp.RemotePeerInfo.PlatformName);
+                            Console.WriteLine(rsp.RemotePeerInfo.AccountId);
+                            Console.WriteLine(rsp.RemotePeerInfo.AppVersion);
 
                         },
                         (error) =>
                         {
                             Console.WriteLine($"Failed. Messge {error}");
 
-                        }
+                        },
+                        10000
                         );
                     }
                     else if (line != null && line.Trim().Equals("g", StringComparison.OrdinalIgnoreCase))
                     {
-                        client.Session.Request(
-                            new SessionReq(SessionReqType.ReqEnter, new SessionId(99), SessionPlayerId.Default),
-                        (rsp) =>
-                        {
-                            if(rsp.type == SessionRspType.Accepted)
-                            {
-                                Console.WriteLine("Succ");
-                                Console.WriteLine(rsp.sessionId);
-                                Console.WriteLine(rsp.playerId);
-                            }
-                            else
-                            {
-                                Console.WriteLine("Rejected");
-                            }
-
-                        },
-                        (error) =>
-                        {
-                            Console.WriteLine($"Failed. Messge {error}");
-
-                        }
-                        );
+                        
                     }
                 }
             });

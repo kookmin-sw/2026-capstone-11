@@ -18,6 +18,11 @@ namespace Game.Network
             public const int GameReady = 11;
             public const int GameDataRegister = 12;
             public const int ObserverEnter = 13;
+
+
+
+            public const int RequestReceiver = 14;
+            public const int RespondReceiver = 15;
         }
 
     }

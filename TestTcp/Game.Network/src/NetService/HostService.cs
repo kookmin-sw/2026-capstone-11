@@ -23,7 +23,7 @@ namespace Game.Network.Service
             _manager = new(net, sessionBuilder, port, selfConnInfo, opt);
 
             _manager.AddModule<HostControlModule>();
-            _manager.AddModule<EnterResponseModule>();
+            _manager.AddModule<RequestReceiveModule>();
             _manager.AddModule<PingModule_V2>();
             _manager.AddModule<PongModule>();
             _manager.AddModule<SessionRspModule>();

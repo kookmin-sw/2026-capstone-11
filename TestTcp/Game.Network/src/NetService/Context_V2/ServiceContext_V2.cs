@@ -18,6 +18,7 @@ namespace Game.Network.Service
         public ServiceOption Opt { get; }
         public PeerDictionary Other { get; }
         public HostHolder Host { get; }
+        public DispatchMap Dispatcher {get;}
         //public SecurityKeyHolder Security {get;}
         public RunningGames Games { get; }
         public RoutingMap Router { get; }
@@ -34,6 +35,7 @@ namespace Game.Network.Service
             Self = new(selfConnInfo);
             Other = new();
             Host = new();
+            Dispatcher = new();
             Games = new(builder, port);
             Router = new();
             EventBridge = new();
@@ -43,11 +45,11 @@ namespace Game.Network.Service
         {
             var sb = new System.Text.StringBuilder();
             sb.AppendLine("[ServiceContext]");
-            sb.AppendLine($"  Host     : {(Host.HasHost ? Host.connId.ToString() : "None")}");
-            sb.AppendLine($"  Self     : {Self.connInfo.networkType} / {Self.connInfo.connectionType}");
-            sb.AppendLine($"  Peers    : {Other.ReadPeers().Count}");
-            sb.AppendLine($"  Sessions : {Games.ActiveSessionCount}");
-            sb.AppendLine($"  Routes   : {Router.RouteCount}");
+            sb.AppendLine($"  Host        : {(Host.HasHost ? Host.connId.ToString() : "None")}");
+            sb.AppendLine($"  Self        : {Self.connInfo.networkType} / {Self.connInfo.connectionType}");
+            sb.AppendLine($"  Peers       : {Other.PeerReaderList().Count}");
+            sb.AppendLine($"  Sessions    : {Games.ActiveSessionCount}");
+            sb.AppendLine($"  Routes      : {Router.RouteCount}");
             return sb.ToString();
         }
     }
