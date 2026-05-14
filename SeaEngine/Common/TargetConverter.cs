@@ -9,7 +9,11 @@ public class TargetConverter : JsonConverter<EffectTarget>
 
     public override void WriteJson(JsonWriter writer, EffectTarget? value, JsonSerializer serializer)
     {
-        if (value == null) return;
+        if (value == null)
+        {
+            writer.WriteNull();
+            return;
+        };
         writer.WriteStartObject();
         switch (value.Type)
         {

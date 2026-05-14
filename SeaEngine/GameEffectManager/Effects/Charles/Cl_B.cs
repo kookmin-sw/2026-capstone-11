@@ -38,7 +38,6 @@ public class Cl_B : IEffect
         }
         foreach (var e in enemy)
         {
-            if (e == null) continue;
             CombatUtils.Attack(card, e, data);
         }
         

@@ -12,11 +12,12 @@ public class Cl_P : IEvent
     // 이 유닛을 파괴합니다.
     
     public string Id => "Cl_P";
-    public string Timing => "TurnStart";
+    public string Timing => "TurnEnd";
 
     public bool Apply(Uid source, GameData data)
     {
         var card = data.GetCardById(source);
+        if(data.ActivePlayer != card.Owner) return false;
         var enemyZone = card.Owner == data.Player1 ? 5 : 0;
         if (card.Unit.PosX == enemyZone)
         {

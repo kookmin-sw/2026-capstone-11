@@ -1,18 +1,26 @@
 namespace SeaEngine.GameDataManager.Components;
 
-public class Unit(Card card)
+public class Unit
 {
-    public readonly Card Card = card;
-
-    public int Atk = card.Data.Atk;
-    public int MaxHp = card.Data.Hp;
-    public int Hp = card.Data.Hp;
-
-    public bool IsPlaced = false; // 설치된 유닛인지
-    public bool IsMoved = false; // 이번 턴에 기본행동으로 움직였는지
-    
+    public Card Card = null!;
+    public int Atk;
+    public int MaxHp;
+    public int Hp;
+    public bool IsPlaced;
+    public bool IsMoved;
     public int PosX = -1;
     public int PosY = -1;
+    public readonly Dictionary<string, int> Buffs = new Dictionary<string, int>();
+
+    public Unit(Card card)
+    {
+        Card = card;
+        Atk = card.Data.Atk;
+        MaxHp = card.Data.Hp;
+        Hp = card.Data.Hp;
+    }
+
+    private Unit() { }
 
     public void Place(int x, int y)
     {
@@ -20,12 +28,12 @@ public class Unit(Card card)
         {
             throw new ArgumentOutOfRangeException($"Place Out of range({Card.Guid})");
         }
-        
-        Atk = card.Data.Atk;
-        MaxHp = card.Data.Hp;
-        Hp = card.Data.Hp;
+
+        Atk = Card.Data.Atk;
+        MaxHp = Card.Data.Hp;
+        Hp = Card.Data.Hp;
         Buffs.Clear();
-        
+
         IsPlaced = true;
         PosX = x;
         PosY = y;
@@ -49,8 +57,6 @@ public class Unit(Card card)
         Buffs.Clear();
     }
 
-    public readonly Dictionary<string, int> Buffs = new Dictionary<string, int>();
-    
     public void GiveBuff(string buff, int amount = 1)
     {
         Buffs.TryAdd(buff, 0);
@@ -60,5 +66,22 @@ public class Unit(Card card)
     public void RemoveBuff(string buff)
     {
         Buffs.Remove(buff);
+    }
+
+    public Unit Clone()
+    {
+        var unit = new Unit();
+        unit.Atk = Atk;
+        unit.MaxHp = MaxHp;
+        unit.Hp = Hp;
+        unit.IsPlaced = IsPlaced;
+        unit.IsMoved = IsMoved;
+        unit.PosX = PosX;
+        unit.PosY = PosY;
+        if (Buffs.Count > 0)
+            ((Dictionary<string, int>)unit.Buffs).EnsureCapacity(Buffs.Count);
+        foreach (var (key, value) in Buffs)
+            unit.Buffs[key] = value;
+        return unit;
     }
 }
