@@ -221,7 +221,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 63808211}
-  - component: {fileID: 63808210}
+  - component: {fileID: 63808212}
   m_Layer: 0
   m_Name: PlayFabMatchManager
   m_TagString: Untagged
@@ -229,18 +229,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &63808210
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 63808209}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 57b6f6f3b669547f1a563e8e00ab43eb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayFabMatchManager
 --- !u!4 &63808211
 Transform:
   m_ObjectHideFlags: 0
@@ -256,6 +244,25 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &63808212
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 63808209}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f7e2c2edb5bb10fb86dac52005c008d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayFabMatchManager
+  _matchQueueName: TestMatchQueue
+  _giveUpTime: 60
+  _ticketPollingTime: 6
+  _gamePortName: game_port
+  _regionName: KoreaCentral
+  _dummyLatencyMs: 50
+  _dedicateModeStarter: {fileID: 304439361}
 --- !u!1 &82502908
 GameObject:
   m_ObjectHideFlags: 0
@@ -1072,6 +1079,8 @@ MonoBehaviour:
   IPaddrInputField: {fileID: 1591910930}
   PortNumInputField: {fileID: 1865270012}
   DeckInputField: {fileID: 140492234}
+  gameLoadTimeoutSec: 30
+  connectionTimeOutMs: 30000
   gameSceneName: Chess
   ip: 127.0.0.1
   port: 9000
@@ -1079,6 +1088,8 @@ MonoBehaviour:
   decks:
   - {fileID: 11400000, guid: 284572b3f468cc6aea95fe9a9027f258, type: 2}
   - {fileID: 11400000, guid: 67f3c7ec9c699423a9d9fb7e7a672ba4, type: 2}
+  - {fileID: 11400000, guid: ec464f6d5a5a7499fb41c2636c632695, type: 2}
+  - {fileID: 11400000, guid: 5e7cfaf4bb9b3cae8a5fe4a4704ec072, type: 2}
 --- !u!4 &304439362
 Transform:
   m_ObjectHideFlags: 0
@@ -2575,7 +2586,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 63808210}
+      - m_Target: {fileID: 63808212}
         m_TargetAssemblyTypeName: PlayFabMatchManager, Assembly-CSharp
         m_MethodName: OnCancelMatchMaking
         m_Mode: 1
@@ -3545,7 +3556,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 63808210}
+      - m_Target: {fileID: 63808212}
         m_TargetAssemblyTypeName: PlayFabMatchManager, Assembly-CSharp
         m_MethodName: OnMatchMakingRequest
         m_Mode: 1
@@ -8469,10 +8480,14 @@ MonoBehaviour:
   decks:
   - {fileID: 11400000, guid: 284572b3f468cc6aea95fe9a9027f258, type: 2}
   - {fileID: 11400000, guid: 67f3c7ec9c699423a9d9fb7e7a672ba4, type: 2}
+  - {fileID: 11400000, guid: ec464f6d5a5a7499fb41c2636c632695, type: 2}
+  - {fileID: 11400000, guid: 5e7cfaf4bb9b3cae8a5fe4a4704ec072, type: 2}
   cardDB: {fileID: 11400000, guid: 16289142255d240b182aa2a714fd4e2b, type: 2}
   leaderSprites:
   - {fileID: 3383679284579504793, guid: 88ee2bd2caa9dc5d385b2b2ad9c32989, type: 3}
   - {fileID: 6289068053135928818, guid: b4d840678c745116d86cf2956ea8f886, type: 3}
+  - {fileID: 5497369311495656864, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
+  - {fileID: -2298216017647605559, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
   cardSprites:
   - {fileID: -6659611600469109033, guid: 57aec9c9aac523c31a8c123c28819ddc, type: 3}
   - {fileID: 2293576223685294724, guid: 57aec9c9aac523c31a8c123c28819ddc, type: 3}
@@ -8484,6 +8499,16 @@ MonoBehaviour:
   - {fileID: 4960557203668177773, guid: e0c8d66b56144181682e9b5dbbde1a0d, type: 3}
   - {fileID: 8073168511331195592, guid: e0c8d66b56144181682e9b5dbbde1a0d, type: 3}
   - {fileID: -3196089721793587971, guid: e0c8d66b56144181682e9b5dbbde1a0d, type: 3}
+  - {fileID: -925894841434283855, guid: 6ba1894968af5d014a1479e1dfa7a1dc, type: 3}
+  - {fileID: 2684012008712979701, guid: 78182bb989bf51b2d8d92aa1dee092b9, type: 3}
+  - {fileID: -522880524942443664, guid: 24483099e2c5db62cb3a382830ce05c9, type: 3}
+  - {fileID: -4165005846052628502, guid: fc9275ae7cabc0e1c877dfb57d1ef0b5, type: 3}
+  - {fileID: 4659282931684007626, guid: f5a44f913693465d0baf16a4b073a415, type: 3}
+  - {fileID: -5828586627971378113, guid: 20b4342ccffb8269a850f48ecf2b4089, type: 3}
+  - {fileID: -979918018530933090, guid: 822a548056bf4e37281a713ce21e237e, type: 3}
+  - {fileID: 1134702184646006011, guid: 5a1e7c04e1163c399b3463301b2881eb, type: 3}
+  - {fileID: 6963268967340307601, guid: 6e805bf2042b1c0109a330b7d3db1b2d, type: 3}
+  - {fileID: -5779529634858215927, guid: e169da1c4a4dee94bab7278fed365028, type: 3}
   content: {fileID: 420639178}
   itemRoot: {fileID: 420639178}
   leaderItemPrefab: {fileID: 3927472619357504405, guid: a6840ff69b839df018d36e2c1185c2f0, type: 3}

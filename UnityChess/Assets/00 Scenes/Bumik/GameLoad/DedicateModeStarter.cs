@@ -78,9 +78,11 @@ public class DedicateModeStarter : MonoBehaviour
             return;
         }
 
-        string deckInput = DeckInputField != null ? DeckInputField.text.Trim() : string.Empty;
+        // string deckInput = DeckInputField != null ? DeckInputField.text.Trim() : string.Empty;
+        
+        deck = decks[PlayerPrefs.GetInt("SelectedDeckIndex", 0)].deckId;
 
-        StartDedicateMode(serverAddress, serverPort, deckInput);
+        StartDedicateMode(serverAddress, serverPort, deck);
     }
 
     private void StartDedicateMode(string hostAddress, int portNum, string deckInput)
@@ -115,18 +117,14 @@ public class DedicateModeStarter : MonoBehaviour
         }
     }
 
-    private void SetupPlayerDeck(string deckInput)
-    {
-        if (deckInput == "Or")
+    private void SetupPlayerDeck(string deckInput) {
+        GameInitParam.Instance.Player1Deck = deckInput switch
         {
-            GameInitParam.Instance.Player1Deck =
-                "[\"Or_L\", \"Or_B\", \"Or_R\", \"Or_N\", \"Or_P\", \"Or_P\", \"Or_P\"]";
-        }
-        else
-        {
-            GameInitParam.Instance.Player1Deck =
-                "[\"Cl_L\", \"Cl_B\", \"Cl_R\", \"Cl_N\", \"Cl_P\", \"Cl_P\", \"Cl_P\"]";
-        }
+            "Or" => "[\"Or_L\", \"Or_B\", \"Or_R\", \"Or_N\", \"Or_P\", \"Or_P\", \"Or_P\"]",
+            "Me" => "[\"Me_L\", \"Me_B\", \"Me_R\", \"Me_N\", \"Me_P\", \"Me_P\", \"Me_P\"]",
+            "Tr" => "[\"Tr_L\", \"Tr_B\", \"Tr_R\", \"Tr_N\", \"Tr_P\", \"Tr_P\", \"Tr_P\"]",
+            _ => "[\"Cl_L\", \"Cl_B\", \"Cl_R\", \"Cl_N\", \"Cl_P\", \"Cl_P\", \"Cl_P\"]",
+        };
     }
 
     private bool IsValidHost(string host)

@@ -131,7 +131,7 @@ MonoBehaviour:
     unitClass: 0
     attack: 1
     hp: 1
-    effectId: 
+    effectId: PawnGeneric
     eventId: 
   - cardId: Tr_L
     name: "\uD2B8\uB80C\uD2B8"
