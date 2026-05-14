@@ -159,7 +159,7 @@ public class DedicateModeStarter : MonoBehaviour
 
     private IEnumerator GameLoadTimeoutCoroutine()
     {
-        yield return new WaitForSecondsRealtime(gameLoadTimeout);
+        yield return new WaitForSecondsRealtime(gameLoadTimeoutSec);
 
         Debug.Log("GameLoad Timeout: 30초 초과로 로딩 중단");
         StopGameLoad();

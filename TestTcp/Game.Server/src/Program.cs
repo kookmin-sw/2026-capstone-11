@@ -18,7 +18,7 @@ namespace Game.Server
     class Program
     {
         public const int TickTime = 15;
-        public const int ServerKillTimer = 30000;
+        public const int ServerKillTimer = 60000;
         static async Task Main()
         {
         
@@ -39,6 +39,8 @@ namespace Game.Server
             // Initalization
             var server = NetworkManager.CreateNetworkManager(PlayfabRunner.GamePort, 10);
             server.Start();
+
+            Log.WriteLog($"Server Port : {PlayfabRunner.GamePort}");
 
             var opt = new ServiceOption(
                 MaxConnPerService: 2,
