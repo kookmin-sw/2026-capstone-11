@@ -35,18 +35,25 @@ namespace core.UI
     /// </summary>  
     public class ViewFactory : MonoBehaviour
     {
+        [Header("References")]
         [SerializeField]
         private ViewRegistry registry;
         [SerializeField]
         private ChessUIEventBus UIEventBus;
+
+        [Header("DB")]
         [SerializeField]
         private CardUnitDB cardDB;
+        [SerializeField]
+        private BuffDB buffDB;
 
+        [Header("Prefabs")]
         [SerializeField]
         private GameObject UnitBasePrefab;
         [SerializeField]
         private GameObject CardBasePrefab;
         
+        [Header("Sprites")]
         [SerializeField]
         private List<ViewSpriteEntry> SpriteEntries;
         [SerializeField]
@@ -142,7 +149,8 @@ namespace core.UI
                     cardId: unit.cardId,
                     curAttack: unit.curAttack,
                     curHP: unit.curHp,
-                    pos: unit.position
+                    pos: unit.position,
+                    buffs: ResolveBuffList(unit.buffs)
                 );
 
                 bool isMyUnit = state.LocalPlayerId == ownerId;
@@ -219,6 +227,18 @@ namespace core.UI
 
             // 아군 유닛을 흰색으로 하고, 상대 유닛을 검은색으로 설정
             unitView.classSprite.color = isMyUnit ? Color.white : Color.black;
+        }
+
+        private List<UnitViewData.BuffViewData> ResolveBuffList(List<EffectState> buffs)
+        {
+            var data = new List<UnitViewData.BuffViewData>();
+
+            foreach (var buff in buffs)
+            {
+                data.Add(new UnitViewData.BuffViewData(buffDB.Get(buff.id), buff.amount));
+            }
+
+            return data;
         }
 
         void Awake()

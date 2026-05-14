@@ -8161,6 +8161,7 @@ MonoBehaviour:
   registry: {fileID: 1306483363}
   UIEventBus: {fileID: 64190383}
   cardDB: {fileID: 11400000, guid: 16289142255d240b182aa2a714fd4e2b, type: 2}
+  buffDB: {fileID: 11400000, guid: f7b6bb9128accabaaa3ffdaad2959837, type: 2}
   UnitBasePrefab: {fileID: 20258329590332241, guid: b9476bac4c5cdb74793da4f0a77ea675, type: 3}
   CardBasePrefab: {fileID: 1487831780718665694, guid: 64516851b6b123f91a17c1f2035e5244, type: 3}
   SpriteEntries:

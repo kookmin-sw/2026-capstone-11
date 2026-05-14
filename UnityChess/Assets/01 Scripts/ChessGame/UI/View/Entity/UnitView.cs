@@ -7,6 +7,7 @@ using events.client;
 using Game.Network;
 using core.data;
 using ui.view.effect;
+using System.Collections.Generic;
 
 namespace ui.view.unit
 {
@@ -15,6 +16,18 @@ namespace ui.view.unit
     /// </summary>
     public class UnitViewData : BaseViewData
     {
+        public class BuffViewData
+        {
+            public BuffDefinition buff;
+            public int amount;
+
+            public BuffViewData(BuffDefinition def, int amount)
+            {
+                buff = def;
+                this.amount = amount;
+            }
+        }
+
         // 동적 상태
         public int curAttack;
         public int curHP;
@@ -22,12 +35,16 @@ namespace ui.view.unit
         // 보드 위에서의 위치
         public Vector2Int pos;
 
+        // 현재 적용중인 버프
+        public List<BuffViewData> buffs;
+
         public UnitViewData(ViewID id,
                             ViewType type,
                             string cardId,
                             int curAttack,
                             int curHP,
-                            Vector2Int pos
+                            Vector2Int pos,
+                            List<BuffViewData> buffs = null
                             ) : base(id, type)
         {
             this.cardId = cardId;
@@ -36,6 +53,8 @@ namespace ui.view.unit
             this.curHP = curHP;
 
             this.pos = pos;
+
+            this.buffs = buffs ?? new List<BuffViewData>();
         }
     }
 

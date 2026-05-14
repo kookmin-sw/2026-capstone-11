@@ -1,6 +1,9 @@
 using entity.targetable;
 using ui.view.unit;
 using core.data;
+using System.Collections.Generic;
+using Unity.VisualScripting;
+
 
 namespace ui.tooltip
 {
@@ -20,16 +23,6 @@ namespace ui.tooltip
                 $"공격력: {def.card.attack}    체력: {def.card.hp}"
             );
         }
-        
-        // 정보가 공개되지 않는 뒷면 상태인 상대 카드 툴팁
-        public static TooltipData OpponentCardTooltip()
-        {
-            return new TooltipData(
-                title: "???",
-                header: "[카드/클래스 : ???]",
-                description: "???"
-            );
-        }
 
         public static TooltipData UnitOnboardTooltip(CardDefinition def, UnitViewData data)
         {
@@ -37,7 +30,8 @@ namespace ui.tooltip
                 title: def.card.name,
                 header: $"[유닛/클래스 : {ResolveClass(def.card.unitClass)}]",
                 description: $"[{def.evt.timing}] {def.evt.name}: {def.evt.text}" + "\n\n" +
-                $"공격력: {def.card.attack}    체력: {data.curHP} / {def.card.hp}"
+                $"공격력: {def.card.attack}    체력: {data.curHP} / {def.card.hp}" + "\n\n" +
+                BuildBuffText(data.buffs)
             );
         }
 
@@ -50,5 +44,28 @@ namespace ui.tooltip
             UnitType.Pawn => "폰",
             _ => "???",
         };
+
+        private static string BuildBuffText(List<UnitViewData.BuffViewData> buffs)
+        {
+            if (buffs == null || buffs.Count == 0)
+                return string.Empty;
+            
+            string text = string.Empty;
+
+            foreach (var buff in buffs)
+            {
+                if (buff == null)
+                    continue;
+                
+                string colorHex = buff.buff.textColor.ToHexString();
+
+                string name = $"<color=#{colorHex}>[{buff.buff.name}]</color>: ";
+                string desc = $"{buff.buff.BuildDisplayDesc(buff.amount)}";
+
+                text += name + desc + "\n";
+            }
+
+            return text;
+        }
     }
 }
