@@ -26,21 +26,35 @@ namespace Game.Server
                 return;
             }
 
-            // Callbacks must be registered before Start()
             GameserverSDK.RegisterShutdownCallback(OnShutdown);
             GameserverSDK.RegisterHealthCallback(OnHealthCheck);
 
             GameserverSDK.Start();
 
-            // Port is assigned by the PlayFab agent at runtime
             var config = GameserverSDK.getConfigSettings();
-            if (config != null && config.TryGetValue(PortKey, out var raw) && int.TryParse(raw, out var port))
-                GamePort = port;
-            else
-                Log.WriteLog("Set fallbackPort");
-                GamePort = fallbackPort;
-        }
 
+            if (config != null &&
+                config.TryGetValue(PortKey, out var raw) &&
+                int.TryParse(raw, out var port))
+            {
+                GamePort = port;
+                Log.WriteLog($"MPS port resolved. PortKey={PortKey}, GamePort={GamePort}");
+            }
+            else
+            {
+                Log.WriteLog($"MPS port resolve failed. PortKey={PortKey}");
+
+                if (config != null)
+                {
+                    foreach (var kv in config)
+                    {
+                        Log.WriteLog($"GSDK Config: {kv.Key} = {kv.Value}");
+                    }
+                }
+
+                throw new Exception($"MPS port not found. PortKey={PortKey}");
+            }
+        }
         // Blocks until PlayFab allocates this server (Window/Standby).
         // Returns false → PlayFab will not allocate; server should shut down.
         public bool ReadyForPlayers() => _localMode || GameserverSDK.ReadyForPlayers();

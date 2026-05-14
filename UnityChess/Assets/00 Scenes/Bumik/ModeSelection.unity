@@ -717,8 +717,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayFabMatchManager
   _matchQueueName: TestMatchQueue
-  _giveUpTime: 60
-  _ticketPollingTime: 6
+  _giveUpTime: 300
+  _ticketPollingTime: 6.0072
   _gamePortName: game_port
   _regionName: KoreaCentral
   _dummyLatencyMs: 50
@@ -2164,7 +2164,7 @@ MonoBehaviour:
   IPaddrInputField: {fileID: 1591910930}
   PortNumInputField: {fileID: 1865270012}
   DeckInputField: {fileID: 140492234}
-  gameLoadTimeout: 60
+  gameLoadTimeoutSec: 60
   connectionTimeOutMs: 60000
   gameSceneName: Chess
 --- !u!4 &304439362
