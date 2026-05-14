@@ -1,4 +1,4 @@
-using UnityEditor.PackageManager;
+
 using UnityEngine;
 
 public class GameInitializer : MonoBehaviour

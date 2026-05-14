@@ -2164,6 +2164,8 @@ MonoBehaviour:
   IPaddrInputField: {fileID: 1591910930}
   PortNumInputField: {fileID: 1865270012}
   DeckInputField: {fileID: 140492234}
+  gameLoadTimeout: 30
+  connectionTimeOutMs: 30000
   gameSceneName: Chess
 --- !u!4 &304439362
 Transform:

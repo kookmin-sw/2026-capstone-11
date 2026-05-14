@@ -7,10 +7,10 @@ namespace Game.Server
     public class PlayfabRun
     {
         // Port name configured in the PlayFab build's port mapping.
-        private const string PortKey = "gamePort";
+        private const string PortKey = "game_port";
 
         private readonly CancellationTokenSource _cts;
-        private readonly bool _localMode;
+        public readonly bool _localMode;
 
         public int GamePort { get; }
 
@@ -36,6 +36,7 @@ namespace Game.Server
             if (config != null && config.TryGetValue(PortKey, out var raw) && int.TryParse(raw, out var port))
                 GamePort = port;
             else
+                GameserverSDK.LogMessage("Set fallbackPort");
                 GamePort = fallbackPort;
         }
 

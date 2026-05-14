@@ -21,6 +21,10 @@ public class DedicateModeStarter : MonoBehaviour
     [SerializeField] private TMP_InputField PortNumInputField;
     [SerializeField] private TMP_InputField DeckInputField;
 
+    [Header("Connectino Opt")]
+    [SerializeField] private float gameLoadTimeoutSec;
+    [SerializeField] private int connectionTimeOutMs;
+
     [Header("Game Scene Load")]
     [SerializeField] private string gameSceneName;
 
@@ -155,7 +159,7 @@ public class DedicateModeStarter : MonoBehaviour
 
     private IEnumerator GameLoadTimeoutCoroutine()
     {
-        yield return new WaitForSecondsRealtime(30f);
+        yield return new WaitForSecondsRealtime(gameLoadTimeout);
 
         Debug.Log("GameLoad Timeout: 30초 초과로 로딩 중단");
         StopGameLoad();
@@ -189,7 +193,7 @@ public class DedicateModeStarter : MonoBehaviour
         _ = NetworkManagerUnity.Instance.Net.ConnectTo(
             GameInitParam.Instance.IpAddr,
             GameInitParam.Instance.PortNum,
-            9999
+            connectionTimeOutMs
         );
 
         yield return wait;
