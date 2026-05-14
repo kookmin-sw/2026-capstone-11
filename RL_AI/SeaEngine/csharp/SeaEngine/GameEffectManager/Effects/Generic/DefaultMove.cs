@@ -20,7 +20,7 @@ public class DefaultMove : IEffect
     public void Apply(Uid source, EffectTarget target, GameData data)
     {
         var cur = data.Board.GetCardById(source);
-        cur.Unit.Move(target.PosX, target.PosY);
+        data.Board.MoveCard(cur, target.PosX, target.PosY);
         cur.Unit.IsMoved = true;
         
         data.TriggerEvent(cur.Data.EventId, "AfterMove", source);

@@ -14,9 +14,11 @@ from typing import Any, Dict, Optional, Sequence
 
 from RL_AI.SeaEngine.action_adapter import choose_action_with_agent
 from RL_AI.agents import (
+    SeaEngineBeliefMCTSAgent,
     SeaEngineGreedyAgent,
     SeaEngineRandomAgent,
     SeaEngineRLAgent,
+    infer_hidden_dim_from_state_dict,
     load_state_dict_flexible,
 )
 from RL_AI.SeaEngine.observation import STATE_VECTOR_DIM
@@ -213,13 +215,18 @@ def _load_rl_agent(*, model_path: str, device: str = "auto", seed: Optional[int]
     resolved_device = device
     if device == "auto":
         resolved_device = "cuda" if torch.cuda.is_available() else "cpu"
-    agent = SeaEngineRLAgent(seed=seed, device=resolved_device, sample_actions=False)
-    agent.ensure_model(state_dim=STATE_VECTOR_DIM)
-    assert agent.model is not None
     model_file = Path(model_path)
     if model_file.suffix.lower() == ".zip":
         model_file = _extract_zip_model(model_file)
-    state_dict = torch.load(model_file, map_location=agent.device)
+    state_dict = torch.load(model_file, map_location=resolved_device)
+    agent = SeaEngineRLAgent(
+        seed=seed,
+        device=resolved_device,
+        sample_actions=False,
+        hidden_dim=infer_hidden_dim_from_state_dict(state_dict),
+    )
+    agent.ensure_model(state_dim=STATE_VECTOR_DIM)
+    assert agent.model is not None
     load_state_dict_flexible(agent.model, state_dict)
     agent.model.eval()
     return agent
@@ -258,10 +265,13 @@ class ServerAiClient:
             return SeaEngineRandomAgent(seed=self.seed)
         if self.mode == "greedy":
             return SeaEngineGreedyAgent(seed=self.seed)
-        if self.mode == "rl":
+        if self.mode in {"rl", "belief_mcts"}:
             if not self.model_path:
-                raise ValueError("mode=rl requires --model-path")
-            return _load_rl_agent(model_path=self.model_path, device=self.device, seed=self.seed)
+                raise ValueError("mode=rl/belief_mcts requires --model-path")
+            rl_agent = _load_rl_agent(model_path=self.model_path, device=self.device, seed=self.seed)
+            if self.mode == "belief_mcts":
+                return SeaEngineBeliefMCTSAgent.from_env(rl_agent, seed=self.seed)
+            return rl_agent
         raise ValueError(f"Unsupported mode: {self.mode}")
 
     def _log(self, message: str) -> None:

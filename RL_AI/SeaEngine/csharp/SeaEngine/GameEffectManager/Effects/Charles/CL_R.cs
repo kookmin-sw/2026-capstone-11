@@ -44,7 +44,7 @@ public class Cl_R : IEffect
             card.Unit.PosY + dy is >= 0 and < Board.BoardSize && 
             data.Board.IsEmptyCell(card.Unit.PosX + dx, card.Unit.PosY + dy))
         {
-            card.Unit.Move(card.Unit.PosX + dx, card.Unit.PosY + dy);
+            data.Board.MoveCard(card, card.Unit.PosX + dx, card.Unit.PosY + dy);
         }
         else
         {

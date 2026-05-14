@@ -19,7 +19,7 @@ public partial class GameData
     [JsonIgnore] public readonly ILogger Logger;
     public string ActivePlayerId => ActivePlayer.Id;
     public readonly Board Board = new Board();
-    [JsonIgnore] public int TurnCnt = 0;
+    public int TurnCnt = 0;
 
     public GameData(string player1Id, string player2Id, ILogger logger)
     {
@@ -28,6 +28,17 @@ public partial class GameData
         Player2 = new Player(player2Id);
         ActivePlayer = Player1;
         Winner = null;
+    }
+
+    private GameData(Player player1, Player player2, Board board, ILogger logger, Player activePlayer, Player? winner, int turnCnt)
+    {
+        Player1 = player1;
+        Player2 = player2;
+        Board = board;
+        Logger = logger;
+        ActivePlayer = activePlayer;
+        Winner = winner;
+        TurnCnt = turnCnt;
     }
 
     public void Init(List<Card> player1Cards, List<Card> player2Cards)
@@ -45,9 +56,11 @@ public partial class GameData
         }
     }
 
+    private static readonly JsonConverter[] SerializeConverters = [new CardZoneConverter(), new CardConverter(), new BoardConverter()];
+
     public string Serialize()
     {
-        return JsonConvert.SerializeObject(this, Formatting.Indented, [new CardZoneConverter(), new CardConverter(), new BoardConverter()]);
+        return JsonConvert.SerializeObject(this, Formatting.Indented, SerializeConverters);
     }
 
     public void TriggerEvent(string eventId, string timing, Uid source)

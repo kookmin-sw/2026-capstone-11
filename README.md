@@ -16,6 +16,8 @@ RL_AI/start.py
   -> RL_AI/training/experiment.py
   -> RL_AI/training/trainer.py
   -> RL_AI/SeaEngine/bridge/vector_env.py
+  -> RL_AI/SeaEngine/bridge/process_vector_env.py
+  -> RL_AI/SeaEngine/bridge/process_env_worker.py
   -> RL_AI/SeaEngine/bridge/pythonnet_session.py
   -> RL_AI/SeaEngine/csharp/SeaEngine
 
@@ -40,6 +42,7 @@ RL_AI/server_ai_client.py
 핵심 포인트는 다음과 같다.
 
 - 학습은 PythonNet으로 C# DLL을 프로세스 내부에서 직접 호출한다.
+- `SEAENGINE_VECTOR_BACKEND=isolated` 기본값은 spawn 기반 worker process로 C# SeaEngine 세션을 분리해 안정성을 높인다.
 - 평가와 분석은 checkpoint별로 side/deck breakdown, 행동 패턴, 기보(history)를 남긴다.
 - 서버 플레이는 TCP app-level packet 형식의 JSON 상태를 읽어서 action Uid를 응답한다.
 - 로그와 산출물은 `log/`, `models/` 아래에 남기고, 실행별 zip으로 묶는다.
@@ -52,12 +55,21 @@ RL_AI/server_ai_client.py
 
 ### `<start.py>`
 
-학습 전 RL vs random/greedy/자기자신 8개 조합 50판씩 -> 총 1200판  
-1~2000판 학습(상대는 커리큘럼에 따라 횟수 다를 수 있음, 정확히 같은 횟수는 기본은 반반이지만 커리큘럼에 따라 조금씩 보정. 불리한 상태도 학습하기 위해 다음 비율을 사용)
+기본 실행은 `train_episodes=10000`, `max_turns=70`, `checkpoint_interval=2500`이다.  
+checkpoint 0은 RL vs random/greedy/rule-based/자기자신 8개 조합 100판씩 평가하고,
+옵션 `--skip-initial-eval`을 주면 이 초기 평가만 생략하고 바로 학습을 시작할 수 있다.
 
-- 1~2000판: `normal 70% / slight 20% / heavy 10%`
-- 2001~6000판: `normal 50% / slight 25% / heavy 25%`
-- 6001~10000판: `normal 40% / slight 25% / heavy 35%`
+학습 중 checkpoint 평가는 다음 기준으로 수행한다.
+
+- checkpoint 0 / 10000: 8개 조합 기준 더 많은 판수로 평가
+- checkpoint 2500 / 5000 / 7500: 8개 조합 기준 기본 판수로 평가
+- 학습은 총 10000판으로 끝난다
+
+학습은 random, greedy, rule-based, 최근 self-play를 섞는 커리큘럼이며,
+불리한 시작 상태도 함께 섞어서 학습한다.
+
+- 1~5000판: `normal 80% / slight 15% / heavy 5%`
+- 5001~10000판: `normal 70% / slight 20% / heavy 10%`
 
 정의는 다음과 같다.
 
@@ -71,30 +83,27 @@ RL_AI/server_ai_client.py
   - `hp_diff <= -5` 또는 `board_diff <= -3`
   - 또는 `hp_diff <= -3`이고 `board_diff <= -2`
 
-체크포인트 저장  
-체크포인트별 평가 800판(greedy/자기자신 상대로 8개 조합 50판씩)  
-2001~4000판 학습(12000판과 동일)  
-...  
-8001~10000판 학습(12000판과 동일)  
-체크포인트 저장  
-10000판 학습 완료 후에는 체크포인트별 평가는 하지 않음 -> 학습 후 random/greedy/자기자신으로 대응  
-학습 후 RL vs random/greedy/자기자신 8개 조합 50판씩 -> 총 1200판  
-총 15600판
+체크포인트 저장은 2500판마다 수행된다.
+
+- 2500 / 5000 / 7500 checkpoint: random / greedy / rule-based / 자기자신 상대로 8개 조합 50판씩
+- 10000 checkpoint: random / greedy / rule-based / 자기자신 상대로 8개 조합 100판씩
+- 총 학습: 10000판
 
 ### `<make_balance.py>` (변경 없음)
 
-학습된 RL vs 학습된 RL, 8개 조합 250판씩  
-총 2000판
+학습된 RL vs 학습된 RL, 8개 조합 500판씩  
+총 4000판
 
 ### `<bias_check.py>`
 
 random/random 8개 조합 50판씩 -> 400판  
 greedy/greedy 8개 조합 50판씩 -> 400판  
+rule-based/rule-based 8개 조합 50판씩 -> 400판  
 RL/RL 8개 조합 50판씩 -> 400판  
 normalize vs raw 비교 8개 조합 50판씩 -> 800판  
 normalize-raw agree rate 8개 조합 50판씩 -> 800판  
-random/greedy/RL 각각 slight deficit / heavy deficit 8조합 50판씩 -> 2400판  
-총 5200판
+random/greedy/rule-based/RL 각각 slight deficit / heavy deficit 8조합 50판씩 -> 3200판  
+기본 진단은 현재 `total-matches=400`, `comeback-matches=200`, `ablation-matches=400`, `mirror-matches=400`이다.
 
 ---
 
@@ -102,10 +111,10 @@ random/greedy/RL 각각 slight deficit / heavy deficit 8조합 50판씩 -> 2400�
 
 ### `<start.py>`
 
-1. 학습 전 vs Random, Greedy, 자기자신 8조합 승률 및 정보 전체  
-2. 학습 후 vs Random, Greedy, 자기자신 8조합 승률 및 정보 전체  
-3. 체크포인트별 vs Random, Greedy, 자기자신 8조합 승률 및 정보 전체  
-4. 학습 후 vs Random, Greedy, 자기자신 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석
+1. checkpoint 0 vs Random, Greedy, Rule-based, 자기자신 8조합 승률 및 정보 전체  
+2. checkpoint 10000 vs Random, Greedy, Rule-based, 자기자신 8조합 승률 및 정보 전체  
+3. 체크포인트별 vs Random, Greedy, Rule-based, 자기자신 8조합 승률 및 정보 전체  
+4. checkpoint 10000 vs Random, Greedy, Rule-based, 자기자신 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석
 
 ### `<make_balance.py>`
 
@@ -115,15 +124,14 @@ random/greedy/RL 각각 slight deficit / heavy deficit 8조합 50판씩 -> 2400�
 ### `<bias_check.py>`
 
 1. random vs random 8조합 승률 및 정보 전체  
-2. random vs random 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석  
-3. greedy vs greedy 8조합 승률 및 정보 전체  
-4. greedy vs greedy 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석  
-5. RL vs RL 8조합 승률 및 정보 전체  
-6. RL vs RL 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석  
-7. normalize vs raw 8조합 승률 및 정보 전체 비교  
-8. normalize-raw agree rate 8조합 일치율 및 정보 전체 비교  
-9. random vs 자기자신, greedy vs 자기자신, 학습이 완료된 RL vs 자기자신 slight deficit / heavy deficit 8조합 승률 및 정보 전체  
-10. random vs 자기자신, greedy vs 자기자신, 학습이 완료된 RL vs 자기자신 slight deficit / heavy deficit 8조합 기보를 5개씩 보고 패턴 및 판도 분석
+2. greedy vs greedy 8조합 승률 및 정보 전체  
+3. rule-based vs rule-based 8조합 승률 및 정보 전체  
+4. RL vs RL 8조합 승률 및 정보 전체  
+5. 각 family suite의 8조합 별 대표 기보를 보고 패턴 및 판도 분석  
+6. normalize vs raw 8조합 승률 및 정보 전체 비교  
+7. normalize-raw agree rate 8조합 일치율 및 정보 전체 비교  
+8. random, greedy, rule-based, RL의 slight deficit / heavy deficit 8조합 승률 및 정보 전체  
+9. 서로 다른 full-run 모델 2개가 있을 때 `--compare-model-path`로 모델 A vs 모델 B 편향 비교
 
 ---
 
@@ -146,12 +154,11 @@ random/greedy/RL 각각 slight deficit / heavy deficit 8조합 50판씩 -> 2400�
 2. `~/RL_AI` 작업 디렉터리를 압축 해제한다.
 3. C# 빌드와 PythonNet 초기화를 수행한다.
 4. `SeaEnginePPOTrainer`로 학습을 진행한다.
-5. 학습 전 `random` / `greedy` / `자기자신` 평가를 8개 조합 기준으로 각각 50판씩 수행한다.
+5. checkpoint 0 `random` / `greedy` / `rule-based` / `자기자신` 평가를 8개 조합 기준으로 각각 100판씩 수행한다.
 6. 학습을 10,000 episodes 돌린다.
-7. 2,000 에피소드마다 checkpoint를 저장하고, `2,000 / 4,000 / 6,000 / 8,000` checkpoint마다 `greedy`와 `자기자신` 기준 8개 조합 평가를 수행한다.
-8. 마지막 10,000 에피소드 checkpoint에서는 추가 checkpoint 평가를 하지 않는다.
-9. 학습 후 `random` / `greedy` / `자기자신` 평가를 8개 조합 기준으로 각각 50판씩 수행한다.
-10. 결과 로그와 모델을 zip으로 묶는다.
+7. 2,500 에피소드마다 checkpoint를 저장하고, `2,500 / 5,000 / 7,500` checkpoint마다 `random` / `greedy` / `rule-based` / `자기자신` 기준 8개 조합 평가를 수행한다.
+8. 10,000 에피소드 checkpoint에서는 `random` / `greedy` / `rule-based` / `자기자신` 평가를 8개 조합 기준으로 각각 100판씩 수행한다.
+9. 10,000 에피소드 평가를 마치면 결과 로그와 모델을 zip으로 묶는다.
 
 여기서 말하는 **8개 조합**은 다음 축의 조합이다.
 
@@ -159,14 +166,32 @@ random/greedy/RL 각각 slight deficit / heavy deficit 8조합 50판씩 -> 2400�
 - 내 덱: 귤 / 샤를로테
 - 상대 덱: 귤 / 샤를로테
 
-학습은 random, greedy, 최근 self-play를 섞는 커리큘럼이다.
+학습은 random, greedy, rule-based, 최근 self-play를 섞는 커리큘럼이다.
 
-- 초반: `normal 70% / slight 20% / heavy 10%`
-- 중반: `normal 50% / slight 25% / heavy 25%`
-- 후반: `normal 40% / slight 25% / heavy 35%`
+- opponent pool은 기본적으로 `random / greedy / rule-based / 최근 self-play`를 섞고,
+  checkpoint가 쌓일수록 recent self-play 비중이 늘어난다.
+- `greedy`는 오래된 단순 공격 우선 로직에서 벗어나, 킬각/리더 압박/중앙 점유/전개 우선순위를 더 보는 tactical greedy로 강화했다.
+- `rule-based`는 search 없이 한 수의 전술 가치를 더 촘촘히 평가하는 강한 기준 agent다. 공식 agent 종류는 `random / greedy / rule-based / RL` 네 가지로 유지한다.
+- deficit start schedule은 초반에 가장 안전하게(`normal` 위주) 시작하고,
+  학습이 진행될수록 `slight`, `heavy` 비중을 천천히 늘린다.
+- training layout은 기본값이 `balanced`라서 8개 조합을 고르게 본다.
+  필요할 때만 `adaptive` 또는 `focused` 모드로 바꿔서 약한 조합을 더 자주 보게 할 수 있다.
+- opening diversity는 랜덤 노이즈뿐 아니라 `SEAENGINE_OPENING_TEACHER_PROB` 기반의 rule-based opening teacher를 섞어 고착화를 줄인다.
+- imitation learning은 초반 teacher가 고른 행동에 작은 behavior cloning loss를 추가하는 방식으로 들어갔다. 기본값은 작게 잡아서 RL의 자유도를 크게 훼손하지 않는다.
+- hard example mining은 deficit start와 focused/adaptive layout, 그리고 checkpoint 하락 시 recovery schedule로 반영한다.
+- population-based checkpoint selection은 greedy/self 평가를 바탕으로 평균 승률, worst combo, side gap을 합쳐 checkpoint score를 남기는 방식으로 기록한다.
 
 중요한 점은 greedy-heavy fine-tuning이 아니라,
 균형과 범용성을 유지하면서 강한 정책을 만드는 것이다.
+최근에는 샤를로테 전용 shaping을 줄이고, 덱 공통의 오프닝 개발/리더 보호 shaping으로 정리했다.
+
+최근 바뀐 정책은 다음처럼 이해하면 된다.
+
+- 예전에는 샤를로테 약점 보강을 위해 layout 샘플링이 한쪽으로 기울 수 있었지만,
+  지금은 기본값이 `balanced`라서 8개 조합을 고르게 본다.
+- 약한 조합을 더 보고 싶을 때만 `adaptive` 또는 `focused` 모드를 켠다.
+- reward shaping은 특정 덱 전용 보정보다, 모든 덱에 공통인 초반 개발/리더 보호/불필요한 TurnEnd 억제 쪽으로 옮겼다.
+- 기록용 history는 모든 판을 다 저장하지 않고, 대표 샘플만 남기는 구조를 유지한다.
 
 ### 2. 밸런스 파이프라인
 
@@ -175,8 +200,8 @@ random/greedy/RL 각각 slight deficit / heavy deficit 8조합 50판씩 -> 2400�
 기본적으로는:
 
 - `RL vs RL` self-play
-- 총 2000판
-- 8개 조합 x 250판씩
+- 총 4000판
+- 8개 조합 x 500판씩
   - 선공 / 후공
   - 내 덱: 귤 / 샤를로테
   - 상대 덱: 귤 / 샤를로테
@@ -205,16 +230,18 @@ random/greedy/RL 각각 slight deficit / heavy deficit 8조합 50판씩 -> 2400�
 - `RL/RL`
 - `normalize vs raw`
 - `normalize-raw agree rate`
-- `random/greedy/RL` 각각 `slight deficit / heavy deficit`
+- `random/greedy/rule-based/RL` 각각 `slight deficit / heavy deficit`
+- 필요하면 `--compare-model-path`로 서로 다른 full-run 모델 2개를 직접 head-to-head 비교한다.
 
-기본 총판수는 `5200`이다.
+checkpoint sweep을 제외한 기본 총판수는 `6400`이다.
 
 - `random/random`: 8개 조합 x 50
 - `greedy/greedy`: 8개 조합 x 50
 - `RL/RL`: 8개 조합 x 50
 - `normalize vs raw`: 각 8개 조합 x 50
 - `normalize-raw agree rate`: 각 8개 조합 x 50
-- `random/greedy/RL`의 `slight deficit / heavy deficit`: 각 8개 조합 x 50
+- `random/greedy/rule-based/RL`의 `slight deficit / heavy deficit`: 각 8개 조합 x 50
+- `--compare-model-path`를 준 경우: 모델 A vs 모델 B 8개 조합 x 50
 
 ### 4. 서버 접속형 AI 플레이어
 
@@ -225,6 +252,7 @@ AI가 action Uid를 응답하는 TCP 클라이언트다.
 
 - `random`
 - `greedy`
+- `rule_based`
 - `rl`
 
 `rl` 모드는 모델 zip 또는 `.pt`를 직접 읽을 수 있다.
@@ -277,10 +305,10 @@ AI가 action Uid를 응답하는 TCP 클라이언트다.
 
 ### `start.py`
 
-1. 학습 전 vs Random, Greedy, 자기자신 8조합 승률 및 정보 전체
-2. 학습 후 vs Random, Greedy, 자기자신 8조합 승률 및 정보 전체
-3. 체크포인트별 vs Random, Greedy, 자기자신 8조합 승률 및 정보 전체
-4. 학습 후 vs Random, Greedy, 자기자신 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석
+1. 학습 전 vs Random, Greedy, Rule-based, 자기자신 8조합 승률 및 정보 전체
+2. 학습 후 vs Random, Greedy, Rule-based, 자기자신 8조합 승률 및 정보 전체
+3. 체크포인트별 vs Random, Greedy, Rule-based, 자기자신 8조합 승률 및 정보 전체
+4. 학습 후 vs Random, Greedy, Rule-based, 자기자신 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석
 
 ### `make_balance.py`
 
@@ -297,42 +325,57 @@ AI가 action Uid를 응답하는 TCP 클라이언트다.
 6. `RL vs RL` 8조합 별 기보를 5개씩 보고 패턴 및 판도 분석
 7. `normalize vs raw` 8조합 승률 및 정보 전체 비교
 8. `normalize-raw agree rate` 8조합 일치율 및 정보 전체 비교
-9. `random vs 자기자신`, `greedy vs 자기자신`, `학습이 완료된 RL vs 자기자신` `slight deficit / heavy deficit` 8조합 승률 및 정보 전체
-10. `random vs 자기자신`, `greedy vs 자기자신`, `학습이 완료된 RL vs 자기자신` `slight deficit / heavy deficit` 8조합 기보를 5개씩 보고 패턴 및 판도 분석
+9. `random vs 자기자신`, `greedy vs 자기자신`, `rule-based vs 자기자신`, `학습이 완료된 RL vs 자기자신` `slight deficit / heavy deficit` 8조합 승률 및 정보 전체
+10. `random vs 자기자신`, `greedy vs 자기자신`, `rule-based vs 자기자신`, `학습이 완료된 RL vs 자기자신` `slight deficit / heavy deficit` 8조합 기보를 5개씩 보고 패턴 및 판도 분석
 
 ### 이번 런의 요약
 
-최근 모델은 random/greedy/self에 대해 모두 더 강해졌고,
-self-play balance도 예전처럼 붕괴하지는 않는다.
+최신 런 기준으로 정리하면 다음과 같다.
+핵심 변화는 `greedy` 강화, `rule-based` 기준 agent 추가, opening diversity / imitation learning / hard example mining / population-based checkpoint score,
+리더 최소 HP 통계 추가, 그리고 로그 산출물 통합이다.
 
-예시로 최근 분석에서는 다음이 관찰됐다.
+`start.py` 기준 학습 후 8조합 전체 승률은 다음과 같다.
 
-마지막 실행에 대한 로그 분석입니다.
+- vs Random: 약 90.0%
+- vs Greedy: 약 57.2%
+- vs Rule-based: 약 54.8%
+- vs Self: P1 45.8% / P2 54.2%
 
-start.py 관련 로그 -> 학습 전후 성능 비교(vs random, greedy, 과거의 자기자신 성능 지표)
-- 학습 이후 확실히 승률이 오른다. vs greedy는 58.8% 승률을 보인다. 매우 불리한 상태에서 시작해도 57.0% 이긴다.
-- 대신 4000판 학습한 자기자신한테는 30%도 못 이기는 이상한 결과도 있다.
-- 선공의 첫 턴 이동 불가 제약이 있음에도 오히려 선/후공 차이가 더 커졌다.
-- 전처럼 후공/샤를/다른 덱으로 했을 때도 100% 진다는 건 이제 없고 random에게는 이제 모든 경우의 수에서 크게 이긴다.
-- 다만 greedy에게는 후공/샤를/다른 덱으로 했을 때 여전히 밀린다.
+해석은 다음과 같다.
 
-make_balance.py 관련 로그 -> 밸런스 지표(vs 학습 완료된 자기자신)
-- 이쪽도 이제 100:0으로 지는 건 없다. 대신 여전히 편차는 많이 크다.
-- 특이사항으로는 후공/샤를/같은 덱 승률이 후공/샤를/다른 덱 승률보다 낮아졌다.
+- 예전의 greedy 62%대보다 낮아진 것은 단순 greedy 전용 최적화가 아니라 `rule-based`, self-play, 불리한 시작 상태, opening diversity까지 같이 보도록 목표가 넓어졌기 때문이다.
+- 최종 모델은 random은 안정적으로 이기지만, greedy/rule-based를 80~90%로 압도하는 수준은 아직 아니다.
+- population score 기준으로는 최종 10000 checkpoint보다 중간 checkpoint가 더 균형적일 수 있으며, 최근 분석에서는 6000 checkpoint가 비교적 안정적으로 보였다.
+- 샤를로테, 특히 `샤를로테/후공/다른 덱` 약점은 여전히 강하게 남아 있다.
 
-bias_check.py 관련 로그 -> 덱, 선/후공 승률 차이, P2를 P1 시점으로 정규화했을 때와 안 했을 때의 차이
-- random vs random, greedy vs greedy, RL vs RL 모두 8개 조합(선/후공, 나 귤/샤를, 상대 귤/샤를)의 승률 차이가 비슷하다.
-- 근데 다 불규칙하다는 점이 비슷하다.
-- RL vs RL은 불리한 상태로 시작하나 동일하게 시작하나 비슷한 결과가 나온다는 게 이번에 큰 발전이다.
-- 이에 반해 random vs random, greedy vs greedy는 덱별 승률이 좀 더 뒤죽박죽이다. 즉 RL vs RL의 승률 일관성이 생겼다고 볼 수 있다.
-- 시점 normalize와 raw의 승률, 일치율을 확인해봤을 때 raw가 특정 조합에 더 극단적으로 치우치고, normalize는 완만하다. normalize 쓰는 게 더 낫다.
+`make_balance.py` 기준 RL vs RL 결과는 다음과 같다.
 
-즉, 지금 모델은:
+- 전체 RL 승률: 48.65%
+- RL wins / opponent wins / draws: 973 / 1027 / 0
+- 평균 steps: 약 130.78
+- 평균 final turn: 약 13.95
+- 전체적으로는 50%에 가깝지만, 8조합별 편차는 크다.
+- `귤/선공/다른 덱`은 82.4%로 강하고, `샤를로테/후공/다른 덱`은 14.4%로 매우 약하다.
 
-- random을 잘 잡고
-- greedy도 꽤 잘 잡고
-- side/deck 편향도 예전보다 줄었고
-- 아직은 완전 범용은 아니지만, 훨씬 실전형에 가까워졌다
+리더 최소 HP 통계도 기록한다.
+
+- make_balance 전체 aggregate:
+  - Orange 평균 최소 HP: 1.98, min -2, max 7
+  - Charlotte 평균 최소 HP: 1.31, min -2, max 10
+- `샤를로테/후공/다른 덱`에서는 Charlotte 평균 최소 HP가 0.14까지 내려가서 거의 끝까지 몰리는 판이 많다.
+- history로 저장된 대표 판에서는 각 판별 `leader_hp=P1:... final=... min=... | P2:... final=... min=...` 형태로 볼 수 있다.
+- 단, 기본 history sampling 때문에 모든 판의 per-match HP가 저장되는 것은 아니고, summary에는 전체 통계가 저장된다.
+
+`bias_check.py` 기준 주요 관찰은 다음과 같다.
+
+- random, greedy, rule-based, RL family 모두에서 Orange가 Charlotte보다 평균 최소 HP가 높은 경향이 반복된다.
+- RL/RL 기준 평균 최소 HP는 Orange 1.93, Charlotte 1.37이다.
+- rule-based/rule-based 기준 평균 최소 HP는 Orange 2.29, Charlotte 1.19로, 모델만의 문제가 아니라 게임/덱 구조 편향도 섞여 있을 가능성이 높다.
+- normalize canonical은 raw보다 극단성이 낮고, raw는 특정 조합에서 더 강하거나 더 치우치는 경향이 있다.
+- checkpoint별로는 6000 checkpoint의 Charlotte 평균 최소 HP가 0.92로 낮고, 8000 checkpoint는 Orange/Charlotte 차이가 상대적으로 완화된다.
+
+즉, 지금 모델은 random을 안정적으로 이기고 greedy/rule-based 상대로도 절반 이상을 가져가지만,
+일반 사용자 수준의 안정적인 범용 플레이를 목표로 하려면 샤를로테 약점, side/deck 편차, 오프닝 고착화를 계속 줄여야 한다.
 
 ---
 
@@ -353,22 +396,18 @@ bias_check.py 관련 로그 -> 덱, 선/후공 승률 차이, P2를 P1 시점으
 - `~/RL_AI/log/start_latest.zip`
 - `~/RL_AI/models/start_latest.zip`
 - `~/RL_AI/log/start_summary.txt`
-- `~/RL_AI/log/start_histories.zip`
 
 ### `make_balance.py` 실행 후
 
 - `~/make_balance.log`
 - `~/RL_AI/log/make_balance_latest.zip`
 - `~/RL_AI/log/make_balance_summary.txt`
-- `~/RL_AI/log/make_balance_histories.zip`
 
 ### `bias_check.py` 실행 후
 
 - `~/bias_check.log`
-- `~/RL_AI/log/bias_check_YYYYMMDD_HHMMSS.txt`
-- `~/RL_AI/log/bias_check_log_YYYYMMDD_HHMMSS.zip`
+- `~/RL_AI/log/bias_check_latest.zip`
 - `~/RL_AI/log/bias_check_summary.txt`
-- `~/RL_AI/log/bias_check_histories.zip`
 
 ---
 
@@ -390,7 +429,7 @@ nohup bash -lc 'cd ~ && python -u ~/start.py' > ~/start.log 2>&1 &
 python -u ~/start.py \
   --eval-matches 50 \
   --train-episodes 10000 \
-  --max-turns 100 \
+  --max-turns 70 \
   --update-interval 16 \
   --seed 7
 ```
@@ -398,14 +437,14 @@ python -u ~/start.py \
 옵션 설명:
 
 - `--eval-matches`
-  - 학습 전/후 평가 판수 per combo (random/greedy/self 각각)
+  - checkpoint 0/10000 평가 판수 per combo (random/greedy/rule-based/self 각각)
   - 기본값: `50`
 - `--train-episodes`
   - 총 학습 에피소드 수
   - 기본값: `10000`
 - `--max-turns`
   - 평가 시 허용 최대 턴 수
-  - 기본값: `100`
+  - 기본값: `70`
 - `--update-interval`
   - PPO 업데이트 주기
   - 기본값: `16`
@@ -416,6 +455,8 @@ python -u ~/start.py \
   - `RL_AI.zip` 압축 해제를 건너뜀
 - `--skip-build`
   - C# 빌드를 건너뜀
+- `--skip-initial-eval`
+  - checkpoint 0 초기 평가만 건너뜀
 - `--log-file`
   - 외부 로그 파일 경로를 직접 지정
 
@@ -426,8 +467,8 @@ python -u ~/start.py \
 - C# 빌드
 - PythonNet 초기화
 - 학습
-- before/after 8개 조합 평가
-- 2000/4000/6000/8000 checkpoint의 greedy/self 8개 조합 평가
+- checkpoint 0 / 10000 8개 조합 평가
+- 2500/5000/7500 checkpoint의 random/greedy/rule-based/self 8개 조합 평가
 - 모델 zip / 로그 zip 정리
 
 DLPC에서 홈 디렉터리 wrapper를 쓴다면 동일하게 `~/start.py`를 실행하면 된다.
@@ -451,8 +492,8 @@ nohup bash -lc 'cd ~ && python -u ~/make_balance.py' > ~/make_balance.log 2>&1 &
 ```bash
 python -u ~/make_balance.py \
   --model-path ~/RL_AI/models/model_ep_10000.pt \
-  --total-matches 2000 \
-  --max-turns 100 \
+  --total-matches 4000 \
+  --max-turns 70 \
   --seed 7 \
   --device auto
 ```
@@ -464,10 +505,10 @@ python -u ~/make_balance.py \
   - `.pt` 또는 `.zip` 가능
 - `--total-matches`
   - 총 평가 판수
-  - 기본값: `2000`
+  - 기본값: `4000`
 - `--max-turns`
   - 한 판의 최대 턴 수
-  - 기본값: `100`
+  - 기본값: `70`
 - `--seed`
   - 난수 시드
   - 기본값: `7`
@@ -480,16 +521,18 @@ python -u ~/make_balance.py \
 
 `make_balance.py`는 다음 규칙으로 모델을 고른다.
 
-1. `~/RL_AI/models/model_ep_10000.pt`
-2. `~/RL_AI/models/*.zip` 중 최신 파일
-3. zip 안의 `model_ep_10000.pt`
-4. 없으면 zip 안의 최신 `.pt`
+1. `~/RL_AI/models/best_model.pt`
+2. `~/RL_AI/models/model_ep_10000.pt`
+3. `~/RL_AI/models/*.zip` 중 최신 파일
+4. zip 안의 `best_model.pt`
+5. zip 안의 `model_ep_10000.pt`
+6. 없으면 zip 안의 최신 `.pt`
 
 `make_balance.py`는 현재 다음을 고정으로 평가한다.
 
 - self-play
-- 8개 조합 x 250판
-- 총 2000판
+- 8개 조합 x 500판
+- 총 4000판
 
 DLPC에서 홈 디렉터리 wrapper를 쓴다면 동일하게 `~/make_balance.py`를 실행하면 된다.
 
@@ -525,8 +568,11 @@ python -u ~/bias_check.py \
   - 분석할 모델 파일
   - `.pt` 또는 `.zip` 가능
 - `--total-matches`
-  - random/random, greedy/greedy, RL/RL 각 suite의 총 판수
+  - random/random, greedy/greedy, rule-based/rule-based, RL/RL 각 suite의 총 판수
   - 기본값: `400`
+- `--comeback-matches`
+  - greedy/rule-based/self slight/heavy deficit suite의 총 판수
+  - 기본값: `200`
 - `--ablation-matches`
   - normalize vs raw 비교용 총 판수
   - 기본값: `400`
@@ -558,11 +604,11 @@ python -u ~/bias_check.py \
 
 - 최신 모델 zip/pt 자동 탐색
 - 5개 checkpoint만 추출
-  - 2000 / 4000 / 6000 / 8000 / 10000
+  - 2500 / 5000 / 7500 / 10000
 - random/random, greedy/greedy, RL/RL 평가
 - normalize vs raw 비교
 - normalize-raw agree rate 측정
-- random/greedy/RL deficit suite 측정
+- random/greedy/rule-based/RL deficit suite 측정
 - 최종 report txt 생성
 - bias_check log txt zip 생성
 

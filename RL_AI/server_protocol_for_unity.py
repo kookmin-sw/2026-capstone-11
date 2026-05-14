@@ -25,6 +25,14 @@ HANDLER_PEER_ENTRANCE = 7
 HANDLER_GAME_READY         = 11
 HANDLER_GAME_DATA_REGISTER = 12
 
+# AI mode aliases are kept here so Unity-side clients can share the
+# same strings without hardcoding them in multiple places.
+AI_MODE_RANDOM = "random"
+AI_MODE_GREEDY = "greedy"
+AI_MODE_RULE_BASED = "rule_based"
+AI_MODE_RL = "rl"
+AI_MODE_BELIEF_MCTS = "belief_mcts"
+
 
 @dataclass(frozen=True)
 class AppPacket:

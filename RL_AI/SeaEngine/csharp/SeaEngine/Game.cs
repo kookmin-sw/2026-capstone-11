@@ -11,11 +11,26 @@ public partial class Game(CardLoader cardLoader, ILogger logger, string player1I
 {
     [JsonIgnore]
     public readonly CardLoader CardLoader = cardLoader;
-    public readonly GameData Data = new GameData(player1Id, player2Id, logger);
+    public GameData Data { get; private set; } = new GameData(player1Id, player2Id, logger);
     [JsonIgnore]
     public readonly ILogger Logger = logger;
     private List<GameAction> _actions = [];
     public IReadOnlyList<GameAction> Actions => _actions;
+
+    public void SetData(GameData gameData)
+    {
+        Data = gameData;
+        UpdateActions();
+    }
+
+    public Game Fork()
+    {
+        var fork = new Game(CardLoader, Logger, Data.Player1.Id, Data.Player2.Id);
+        fork.SetData(Data.Clone());
+        return fork;
+    }
+
+    public Game Clone() => Fork();
     
     public override string ToString()
     {
