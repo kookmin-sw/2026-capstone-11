@@ -23,6 +23,7 @@ public class GameInit : MonoBehaviour
     [Header("Game Close Scene")] 
     [SerializeField] private string CloseScene;
     private Coroutine _closeCoroutine = null;
+    private string prevJson = string.Empty;
 
     void Start()
     {
@@ -32,7 +33,20 @@ public class GameInit : MonoBehaviour
         NetworkManagerUnity.Instance.Session.Events.OnDisconnectUnsafe = () => {if (_closeCoroutine == null) _closeCoroutine = StartCoroutine(SceneCloseCoroutine());};
 
         // NetworkManagerUnity.Instance.Session.Events.OnGetQuery = (queryNum, raw) => { };
-        NetworkManagerUnity.Instance.Session.Events.OnMessageReceive = (raw) => { gameManager.InitSnapshotJson(Encoding.UTF8.GetString(raw), GameInitParam.Instance.Player1Name); };
+        NetworkManagerUnity.Instance.Session.Events.OnMessageReceive = (raw) => 
+        { 
+            var json = Encoding.UTF8.GetString(raw);    
+            
+            // 새로 받은 스냅샷에 diff가 없으면 무시
+            if (prevJson != json)
+            {
+                prevJson = json;
+                gameManager.InitSnapshotJson(json, GameInitParam.Instance.Player1Name);
+            }
+
+            
+        };
+
         NetworkManagerUnity.Instance.Session.SubscribeEventBus();
 
         // 이 코루틴을 실행하기 이전에 게임 씬 로드 및 Bootstrap이 완료되어야 함

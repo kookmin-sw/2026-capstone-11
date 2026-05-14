@@ -44,7 +44,7 @@ public class CardDBImporter
                                 cardId = row[0],
                                 name = row[1],
                                 leaderId = row[2],
-                                unitType = ParseRole(row[3]),
+                                unitClass = ParseRole(row[3]),
                                 attack = int.Parse(row[4]),
                                 hp = int.Parse(row[5]),
                                 effectId = row[6],
@@ -81,7 +81,7 @@ public class CardDBImporter
 
         db.SetData(cardList, effectList, eventList);
 
-        string assetPath = "Assets/11 Scriptable Object/CardUnitDB.asset";
+        string assetPath = "Assets/05 Scriptable Object/CardUnitDB.asset";
         AssetDatabase.CreateAsset(db, assetPath);
         AssetDatabase.SaveAssets();
 
@@ -110,18 +110,18 @@ public class CardDBImporter
         return result.ToArray();
     }
 
-    private static string ParseRole(string role)
+    private static UnitType ParseRole(string role)
     {
         switch (role)
         {
-            case "L": return "군주";
-            case "B": return "비숍";
-            case "N": return "나이트";
-            case "R": return "룩";
-            case "P": return "폰";
+            case "L": return UnitType.Leader;
+            case "B": return UnitType.Bishop;
+            case "N": return UnitType.Knight;
+            case "R": return UnitType.Rook;
+            case "P": return UnitType.Pawn;
             default:
                 Debug.LogError($"알 수 없는 Role: {role}");
-                return "?";
+                return UnitType.Unknown;
         }
     }
 
