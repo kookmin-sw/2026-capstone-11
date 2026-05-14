@@ -1,17 +1,28 @@
 
-using System.Collections.Concurrent;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Game.Network
 {
     public interface INetAPI
     {
+        public void SendMessage<T>(int handlerId, ConnId id, T data, IPacketCodec<T> codec);
+
+        public void SendRespond<T>(int handlerId, int queryNum, ConnId id, T data, IPacketCodec<T> codec);
+
+        public Task<QueryTaskResult> AsyncSendQuery<T>(int handlerId, ConnId id, T data, IPacketCodec<T> codec, long expireTimeMs);
+
+        public Task<QueryTaskResult> AsyncSendQuery<T>(int handlerId, ConnId id, T data, IPacketCodec<T> codec, long expireTimeMs, TaskCompletionSource<QueryTaskResult> tcs);
+
+        public Task<QueryTaskResult> AsyncSendQuery<T>(int handlerId, ConnId id, T data, IPacketCodec<T> codec, long expireTimeMs, Action<ConnId, QueryTaskResult>? callBack);
+
         /// <summary>
         /// 특정 ConnId 연결에 raw를 전송. 
         /// 메세지 처리에 대한 handler는 handlerId가 지정
         /// queryNum == 0일시 일반 전송. != 0인 경우 해당 쿼리번호에 해당하는 클라이언트 쿼리에 응답.
         /// </summary>
         public void Send(int handlerId, int queryNum, ConnId id, byte[] raw);
-
 
         /// <summary>
         /// 모든 연결에 raw를 전송. 
@@ -54,7 +65,7 @@ namespace Game.Network
         /// **위 콜백은 기본적은 Exception handling이 없음**
         /// </summary>
         public Task<QueryTaskResult> AsyncRequestQuery(int handlerId, ConnId id, byte[] query_raw, long expireTimeMs, Action<ConnId, QueryTaskResult>? callBack);
-        
+
         // public Task<QueryTaskResult> AsyncRequestQuery(int handlerId, ConnId id, byte[] query_raw, long expireTimeMs, Action<ConnId, byte[]>? responseAction, Action<ConnId>? timeOutAction);
 
         /// <summary>
@@ -62,7 +73,7 @@ namespace Game.Network
         /// 연결된 Connection 수가 minConnCount 이하일 경우 false.
         /// 반환된 연결이 항상 Connection을 보장하진 않음.
         /// </summary>
-        public bool TryGetConnIdList(int minConnCount, out List<ConnId> connIdList); 
+        public bool TryGetConnIdList(int minConnCount, out List<ConnId> connIdList);
 
         /// <summary>
         /// handler 등록
@@ -88,7 +99,7 @@ namespace Game.Network
         /// <param name="portNum"></param>
         /// <param name="expireTimeMs"></param>
         /// <returns></returns> 
-        public Task<ConnId?> ConnectTo(string ipAddr, int portNum, long expireTimeMs); 
+        public Task<ConnId?> ConnectTo(string ipAddr, int portNum, long expireTimeMs);
     }
 
 }

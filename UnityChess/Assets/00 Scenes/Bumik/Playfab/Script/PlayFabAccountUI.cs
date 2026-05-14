@@ -1,39 +1,90 @@
 using UnityEngine;
 using TMPro;
 using System.Linq;
-using Unity.VisualScripting;
-using System.Text;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using PlayFab;
+using UnityEngine.SceneManagement;
+using DG.Tweening;
+using Title.UI;
 
 public class PlayFabAccountUI : MonoBehaviour
 {
+
+    [SerializeField] private TitleInputController controller;
+
+    [Header("Panel")]
+    [SerializeField] private GameObject registerPanel;
+    [SerializeField] private GameObject loginPanel;
+    
+
     [Header("Register")]
     [SerializeField] private TMP_InputField registerUsernameInput;
     [SerializeField] private TMP_InputField registerDisplaynameInput;
     [SerializeField] private TMP_InputField registerEmailInput;
     [SerializeField] private TMP_InputField registerPasswordInput;
     [SerializeField] private TMP_InputField registerPasswordCheck;
-    
 
     [Header("Login")]
     [SerializeField] private TMP_InputField loginEmailInput;
     [SerializeField] private TMP_InputField loginPasswordInput;
 
-
+    [Header("Button")]
+    [SerializeField] private Button loginButton;
+    [SerializeField] private Button logoutButton;
+    [SerializeField] private Button registerButton;
+    [SerializeField] private List<Button> closePanelButton;
 
     [Header("Info Field")]
     [SerializeField] private TMP_Text InfoField;
+    [SerializeField] private TMP_Text NameField;
 
     [Header("API Call Guard Button")]
     [SerializeField] private List<Button> ButtonToGuard;
 
-    private bool APICallGuardFlag = false;
+    [Header("Hard Logout toggle (for test)")]
+    [SerializeField] private bool hardLogout = false;
 
-    public void Start()
+    private bool APICallGuardFlag = false;
+    private Tween infoTween;
+
+    private void Start()
     {
-        UpdateInfoField();
+        InfoField.text = "";
+        NameField.text = "";
+
+        loginButton.onClick.AddListener(() => controller.SetState(TitleState.LoginPanelOpened));
+        logoutButton.onClick.AddListener(() => controller.SetState(TitleState.WaitingForInput));
+        registerButton.onClick.AddListener(() => controller.SetState(TitleState.RegisterPanelOpened));
+
+        foreach (var btn in closePanelButton)
+        {
+            btn.onClick.AddListener(() => controller.SetState(TitleState.WaitingForInput));
+        }
+    }
+
+    private void SwitchButton()
+    {
+        bool isLoggedin = PlayFabAccountManager.Instance.IsLoggedIn;
+
+        loginButton.gameObject.SetActive(!isLoggedin);
+        logoutButton.gameObject.SetActive(isLoggedin);
+        registerButton.gameObject.SetActive(!isLoggedin);
+    }
+
+    private void ClearLoginInputField()
+    {
+        loginEmailInput.text = string.Empty;
+        loginPasswordInput.text = string.Empty;
+    }
+
+    private void ClearRegisterInputField()
+    {
+        registerUsernameInput.text = string.Empty;
+        registerDisplaynameInput.text = string.Empty;
+        registerEmailInput.text = string.Empty;
+        registerPasswordInput.text = string.Empty;
+        registerPasswordCheck.text = string.Empty;
     }
 
     public void GuardButton()
@@ -52,26 +103,15 @@ public class PlayFabAccountUI : MonoBehaviour
 
     public void UpdateInfoField()
     {
-        if (!PlayFabAccountManager.Instance.IsLoggedIn)
-        {
-            InfoField.text = "No Account LogIn";
-            return;
-        }
+        infoTween?.Kill();
 
-        string msg = "PlayFabId="
-        + PlayFabAccountManager.Instance.PlayFabId + " \n " 
-        + "DisplayName=" 
-        + PlayFabAccountManager.Instance.InGameDisplayName + " \n "
-        + "SessionTick="
-        + PlayFabAccountManager.Instance.SessionTicket + " \n "
-        + "EntityID=" 
-        + PlayFabAccountManager.Instance.EntityId + "\n" 
-        + "EntityType="
-        + PlayFabAccountManager.Instance.EntityType + "\n"
-        + "EntityToken="
-        + PlayFabAccountManager.Instance.EntityToken + "\n";
+        bool isLoggedIn = PlayFabAccountManager.Instance.IsLoggedIn; 
+        InfoField.text = isLoggedIn ? "로그인 성공!" : "로그인 실패!";
 
-        InfoField.text = msg;
+        if (isLoggedIn) 
+            NameField.text = "환영합니다, " + PlayFabAccountManager.Instance.InGameDisplayName + "님";
+        
+        infoTween = InfoField.DOColor(Color.clear, 5f);
     }
 
     public void OnClickRegister()
@@ -117,12 +157,16 @@ public class PlayFabAccountUI : MonoBehaviour
                 Debug.Log("회원가입 성공");
                 UpdateInfoField();
                 ReleaseButton();
+                SwitchButton();
+                ClearRegisterInputField();
+                registerPanel.SetActive(false);
             },
             onFail: error =>
             {
                 Debug.Log("회원가입 실패: " + error);
                 UpdateInfoField();
                 ReleaseButton();
+                SwitchButton();
             });
     }
 
@@ -148,12 +192,29 @@ public class PlayFabAccountUI : MonoBehaviour
                 Debug.Log("로그인 성공");
                 UpdateInfoField();
                 ReleaseButton();
+                SwitchButton();
+                ClearLoginInputField();
+                loginPanel.SetActive(false);
             },
             onFail: error =>
             {
                 Debug.Log("로그인 실패: " + error);
                 UpdateInfoField();
                 ReleaseButton();
+                SwitchButton();
             });
+    }
+
+    public void OnCkickLogout()
+    {
+        if (APICallGuardFlag) return;
+
+        GuardButton();
+        PlayFabAccountManager.Instance.Logout(hardLogout);
+
+        ReleaseButton();
+        SwitchButton();
+
+        NameField.text = "";
     }
 }

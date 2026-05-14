@@ -11,9 +11,10 @@ public class Cl_L : IEvent
     public string Id => "Cl_L";
     public string Timing => "TurnStart";
 
-    public void Apply(Uid source, GameData data)
+    public bool Apply(Uid source, GameData data)
     {
         var card = data.GetCardById(source);
+        if(data.ActivePlayer != card.Owner) return false;
         if (data.GetMoveArea(card)
             .Where(p => !data.Board.IsEmptyCell(p.Item1, p.Item2) &&
                         data.Board.GetCardByPos(p.Item1, p.Item2)!.Owner == card.Owner)
@@ -21,6 +22,9 @@ public class Cl_L : IEvent
             .Any(p => p?.Data.UnitType == UnitType.Knight))
         {
             CombatUtils.Heal(card, 2, data);
+            return true;
         }
+
+        return false;
     }
 }

@@ -1,7 +1,7 @@
 
+// System.Buffers.Binary : BinaryPrimitives - 이진 데이터 리틀-엔디언 인코딩/디코딩
+using System;
 using System.Buffers.Binary;
-using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace Game.Network
 {
@@ -32,7 +32,7 @@ namespace Game.Network
         public byte[] Data { get; }
 
         // Packet Flag Bit
-        private static class FlagBit
+        public static class FlagBit
         {
             public const uint None = 0x0000_0000;
             public const uint Control = 0x0000_0001;
@@ -105,6 +105,29 @@ namespace Game.Network
                 Array.Empty<byte>()
             );
         }
+
+        public static void WriteSendHeader(ref PacketWriter writer, int handlerId)
+        {
+            writer.WriteUInt32(FlagBit.None);
+            writer.WriteInt32(handlerId);
+            writer.WriteInt32(0);
+            writer.WriteInt32(0);
+        } 
+        public static void WriteQueryHeader(ref PacketWriter writer, int handlerId, int queryNum)
+        {
+            writer.WriteUInt32(FlagBit.Query);
+            writer.WriteInt32(handlerId);
+            writer.WriteInt32(queryNum);
+            writer.WriteInt32(0);
+        } 
+        public static void WriteRespondHeader(ref PacketWriter writer, int handlerId, int queryNum)
+        {
+            writer.WriteUInt32(FlagBit.Respond);
+            writer.WriteInt32(handlerId);
+            writer.WriteInt32(queryNum);
+            writer.WriteInt32(0);
+        } 
+
 
         public bool IsPacketValid()
         {

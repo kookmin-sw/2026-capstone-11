@@ -5,6 +5,8 @@ namespace SeaEngine;
 
 public partial class Game
 {
+    public GameAction? LastActionData = null;
+    private readonly UidFactory _actionUidFactory = new("A");
     private void UpdateActions()
     {
         _actions = [];
@@ -20,7 +22,7 @@ public partial class Game
         {
             foreach(var target in EffectRegistry.Get("DefaultMove").GetTargets(unit.Guid, Data))
             {
-                _actions.Add(new GameAction("DefaultMove", unit.Guid, target));
+                _actions.Add(new GameAction("DefaultMove", unit.Guid, target, _actionUidFactory));
             }
         }
 
@@ -31,7 +33,7 @@ public partial class Game
         {
             foreach (var target in EffectRegistry.Get("DeployUnit").GetTargets(card.Guid, Data))
             {
-                _actions.Add(new GameAction("DeployUnit", card.Guid, target));
+                _actions.Add(new GameAction("DeployUnit", card.Guid, target, _actionUidFactory));
             }
         }
         
@@ -41,20 +43,23 @@ public partial class Game
         {
             foreach (var target in EffectRegistry.Get(card.Data.EffectId).GetTargets(card.Guid, Data))
             {
-                _actions.Add(new GameAction(card.Data.EffectId, card.Guid, target));
+                _actions.Add(new GameAction(card.Data.EffectId, card.Guid, target, _actionUidFactory));
             }
         }
         
         //04. 턴 종료
-        _actions.Add(new GameAction("TurnEnd", Uid.None, EffectTarget.None));
+        _actions.Add(new GameAction("TurnEnd", Uid.None, EffectTarget.None, _actionUidFactory));
     }
 
     public void UseAction(Uid actionId)
     {
         var selectedAction = _actions.FirstOrDefault(a => a.Guid == actionId) ?? throw new KeyNotFoundException($"No action with the guid : {actionId}");
-        Logger.Log("UseAction", selectedAction, Data);
+        LastActionData = selectedAction;
+        Logger.LogAction(selectedAction, Data);
         EffectRegistry.Get(selectedAction.EffectId).Apply(selectedAction.Source, selectedAction.Target, Data);
         
+        Data.TriggerEventToAll("Always");
+        Data.TriggerBuffEventToAll("Always");
         UpdateActions();
     }
 }

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using events.server;
+using events.ui;
 using Game.Network;
 using PlayFab.ProfilesModels;
 using Unity.VisualScripting;
@@ -10,14 +12,14 @@ public class ClientSession : INetEventHandler
 {
     public int HandlerId => NetEventHandlerId.Constant.GameMessage;
 
-    private long ConnectionExpireTimeMs = 9999;
-
-    private string _name = "1";
+    private int queryNum = 0;
+    private bool disconnectUnsafe = true;
 
 
     private ConnId _host = ConnId.Default();
     private SessionEvents _events = new();
     public SessionEvents Events => _events;
+    public ConnId Host => _host;
 
     public ClientSession()
     {
@@ -25,16 +27,60 @@ public class ClientSession : INetEventHandler
         NetworkManagerUnity.Instance.Net.SetReceiveHandler(this);
     }
 
-    public void SetName(string name) {if (!String.IsNullOrEmpty(name)) _name = name;}
-
-    public void StartSession(string ipAddr, int portNum)
+    public void Clear()
     {
-        _ = NetworkManagerUnity.Instance.Net.ConnectTo(ipAddr, portNum, ConnectionExpireTimeMs);
+        queryNum = 0;
+        disconnectUnsafe = true;
+        _host = ConnId.Default();
+        _events.Clear();
     }
 
-    public void OnReceive(ConnId connId, byte[] raw)
+    public void EnterSession(string name, Action<byte[]> succ, Action<string> fail)
     {
-        _events.OnMessageReceive?.Invoke(raw);
+        _ = NetworkManagerUnity.Instance.Net.AsyncRequestQuery(
+            NetEventHandlerId.Constant.PeerEntrance,
+            _host,
+            Encoding.UTF8.GetBytes(name),
+            10000,
+            (connId, result) => { if (result.IsResponded) succ.Invoke(result.AnswerRaw); else fail.Invoke("failed"); }
+            );
+    }
+
+    public void Query(byte[] raw, long expireMs, Action<QueryTaskResult> callback)
+    {
+        _ = NetworkManagerUnity.Instance.Net.AsyncRequestQuery(
+            NetEventHandlerId.Constant.GameMessage,
+            _host,
+            raw, 
+            expireMs,
+            (connId, result) => { callback.Invoke(result); }
+            );
+    }
+
+    public void Disconnect()
+    {
+        NetworkManagerUnity.Instance.Net.Disconnect(_host); 
+    }
+
+    public void QueryDataRegister(byte[] raw, long expireMs, Action<QueryTaskResult> callback)
+    {
+        _ = NetworkManagerUnity.Instance.Net.AsyncRequestQuery(
+            NetEventHandlerId.Constant.GameDataRegister,
+            _host,
+            raw, 
+            expireMs,
+            (connId, result) => { callback.Invoke(result); }
+            );
+    }
+    public void QueryReady(byte[] raw, long expireMs, Action<QueryTaskResult> callback)
+    {
+        _ = NetworkManagerUnity.Instance.Net.AsyncRequestQuery(
+            NetEventHandlerId.Constant.GameReady,
+            _host,
+            raw, 
+            expireMs,
+            (connId, result) => { callback.Invoke(result); }
+            );
     }
 
     public void Answer(int queryNum, byte[] raw)
@@ -42,9 +88,20 @@ public class ClientSession : INetEventHandler
         NetworkManagerUnity.Instance.Net.Send(NetEventHandlerId.Constant.GameMessage, queryNum, _host, raw);
     }
 
+    public void Send(int queryNum, byte[] raw)
+    {
+        NetworkManagerUnity.Instance.Net.Send(NetEventHandlerId.Constant.GameMessage, 0, _host, raw);
+    }
+
+    public void OnReceive(ConnId connId, byte[] raw)
+    {
+        _events.OnMessageReceive?.Invoke(raw);
+    }
+
     public void OnQuery(ConnId connId, int queryNum, byte[] raw)
     {
         _events.OnGetQuery?.Invoke(queryNum, raw);
+        this.queryNum = queryNum;
     }
     public void OnException(ConnId connId, byte[] raw, string msg)
     {
@@ -56,7 +113,6 @@ public class ClientSession : INetEventHandler
     public void OnHello(ConnId connId, byte[] raw)
     {
         _host = connId;
-        NetworkManagerUnity.Instance.Net.Send(NetEventHandlerId.Constant.PeerEntrance, 0, connId, Encoding.UTF8.GetBytes(_name));
         _events.OnConnectHello?.Invoke();
 
     }
@@ -68,4 +124,8 @@ public class ClientSession : INetEventHandler
         _events.OnDisconnectUnsafe?.Invoke();
     }
 
+    public void SubscribeEventBus()
+    {
+        NetworkEventBus.Instance.Subscribe<IServerEvents.ReplyQueryEvent>((evt) => { Answer(this.queryNum, Encoding.UTF8.GetBytes(evt.actionId)); });
+    }
 }

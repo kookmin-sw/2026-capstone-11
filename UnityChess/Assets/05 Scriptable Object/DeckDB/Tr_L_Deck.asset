@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa2e0304fc1fe79849d42b5eddfe2fb1, type: 3}
+  m_Name: Tr_L_Deck
+  m_EditorClassIdentifier: Assembly-CSharp::core.data.DeckDB
+  deckId: Tr
+  leaderId: Tr_L
+  displayName: "\uD2B8\uB80C\uD2B8"
+  cardIds:
+  - Tr_L
+  - Tr_B
+  - Tr_N
+  - Tr_R
+  - Tr_P

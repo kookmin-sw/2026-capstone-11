@@ -12,11 +12,12 @@ public class Cl_P : IEvent
     // 이 유닛을 파괴합니다.
     
     public string Id => "Cl_P";
-    public string Timing => "TurnStart";
+    public string Timing => "TurnEnd";
 
-    public void Apply(Uid source, GameData data)
+    public bool Apply(Uid source, GameData data)
     {
         var card = data.GetCardById(source);
+        if(data.ActivePlayer != card.Owner) return false;
         var enemyZone = card.Owner == data.Player1 ? 5 : 0;
         if (card.Unit.PosX == enemyZone)
         {
@@ -24,8 +25,9 @@ public class Cl_P : IEvent
             {
                 if (enemy.Unit.IsPlaced) CombatUtils.Damage(enemy, 2, data);
             }
+            CombatUtils.Damage(card, 100, data);
+            return true;
         }
-
-        CombatUtils.Damage(card, 100, data);
+        return false;
     }
 }

@@ -11,11 +11,18 @@ public partial class Game(CardLoader cardLoader, ILogger logger, string player1I
 {
     [JsonIgnore]
     public readonly CardLoader CardLoader = cardLoader;
-    public readonly GameData Data = new GameData(player1Id, player2Id);
+    public GameData Data { get; private set; } = new GameData(player1Id, player2Id, logger);
     [JsonIgnore]
     public readonly ILogger Logger = logger;
     private List<GameAction> _actions = [];
     public IReadOnlyList<GameAction> Actions => _actions;
+
+    public void SetData(GameData gameData)
+    {
+        Data = gameData;
+        UpdateActions();
+        LastActionData = null;
+    }
     
     public override string ToString()
     {
@@ -27,14 +34,17 @@ Actions:
 ";
     }
 
+    private static readonly JsonConverter[] SerializeConverters =
+    [
+        new CardZoneConverter(),
+        new CardConverter(),
+        new BoardConverter(),
+        new ActionConverter(),
+        new TargetConverter()
+    ];
+
     public string Serialize()
     {
-        return JsonConvert.SerializeObject(this, Formatting.Indented, [
-            new CardZoneConverter(),
-            new CardConverter(),
-            new BoardConverter(),
-            new ActionConverter(),
-            new TargetConverter()
-        ]);
+        return JsonConvert.SerializeObject(this, Formatting.Indented, SerializeConverters);
     }
 }

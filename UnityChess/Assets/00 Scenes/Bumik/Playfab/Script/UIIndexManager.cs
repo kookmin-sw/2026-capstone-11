@@ -34,7 +34,7 @@ public class UIIndexManager : MonoBehaviour
         }
     }
 
-    private void HideAll()
+    public void HideAll()
     {
         foreach (var elem in _button_UI_list)
             elem.UIPanel.SetActive(false);

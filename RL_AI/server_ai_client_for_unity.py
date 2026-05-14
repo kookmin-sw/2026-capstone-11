@@ -240,7 +240,7 @@ class ServerAiClient:
         *,
         mode: str = "rl",
         model_path: Optional[str] = None,
-        player_name: str = "AI Player",
+        player_name: Optional[str] = None,
         seed: Optional[int] = None,
         device: str = "auto",
         card_data_path: Optional[str] = None,
@@ -299,7 +299,7 @@ class ServerAiClient:
 
             # 1. PeerEntrance — raw 문자열 쿼리 전송 후 raw 문자열 응답 수신
             #    TODO: SimpleReq/SimpleRsp 양식으로 전환 가능
-            entrance_name = self.player_name + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            entrance_name = self.player_name if self.player_name else "AI Player" + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             send_packet(sock, FLAG_QUERY, HANDLER_PEER_ENTRANCE, 0, entrance_name)
             self._log(f"sent PeerEntrance: {entrance_name}")
             rsp = recv_packet(sock)
@@ -367,9 +367,9 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="SeaEngine server AI client")
     parser.add_argument("host", help="game server IP/hostname")
     parser.add_argument("port", type=int, help="game server port")
-    parser.add_argument("--mode", choices=["rl", "belief_mcts", "greedy", "random"], default="rl")
-    parser.add_argument("--model-path", help="model checkpoint path for rl/belief_mcts mode")
-    parser.add_argument("--player-name", default="AI Player")
+    parser.add_argument("--mode", choices=["rl", "greedy", "random"], default="rl")
+    parser.add_argument("--model-path", help="model checkpoint path for rl mode")
+    parser.add_argument("--player-name", default=None)
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--device", default="auto")
     parser.add_argument("--card-data-path", default=None)

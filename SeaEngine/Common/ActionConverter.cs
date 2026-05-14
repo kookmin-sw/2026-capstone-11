@@ -9,7 +9,20 @@ public class ActionConverter : JsonConverter<GameAction>
 
     public override void WriteJson(JsonWriter writer, GameAction? value, JsonSerializer serializer)
     {
-        if(value == null) return;
+        if (value == null)
+        {
+            writer.WriteStartObject();
+            writer.WritePropertyName("Uid");
+            writer.WriteNull();
+            writer.WritePropertyName("EffectId");
+            writer.WriteNull();
+            writer.WritePropertyName("Source");
+            writer.WriteNull();
+            writer.WritePropertyName("Target");
+            writer.WriteNull();
+            writer.WriteEndObject();
+            return;
+        }
         
         writer.WriteStartObject();
         writer.WritePropertyName("Uid");

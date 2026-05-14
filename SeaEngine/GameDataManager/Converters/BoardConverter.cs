@@ -19,7 +19,7 @@ public class BoardConverter : JsonConverter<Board>
         writer.WriteEndArray();
     }
 
-    public override Board? ReadJson(JsonReader reader, Type objectType, Board? existingValue, bool hasExistingValue,
+    public override Board ReadJson(JsonReader reader, Type objectType, Board? existingValue, bool hasExistingValue,
         JsonSerializer serializer)
     {
         throw new NotImplementedException();

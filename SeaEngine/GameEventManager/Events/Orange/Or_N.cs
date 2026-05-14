@@ -13,7 +13,7 @@ public class Or_N : IEvent
     public string Id => "Or_N";
     public string Timing => "OnDestroy";
 
-    public void Apply(Uid source, GameData data)
+    public bool Apply(Uid source, GameData data)
     {
         var card = data.GetCardById(source);
         
@@ -24,8 +24,9 @@ public class Or_N : IEvent
         
         foreach (Card? e in enemy)
         {
-            if(e == null) continue;
+            if(e.Unit.Hp <= 0) continue;
             CombatUtils.Damage(e, 2, data);
         }
+        return true;
     }
 }
