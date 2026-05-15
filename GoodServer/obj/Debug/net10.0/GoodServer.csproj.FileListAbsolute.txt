@@ -1,0 +1,14 @@
+/Users/seyzero/RiderProjects/GoodServer/GoodServer/bin/Debug/net10.0/GoodServer
+/Users/seyzero/RiderProjects/GoodServer/GoodServer/bin/Debug/net10.0/GoodServer.deps.json
+/Users/seyzero/RiderProjects/GoodServer/GoodServer/bin/Debug/net10.0/GoodServer.runtimeconfig.json
+/Users/seyzero/RiderProjects/GoodServer/GoodServer/bin/Debug/net10.0/GoodServer.dll
+/Users/seyzero/RiderProjects/GoodServer/GoodServer/bin/Debug/net10.0/GoodServer.pdb
+/Users/seyzero/RiderProjects/GoodServer/GoodServer/obj/Debug/net10.0/GoodServer.GeneratedMSBuildEditorConfig.editorconfig
+/Users/seyzero/RiderProjects/GoodServer/GoodServer/obj/Debug/net10.0/GoodServer.AssemblyInfoInputs.cache
+/Users/seyzero/RiderProjects/GoodServer/GoodServer/obj/Debug/net10.0/GoodServer.AssemblyInfo.cs
+/Users/seyzero/RiderProjects/GoodServer/GoodServer/obj/Debug/net10.0/GoodServer.csproj.CoreCompileInputs.cache
+/Users/seyzero/RiderProjects/GoodServer/GoodServer/obj/Debug/net10.0/GoodServer.dll
+/Users/seyzero/RiderProjects/GoodServer/GoodServer/obj/Debug/net10.0/refint/GoodServer.dll
+/Users/seyzero/RiderProjects/GoodServer/GoodServer/obj/Debug/net10.0/GoodServer.pdb
+/Users/seyzero/RiderProjects/GoodServer/GoodServer/obj/Debug/net10.0/GoodServer.genruntimeconfig.cache
+/Users/seyzero/RiderProjects/GoodServer/GoodServer/obj/Debug/net10.0/ref/GoodServer.dll

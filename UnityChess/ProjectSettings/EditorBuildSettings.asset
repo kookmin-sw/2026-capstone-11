@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/00 Scenes/Develop/Splash.unity
+    guid: f7ecaf70e8864276ab9c9a3733447f2e
+  - enabled: 1
+    path: Assets/00 Scenes/Develop/Main Lobby.unity
+    guid: 2efb46b5bad861adea16881fbdcfb604
+  - enabled: 1
+    path: Assets/00 Scenes/Develop/Chess.unity
+    guid: 1b207c7c1ad98b855ab4d372b5fefea5
+  m_configObjects: {}
+  m_UseUCBPForAssetBundles: 0

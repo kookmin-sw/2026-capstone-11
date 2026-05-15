@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa2e0304fc1fe79849d42b5eddfe2fb1, type: 3}
+  m_Name: Or_L_Deck
+  m_EditorClassIdentifier: Assembly-CSharp::core.data.DeckDB
+  deckId: Or
+  leaderId: Or_L
+  displayName: "\uADE4 \uACF5\uC8FC\uB2D8"
+  cardIds:
+  - Or_L
+  - Or_B
+  - Or_N
+  - Or_R
+  - Or_P

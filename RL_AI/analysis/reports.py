@@ -1,0 +1,95 @@
+from __future__ import annotations
+
+# 평가 결과를 사람이 읽기 쉬운 텍스트 리포트로 바꾸는 파일
+# 현재는 승/패/무, 승률, 평균 스텝 수, 행동 타입 통계, 카드 사용 통계를 제공한다.
+
+from pathlib import Path
+from typing import Dict
+
+
+def build_win_rate_report(summary: Dict[str, object]) -> str:
+    episodes = int(summary.get("episodes", 0))
+    p1_wins = int(summary.get("p1_wins", 0))
+    p2_wins = int(summary.get("p2_wins", 0))
+    draws = int(summary.get("draws", 0))
+    avg_steps = float(summary.get("avg_steps", 0.0))
+    avg_final_turn = float(summary.get("avg_final_turn", 0.0))
+    p1_name = str(summary.get("p1_agent", "P1"))
+    p2_name = str(summary.get("p2_agent", "P2"))
+    action_type_counts = dict(summary.get("action_type_counts", {}))
+    card_use_counts = dict(summary.get("card_use_counts", {}))
+    leader_hp_stats = dict(summary.get("leader_hp_stats", {}))
+    card_use_total = sum(int(count) for count in card_use_counts.values())
+    total_steps_estimate = episodes * avg_steps
+    card_use_per_match = 0.0 if episodes == 0 else card_use_total / episodes
+    card_use_per_100_steps = 0.0 if total_steps_estimate <= 0 else (card_use_total / total_steps_estimate) * 100.0
+
+    def rate(count: int) -> float:
+        return 0.0 if episodes == 0 else 100.0 * count / episodes
+
+    lines = [
+        "=== Evaluation Report ===",
+        f"Episodes: {episodes}",
+        f"P1 ({p1_name}) wins: {p1_wins} ({rate(p1_wins):.1f}%)",
+        f"P2 ({p2_name}) wins: {p2_wins} ({rate(p2_wins):.1f}%)",
+        f"Draws: {draws} ({rate(draws):.1f}%)",
+        f"Average steps: {avg_steps:.2f}",
+        f"Average final turn: {avg_final_turn:.2f}",
+    ]
+
+    if leader_hp_stats:
+        def _hp_line(title: str, rows: object) -> None:
+            if not isinstance(rows, dict) or not rows:
+                return
+            lines.append(f"[{title}]")
+            for key, raw in rows.items():
+                row = dict(raw or {})
+                count = int(row.get("count", 0))
+                if count <= 0:
+                    continue
+                lines.append(
+                    f"- {key}: n={count}, avg={float(row.get('avg', 0.0)):.2f}, "
+                    f"min={float(row.get('min', 0.0)):.2f}, max={float(row.get('max', 0.0)):.2f}"
+                )
+
+        lines.append("")
+        _hp_line("Leader Min HP By Player", leader_hp_stats.get("min_by_player"))
+        _hp_line("Leader Final HP By Player", leader_hp_stats.get("final_by_player"))
+        _hp_line("Leader Min HP By Deck", leader_hp_stats.get("min_by_deck"))
+        _hp_line("Leader Final HP By Deck", leader_hp_stats.get("final_by_deck"))
+
+    if action_type_counts:
+        lines.append("")
+        lines.append("[Action Type Counts]")
+        for action_type, count in action_type_counts.items():
+            lines.append(f"- {action_type}: {count}")
+
+    if card_use_counts:
+        lines.append("")
+        lines.append("[Card Use Counts]")
+        lines.append(
+            f"- total: {card_use_total} "
+            f"({card_use_per_match:.2f}/match, {card_use_per_100_steps:.2f}/100 steps)"
+        )
+        for card_name, count in card_use_counts.items():
+            per_match = 0.0 if episodes == 0 else count / episodes
+            per_100_steps = 0.0 if total_steps_estimate <= 0 else (count / total_steps_estimate) * 100.0
+            lines.append(f"- {card_name}: {count} ({per_match:.2f}/match, {per_100_steps:.2f}/100 steps)")
+
+    return "\n".join(lines)
+
+
+def save_report(report_text: str, output_path: str | Path) -> Path:
+    path = Path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(report_text, encoding="utf-8")
+    return path
+
+
+def build_league_report(league_summary: Dict[str, Dict[str, object]]) -> str:
+    lines = ["=== Agent League Report ==="]
+    for matchup_key, summary in league_summary.items():
+        lines.append("")
+        lines.append(f"[{matchup_key}]")
+        lines.append(build_win_rate_report(summary))
+    return "\n".join(lines)
