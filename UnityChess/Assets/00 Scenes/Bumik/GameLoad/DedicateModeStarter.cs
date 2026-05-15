@@ -294,8 +294,7 @@ public class DedicateModeStarter : MonoBehaviour
 
         deck = decks[PlayerPrefs.GetInt("SelectedDeckIndex", 0)].deckId;
 
-        if (deck == "Or") GameInitParam.Instance.Player1Deck = "[\"Or_L\", \"Or_B\", \"Or_R\", \"Or_N\", \"Or_P\", \"Or_P\", \"Or_P\"]";
-        else GameInitParam.Instance.Player1Deck = "[\"Cl_L\", \"Cl_B\", \"Cl_R\", \"Cl_N\", \"Cl_P\", \"Cl_P\", \"Cl_P\"]";
+        SetupPlayerDeck(deck);
 
         GameInitParam.Instance.IpAddr = ipAddr.ToString();
         GameInitParam.Instance.PortNum = portNum;
