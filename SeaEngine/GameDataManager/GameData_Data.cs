@@ -1,7 +1,9 @@
 using Newtonsoft.Json;
 using SeaEngine.Common;
 using SeaEngine.GameDataManager.Components;
+using SeaEngine.GameDataManager.Components.differences;
 using SeaEngine.GameDataManager.Converters;
+using SeaEngine.GameEffectManager;
 using SeaEngine.GameEventManager;
 using SeaEngine.Logger;
 
@@ -18,8 +20,9 @@ public partial class GameData
     [JsonIgnore] public Player ActivePlayer;
     [JsonIgnore] public readonly ILogger Logger;
     public string ActivePlayerId => ActivePlayer.Id;
-    public readonly Board Board = new Board();
+    public readonly Board Board;
     public int TurnCnt = 0;
+    public readonly DifferenceLogger DifferenceLogger= new DifferenceLogger();
 
     public GameData(string player1Id, string player2Id, ILogger logger)
     {
@@ -27,12 +30,14 @@ public partial class GameData
         Player1 = new Player(player1Id);
         Player2 = new Player(player2Id);
         ActivePlayer = Player1;
+        Board = new Board(this);
         Winner = null;
     }
 
     private GameData(Player player1, Player player2, Board board, ILogger logger, Player activePlayer, Player? winner, int turnCnt)
     {
         Player1 = player1;
+        Board = new Board(this);
         Player2 = player2;
         Board = board;
         Logger = logger;
@@ -66,10 +71,11 @@ public partial class GameData
 
     public void TriggerEvent(string eventId, string timing, Uid source)
     {
-        if (EventRegistry.GetEvent(timing, eventId)?.Apply(source, this) ?? false)
-        {
-            Logger.LogEvent(eventId, timing, source);
-        }
+        if (!(EventRegistry.GetEvent(timing, eventId)?.Apply(source, this) ?? false)) return;
+        
+        DifferenceLogger.LogDifference(new Difference("OnEvent", 
+            [EffectTarget.Card(source),EffectTarget.String(eventId), EffectTarget.String(timing)]));
+        Logger.LogEvent(eventId, timing, source);
     }
 
     public void TriggerEventToAll(string timing)

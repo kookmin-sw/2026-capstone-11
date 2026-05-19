@@ -40,7 +40,9 @@ Actions:
         new CardConverter(),
         new BoardConverter(),
         new ActionConverter(),
-        new TargetConverter()
+        new TargetConverter(),
+        new DifferenceConverter(),
+        new DifferenceLoggerConverter()
     ];
 
     public string Serialize()

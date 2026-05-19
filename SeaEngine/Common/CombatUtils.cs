@@ -1,5 +1,7 @@
 using SeaEngine.GameDataManager;
 using SeaEngine.GameDataManager.Components;
+using SeaEngine.GameDataManager.Components.differences;
+using SeaEngine.GameEffectManager;
 using SeaEngine.GameEventManager;
 
 namespace SeaEngine.Common;
@@ -11,6 +13,8 @@ public static class CombatUtils
         data.TriggerBeforeAttackEvent(attacker.Data.EventId, attacker.Guid, defender.Guid);
         data.TriggerBeforeAttackedEvent(defender.Data.EventId, attacker.Guid, defender.Guid);
         var isDestroyed = Damage(defender, attacker.Unit.Atk, data);
+        data.DifferenceLogger.LogDifference(new Difference("AttackUnit",
+            [EffectTarget.Card(defender.Guid), EffectTarget.Card(attacker.Guid)]));
         data.TriggerAfterAttackEvent(attacker.Data.EventId, attacker.Guid, defender.Guid);
         data.TriggerAfterAttackedEvent(defender.Data.EventId, attacker.Guid, defender.Guid);
         return isDestroyed;
@@ -20,6 +24,8 @@ public static class CombatUtils
     {
         if (amount <= 0) return false;
         target.Unit.Hp -= amount;
+        data.DifferenceLogger.LogDifference(new Difference("AttackUnit",
+            [EffectTarget.Card(target.Guid), EffectTarget.String($"{amount}")]));
         if (target.Unit.Hp > 0) return false;
         
         data.TriggerEvent(target.Data.EventId, "OnDestroy", target.Guid);
@@ -36,6 +42,8 @@ public static class CombatUtils
     {
         if (amount <= 0) return false;
         target.Unit.Hp += amount;
+        data.DifferenceLogger.LogDifference(new Difference("HealUnit",
+            [EffectTarget.Card(target.Guid), EffectTarget.String($"{amount}")]));
         if (target.Unit.Hp < target.Unit.MaxHp) return false;
         
         target.Unit.Hp = target.Unit.MaxHp;
