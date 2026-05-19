@@ -10,14 +10,16 @@ public class EffectTarget
     public readonly int PosX;
     public readonly int PosY;
     public readonly Types Type;
+    public readonly string StrData;
 
-    private EffectTarget(Uid guid, Uid guid2,Types type, int posX, int posY)
+    private EffectTarget(Uid guid, Uid guid2, Types type, int posX, int posY, string strData = "")
     {
         Guid = guid;
         Guid2 = guid2;
         Type = type;
         PosX = posX;
         PosY = posY;
+        StrData = strData;
     }
 
     public enum Types
@@ -27,6 +29,7 @@ public class EffectTarget
         Card,
         Cell,
         None,
+        String,
     }
     
     public static readonly EffectTarget None = new EffectTarget(Uid.None, Uid.None, EffectTarget.Types.None, -1, -1);
@@ -50,16 +53,22 @@ public class EffectTarget
     {
         return new EffectTarget(Uid.None, Uid.None, EffectTarget.Types.Cell, posX, posY);
     }
+    
+    public static EffectTarget String(string str)
+    {
+        return new EffectTarget(Uid.None, Uid.None, EffectTarget.Types.String, -1, -1, str);
+    }
 
     public override string ToString()
     {
         return Type switch
         {
-            Types.Unit => $"{Guid}(unit)",
-            Types.Unit2 => $"{Guid}(unit),{Guid2}(unit2)",
-            Types.Card => $"{Guid}(card)",
-            Types.Cell => $"{PosX}/{PosY}(cell)",
+            Types.Unit => $"{Guid}",
+            Types.Unit2 => $"{Guid},{Guid2}",
+            Types.Card => $"{Guid}",
+            Types.Cell => $"{PosX}/{PosY}",
             Types.None => $"none",
+            Types.String => StrData,
             _ => throw new ArgumentOutOfRangeException()
         };
     }

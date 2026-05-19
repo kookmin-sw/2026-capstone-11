@@ -14,12 +14,18 @@ public partial class GameData
         var clonedPlayer1 = Player1.Clone(ctx);
         var clonedPlayer2 = Player2.Clone(ctx);
 
-        var board = new Board();
-        board.ReconstructFrom(Board.Cards.Select(c => ctx.GetCloned(c)).ToList());
+        var board = new Board(this);
+        board.ReconstructFrom(Board.Cards.Select(ctx.GetCloned).ToList());
 
         var clonedActivePlayer = ActivePlayer == Player1 ? clonedPlayer1 : clonedPlayer2;
         var clonedWinner = Winner != null ? (Winner == Player1 ? clonedPlayer1 : clonedPlayer2) : null;
 
-        return new GameData(clonedPlayer1, clonedPlayer2, board, Logger, clonedActivePlayer, clonedWinner, TurnCnt);
+        return new GameData(clonedPlayer1, clonedPlayer2, board, Logger, clonedActivePlayer, clonedWinner, TurnCnt)
+            {
+                DifferenceLogger =
+                {
+                    IsActivated = false
+                }
+            };
     }
 }
