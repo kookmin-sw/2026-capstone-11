@@ -1,5 +1,7 @@
 using System.Text;
 using SeaEngine.Common;
+using SeaEngine.GameDataManager.Components.differences;
+using SeaEngine.GameEffectManager;
 
 namespace SeaEngine.GameDataManager.Components;
 
@@ -14,7 +16,13 @@ public class Board
     private readonly Dictionary<Uid, Card> _cardById = new();
     private readonly Card?[,] _grid = new Card[BoardSize, BoardSize];
     public IReadOnlyList<Card> Cards => _cards;
+    private GameData _gameData;
 
+    public Board(GameData gameData)
+    {
+        _gameData = gameData;
+    }
+    
     public void Register(Card card)
     {
         _cards.Add(card);
@@ -54,6 +62,8 @@ public class Board
             throw new InvalidOperationException($"Cell ({x}, {y}) is already occupied");
         card.Unit.Place(x, y);
         _grid[x, y] = card;
+        
+        _gameData.DifferenceLogger.LogDifference(new Difference("DeployUnit", [EffectTarget.Card(card.Guid), EffectTarget.Cell(x, y)]));
     }
 
     public void MoveCard(Card card, int x, int y)
@@ -63,6 +73,8 @@ public class Board
         _grid[card.Unit.PosX, card.Unit.PosY] = null;
         card.Unit.Move(x, y);
         _grid[x, y] = card;
+        
+        _gameData.DifferenceLogger.LogDifference(new Difference("MoveUnit", [EffectTarget.Card(card.Guid), EffectTarget.Cell(x, y)]));
     }
 
     public void SwapCards(Card card1, Card card2)
@@ -76,6 +88,8 @@ public class Board
         card2.Unit.Move(x1, y1);
         _grid[card1.Unit.PosX, card1.Unit.PosY] = card1;
         _grid[card2.Unit.PosX, card2.Unit.PosY] = card2;
+        
+        _gameData.DifferenceLogger.LogDifference(new Difference("SwapUnit", [EffectTarget.Card(card1.Guid), EffectTarget.Card(card2.Guid)]));
     }
 
     public void WithdrawCard(Card card)
@@ -83,6 +97,8 @@ public class Board
         if (!card.Unit.IsPlaced) return;
         _grid[card.Unit.PosX, card.Unit.PosY] = null;
         card.Unit.Withdraw();
+        
+        _gameData.DifferenceLogger.LogDifference(new Difference("WithdrawUnit", [EffectTarget.Card(card.Guid)]));
     }
 
     public override string ToString()
