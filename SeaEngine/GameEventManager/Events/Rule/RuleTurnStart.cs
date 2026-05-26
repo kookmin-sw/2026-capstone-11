@@ -14,6 +14,10 @@ public class RuleTurnStart : IEvent
         data.DrawCard(data.ActivePlayer, data.TurnCnt == 0 ? 1 : 3);
         
         var myUnits = data.Board.Cards.Where(c => c.Owner == data.ActivePlayer);
+        foreach (var unit in myUnits)
+        {
+            unit.Unit.IsMoved = data.TurnCnt == 0;
+        }
         return true;
     }
 }
