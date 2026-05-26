@@ -109,7 +109,7 @@ namespace UI.HUD
             }
         }
 
-        private void UpdateOppoCardCountText(int conut)
+        public void UpdateOppoCardCountText(int conut)
         {
             oppoCardCount.text = conut.ToString();
         }

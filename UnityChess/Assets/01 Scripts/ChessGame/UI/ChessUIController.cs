@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using events.client;
 using events.ui;
+using events.Animation;
 using ui.view.board;
 using ui.view.effect;
 using ui.view;
@@ -17,8 +18,7 @@ public enum SelectionState
     None,
     SelectingCellTarget,
     SelectingEntityTargets,
-    Sumbitting, // 액션 확정 이후 잠시 대기하는 상태, 서버 응답이 오면 다시 None으로 돌아감
-    Locked, // 본인 턴이 아닌 경우 선택이 불가능한 상태
+    Locked, // 선택이 불가능한 상태
 }
 
 /// <summary>
@@ -28,6 +28,7 @@ public class ChessUIController : MonoBehaviour
 {
     [SerializeField] private ChessGameManager gameManager;
     [SerializeField] private ChessUIEventBus eventBus;
+    [SerializeField] private AnimationEventBus animationEventBus;
     [SerializeField] private ViewRegistry viewRegistry;
     [SerializeField] private BoardView boardView;
 
@@ -76,6 +77,8 @@ public class ChessUIController : MonoBehaviour
         eventBus.Subscribe<IClientEvents.CardSelectedEvent>(OnCardSelected);
         eventBus.Subscribe<IClientEvents.EmptySelectedEvent>(OnEmptySelected);
 
+        animationEventBus.Subscribe<IClientEvents.LockInputEvent>(OnLockInput);
+
         ResetSelectionAndHighlights();
     }
 
@@ -89,6 +92,8 @@ public class ChessUIController : MonoBehaviour
         eventBus.Unsubscribe<IClientEvents.CellSelectedEvent>(OnCellSelected);
         eventBus.Unsubscribe<IClientEvents.CardSelectedEvent>(OnCardSelected);
         eventBus.Unsubscribe<IClientEvents.EmptySelectedEvent>(OnEmptySelected);
+
+        animationEventBus.Unsubscribe<IClientEvents.LockInputEvent>(OnLockInput);
     }
 
     /// <summary>
@@ -449,6 +454,11 @@ public class ChessUIController : MonoBehaviour
         NetworkEventBus.Instance.Publish(new IServerEvents.ReplyQueryEvent { actionId = actionUid });
     }
 
+    private void OnLockInput(IClientEvents.LockInputEvent evt)
+    {
+        SetInputLocked(evt.IsLocked);
+    }
+    
     public void SetInputLocked(bool locked)
     {
         isInputLocked = locked;

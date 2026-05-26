@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2618938969763534435}
   - component: {fileID: 9012974345327925349}
+  - component: {fileID: 5031699476427425886}
   - component: {fileID: 3777091221435983120}
   m_Layer: 6
   m_Name: Base Unit
@@ -31,9 +32,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
-  - {fileID: 5738336007605640111}
-  - {fileID: 4391654452961940183}
   - {fileID: 1412478561779348798}
+  - {fileID: 5143396595001140120}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &9012974345327925349
@@ -70,6 +70,23 @@ MonoBehaviour:
   unitSprite: {fileID: 8285600397291929665}
   classSprite: {fileID: 3671661723920313602}
   unitOutliner: {fileID: 2114675088896314155}
+  unitAnimator: {fileID: 5031699476427425886}
+--- !u!114 &5031699476427425886
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 20258329590332241}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89e846f35f57f1d4d8e31bd507e4637e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Animations.Unit.UnitAnimator
+  visualRoot: {fileID: 5143396595001140120}
+  animator: {fileID: 3142749748206294834}
+  unitSprite: {fileID: 8285600397291929665}
+  dissolveMaterial: {fileID: 2100000, guid: b08dbe4c4a91cb412b63162c37f98f96, type: 2}
 --- !u!61 &3777091221435983120
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -141,12 +158,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1263419547065817566}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 2618938969763534435}
+  m_Father: {fileID: 5143396595001140120}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &8285600397291929665
 SpriteRenderer:
@@ -324,12 +341,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5688261707263020208}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 2618938969763534435}
+  m_Father: {fileID: 5143396595001140120}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &3866394464657707086
 SpriteRenderer:
@@ -407,3 +424,59 @@ MonoBehaviour:
   - {r: 1, g: 0.23881716, b: 0.10980392, a: 1}
   - {r: 0.10980392, g: 0.95686275, b: 1, a: 1}
   - {r: 0.99215686, g: 1, b: 0.5803922, a: 1}
+--- !u!1 &8280250294603618838
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5143396595001140120}
+  - component: {fileID: 3142749748206294834}
+  m_Layer: 6
+  m_Name: Visual Root
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5143396595001140120
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8280250294603618838}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 5738336007605640111}
+  - {fileID: 4391654452961940183}
+  m_Father: {fileID: 2618938969763534435}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!95 &3142749748206294834
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8280250294603618838}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
