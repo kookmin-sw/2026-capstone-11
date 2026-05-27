@@ -16,14 +16,14 @@ public class Tr_Hard : IEvent
         if (!card.Unit.IsMoved && !card.Unit.Buffs.ContainsKey("Hardened"))
         {
             card.Unit.Atk += 3;
-            card.Unit.GiveBuff("Hardened");
+            CombatUtils.GiveBuff(card, "Hardened", data);
             return true;
         }
 
         if (card.Unit.IsMoved && card.Unit.Buffs.ContainsKey("Hardened"))
         {
             card.Unit.Atk -= 3;
-            card.Unit.RemoveBuff("Hardened");
+            CombatUtils.RemoveBuff(card, "Hardened", data);
             return true;
         }
 

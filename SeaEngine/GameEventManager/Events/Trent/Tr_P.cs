@@ -22,7 +22,7 @@ public class Tr_P : IEvent
             if(c.Owner != card.Owner) continue;
             if(!c.Unit.IsPlaced) continue;
             
-            c.Unit.GiveBuff("MoreMove");
+            CombatUtils.GiveBuff(c, "MoreMove", data);
         }
         return true;
     }
