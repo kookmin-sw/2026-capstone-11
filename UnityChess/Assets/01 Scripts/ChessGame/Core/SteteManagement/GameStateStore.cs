@@ -182,9 +182,15 @@ namespace Core.StateManagement
         public Dictionary<Vector2Int, EntityID> BoardIndex { get; private set; } = new();
 
         public int TurnCnt { get; private set; }
+        public bool IsMyTurn => ActivePlayerId == LocalPlayerId;
         public string ActivePlayerId { get; private set; } = string.Empty;
         public string LocalPlayerId { get; set; } = string.Empty;
+        public string OpponentPlayerId { get; private set; } = string.Empty;
         public string WinnerId { get; private set; } = string.Empty;
+
+        // Hand 차분 계산용 임시 저장소
+        public List<EntityID> PreviousHands { get; private set; }
+        public List<EntityID> Handdiff { get; private set; }
 
         // Action 인덱스
         private readonly List<RuntimeAction> actions = new();
@@ -232,6 +238,8 @@ namespace Core.StateManagement
 
             if (snapshot.Data == null)
                 throw new InvalidOperationException("[GameStateStore] snapshot.Data is null");
+            
+            PreviousHands = GetPlayer(LocalPlayerId) != null ? GetHand(LocalPlayerId).ToList() : new List<EntityID>();
 
             ResetStore();
 
@@ -251,6 +259,9 @@ namespace Core.StateManagement
         private void ApplyPlayers(GameSnapshotDataDTO data)
         {
             Debug.Log($"[GameStateStore] Applying players. Player1: {data.Player1?.Id}, Player2: {data.Player2?.Id}");
+
+            OpponentPlayerId = Players.Select(x => x.Key).FirstOrDefault(id => id != LocalPlayerId) ?? string.Empty;
+
             AddOrReplacePlayer(new PlayerState(data.Player1?.Id ?? "Player1")
             {
                 hand = ToEntityIdList(data.Player1?.Hand),
@@ -264,6 +275,9 @@ namespace Core.StateManagement
                 deck = ToEntityIdList(data.Player2?.Deck),
                 trash = ToEntityIdList(data.Player2?.Trash)
             });
+
+            Handdiff = GetHand(LocalPlayerId).Where(x => !PreviousHands.Contains(x)).ToList();
+            Debug.Log($"[GameStateStore] Handdiff for {LocalPlayerId}: {string.Join(", ", Handdiff)}");
         }
 
         private void ApplyEntities(List<BoardEntityDTO> boardDtos)
