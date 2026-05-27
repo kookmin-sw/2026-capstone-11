@@ -27,7 +27,7 @@ public class Me_N : IEffect
         zone.RemoveCard(card);
         
         data.Board.SwapCards(card, targetCard);
-        if(targetCard.Owner != owner) targetCard.Unit.GiveBuff("Infected");
+        if(targetCard.Owner != owner) CombatUtils.GiveBuff(targetCard, "Infected", data);
         
         owner.Trash.AddCard(card);
     }

@@ -25,7 +25,7 @@ public class Tr_L : IEffect
         zone.RemoveCard(card);
 
         targetCard.Unit.Atk += 2;
-        targetCard.Unit.GiveBuff("TempAtk", 2);
+        CombatUtils.GiveBuff(targetCard, "TempAtk", data, 2);
         data.DrawCard(owner, 1);
         
         owner.Trash.AddCard(card);

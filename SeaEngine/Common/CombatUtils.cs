@@ -4,10 +4,25 @@ using SeaEngine.GameDataManager.Components.differences;
 using SeaEngine.GameEffectManager;
 using SeaEngine.GameEventManager;
 
+
 namespace SeaEngine.Common;
 
 public static class CombatUtils
 {
+    public static void GiveBuff(Card target, string buff, GameData data, int amount = 1)
+    {
+        target.Unit.GiveBuff(buff, amount);
+        data.DifferenceLogger.LogDifference(new Difference("ApplyBuff", 
+            [EffectTarget.Card(target.Guid), EffectTarget.String(buff), EffectTarget.String($"{amount}")]));
+    }
+
+    public static void RemoveBuff(Card target, string buff, GameData data)
+    {
+        target.Unit.RemoveBuff(buff);
+        data.DifferenceLogger.LogDifference(new Difference("RemoveBuff", 
+            [EffectTarget.Card(target.Guid), EffectTarget.String(buff)]));
+    }
+    
     public static bool Attack(Card attacker, Card defender, GameData data)
     {
         data.TriggerBeforeAttackEvent(attacker.Data.EventId, attacker.Guid, defender.Guid);
