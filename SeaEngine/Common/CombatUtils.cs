@@ -24,7 +24,7 @@ public static class CombatUtils
     {
         if (amount <= 0) return false;
         target.Unit.Hp -= amount;
-        data.DifferenceLogger.LogDifference(new Difference("AttackUnit",
+        data.DifferenceLogger.LogDifference(new Difference("DamageUnit",
             [EffectTarget.Card(target.Guid), EffectTarget.String($"{amount}")]));
         if (target.Unit.Hp > 0) return false;
         
