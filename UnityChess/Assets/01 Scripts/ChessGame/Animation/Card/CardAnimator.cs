@@ -19,8 +19,6 @@ namespace Animations
 
         private Tween moveTween;
         private Tween scaleTween;
-        private Tween drawTween;
-        private Tween useTween;
 
         private bool isSelected;
 
@@ -53,30 +51,15 @@ namespace Animations
                 .SetEase(Ease.OutQuad);
         }
 
+        // TODO: 추후 애니메이션 구현 시 활용
         public void PlayDraw()
         {
-            drawTween?.Kill();
-
-            Vector2 targetPos = visualRoot.anchoredPosition;
-
-            visualRoot.anchoredPosition = targetPos + Vector2.down * 300f;
-            visualRoot.localScale = Vector3.one * 0.6f;
-
-            drawTween = DOTween.Sequence()
-                .Append(visualRoot.DOAnchorPos(targetPos, 0.45f)).SetEase(Ease.OutCubic)
-                .Join(visualRoot.DOScale(1.05f, 0.35f)).SetEase(Ease.OutCubic)
-                .Append(visualRoot.DOScale(1f, 0.12f));
+            animator.Play("Draw");
         }
 
-        public void PlayUse(float duration)
+        public void PlayUse()
         {
-            useTween?.Kill();
-
-            useTween = DOTween.Sequence()
-                .Append(visualRoot.DOAnchorPos(Vector2.up * 220f, duration * 0.3f).SetEase(Ease.InQuad))
-                .Append(visualRoot.DOScale(0.1f, duration).SetEase(Ease.InBack))
-                .Join(visualRoot.GetComponent<CanvasGroup>().DOFade(0f, duration * 0.3f))
-                .OnComplete(() => { Destroy(gameObject); });
+            animator.Play("Use");
         }
 
         public void PlayFlash()

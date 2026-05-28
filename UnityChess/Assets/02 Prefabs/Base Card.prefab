@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2582910728266239327}
   - component: {fileID: 4659714152105737143}
+  - component: {fileID: 634302096666750418}
   - component: {fileID: 8978812311613450884}
   m_Layer: 5
   m_Name: View Root
@@ -48,6 +49,24 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 380717903664213937}
   m_CullTransparentMesh: 1
+--- !u!114 &634302096666750418
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 380717903664213937}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5447960412a14e73b48fc9b3285b222, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Animations.CardAnimator
+  visualRoot: {fileID: 2582910728266239327}
+  animator: {fileID: 8978812311613450884}
+  sortingCanvas: {fileID: 6760287449784380900}
+  selectedY: 30
+  selectedScale: 1.1
+  duration: 0.2
 --- !u!95 &8978812311613450884
 Animator:
   serializedVersion: 7
@@ -81,8 +100,6 @@ GameObject:
   - component: {fileID: 5620289041033481847}
   - component: {fileID: 5473389214408634354}
   - component: {fileID: 8571353090491861354}
-  - component: {fileID: 4411787171375066686}
-  - component: {fileID: 5696334652114011126}
   m_Layer: 5
   m_Name: Base Card
   m_TagString: Untagged
@@ -150,38 +167,8 @@ MonoBehaviour:
       timing: 
       text: 
   image: {fileID: 8969367986056270884}
-  cardAnimator: {fileID: 4411787171375066686}
+  cardAnimator: {fileID: 634302096666750418}
   cardOutliner: {fileID: 2813319808774256147}
---- !u!114 &4411787171375066686
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1487831780718665694}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a5447960412a14e73b48fc9b3285b222, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Animations.CardAnimator
-  visualRoot: {fileID: 2582910728266239327}
-  animator: {fileID: 8978812311613450884}
-  sortingCanvas: {fileID: 6760287449784380900}
-  selectedY: 30
-  selectedScale: 1.1
-  duration: 0.2
---- !u!225 &5696334652114011126
-CanvasGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1487831780718665694}
-  m_Enabled: 1
-  m_Alpha: 1
-  m_Interactable: 1
-  m_BlocksRaycasts: 1
-  m_IgnoreParentGroups: 0
 --- !u!1 &3175075286566276619
 GameObject:
   m_ObjectHideFlags: 0

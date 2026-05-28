@@ -16,13 +16,13 @@ public class MoreMove : IEvent
 
         if (data.ActivePlayer != card.Owner)
         {
-            CombatUtils.RemoveBuff(card, "MoreMove", data);
+            card.Unit.RemoveBuff("MoreMove");
             return false;
         }
 
         if (!card.Unit.IsMoved) return false;
         card.Unit.IsMoved = false;
-        CombatUtils.RemoveBuff(card, "MoreMove", data);
+        card.Unit.RemoveBuff("MoreMove");
         return true;
     }
 }

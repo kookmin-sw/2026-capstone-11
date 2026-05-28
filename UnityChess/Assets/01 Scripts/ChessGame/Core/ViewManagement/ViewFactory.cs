@@ -143,7 +143,34 @@ namespace core.UI
 
             foreach (var unit in units)
             {
-                CreateUnitView(state, ownerId, boardParent, isLocalPlayerP1, unit.id);
+                var data = new UnitViewData(
+                    id: new ViewID(ViewType.Unit, unit.id.id),
+                    type: ViewType.Unit,
+                    cardId: unit.cardId,
+                    curAttack: unit.curAttack,
+                    curHP: unit.curHp,
+                    pos: unit.position,
+                    buffs: ResolveBuffList(unit.buffs)
+                );
+
+                bool isMyUnit = state.LocalPlayerId == ownerId;
+                var view = Create(data, boardParent);
+
+                if (view is MonoBehaviour mb)
+                {
+                    var boardView = boardParent.GetComponent<BoardView>();
+                    var cell = BoardView.BoardToCell(unit.position, isLocalPlayerP1);
+                    var worldPos = boardView.tilemap.GetCellCenterWorld(cell);
+                    
+                    mb.transform.position = worldPos;
+                }
+
+                var key = new PrefabKey { Type = data.Type, defId = data.cardId };
+                var unitView = view as UnitView;
+
+                // 플레이어 자신의 유닛인지 확인하고 해당하는 스프라이트를 설정
+                unitView.SetUnitSprite(isMyUnit ? SpriteDict[key][0] : SpriteDict[key][1]);
+                SetClassSprite(unitView, isMyUnit);
             }
         }
 
@@ -153,69 +180,22 @@ namespace core.UI
 
             foreach (var uid in hand)
             {
-                CreateCardView(state, handParent, uid);
-            }
-        }
+                if (!state.TryGetUnit(uid, out var entity))
+                    continue;
 
-        public CardView CreateCardView(GameStateStore state, Transform handParent, EntityID cardId)
-        {
-            if (!state.TryGetUnit(cardId, out var card))
-            {
-                Debug.LogError($"[ViewFactory] 유닛 ID {cardId}를 찾을 수 없습니다.");
-                return null;
-            }
+                var data = new CardViewData(
+                    id: new ViewID(ViewType.Card, uid.id),
+                    type: ViewType.Card,
+                    cardId: entity.cardId
+                );
 
-            var data = new CardViewData(
-                id: new ViewID(ViewType.Card, card.id.id),
-                type: ViewType.Card,
-                cardId: card.cardId
-            );
-
-            var view = Create(data, handParent) as CardView;
-            var key = new PrefabKey { Type = data.Type, defId = data.cardId };
-
-            view.SetCardSprite(SpriteDict[key][0]);
-
-            return view;
-        }
-
-        public UnitView CreateUnitView(GameStateStore state, string ownerId, Transform boardParent, bool isLocalPlayerP1, EntityID unitId)
-        {
-            if (!state.TryGetUnit(unitId, out var unit))
-            {
-                Debug.LogError($"[ViewFactory] 유닛 ID {unitId}를 찾을 수 없습니다.");
-                return null;
-            }
-
-            var data = new UnitViewData(
-                id: new ViewID(ViewType.Unit, unit.id.id),
-                type: ViewType.Unit,
-                cardId: unit.cardId,
-                curAttack: unit.curAttack,
-                curHP: unit.curHp,
-                pos: unit.position,
-                buffs: ResolveBuffList(unit.buffs)
-            );
-
-            var view = Create(data, boardParent) as UnitView;
-
-            if (view != null && view is MonoBehaviour mb)
-            {
-                var boardView = boardParent.GetComponent<BoardView>();
-                var cell = BoardView.BoardToCell(unit.position, isLocalPlayerP1);
-                var worldPos = boardView.tilemap.GetCellCenterWorld(cell);
-                    
-                mb.transform.position = worldPos;
+                var view = Create(data, handParent);
 
                 var key = new PrefabKey { Type = data.Type, defId = data.cardId };
+                var cardView = view as CardView;
 
-                // 플레이어 자신의 유닛인지 확인하고 해당하는 스프라이트를 설정
-                bool isMyUnit = state.LocalPlayerId == ownerId;
-                view.SetUnitSprite(isMyUnit ? SpriteDict[key][0] : SpriteDict[key][1]);
-                SetClassSprite(view, isMyUnit);
+                cardView.SetCardSprite(SpriteDict[key][0]);
             }
-
-            return view;
         }
 
         private void SetClassSprite(UnitView unitView, bool isMyUnit)

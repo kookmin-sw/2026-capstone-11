@@ -60,16 +60,6 @@ namespace events.client
             public IHoverable Target;
         }
 
-        public class LockInputEvent : IBaseEvent
-        {
-            public bool IsLocked;
-
-            public LockInputEvent(bool isLocked)
-            {
-                IsLocked = isLocked;
-            }
-        }
-
         public class GameEndEvent : IBaseEvent
         {
             public string winner;

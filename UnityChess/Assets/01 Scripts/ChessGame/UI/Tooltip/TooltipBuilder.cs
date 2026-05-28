@@ -30,7 +30,7 @@ namespace ui.tooltip
                 title: def.card.name,
                 header: $"[유닛/클래스 : {ResolveClass(def.card.unitClass)}]",
                 description: $"[{def.evt.timing}] {def.evt.name}: {def.evt.text}" + "\n\n" +
-                $"공격력: {def.card.attack}    체력: {(data.curHP > 0 ? data.curHP : 0)} / {def.card.hp}" + "\n\n" +
+                $"공격력: {def.card.attack}    체력: {data.curHP} / {def.card.hp}" + "\n\n" +
                 BuildBuffText(data.buffs)
             );
         }

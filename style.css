@@ -65,7 +65,7 @@ strong {
     margin: 15px auto;
 }
 
-p{
+p {
     display: block;
     margin: 3px auto;
     font-size: 15px;
@@ -168,22 +168,6 @@ ul.introduceUl2>li:nth-child(2) {
     background-image: url('svgs/clock.svg');
 }
 
-ul.techs>li:nth-child(1) {
-    background-image: url('image/icons/unity.svg');
-}
-
-ul.techs>li:nth-child(2) {
-    background-image: url('image/icons/CSharp.svg');
-}
-
-ul.techs>li:nth-child(3) {
-    background-image: url('image/icons/Azure.svg');
-}
-
-ul.techs>li:nth-child(4) {
-    background-image: url('image/icons/pytorch.svg');
-}
-
 div.profile {
     width: 500px;
 }
@@ -193,32 +177,27 @@ div.profile {
 }
 
 @keyframes fade-scroll {
-    from {
-        opacity: 1;
-    }
-
-    to {
-        opacity: 0.5;
-    }
+  from { opacity: 1; }
+  to { opacity: 0.5; }
 }
 
 .sidebar {
     position: fixed;
-    width: 600px;
+    width: 450px;
     left: 50%;
     transform: translateX(-50%);
     top: 10px;
+    background: #45475a;
     padding: 0;
     display: flex;
     flex-direction: row;
-    justify-content: center;
     gap: 0;
     z-index: 1000;
     transition: opacity 0.3s;
 }
 
-@supports (animation-timeline: scroll()) {
-    .sidebar {
+@supports (animation-timeline: scroll()){
+    .sidebar{
         animation: fade-scroll linear both;
         animation-timeline: scroll();
         animation-range: 0px 100px;
@@ -232,7 +211,6 @@ div.profile {
 
 .sidebar a {
     color: #cdd6f4;
-    background: #45475a;
     text-decoration: none;
     font-size: 14px;
     padding: 10px 10px;

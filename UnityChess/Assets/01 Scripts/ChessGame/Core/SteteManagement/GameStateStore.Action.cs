@@ -180,7 +180,7 @@ namespace Core.StateManagement
             return availableActions.Any(x => x.effectType == RuntimeActionEffectType.CardEffect);
         }
 
-        public RuntimeAction ParseAction(ActionDTO dto)
+        private RuntimeAction ParseAction(ActionDTO dto)
         {
             var action = new RuntimeAction
             {

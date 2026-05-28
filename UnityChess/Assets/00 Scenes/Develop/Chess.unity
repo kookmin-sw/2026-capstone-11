@@ -130,7 +130,6 @@ GameObject:
   - component: {fileID: 64190384}
   - component: {fileID: 64190383}
   - component: {fileID: 64190385}
-  - component: {fileID: 64190386}
   m_Layer: 0
   m_Name: Event Bus
   m_TagString: Untagged
@@ -177,18 +176,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef2de5564e068793ab928d4b25c71ee0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::events.ui.NetworkEventBus
---- !u!114 &64190386
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 64190382}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 69da7d3ce9b25111e9391296bef232a6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::events.Animation.AnimationEventBus
 --- !u!1 &76979773
 GameObject:
   m_ObjectHideFlags: 0
@@ -7896,7 +7883,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ChessUIController
   gameManager: {fileID: 1470376623}
   eventBus: {fileID: 64190383}
-  animationEventBus: {fileID: 64190386}
   viewRegistry: {fileID: 1306483363}
   boardView: {fileID: 427112746}
 --- !u!1 &1176488946
@@ -8727,7 +8713,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1470376624}
   - component: {fileID: 1470376623}
-  - component: {fileID: 1470376625}
   m_Layer: 0
   m_Name: ChessGame Manager
   m_TagString: Untagged
@@ -8751,8 +8736,8 @@ MonoBehaviour:
   viewFactory: {fileID: 1306483364}
   hudController: {fileID: 1826855864}
   resultController: {fileID: 265014210}
+  eventBus: {fileID: 64190383}
   inputHandler: {fileID: 76979778}
-  animationHandler: {fileID: 1470376625}
   boardParent: {fileID: 427112741}
   handParent: {fileID: 454696266}
 --- !u!4 &1470376624
@@ -8770,20 +8755,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1470376625
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1470376622}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7bfad8e3087ac92ae8d9342718f653c3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Animations.AnimationHandler
-  viewRegistry: {fileID: 1306483363}
-  HUDController: {fileID: 1826855864}
 --- !u!1 &1475038796
 GameObject:
   m_ObjectHideFlags: 0

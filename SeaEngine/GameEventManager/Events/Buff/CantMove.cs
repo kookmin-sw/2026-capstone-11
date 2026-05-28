@@ -12,12 +12,12 @@ public class CantMove : IEvent
 
     public bool Apply(Uid source, GameData data)
     {
-        var card = data.GetCardById(source);
-        card.Unit.IsMoved = true;
-        CombatUtils.GiveBuff(card, "CantMove", data, -1);
-        if (card.Unit.Buffs["CantMove"] <= 0)
+        var unit = data.GetCardById(source).Unit;
+        unit.IsMoved = true;
+        unit.GiveBuff("CantMove", -1);
+        if (unit.Buffs["CantMove"] <= 0)
         {
-            CombatUtils.RemoveBuff(card, "CantMove", data);
+            unit.RemoveBuff("CantMove");
         }
 
         return true;

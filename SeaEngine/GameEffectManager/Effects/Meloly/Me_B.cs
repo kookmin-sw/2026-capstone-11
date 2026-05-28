@@ -40,7 +40,7 @@ public class Me_B : IEffect
             
             var t = data.Board.GetCardByPos(x, y);
             if(t.Owner == card.Owner) continue;
-            CombatUtils.GiveBuff(t, "Infected", data);
+            t.Unit.GiveBuff("Infected");
         }
         
         owner.Trash.AddCard(card);

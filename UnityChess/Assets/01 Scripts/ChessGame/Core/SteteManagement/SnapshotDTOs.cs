@@ -12,9 +12,6 @@ namespace Core.DTO
 
         [JsonProperty("Actions")]
         public List<ActionDTO> Actions;
-
-        [JsonProperty("LastActionData")]
-        public ActionDTO LastActionData;
     }
 
     [Serializable]
@@ -37,9 +34,6 @@ namespace Core.DTO
         
         [JsonProperty("ActivePlayerId")]
         public string ActivePlayerId;
-
-        [JsonProperty("DifferenceLogger")]
-        public List<List<string>> Delta;
     }
 
     [Serializable]

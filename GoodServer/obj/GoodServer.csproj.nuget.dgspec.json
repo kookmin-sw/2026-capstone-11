@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/Users/yubeom-ig/school/sem_7th/capstone/2026-capstone-11/GoodServer/GoodServer.csproj": {}
+    "/Users/seyzero/RiderProjects/GoodServer/GoodServer/GoodServer.csproj": {}
   },
   "projects": {
-    "/Users/yubeom-ig/school/sem_7th/capstone/2026-capstone-11/GoodServer/GoodServer.csproj": {
+    "/Users/seyzero/RiderProjects/GoodServer/GoodServer/GoodServer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/yubeom-ig/school/sem_7th/capstone/2026-capstone-11/GoodServer/GoodServer.csproj",
+        "projectUniqueName": "/Users/seyzero/RiderProjects/GoodServer/GoodServer/GoodServer.csproj",
         "projectName": "GoodServer",
-        "projectPath": "/Users/yubeom-ig/school/sem_7th/capstone/2026-capstone-11/GoodServer/GoodServer.csproj",
-        "packagesPath": "/Users/yubeom-ig/.nuget/packages/",
-        "outputPath": "/Users/yubeom-ig/school/sem_7th/capstone/2026-capstone-11/GoodServer/obj/",
+        "projectPath": "/Users/seyzero/RiderProjects/GoodServer/GoodServer/GoodServer.csproj",
+        "packagesPath": "/Users/seyzero/.nuget/packages/",
+        "outputPath": "/Users/seyzero/RiderProjects/GoodServer/GoodServer/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/Users/yubeom-ig/.nuget/NuGet/NuGet.Config"
+          "/Users/seyzero/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"

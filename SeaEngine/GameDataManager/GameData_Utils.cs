@@ -1,7 +1,5 @@
 using SeaEngine.Common;
 using SeaEngine.GameDataManager.Components;
-using SeaEngine.GameDataManager.Components.differences;
-using SeaEngine.GameEffectManager;
 
 namespace SeaEngine.GameDataManager;
 
@@ -24,9 +22,6 @@ public partial class GameData
             player.Deck.AddCard(card);
         player.Trash.Clear();
         player.Deck.Shuffle();
-        
-        DifferenceLogger.LogDifference(new Difference("ShuffleDeck", 
-            [EffectTarget.String(player.Id)]));
     }
 
     public void DrawCard(string playerId, int count)
@@ -45,8 +40,6 @@ public partial class GameData
             player.Hand.AddCard(top);
             player.Deck.RemoveCard(top);
         }
-        DifferenceLogger.LogDifference(new Difference("DrawCard", 
-            [EffectTarget.String(player.Id), EffectTarget.String($"{count}")]));
     }
 
     public CardZone GetCardZoneById(Uid guid)

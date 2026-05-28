@@ -13,9 +13,9 @@ public class TempAtk : IEvent
 
     public bool Apply(Uid source, GameData data)
     {
-        var card = data.GetCardById(source);
-        card.Unit.Atk -= card.Unit.Buffs["TempAtk"];
-        CombatUtils.RemoveBuff(card, "TempAtk", data);
+        var cur = data.GetCardById(source).Unit;
+        cur.Atk -= cur.Buffs["TempAtk"];
+        cur.RemoveBuff("TempAtk");
         return true;
     }
 }

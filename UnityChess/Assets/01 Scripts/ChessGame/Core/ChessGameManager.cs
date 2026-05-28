@@ -10,12 +10,6 @@ using core.UI;
 using System.Linq;
 using ui.view;
 using UI.HUD;
-using Core.Delta;
-using Newtonsoft.Json;
-using Animations;
-using events.Animation;
-using evets.Animation;
-using System;
 
 namespace Core
 {
@@ -25,8 +19,8 @@ namespace Core
         [SerializeField] private ViewFactory viewFactory;
         [SerializeField] private ChessHUDController hudController;
         [SerializeField] private ChessResultController resultController;
+        [SerializeField] private ChessUIEventBus eventBus;
         [SerializeField] private WorldInputHandler inputHandler;
-        [SerializeField] private AnimationHandler animationHandler;
         
         // View가 생성될 때의 부모 transform
         [SerializeField] private Transform boardParent;
@@ -37,11 +31,6 @@ namespace Core
         // 스냅샷 수신 시에 StateStore에 적용하기 위해 위임
         public void InitSnapshotJson(string json, string localPlayerId)
         {
-            animationHandler.Init(State, viewFactory, boardParent, handParent);
-
-            AnimationEventBus.Instance.Subscribe<IAnimationEvents.TurnEndEvent>(OnTurnEnd);
-            AnimationEventBus.Instance.Subscribe<IAnimationEvents.TurnStartEvent>(OnTurnStart);
-
             gameStateStore.LocalPlayerId = localPlayerId;
 
             gameStateStore.ApplySnapshotJson(json);
@@ -55,20 +44,11 @@ namespace Core
                 PublishGameEnd();
             }
         }
-
+        
         public void ApplySnapshotJson(string json)
         {
-            var dto = JsonConvert.DeserializeObject<GameSnapshotDTO>(json);
-
-            List<RuntimeDelta> delta = DeltaParser.Parse(dto.Data.Delta, dto.LastActionData);
-            
-            var commands = RenderCommandBuilder.Build(State.ParseAction(dto.LastActionData), delta);
-
-            // authoritative state 갱신
-            State.ApplySnapshot(dto);
-
-            // animation queue enqueue
-            AnimationEventBus.Instance.Enqueue(commands);
+            gameStateStore.ApplySnapshotJson(json);
+            PublishSnapshotRefreshed();
 
             // 게임 종료 여부 체크
             if (gameStateStore.WinnerId != null && gameStateStore.WinnerId != string.Empty)
@@ -76,7 +56,13 @@ namespace Core
                 PublishGameEnd();
             }
         }
-        
+
+        public void ApplySnapshot(GameSnapshotDTO snapshot)
+        {
+            gameStateStore.ApplySnapshot(snapshot);
+            PublishSnapshotRefreshed();
+        }
+
         public bool CanSelectSource(ActionSourceKey source)
         {
             return gameStateStore.HasAnyActionForSource(source);
@@ -173,24 +159,7 @@ namespace Core
                 playerNames: gameStateStore.Players.Values.Select(p => p.playerId).ToArray(),
                 isLocalPlayerP1: gameStateStore.IsLocalPlayer()
             );
-        }
-
-        private void OnTurnEnd(IAnimationEvents.TurnEndEvent evt)
-        {
-            hudController.RefreshHUD(
-                state: gameStateStore,
-                playerNames: gameStateStore.Players.Values.Select(p => p.playerId).ToArray(),
-                isLocalPlayerP1: gameStateStore.IsLocalPlayer()
-            );
-        }
-
-        private void OnTurnStart(IAnimationEvents.TurnStartEvent evt)
-        {
-            hudController.RefreshHUD(
-                state: gameStateStore,
-                playerNames: gameStateStore.Players.Values.Select(p => p.playerId).ToArray(),
-                isLocalPlayerP1: gameStateStore.IsLocalPlayer()
-            );
+            //eventBus.Publish(new SnapshotRefreshedEvent());
         }
 
         private void PublishGameEnd()
@@ -202,14 +171,11 @@ namespace Core
                 winner: gameStateStore.WinnerId,
                 playerNames: gameStateStore.Players.Values.Select(p => p.playerId).ToArray()
             );
-
-            AnimationEventBus.Instance.Unsubscribe<IAnimationEvents.TurnEndEvent>(OnTurnEnd);
-            AnimationEventBus.Instance.Unsubscribe<IAnimationEvents.TurnStartEvent>(OnTurnStart);
         }
 
         private void PublishUIEvent(IBaseEvent uiEvent)
         {
-            ChessUIEventBus.Instance.Publish(uiEvent);
+            eventBus.Publish(uiEvent);
         }
     }
 }

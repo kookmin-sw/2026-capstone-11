@@ -29,7 +29,7 @@ public class Tr_R : IEffect
         zone.RemoveCard(card);
 
         card.Unit.IsMoved = true;
-        CombatUtils.GiveBuff(data.GetCardById(target.Guid), "CantMove", data, 1);
+        data.GetCardById(target.Guid).Unit.GiveBuff("CantMove", 1);
         
         owner.Trash.AddCard(card);
     }

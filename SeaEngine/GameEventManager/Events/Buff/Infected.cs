@@ -12,11 +12,11 @@ public class Infected : IEvent
 
     public bool Apply(Uid source, GameData data)
     {
-        var card = data.GetCardById(source);
-        CombatUtils.GiveBuff(card, "Infected", data, -1);
-        if (card.Unit.Buffs["Infected"] <= 0)
+        var unit = data.GetCardById(source).Unit;
+        unit.GiveBuff("Infected", -1);
+        if (unit.Buffs["Infected"] <= 0)
         {
-            CombatUtils.RemoveBuff(card, "Infected", data);
+            unit.RemoveBuff("Infected");
         }
 
         return true;

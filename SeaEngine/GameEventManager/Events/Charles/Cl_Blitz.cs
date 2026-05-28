@@ -23,7 +23,7 @@ public class Cl_Blitz : IEvent
             .Any(p => p?.Data.UnitType == UnitType.Leader))
         {
             card.Unit.Atk += 1;
-            CombatUtils.GiveBuff(card, "TempAtk", data, 1);
+            card.Unit.GiveBuff("TempAtk", 1);
             return true;
         }
         return false;

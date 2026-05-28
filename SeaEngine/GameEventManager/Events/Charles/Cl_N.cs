@@ -28,7 +28,7 @@ public class Cl_N : IEvent
             .Any(p => p == card))
         {
             card.Unit.Atk += 1;
-            CombatUtils.GiveBuff(card, "TempAtk", data, 1);
+            card.Unit.GiveBuff("TempAtk", 1);
             return true;
         }
         return false;

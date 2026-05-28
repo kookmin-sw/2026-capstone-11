@@ -7,7 +7,6 @@ using events.client;
 using Game.Network;
 using core.data;
 using ui.view.effect;
-using Animations.Unit;
 using System.Collections.Generic;
 
 namespace ui.view.unit
@@ -65,8 +64,6 @@ namespace ui.view.unit
         public SpriteRenderer unitSprite;
         public SpriteRenderer classSprite;
         public UnitOutliner unitOutliner;
-
-        public UnitAnimator unitAnimator;
 
         public override void Init(BaseViewData baseData, IEventBus eventBus)
         {
