@@ -37,7 +37,7 @@ namespace Title.UI
 
         private TitleState inputState = TitleState.WaitingForInput;
 
-        private void Start()
+        public void Init()
         {
             PlayFabAccountManager.Instance.AutoLogin(
                 onSuccess: ShowAutoLoginResult,

@@ -32,7 +32,7 @@ public class Me_B : IAttackEvent
 
         if (!targetCard.Unit.IsPlaced) return false;
 
-        targetCard.Unit.GiveBuff("Infected");
+        CombatUtils.GiveBuff(targetCard, "Infected", data);
         
         return true;
     }

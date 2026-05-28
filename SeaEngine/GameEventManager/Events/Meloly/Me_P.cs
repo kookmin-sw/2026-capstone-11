@@ -21,7 +21,7 @@ public class Me_P:IEvent
         var enemys = data.Board.Cards.Where(c => c.Unit.IsPlaced && c.Owner != card.Owner);
         foreach (var enemy in enemys)
         {
-            enemy.Unit.GiveBuff("Infected", 2);
+            CombatUtils.GiveBuff(enemy, "Infected", data, 2);
         }
         CombatUtils.Damage(card, 100, data);
         return true;

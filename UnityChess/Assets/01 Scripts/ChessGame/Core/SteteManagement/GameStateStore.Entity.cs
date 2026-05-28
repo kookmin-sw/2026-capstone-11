@@ -27,7 +27,7 @@ namespace Core.StateManagement
         public PlayerState GetPlayer(string playerId)
         {
             if (!TryGetPlayer(playerId, out var player))
-                throw new KeyNotFoundException($"[GameStateStore] PlayerState 없음: {playerId}");
+                Debug.Log($"[GameStateStore] PlayerState 없음: {playerId}");
 
             return player;
         }

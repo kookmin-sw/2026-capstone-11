@@ -95,5 +95,10 @@ public class WorldInputHandler : MonoBehaviour, IInputHandler
 
             current = next;
         }
+        else if (current != null)
+        {
+            // 현재 호버 상태 유지
+            eventBus.Publish(new IClientEvents.HoverEnterEvent { Target = current });
+        }
     }
 }

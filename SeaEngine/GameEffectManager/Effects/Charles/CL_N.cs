@@ -33,7 +33,7 @@ public class Cl_N : IEffect
         CombatUtils.Attack(card, defender, data);
 
         defender.Unit.Atk -= 3;
-        defender.Unit.GiveBuff("TempAtk", -3);
+        CombatUtils.GiveBuff(defender, "TempAtk", data, -3);
         
         owner.Trash.AddCard(card);
     }
