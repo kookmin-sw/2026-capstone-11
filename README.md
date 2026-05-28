@@ -5,7 +5,7 @@
 
 # 1. 프로젝트 소개
 
-<img src="Capture1,png">
+<img src="image/Capture1,png">
 
 **"Call of the King"** 은 체스와 같은 추상 전략 게임과 CCG(Collectible Card Game)의 무작위성을 결합한 1vs1 PvP 2차원 전략 CCG입니다. 플레이어는 여러 리더 중 하나를 선택하고, 해당 리더에 대응하는 5종류 7장의 카드(군주, 비숍, 나이트, 룩 각각 1장, 폰 3장)으로 이루어진 덱을 활용하여 게임을 플레이합니다. 게임의 목표는 상대 리더 유닛을 파괴하는 것입니다.
 
