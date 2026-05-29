@@ -144,8 +144,8 @@ namespace Core.Delta
                     {
                         Type = DeltaType.ApplyBuff,
                         actionContext = actionContext,
-                        buffId = dto[1],
-                        amount = int.Parse(dto[2])
+                        buffId = dto[2],
+                        amount = int.Parse(dto[3])
                     };
 
                     return delta;
@@ -156,7 +156,7 @@ namespace Core.Delta
                     {
                         Type = DeltaType.RemoveBuff,
                         actionContext = actionContext,
-                        buffId = dto[1]
+                        buffId = dto[2]
                     };
 
                     return delta;
