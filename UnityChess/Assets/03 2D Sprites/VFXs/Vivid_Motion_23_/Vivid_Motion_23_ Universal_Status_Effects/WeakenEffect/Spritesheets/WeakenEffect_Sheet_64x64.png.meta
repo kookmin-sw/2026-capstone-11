@@ -1,0 +1,533 @@
+fileFormatVersion: 2
+guid: 8f706d6ee2a22b5e08e8630cc3c09179
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -7200272266695109919
+    second: WeakenEffect_Sheet_64x64_0
+  - first:
+      213: 4221121573221183857
+    second: WeakenEffect_Sheet_64x64_1
+  - first:
+      213: 8215696747661151556
+    second: WeakenEffect_Sheet_64x64_2
+  - first:
+      213: 6911015980300013227
+    second: WeakenEffect_Sheet_64x64_3
+  - first:
+      213: 8800358684885768796
+    second: WeakenEffect_Sheet_64x64_4
+  - first:
+      213: -6650117723074472388
+    second: WeakenEffect_Sheet_64x64_5
+  - first:
+      213: 4716804645979502102
+    second: WeakenEffect_Sheet_64x64_6
+  - first:
+      213: -7467138074313873080
+    second: WeakenEffect_Sheet_64x64_7
+  - first:
+      213: -2671952534886859964
+    second: WeakenEffect_Sheet_64x64_8
+  - first:
+      213: -9043582188292480534
+    second: WeakenEffect_Sheet_64x64_9
+  - first:
+      213: 4797603260157116900
+    second: WeakenEffect_Sheet_64x64_10
+  - first:
+      213: 1218158983501444541
+    second: WeakenEffect_Sheet_64x64_11
+  - first:
+      213: -894688513174044530
+    second: WeakenEffect_Sheet_64x64_12
+  - first:
+      213: -7581574127438164791
+    second: WeakenEffect_Sheet_64x64_13
+  - first:
+      213: -5230463155385466183
+    second: WeakenEffect_Sheet_64x64_14
+  - first:
+      213: 3404049685971032519
+    second: WeakenEffect_Sheet_64x64_15
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: WeakenEffect_Sheet_64x64_0
+      rect:
+        serializedVersion: 2
+        x: 14
+        y: 207
+        width: 35
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1e29a89a58e731c90800000000000000
+      internalID: -7200272266695109919
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WeakenEffect_Sheet_64x64_1
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 206
+        width: 36
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1713695d4bf649a30800000000000000
+      internalID: 4221121573221183857
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WeakenEffect_Sheet_64x64_2
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 205
+        width: 37
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 44dcca2d9a4040270800000000000000
+      internalID: 8215696747661151556
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WeakenEffect_Sheet_64x64_3
+      rect:
+        serializedVersion: 2
+        x: 205
+        y: 204
+        width: 39
+        height: 39
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bae84defa6cd8ef50800000000000000
+      internalID: 6911015980300013227
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WeakenEffect_Sheet_64x64_4
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 140
+        width: 39
+        height: 39
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c5ad3acf897212a70800000000000000
+      internalID: 8800358684885768796
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WeakenEffect_Sheet_64x64_5
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 140
+        width: 40
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c36dd992a2906b3a0800000000000000
+      internalID: -6650117723074472388
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WeakenEffect_Sheet_64x64_6
+      rect:
+        serializedVersion: 2
+        x: 140
+        y: 140
+        width: 40
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6163586b5d4757140800000000000000
+      internalID: 4716804645979502102
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WeakenEffect_Sheet_64x64_7
+      rect:
+        serializedVersion: 2
+        x: 204
+        y: 140
+        width: 40
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8492ab7eb756f5890800000000000000
+      internalID: -7467138074313873080
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WeakenEffect_Sheet_64x64_8
+      rect:
+        serializedVersion: 2
+        x: 12
+        y: 76
+        width: 40
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 44b3d5d73515bead0800000000000000
+      internalID: -2671952534886859964
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WeakenEffect_Sheet_64x64_9
+      rect:
+        serializedVersion: 2
+        x: 77
+        y: 76
+        width: 39
+        height: 39
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae1e6c92aedbe7280800000000000000
+      internalID: -9043582188292480534
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WeakenEffect_Sheet_64x64_10
+      rect:
+        serializedVersion: 2
+        x: 141
+        y: 77
+        width: 38
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4e1cbee0fb2849240800000000000000
+      internalID: 4797603260157116900
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WeakenEffect_Sheet_64x64_11
+      rect:
+        serializedVersion: 2
+        x: 206
+        y: 77
+        width: 37
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: db5fd833425c7e010800000000000000
+      internalID: 1218158983501444541
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WeakenEffect_Sheet_64x64_12
+      rect:
+        serializedVersion: 2
+        x: 14
+        y: 14
+        width: 36
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e8083ab998d6593f0800000000000000
+      internalID: -894688513174044530
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WeakenEffect_Sheet_64x64_13
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 15
+        width: 35
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9cc81cfff76d8c690800000000000000
+      internalID: -7581574127438164791
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WeakenEffect_Sheet_64x64_14
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 16
+        width: 35
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9b20b7ce879a967b0800000000000000
+      internalID: -5230463155385466183
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WeakenEffect_Sheet_64x64_15
+      rect:
+        serializedVersion: 2
+        x: 206
+        y: 16
+        width: 35
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7c9551a672d9d3f20800000000000000
+      internalID: 3404049685971032519
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      WeakenEffect_Sheet_64x64_0: -7200272266695109919
+      WeakenEffect_Sheet_64x64_1: 4221121573221183857
+      WeakenEffect_Sheet_64x64_10: 4797603260157116900
+      WeakenEffect_Sheet_64x64_11: 1218158983501444541
+      WeakenEffect_Sheet_64x64_12: -894688513174044530
+      WeakenEffect_Sheet_64x64_13: -7581574127438164791
+      WeakenEffect_Sheet_64x64_14: -5230463155385466183
+      WeakenEffect_Sheet_64x64_15: 3404049685971032519
+      WeakenEffect_Sheet_64x64_2: 8215696747661151556
+      WeakenEffect_Sheet_64x64_3: 6911015980300013227
+      WeakenEffect_Sheet_64x64_4: 8800358684885768796
+      WeakenEffect_Sheet_64x64_5: -6650117723074472388
+      WeakenEffect_Sheet_64x64_6: 4716804645979502102
+      WeakenEffect_Sheet_64x64_7: -7467138074313873080
+      WeakenEffect_Sheet_64x64_8: -2671952534886859964
+      WeakenEffect_Sheet_64x64_9: -9043582188292480534
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

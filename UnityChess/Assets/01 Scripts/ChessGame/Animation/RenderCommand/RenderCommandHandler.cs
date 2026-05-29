@@ -70,6 +70,26 @@ namespace Animations
         }
     }
 
+    public class AttackCommandBuilder : IRenderCommnandBuildHandler
+    {
+        public DeltaType type => DeltaType.AttackUnit;
+
+        public void Build(RuntimeAction action, RuntimeDelta delta, List<RuntimeRenderCommand> result)
+        {
+            var attackDelta = delta as AttackUnitDelta;
+
+            var cmd = new RuntimeRenderCommand
+            {
+                type = RenderCommandType.Attack,
+                source = attackDelta.UnitId,
+                target = attackDelta.TargetId,
+                duration = 0.9f
+            };
+
+            result.Add(cmd);
+        }
+    }
+
     public class DamageCommandBuilder : IRenderCommnandBuildHandler
     {
         public DeltaType type => DeltaType.DamageUnit;
@@ -84,6 +104,85 @@ namespace Animations
                 target = damageDelta.UnitId,
                 value = damageDelta.Damage,
                 duration = 0.25f
+            };
+
+            result.Add(cmd);
+        }
+    }
+
+    public class HealCommandBuilder : IRenderCommnandBuildHandler
+    {
+        public DeltaType type => DeltaType.HealUnit;
+
+        public void Build(RuntimeAction action, RuntimeDelta delta, List<RuntimeRenderCommand> result)
+        {
+            var healDelta = delta as HealUnitDelta;
+
+            var cmd = new RuntimeRenderCommand
+            {
+                type = RenderCommandType.Heal,
+                target = healDelta.UnitId,
+                value = healDelta.heal,
+                duration = 0.7f
+            };
+
+            result.Add(cmd);
+        }
+    }
+
+    public class SwapCommandBuilder : IRenderCommnandBuildHandler
+    {
+        public DeltaType type => DeltaType.SwapUnit;
+
+        public void Build(RuntimeAction action, RuntimeDelta delta, List<RuntimeRenderCommand> result)
+        {
+            var swapDelta = delta as SwapUnitDelta;
+
+            var cmd = new RuntimeRenderCommand
+            {
+                type = RenderCommandType.Swap,
+                source = swapDelta.Unit1,
+                target = swapDelta.Unit2,
+                duration = 0.5f
+            };
+
+            result.Add(cmd);
+        }
+    }
+
+    public class ApplyBuffBuilder : IRenderCommnandBuildHandler
+    {
+        public DeltaType type => DeltaType.ApplyBuff;
+
+        public void Build(RuntimeAction action, RuntimeDelta delta, List<RuntimeRenderCommand> result)
+        {
+            var buffDelta = delta as ApplyBuffDelta;
+
+            var cmd = new RuntimeRenderCommand
+            {
+                type = RenderCommandType.BuffApply,
+                extra = buffDelta.buffId,
+                value = buffDelta.amount,
+                duration = 0.05f
+            };
+
+            result.Add(cmd);
+        }
+    }
+
+    public class RemoveBuffBuilder : IRenderCommnandBuildHandler
+    {
+        public DeltaType type => DeltaType.RemoveBuff;
+
+        public void Build(RuntimeAction action, RuntimeDelta delta, List<RuntimeRenderCommand> result)
+        {
+            var buffDelta = delta as RemoveBuffDelta;
+
+            var cmd = new RuntimeRenderCommand
+            {
+                type = RenderCommandType.BuffRemove,
+                extra = buffDelta.buffId,
+                duration = 0.05f
             };
 
             result.Add(cmd);

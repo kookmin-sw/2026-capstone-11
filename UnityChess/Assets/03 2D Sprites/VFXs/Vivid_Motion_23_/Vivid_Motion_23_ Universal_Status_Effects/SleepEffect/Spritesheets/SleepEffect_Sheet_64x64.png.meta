@@ -1,0 +1,533 @@
+fileFormatVersion: 2
+guid: f1a967672065372889e481ef1d2603bf
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 5174487848414024647
+    second: SleepEffect_Sheet_64x64_0
+  - first:
+      213: -4561404724732636811
+    second: SleepEffect_Sheet_64x64_1
+  - first:
+      213: 5781178070533083444
+    second: SleepEffect_Sheet_64x64_2
+  - first:
+      213: -7213566222280100196
+    second: SleepEffect_Sheet_64x64_3
+  - first:
+      213: 8827433949311755678
+    second: SleepEffect_Sheet_64x64_4
+  - first:
+      213: -997743015681549468
+    second: SleepEffect_Sheet_64x64_5
+  - first:
+      213: -1590943634354468201
+    second: SleepEffect_Sheet_64x64_6
+  - first:
+      213: -6251661879972600450
+    second: SleepEffect_Sheet_64x64_7
+  - first:
+      213: 744423073050037097
+    second: SleepEffect_Sheet_64x64_8
+  - first:
+      213: 4852181782668474949
+    second: SleepEffect_Sheet_64x64_9
+  - first:
+      213: 3772842398393602091
+    second: SleepEffect_Sheet_64x64_10
+  - first:
+      213: 1694142424496018616
+    second: SleepEffect_Sheet_64x64_11
+  - first:
+      213: -5470479017617291507
+    second: SleepEffect_Sheet_64x64_12
+  - first:
+      213: -2361452762258922052
+    second: SleepEffect_Sheet_64x64_13
+  - first:
+      213: 7308291321615934998
+    second: SleepEffect_Sheet_64x64_14
+  - first:
+      213: 6809484087047763799
+    second: SleepEffect_Sheet_64x64_15
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: SleepEffect_Sheet_64x64_0
+      rect:
+        serializedVersion: 2
+        x: 17
+        y: 226
+        width: 42
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7c31b4358497fc740800000000000000
+      internalID: 5174487848414024647
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SleepEffect_Sheet_64x64_1
+      rect:
+        serializedVersion: 2
+        x: 81
+        y: 226
+        width: 42
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 571d589f192a2b0c0800000000000000
+      internalID: -4561404724732636811
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SleepEffect_Sheet_64x64_2
+      rect:
+        serializedVersion: 2
+        x: 145
+        y: 226
+        width: 42
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 431176d33deda3050800000000000000
+      internalID: 5781178070533083444
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SleepEffect_Sheet_64x64_3
+      rect:
+        serializedVersion: 2
+        x: 209
+        y: 226
+        width: 41
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c96fc3d6db344eb90800000000000000
+      internalID: -7213566222280100196
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SleepEffect_Sheet_64x64_4
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 161
+        width: 42
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e9563fa3868518a70800000000000000
+      internalID: 8827433949311755678
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SleepEffect_Sheet_64x64_5
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 161
+        width: 42
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 46b9c25730e4722f0800000000000000
+      internalID: -997743015681549468
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SleepEffect_Sheet_64x64_6
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 161
+        width: 42
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 79a02a89135dbe9e0800000000000000
+      internalID: -1590943634354468201
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SleepEffect_Sheet_64x64_7
+      rect:
+        serializedVersion: 2
+        x: 208
+        y: 161
+        width: 42
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e75e16494a2ad39a0800000000000000
+      internalID: -6251661879972600450
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SleepEffect_Sheet_64x64_8
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 97
+        width: 42
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96b80cf37d8b45a00800000000000000
+      internalID: 744423073050037097
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SleepEffect_Sheet_64x64_9
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 97
+        width: 42
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54a73959f99665340800000000000000
+      internalID: 4852181782668474949
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SleepEffect_Sheet_64x64_10
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 97
+        width: 42
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b2098c50c24db5430800000000000000
+      internalID: 3772842398393602091
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SleepEffect_Sheet_64x64_11
+      rect:
+        serializedVersion: 2
+        x: 208
+        y: 97
+        width: 42
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8b411032f8dc28710800000000000000
+      internalID: 1694142424496018616
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SleepEffect_Sheet_64x64_12
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 33
+        width: 42
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d0781bb3154f414b0800000000000000
+      internalID: -5470479017617291507
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SleepEffect_Sheet_64x64_13
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 33
+        width: 42
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cb521b7693f6a3fd0800000000000000
+      internalID: -2361452762258922052
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SleepEffect_Sheet_64x64_14
+      rect:
+        serializedVersion: 2
+        x: 145
+        y: 34
+        width: 41
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 616ecfb6c344c6560800000000000000
+      internalID: 7308291321615934998
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SleepEffect_Sheet_64x64_15
+      rect:
+        serializedVersion: 2
+        x: 209
+        y: 34
+        width: 41
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7573820f2b5208e50800000000000000
+      internalID: 6809484087047763799
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      SleepEffect_Sheet_64x64_0: 5174487848414024647
+      SleepEffect_Sheet_64x64_1: -4561404724732636811
+      SleepEffect_Sheet_64x64_10: 3772842398393602091
+      SleepEffect_Sheet_64x64_11: 1694142424496018616
+      SleepEffect_Sheet_64x64_12: -5470479017617291507
+      SleepEffect_Sheet_64x64_13: -2361452762258922052
+      SleepEffect_Sheet_64x64_14: 7308291321615934998
+      SleepEffect_Sheet_64x64_15: 6809484087047763799
+      SleepEffect_Sheet_64x64_2: 5781178070533083444
+      SleepEffect_Sheet_64x64_3: -7213566222280100196
+      SleepEffect_Sheet_64x64_4: 8827433949311755678
+      SleepEffect_Sheet_64x64_5: -997743015681549468
+      SleepEffect_Sheet_64x64_6: -1590943634354468201
+      SleepEffect_Sheet_64x64_7: -6251661879972600450
+      SleepEffect_Sheet_64x64_8: 744423073050037097
+      SleepEffect_Sheet_64x64_9: 4852181782668474949
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

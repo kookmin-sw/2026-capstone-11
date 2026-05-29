@@ -8343,62 +8343,62 @@ MonoBehaviour:
       Type: 1
       defId: Me_L
     Sprites:
-    - {fileID: -4871531732248455920, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
-    - {fileID: 5012592327895361995, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
+    - {fileID: 4478810090007780563, guid: 94dc00203b33e94ce87c60c7366b350c, type: 3}
+    - {fileID: -721073983444341713, guid: 94dc00203b33e94ce87c60c7366b350c, type: 3}
   - key:
       Type: 1
       defId: Me_B
     Sprites:
-    - {fileID: -4871531732248455920, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
-    - {fileID: 5012592327895361995, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
+    - {fileID: 4135669411751450140, guid: 94dc00203b33e94ce87c60c7366b350c, type: 3}
+    - {fileID: -542923973077206502, guid: 94dc00203b33e94ce87c60c7366b350c, type: 3}
   - key:
       Type: 1
       defId: Me_N
     Sprites:
-    - {fileID: -4871531732248455920, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
-    - {fileID: 5012592327895361995, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
+    - {fileID: -5952553589009115153, guid: 94dc00203b33e94ce87c60c7366b350c, type: 3}
+    - {fileID: -6000435155543836960, guid: 94dc00203b33e94ce87c60c7366b350c, type: 3}
   - key:
       Type: 1
       defId: Me_R
     Sprites:
-    - {fileID: -4871531732248455920, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
-    - {fileID: 5012592327895361995, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
+    - {fileID: 1766402487471799768, guid: 94dc00203b33e94ce87c60c7366b350c, type: 3}
+    - {fileID: -4189843543493919671, guid: 94dc00203b33e94ce87c60c7366b350c, type: 3}
   - key:
       Type: 1
       defId: Me_P
     Sprites:
-    - {fileID: -4871531732248455920, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
-    - {fileID: 5012592327895361995, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
+    - {fileID: 1766402487471799768, guid: 94dc00203b33e94ce87c60c7366b350c, type: 3}
+    - {fileID: -4189843543493919671, guid: 94dc00203b33e94ce87c60c7366b350c, type: 3}
   - key:
       Type: 1
       defId: Tr_L
     Sprites:
-    - {fileID: 7074741479498802654, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
-    - {fileID: 4339810400250722761, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
+    - {fileID: 9039666338100028720, guid: 5a14d34ca31fb01f2a26b7bb08b36c6e, type: 3}
+    - {fileID: -8811634468846449632, guid: 5a14d34ca31fb01f2a26b7bb08b36c6e, type: 3}
   - key:
       Type: 1
       defId: Tr_B
     Sprites:
-    - {fileID: 7074741479498802654, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
-    - {fileID: 4339810400250722761, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
+    - {fileID: -4729049540860851823, guid: 5a14d34ca31fb01f2a26b7bb08b36c6e, type: 3}
+    - {fileID: -2399508313715651843, guid: 5a14d34ca31fb01f2a26b7bb08b36c6e, type: 3}
   - key:
       Type: 1
       defId: Tr_N
     Sprites:
-    - {fileID: 7074741479498802654, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
-    - {fileID: 4339810400250722761, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
+    - {fileID: -8258912465184999597, guid: 5a14d34ca31fb01f2a26b7bb08b36c6e, type: 3}
+    - {fileID: 1086868461769863362, guid: 5a14d34ca31fb01f2a26b7bb08b36c6e, type: 3}
   - key:
       Type: 1
       defId: Tr_R
     Sprites:
-    - {fileID: 7074741479498802654, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
-    - {fileID: 4339810400250722761, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
+    - {fileID: -4231701959047844011, guid: 5a14d34ca31fb01f2a26b7bb08b36c6e, type: 3}
+    - {fileID: -4721224529453746739, guid: 5a14d34ca31fb01f2a26b7bb08b36c6e, type: 3}
   - key:
       Type: 1
       defId: Tr_P
     Sprites:
-    - {fileID: 7074741479498802654, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
-    - {fileID: 4339810400250722761, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
+    - {fileID: 225777701561084749, guid: 5a14d34ca31fb01f2a26b7bb08b36c6e, type: 3}
+    - {fileID: -7627535066985362485, guid: 5a14d34ca31fb01f2a26b7bb08b36c6e, type: 3}
   auroraSprites:
   - {fileID: 6109752833870817001, guid: 3330cc91e43b90d779096b6364fe519d, type: 3}
   - {fileID: 1033718157552196516, guid: 3330cc91e43b90d779096b6364fe519d, type: 3}
@@ -8728,6 +8728,7 @@ GameObject:
   - component: {fileID: 1470376624}
   - component: {fileID: 1470376623}
   - component: {fileID: 1470376625}
+  - component: {fileID: 1470376626}
   m_Layer: 0
   m_Name: ChessGame Manager
   m_TagString: Untagged
@@ -8784,6 +8785,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Animations.AnimationHandler
   viewRegistry: {fileID: 1306483363}
   HUDController: {fileID: 1826855864}
+  vfxHandler: {fileID: 1470376626}
+--- !u!114 &1470376626
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1470376622}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a3de1f19234d3da295fa67bcb6bb8f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Animations.VFXHandler
+  deployEffect: {fileID: 2322809081640410488, guid: 07e7a2142270aa63196556f5969fe100, type: 3}
+  lightEffect: {fileID: 149133882698259088, guid: 427dd3f1d8250d17d93a819abbd12457, type: 3}
+  hitEffect: {fileID: 3266777381828492734, guid: 6ebfc3a4a261eac32a223cf3b873f48d, type: 3}
+  moveEffect: {fileID: 3484035255602064769, guid: f70ee44b51c11e510ac11337f5418d65, type: 3}
+  healEffect: {fileID: 6868823115627656429, guid: bfbf00adb30ec644cb3229ca0a4c0f21, type: 3}
 --- !u!1 &1475038796
 GameObject:
   m_ObjectHideFlags: 0

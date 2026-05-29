@@ -42,6 +42,16 @@ namespace events.Animation
         }
     }
 
+    public class AttackDispatch : IAnimationDispatchHandler
+    {
+        public RenderCommandType type => RenderCommandType.Attack;
+
+        public void Dispatch(RuntimeRenderCommand command, AnimationEventBus eventBus)
+        {
+            eventBus.Publish(new UnitAttackEvent(command));
+        }
+    }
+
     public class DamageDispatch : IAnimationDispatchHandler
     {
         public RenderCommandType type => RenderCommandType.Damage;
@@ -49,6 +59,44 @@ namespace events.Animation
         public void Dispatch(RuntimeRenderCommand command, AnimationEventBus eventBus)
         {
             eventBus.Publish(new UnitDamageEvent(command));
+        }
+    }
+
+    public class HealDispatch : IAnimationDispatchHandler
+    {
+        public RenderCommandType type => RenderCommandType.Heal;
+
+        public void Dispatch(RuntimeRenderCommand command, AnimationEventBus eventBus)
+        {
+            eventBus.Publish(new UnitHealEvent(command));
+        }
+    }
+
+    public class SwapDispatch : IAnimationDispatchHandler
+    {
+        public RenderCommandType type => RenderCommandType.Swap;
+
+        public void Dispatch(RuntimeRenderCommand command, AnimationEventBus eventBus)
+        {
+            eventBus.Publish(new UnitHealEvent(command));
+        }
+    }
+    public class ApplyBuffDispatch : IAnimationDispatchHandler
+    {
+        public RenderCommandType type => RenderCommandType.BuffApply;
+
+        public void Dispatch(RuntimeRenderCommand command, AnimationEventBus eventBus)
+        {
+            eventBus.Publish(new UnitHealEvent(command));
+        }
+    }
+    public class RemoveBuffDispatch : IAnimationDispatchHandler
+    {
+        public RenderCommandType type => RenderCommandType.BuffRemove;
+
+        public void Dispatch(RuntimeRenderCommand command, AnimationEventBus eventBus)
+        {
+            eventBus.Publish(new UnitHealEvent(command));
         }
     }
 

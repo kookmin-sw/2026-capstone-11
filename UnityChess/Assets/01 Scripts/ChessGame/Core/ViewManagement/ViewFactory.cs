@@ -261,6 +261,11 @@ namespace core.UI
             return data;
         }
 
+        public UnitViewData.BuffViewData ResolveBuff(string id, int amount)
+        {
+            return new UnitViewData.BuffViewData(buffDB.Get(id), amount);
+        }
+
         void Awake()
         {
             Init();

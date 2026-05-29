@@ -1,0 +1,533 @@
+fileFormatVersion: 2
+guid: db9270dfa1ba241118017bbf8fc212ca
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 5308272670715346592
+    second: FearEffect_Sheet_64x64_0
+  - first:
+      213: -7606672281857030073
+    second: FearEffect_Sheet_64x64_1
+  - first:
+      213: 7627972918373083945
+    second: FearEffect_Sheet_64x64_2
+  - first:
+      213: 6896922273898175783
+    second: FearEffect_Sheet_64x64_3
+  - first:
+      213: -4572759372410027247
+    second: FearEffect_Sheet_64x64_4
+  - first:
+      213: 6480109148851145961
+    second: FearEffect_Sheet_64x64_5
+  - first:
+      213: 2357616736102044802
+    second: FearEffect_Sheet_64x64_6
+  - first:
+      213: 3718678604621318326
+    second: FearEffect_Sheet_64x64_7
+  - first:
+      213: 1949169713250831843
+    second: FearEffect_Sheet_64x64_8
+  - first:
+      213: -9164765631381103812
+    second: FearEffect_Sheet_64x64_9
+  - first:
+      213: -3419477425535306605
+    second: FearEffect_Sheet_64x64_10
+  - first:
+      213: -5225007165330672604
+    second: FearEffect_Sheet_64x64_11
+  - first:
+      213: -2662567108119950943
+    second: FearEffect_Sheet_64x64_12
+  - first:
+      213: -191720757635265184
+    second: FearEffect_Sheet_64x64_13
+  - first:
+      213: 3699384515016602942
+    second: FearEffect_Sheet_64x64_14
+  - first:
+      213: 955297060513615576
+    second: FearEffect_Sheet_64x64_15
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: FearEffect_Sheet_64x64_0
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 205
+        width: 38
+        height: 39
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0aef6ec9ed5caa940800000000000000
+      internalID: 5308272670715346592
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FearEffect_Sheet_64x64_1
+      rect:
+        serializedVersion: 2
+        x: 75
+        y: 202
+        width: 43
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7480a1d8cdbaf6690800000000000000
+      internalID: -7606672281857030073
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FearEffect_Sheet_64x64_2
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 201
+        width: 46
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 92b6deb54f00cd960800000000000000
+      internalID: 7627972918373083945
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FearEffect_Sheet_64x64_3
+      rect:
+        serializedVersion: 2
+        x: 201
+        y: 200
+        width: 47
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72d1e23444ac6bf50800000000000000
+      internalID: 6896922273898175783
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FearEffect_Sheet_64x64_4
+      rect:
+        serializedVersion: 2
+        x: 9
+        y: 137
+        width: 46
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 113892c049b4a80c0800000000000000
+      internalID: -4572759372410027247
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FearEffect_Sheet_64x64_5
+      rect:
+        serializedVersion: 2
+        x: 74
+        y: 138
+        width: 44
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ec080310f8fde950800000000000000
+      internalID: 6480109148851145961
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FearEffect_Sheet_64x64_6
+      rect:
+        serializedVersion: 2
+        x: 140
+        y: 140
+        width: 40
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 284d0e72eefe7b020800000000000000
+      internalID: 2357616736102044802
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FearEffect_Sheet_64x64_7
+      rect:
+        serializedVersion: 2
+        x: 207
+        y: 142
+        width: 35
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6b88c4e0d766b9330800000000000000
+      internalID: 3718678604621318326
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FearEffect_Sheet_64x64_8
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 80
+        width: 32
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3ed044de687dc0b10800000000000000
+      internalID: 1949169713250831843
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FearEffect_Sheet_64x64_9
+      rect:
+        serializedVersion: 2
+        x: 81
+        y: 81
+        width: 31
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3b12db173630d080800000000000000
+      internalID: -9164765631381103812
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FearEffect_Sheet_64x64_10
+      rect:
+        serializedVersion: 2
+        x: 145
+        y: 81
+        width: 31
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 394308d06639b80d0800000000000000
+      internalID: -3419477425535306605
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FearEffect_Sheet_64x64_11
+      rect:
+        serializedVersion: 2
+        x: 208
+        y: 80
+        width: 32
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 42438999aab0d77b0800000000000000
+      internalID: -5225007165330672604
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FearEffect_Sheet_64x64_12
+      rect:
+        serializedVersion: 2
+        x: 14
+        y: 14
+        width: 36
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a90fd17259ac0bd0800000000000000
+      internalID: -2662567108119950943
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FearEffect_Sheet_64x64_13
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 12
+        width: 40
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 06dc4199cfed65df0800000000000000
+      internalID: -191720757635265184
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FearEffect_Sheet_64x64_14
+      rect:
+        serializedVersion: 2
+        x: 138
+        y: 10
+        width: 44
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e353521cd9ad65330800000000000000
+      internalID: 3699384515016602942
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FearEffect_Sheet_64x64_15
+      rect:
+        serializedVersion: 2
+        x: 201
+        y: 8
+        width: 47
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8de83ea7d95e14d00800000000000000
+      internalID: 955297060513615576
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      FearEffect_Sheet_64x64_0: 5308272670715346592
+      FearEffect_Sheet_64x64_1: -7606672281857030073
+      FearEffect_Sheet_64x64_10: -3419477425535306605
+      FearEffect_Sheet_64x64_11: -5225007165330672604
+      FearEffect_Sheet_64x64_12: -2662567108119950943
+      FearEffect_Sheet_64x64_13: -191720757635265184
+      FearEffect_Sheet_64x64_14: 3699384515016602942
+      FearEffect_Sheet_64x64_15: 955297060513615576
+      FearEffect_Sheet_64x64_2: 7627972918373083945
+      FearEffect_Sheet_64x64_3: 6896922273898175783
+      FearEffect_Sheet_64x64_4: -4572759372410027247
+      FearEffect_Sheet_64x64_5: 6480109148851145961
+      FearEffect_Sheet_64x64_6: 2357616736102044802
+      FearEffect_Sheet_64x64_7: 3718678604621318326
+      FearEffect_Sheet_64x64_8: 1949169713250831843
+      FearEffect_Sheet_64x64_9: -9164765631381103812
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

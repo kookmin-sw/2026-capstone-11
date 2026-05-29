@@ -1,0 +1,533 @@
+fileFormatVersion: 2
+guid: d165574dc3c36d36288ea884e713e4f8
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -1483211432568030616
+    second: BlessedEffect_Sheet_64x64_0
+  - first:
+      213: 3180356498977184071
+    second: BlessedEffect_Sheet_64x64_1
+  - first:
+      213: 6583719705872586557
+    second: BlessedEffect_Sheet_64x64_2
+  - first:
+      213: 1695748913167001151
+    second: BlessedEffect_Sheet_64x64_3
+  - first:
+      213: -1884411880853963557
+    second: BlessedEffect_Sheet_64x64_4
+  - first:
+      213: -1304870437895189932
+    second: BlessedEffect_Sheet_64x64_5
+  - first:
+      213: -2436987836103862346
+    second: BlessedEffect_Sheet_64x64_6
+  - first:
+      213: -2074116474676488817
+    second: BlessedEffect_Sheet_64x64_7
+  - first:
+      213: -635820441892926330
+    second: BlessedEffect_Sheet_64x64_8
+  - first:
+      213: 3764663721882345893
+    second: BlessedEffect_Sheet_64x64_9
+  - first:
+      213: 371065670441533131
+    second: BlessedEffect_Sheet_64x64_10
+  - first:
+      213: 6973218465039068850
+    second: BlessedEffect_Sheet_64x64_11
+  - first:
+      213: 7198607478291554131
+    second: BlessedEffect_Sheet_64x64_12
+  - first:
+      213: 4167792140104793694
+    second: BlessedEffect_Sheet_64x64_13
+  - first:
+      213: -6484132746762133816
+    second: BlessedEffect_Sheet_64x64_14
+  - first:
+      213: -4912017445427919837
+    second: BlessedEffect_Sheet_64x64_15
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: BlessedEffect_Sheet_64x64_0
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 205
+        width: 38
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 86afbfa7f039a6be0800000000000000
+      internalID: -1483211432568030616
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BlessedEffect_Sheet_64x64_1
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 204
+        width: 40
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 749d3a4b265e22c20800000000000000
+      internalID: 3180356498977184071
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BlessedEffect_Sheet_64x64_2
+      rect:
+        serializedVersion: 2
+        x: 139
+        y: 203
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d375641c0321e5b50800000000000000
+      internalID: 6583719705872586557
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BlessedEffect_Sheet_64x64_3
+      rect:
+        serializedVersion: 2
+        x: 202
+        y: 202
+        width: 44
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f36e29de6a2888710800000000000000
+      internalID: 1695748913167001151
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BlessedEffect_Sheet_64x64_4
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 137
+        width: 45
+        height: 45
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bdc7c2fd06939d5e0800000000000000
+      internalID: -1884411880853963557
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BlessedEffect_Sheet_64x64_5
+      rect:
+        serializedVersion: 2
+        x: 73
+        y: 137
+        width: 46
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 45a495f004b24ede0800000000000000
+      internalID: -1304870437895189932
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BlessedEffect_Sheet_64x64_6
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 136
+        width: 47
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6b7d41b89741e2ed0800000000000000
+      internalID: -2436987836103862346
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BlessedEffect_Sheet_64x64_7
+      rect:
+        serializedVersion: 2
+        x: 201
+        y: 137
+        width: 46
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f855f103e024733e0800000000000000
+      internalID: -2074116474676488817
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BlessedEffect_Sheet_64x64_8
+      rect:
+        serializedVersion: 2
+        x: 9
+        y: 73
+        width: 46
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 68c4a044dac1d27f0800000000000000
+      internalID: -635820441892926330
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BlessedEffect_Sheet_64x64_9
+      rect:
+        serializedVersion: 2
+        x: 74
+        y: 73
+        width: 45
+        height: 45
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5a1e89185b5ce3430800000000000000
+      internalID: 3764663721882345893
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BlessedEffect_Sheet_64x64_10
+      rect:
+        serializedVersion: 2
+        x: 139
+        y: 74
+        width: 43
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bce7203e24a462500800000000000000
+      internalID: 371065670441533131
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BlessedEffect_Sheet_64x64_11
+      rect:
+        serializedVersion: 2
+        x: 204
+        y: 75
+        width: 41
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2be29dd8f39d5c060800000000000000
+      internalID: 6973218465039068850
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BlessedEffect_Sheet_64x64_12
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 12
+        width: 39
+        height: 39
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 35fd9059c5796e360800000000000000
+      internalID: 7198607478291554131
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BlessedEffect_Sheet_64x64_13
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 13
+        width: 37
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e5e7c989ed8f6d930800000000000000
+      internalID: 4167792140104793694
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BlessedEffect_Sheet_64x64_14
+      rect:
+        serializedVersion: 2
+        x: 143
+        y: 14
+        width: 35
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ced3c80f9bb306a0800000000000000
+      internalID: -6484132746762133816
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BlessedEffect_Sheet_64x64_15
+      rect:
+        serializedVersion: 2
+        x: 208
+        y: 15
+        width: 33
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3244fba882205dbb0800000000000000
+      internalID: -4912017445427919837
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      BlessedEffect_Sheet_64x64_0: -1483211432568030616
+      BlessedEffect_Sheet_64x64_1: 3180356498977184071
+      BlessedEffect_Sheet_64x64_10: 371065670441533131
+      BlessedEffect_Sheet_64x64_11: 6973218465039068850
+      BlessedEffect_Sheet_64x64_12: 7198607478291554131
+      BlessedEffect_Sheet_64x64_13: 4167792140104793694
+      BlessedEffect_Sheet_64x64_14: -6484132746762133816
+      BlessedEffect_Sheet_64x64_15: -4912017445427919837
+      BlessedEffect_Sheet_64x64_2: 6583719705872586557
+      BlessedEffect_Sheet_64x64_3: 1695748913167001151
+      BlessedEffect_Sheet_64x64_4: -1884411880853963557
+      BlessedEffect_Sheet_64x64_5: -1304870437895189932
+      BlessedEffect_Sheet_64x64_6: -2436987836103862346
+      BlessedEffect_Sheet_64x64_7: -2074116474676488817
+      BlessedEffect_Sheet_64x64_8: -635820441892926330
+      BlessedEffect_Sheet_64x64_9: 3764663721882345893
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

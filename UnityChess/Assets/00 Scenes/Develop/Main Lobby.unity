@@ -8486,8 +8486,8 @@ MonoBehaviour:
   leaderSprites:
   - {fileID: 3383679284579504793, guid: 88ee2bd2caa9dc5d385b2b2ad9c32989, type: 3}
   - {fileID: 6289068053135928818, guid: b4d840678c745116d86cf2956ea8f886, type: 3}
-  - {fileID: 5497369311495656864, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
-  - {fileID: -2298216017647605559, guid: 28e89d27d3dbf5c40ab80aa74b6a0ffc, type: 3}
+  - {fileID: 121296055538386787, guid: 94dc00203b33e94ce87c60c7366b350c, type: 3}
+  - {fileID: 2628549013185381936, guid: 5a14d34ca31fb01f2a26b7bb08b36c6e, type: 3}
   cardSprites:
   - {fileID: -6659611600469109033, guid: 57aec9c9aac523c31a8c123c28819ddc, type: 3}
   - {fileID: 2293576223685294724, guid: 57aec9c9aac523c31a8c123c28819ddc, type: 3}

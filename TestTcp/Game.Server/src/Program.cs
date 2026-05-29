@@ -105,7 +105,7 @@ namespace Game.Server
 
                 while (!cts.IsCancellationRequested)
                 {
-                    if (!server.TryGetConnIdList(2, out var list))
+                    if (!localMode && !server.TryGetConnIdList(2, out var list))
                     {
                         kill_timer += TickTime;
                         if (kill_timer > ServerKillTimer) cts.Cancel();

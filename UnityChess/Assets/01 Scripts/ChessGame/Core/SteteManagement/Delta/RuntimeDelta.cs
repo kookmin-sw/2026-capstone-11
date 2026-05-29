@@ -2,6 +2,7 @@ using UnityEngine;
 using Core.StateManagement;
 using Core.DTO;
 using System;
+using System.Data.Common;
 
 namespace Core.Delta
 {
@@ -12,6 +13,10 @@ namespace Core.Delta
         WithdrawUnit,
         AttackUnit,
         DamageUnit,
+        HealUnit,
+        SwapUnit,
+        ApplyBuff,
+        RemoveBuff,
 
         DrawCard,
         UseCard,
@@ -34,7 +39,7 @@ namespace Core.Delta
 
         public MoveUnitDelta()
         {
-            
+            Type = DeltaType.MoveUnit;
         }
     }
 
@@ -80,7 +85,49 @@ namespace Core.Delta
             Type = DeltaType.DamageUnit;
         }
     }
-    
+
+    public class HealUnitDelta : RuntimeDelta
+    {
+        public EntityID UnitId;
+        public int heal;
+
+        public HealUnitDelta()
+        {
+            Type = DeltaType.HealUnit;
+        }
+    }
+
+    public class SwapUnitDelta : RuntimeDelta
+    {
+        public EntityID Unit1;
+        public EntityID Unit2;
+
+        public SwapUnitDelta()
+        {
+            Type = DeltaType.SwapUnit;
+        }
+    }    
+    public class ApplyBuffDelta : RuntimeDelta
+    {
+        public string buffId;
+        public int amount;
+
+        public ApplyBuffDelta()
+        {
+            Type = DeltaType.ApplyBuff;
+        }
+    }
+
+    public class RemoveBuffDelta : RuntimeDelta
+    {
+        public string buffId;
+
+        public RemoveBuffDelta()
+        {
+            Type = DeltaType.RemoveBuff;
+        }
+    }
+
     public class DrawCardDelta : RuntimeDelta
     {
         public string PlayerId;

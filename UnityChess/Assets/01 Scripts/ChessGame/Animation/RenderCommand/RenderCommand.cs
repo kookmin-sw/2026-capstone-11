@@ -14,6 +14,7 @@ namespace Animations
         Heal,
         Deploy,
         Withdraw,
+        Swap,
         BuffApply,
         BuffRemove,
         Event,

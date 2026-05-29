@@ -10,6 +10,8 @@ using core.UI;
 using static evets.Animation.IAnimationEvents;
 using UI.HUD;
 using System.Collections;
+using Unity.VisualScripting;
+using core.data;
 
 namespace Animations
 {
@@ -18,6 +20,9 @@ namespace Animations
         [Header("References")]
         [SerializeField] private ViewRegistry viewRegistry;
         [SerializeField] private ChessHUDController HUDController;
+        [SerializeField] private VFXHandler vfxHandler;
+        
+        [SerializeField] private BuffDB buffDB;
 
         private GameStateStore state;
         private ViewFactory factory;
@@ -43,7 +48,13 @@ namespace Animations
             AnimationEventBus.Instance.Subscribe<UnitMoveEvent>(OnUnitMove);
             AnimationEventBus.Instance.Subscribe<UnitDeployEvent>(OnUnitDeploy);
             AnimationEventBus.Instance.Subscribe<UnitDestroyEvent>(OnUnitDestroy);
+            AnimationEventBus.Instance.Subscribe<UnitAttackEvent>(OnUnitAttack);
             AnimationEventBus.Instance.Subscribe<UnitDamageEvent>(OnUnitDamage);
+            AnimationEventBus.Instance.Subscribe<UnitHealEvent>(OnUnitHeal);
+            AnimationEventBus.Instance.Subscribe<UnitSwapEvent>(OnSwapUnit);
+
+            AnimationEventBus.Instance.Subscribe<ApplyBuffEvent>(OnAddBuff);
+            AnimationEventBus.Instance.Subscribe<RemoveBuffEvent>(OnRemoveBuff);
 
             AnimationEventBus.Instance.Subscribe<CardDrawEvent>(OnCardDraw);
             AnimationEventBus.Instance.Subscribe<CardUseEvent>(OnCardUse);
@@ -54,6 +65,13 @@ namespace Animations
             AnimationEventBus.Instance.Unsubscribe<UnitMoveEvent>(OnUnitMove);
             AnimationEventBus.Instance.Unsubscribe<UnitDeployEvent>(OnUnitDeploy);
             AnimationEventBus.Instance.Unsubscribe<UnitDestroyEvent>(OnUnitDestroy);
+            AnimationEventBus.Instance.Unsubscribe<UnitAttackEvent>(OnUnitAttack);
+            AnimationEventBus.Instance.Unsubscribe<UnitDamageEvent>(OnUnitDamage);
+            AnimationEventBus.Instance.Unsubscribe<UnitHealEvent>(OnUnitHeal);
+            AnimationEventBus.Instance.Unsubscribe<UnitSwapEvent>(OnSwapUnit);
+
+            AnimationEventBus.Instance.Unsubscribe<ApplyBuffEvent>(OnAddBuff);
+            AnimationEventBus.Instance.Unsubscribe<RemoveBuffEvent>(OnRemoveBuff);
 
             AnimationEventBus.Instance.Unsubscribe<CardDrawEvent>(OnCardDraw);
             AnimationEventBus.Instance.Unsubscribe<CardUseEvent>(OnCardUse);
@@ -70,7 +88,8 @@ namespace Animations
 
             var cell = BoardView.BoardToCell(cmd.position, state.IsLocalPlayer());
             view.transform.position = boardParent.gameObject.GetComponent<BoardView>().tilemap.GetCellCenterWorld(cell);
-            // view.Animator.Move(cmd.To);
+            
+            vfxHandler.PlayMove(view.transform.position + Vector3.down * 0.2f);
         }
 
         private void OnUnitDeploy(UnitDeployEvent evt)
@@ -93,7 +112,17 @@ namespace Animations
                 entity.id
             );
 
-            //view.Animator.Spawn();
+            StartCoroutine(DeployUnit(view, cmd.duration));
+        }
+
+        private IEnumerator DeployUnit(UnitView view, float interval)
+        {
+            view.unitSprite.enabled = false;
+            vfxHandler.PlayDeploy(view.gameObject.transform.position);
+
+            yield return new WaitForSeconds(interval);
+
+            view.unitSprite.enabled = true;
         }
 
         private void OnUnitDestroy(UnitDestroyEvent evt)
@@ -110,8 +139,40 @@ namespace Animations
             if (view == null)
                 return;
 
-            viewRegistry.Unregister(viewId);
             view.unitAnimator.PlayDestroy(evt.cmd.duration);
+            StartCoroutine(InvokeUnregister(view, cmd.duration + 0.1f));
+        }       
+
+        // 애니메이션 재생 시간동안 안전하도록 Unregister 유예
+        private IEnumerator InvokeUnregister(BaseView view, float interval)
+        {
+            yield return new WaitForSeconds(interval);
+            viewRegistry.Unregister(view.Id);
+        }
+
+        private void OnUnitAttack(UnitAttackEvent evt)
+        {
+            var cmd = evt.cmd;
+
+            if (cmd == null)
+                return;
+            
+            UnitView source = viewRegistry.Get(new ViewID(ViewType.Unit, cmd.source.id)) as UnitView;
+            UnitView target = viewRegistry.Get(new ViewID(ViewType.Unit, cmd.target.id)) as UnitView;
+
+            Vector3 targetPos = target != null ? target.transform.position : Vector3.zero;
+
+            StartCoroutine(AttackEffects(source.gameObject.transform.position, targetPos, cmd.duration / 2));
+        }
+
+        private IEnumerator AttackEffects(Vector3 source, Vector3 target, float interval)
+        {
+            vfxHandler.PlayEyeLight(source);
+
+            yield return new WaitForSeconds(interval);
+
+            if (target != Vector3.zero)
+                vfxHandler.PlayHit(target);
         }
 
         private void OnUnitDamage(UnitDamageEvent evt)
@@ -127,7 +188,67 @@ namespace Animations
                 return;
 
             view.unitAnimator.PlayDamage();
-            view.data.curHP -= cmd.value;
+            view.SetCurHp(cmd.value);
+        }
+
+        private void OnUnitHeal(UnitHealEvent evt)
+        {
+            var cmd = evt.cmd;
+
+            if (cmd == null)
+                return;
+            
+            UnitView view = viewRegistry.Get(new ViewID(ViewType.Unit, cmd.target.id)) as UnitView;
+
+            if (view == null)
+                return;
+
+            vfxHandler.PlayHeal(view.transform.position);
+            view.SetCurHp(cmd.value);
+        }
+
+        private void OnSwapUnit(UnitSwapEvent evt)
+        {
+            var cmd = evt.cmd;
+
+            if (cmd == null)
+                return;
+
+            UnitView view1 = viewRegistry.Get(new ViewID(ViewType.Unit,cmd.source.id)) as UnitView;
+            UnitView view2 = viewRegistry.Get(new ViewID(ViewType.Unit,cmd.target.id)) as UnitView;
+
+            var tmp = view1.transform.position;
+
+            view1.transform.position = view2.transform.position;
+            view2.transform.position = tmp; 
+            
+            vfxHandler.PlayMove(view2.transform.position + Vector3.down * 0.2f);
+            vfxHandler.PlayMove(view1.transform.position + Vector3.down * 0.2f);
+        }
+
+        private void OnAddBuff(ApplyBuffEvent evt)
+        {
+            var cmd = evt.cmd;
+
+            if (cmd == null)
+                return;
+
+            UnitView view = viewRegistry.Get(new ViewID(ViewType.Unit, cmd.target.id)) as UnitView;
+            var buff = factory.ResolveBuff(cmd.extra, cmd.value);
+
+            view.AddBuff(buff);
+        }
+
+        private void OnRemoveBuff(RemoveBuffEvent evt)
+        {
+            var cmd = evt.cmd;
+
+            if (cmd == null)
+                return;
+
+            UnitView view = viewRegistry.Get(new ViewID(ViewType.Unit, cmd.target.id)) as UnitView;
+
+            view.RemoveBuff(cmd.extra);
         }
 
         private void OnCardDraw(CardDrawEvent evt)

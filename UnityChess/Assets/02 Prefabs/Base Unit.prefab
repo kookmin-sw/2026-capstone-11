@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2618938969763534435}
   - component: {fileID: 9012974345327925349}
-  - component: {fileID: 5031699476427425886}
+  - component: {fileID: 1606356467723118156}
   - component: {fileID: 3777091221435983120}
   m_Layer: 6
   m_Name: Base Unit
@@ -70,8 +70,8 @@ MonoBehaviour:
   unitSprite: {fileID: 8285600397291929665}
   classSprite: {fileID: 3671661723920313602}
   unitOutliner: {fileID: 2114675088896314155}
-  unitAnimator: {fileID: 5031699476427425886}
---- !u!114 &5031699476427425886
+  unitAnimator: {fileID: 1606356467723118156}
+--- !u!114 &1606356467723118156
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -80,7 +80,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 20258329590332241}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 89e846f35f57f1d4d8e31bd507e4637e, type: 3}
+  m_Script: {fileID: 11500000, guid: ec0b8912b923a568394a6e8edb6f0759, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Animations.Unit.UnitAnimator
   visualRoot: {fileID: 5143396595001140120}

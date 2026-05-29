@@ -1,0 +1,533 @@
+fileFormatVersion: 2
+guid: b07056abcf7b6cba9974ceabb114987c
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 5564741106089515428
+    second: ArmorEffect_Sheet_64x64_0
+  - first:
+      213: 2262854795135280013
+    second: ArmorEffect_Sheet_64x64_1
+  - first:
+      213: 4371045577270651138
+    second: ArmorEffect_Sheet_64x64_2
+  - first:
+      213: -5723368514548988116
+    second: ArmorEffect_Sheet_64x64_3
+  - first:
+      213: 6425138897272155469
+    second: ArmorEffect_Sheet_64x64_4
+  - first:
+      213: -58233006760583413
+    second: ArmorEffect_Sheet_64x64_5
+  - first:
+      213: -6081698507663575346
+    second: ArmorEffect_Sheet_64x64_6
+  - first:
+      213: 5137780456946806963
+    second: ArmorEffect_Sheet_64x64_7
+  - first:
+      213: -5559793432164080175
+    second: ArmorEffect_Sheet_64x64_8
+  - first:
+      213: 6946062585838728006
+    second: ArmorEffect_Sheet_64x64_9
+  - first:
+      213: 3591990147499357472
+    second: ArmorEffect_Sheet_64x64_10
+  - first:
+      213: -7142595959289617667
+    second: ArmorEffect_Sheet_64x64_11
+  - first:
+      213: -5562245551419430495
+    second: ArmorEffect_Sheet_64x64_12
+  - first:
+      213: 6486467519683352434
+    second: ArmorEffect_Sheet_64x64_13
+  - first:
+      213: -8183844470039882540
+    second: ArmorEffect_Sheet_64x64_14
+  - first:
+      213: 8487385615716941018
+    second: ArmorEffect_Sheet_64x64_15
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: ArmorEffect_Sheet_64x64_0
+      rect:
+        serializedVersion: 2
+        x: 15
+        y: 213
+        width: 35
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a9da7f7d8ee93d40800000000000000
+      internalID: 5564741106089515428
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ArmorEffect_Sheet_64x64_1
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 212
+        width: 36
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d83e3527276476f10800000000000000
+      internalID: 2262854795135280013
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ArmorEffect_Sheet_64x64_2
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 212
+        width: 37
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 20962423bc219ac30800000000000000
+      internalID: 4371045577270651138
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ArmorEffect_Sheet_64x64_3
+      rect:
+        serializedVersion: 2
+        x: 206
+        y: 212
+        width: 37
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c2707a3e8a28290b0800000000000000
+      internalID: -5723368514548988116
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ArmorEffect_Sheet_64x64_4
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 148
+        width: 38
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d4da37409cdaa2950800000000000000
+      internalID: 6425138897272155469
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ArmorEffect_Sheet_64x64_5
+      rect:
+        serializedVersion: 2
+        x: 77
+        y: 147
+        width: 38
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b0f15dd836d113ff0800000000000000
+      internalID: -58233006760583413
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ArmorEffect_Sheet_64x64_6
+      rect:
+        serializedVersion: 2
+        x: 141
+        y: 148
+        width: 38
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ec670b3fd67799ba0800000000000000
+      internalID: -6081698507663575346
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ArmorEffect_Sheet_64x64_7
+      rect:
+        serializedVersion: 2
+        x: 205
+        y: 148
+        width: 38
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3b0324eba101d4740800000000000000
+      internalID: 5137780456946806963
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ArmorEffect_Sheet_64x64_8
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 84
+        width: 38
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1d56f4b9455a7d2b0800000000000000
+      internalID: -5559793432164080175
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ArmorEffect_Sheet_64x64_9
+      rect:
+        serializedVersion: 2
+        x: 77
+        y: 84
+        width: 38
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6437c88be1f556060800000000000000
+      internalID: 6946062585838728006
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ArmorEffect_Sheet_64x64_10
+      rect:
+        serializedVersion: 2
+        x: 141
+        y: 84
+        width: 39
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 025f66a020059d130800000000000000
+      internalID: 3591990147499357472
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ArmorEffect_Sheet_64x64_11
+      rect:
+        serializedVersion: 2
+        x: 206
+        y: 84
+        width: 36
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: df2e66071d660ec90800000000000000
+      internalID: -7142595959289617667
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ArmorEffect_Sheet_64x64_12
+      rect:
+        serializedVersion: 2
+        x: 15
+        y: 20
+        width: 35
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a9e52a142feec2b0800000000000000
+      internalID: -5562245551419430495
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ArmorEffect_Sheet_64x64_13
+      rect:
+        serializedVersion: 2
+        x: 79
+        y: 21
+        width: 34
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 277d5d5a7df840a50800000000000000
+      internalID: 6486467519683352434
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ArmorEffect_Sheet_64x64_14
+      rect:
+        serializedVersion: 2
+        x: 143
+        y: 21
+        width: 34
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4d45a3a70d42d6e80800000000000000
+      internalID: -8183844470039882540
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ArmorEffect_Sheet_64x64_15
+      rect:
+        serializedVersion: 2
+        x: 206
+        y: 20
+        width: 37
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: adc7198df3049c570800000000000000
+      internalID: 8487385615716941018
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      ArmorEffect_Sheet_64x64_0: 5564741106089515428
+      ArmorEffect_Sheet_64x64_1: 2262854795135280013
+      ArmorEffect_Sheet_64x64_10: 3591990147499357472
+      ArmorEffect_Sheet_64x64_11: -7142595959289617667
+      ArmorEffect_Sheet_64x64_12: -5562245551419430495
+      ArmorEffect_Sheet_64x64_13: 6486467519683352434
+      ArmorEffect_Sheet_64x64_14: -8183844470039882540
+      ArmorEffect_Sheet_64x64_15: 8487385615716941018
+      ArmorEffect_Sheet_64x64_2: 4371045577270651138
+      ArmorEffect_Sheet_64x64_3: -5723368514548988116
+      ArmorEffect_Sheet_64x64_4: 6425138897272155469
+      ArmorEffect_Sheet_64x64_5: -58233006760583413
+      ArmorEffect_Sheet_64x64_6: -6081698507663575346
+      ArmorEffect_Sheet_64x64_7: 5137780456946806963
+      ArmorEffect_Sheet_64x64_8: -5559793432164080175
+      ArmorEffect_Sheet_64x64_9: 6946062585838728006
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

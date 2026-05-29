@@ -1,0 +1,533 @@
+fileFormatVersion: 2
+guid: 2e27e9b6a9f8fde5085c3ded520d88e5
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -1083181680062326178
+    second: SilenceEffect_Sheet_64x64_0
+  - first:
+      213: 5506097214301508728
+    second: SilenceEffect_Sheet_64x64_1
+  - first:
+      213: 1309983083260180480
+    second: SilenceEffect_Sheet_64x64_2
+  - first:
+      213: 71896945716315390
+    second: SilenceEffect_Sheet_64x64_3
+  - first:
+      213: 2140742315879684905
+    second: SilenceEffect_Sheet_64x64_4
+  - first:
+      213: -5897014622001788878
+    second: SilenceEffect_Sheet_64x64_5
+  - first:
+      213: 349612913861055483
+    second: SilenceEffect_Sheet_64x64_6
+  - first:
+      213: -6754400296836579533
+    second: SilenceEffect_Sheet_64x64_7
+  - first:
+      213: 1128438089927209675
+    second: SilenceEffect_Sheet_64x64_8
+  - first:
+      213: 7095836252871341727
+    second: SilenceEffect_Sheet_64x64_9
+  - first:
+      213: 2249923593990035697
+    second: SilenceEffect_Sheet_64x64_10
+  - first:
+      213: -1741153846337341685
+    second: SilenceEffect_Sheet_64x64_11
+  - first:
+      213: 8282277844928148030
+    second: SilenceEffect_Sheet_64x64_12
+  - first:
+      213: -2662461435892485815
+    second: SilenceEffect_Sheet_64x64_13
+  - first:
+      213: -1008770131421491770
+    second: SilenceEffect_Sheet_64x64_14
+  - first:
+      213: -7578155434204075233
+    second: SilenceEffect_Sheet_64x64_15
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: SilenceEffect_Sheet_64x64_0
+      rect:
+        serializedVersion: 2
+        x: 14
+        y: 207
+        width: 36
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e5a9cac3004c7f0f0800000000000000
+      internalID: -1083181680062326178
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SilenceEffect_Sheet_64x64_1
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 206
+        width: 36
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 874953d6e36996c40800000000000000
+      internalID: 5506097214301508728
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SilenceEffect_Sheet_64x64_2
+      rect:
+        serializedVersion: 2
+        x: 141
+        y: 205
+        width: 38
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0087e737caefd2210800000000000000
+      internalID: 1309983083260180480
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SilenceEffect_Sheet_64x64_3
+      rect:
+        serializedVersion: 2
+        x: 204
+        y: 204
+        width: 40
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ef44bd524ed6ff000800000000000000
+      internalID: 71896945716315390
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SilenceEffect_Sheet_64x64_4
+      rect:
+        serializedVersion: 2
+        x: 12
+        y: 139
+        width: 41
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 92bd7ad4bc175bd10800000000000000
+      internalID: 2140742315879684905
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SilenceEffect_Sheet_64x64_5
+      rect:
+        serializedVersion: 2
+        x: 75
+        y: 139
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2388c4ce178992ea0800000000000000
+      internalID: -5897014622001788878
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SilenceEffect_Sheet_64x64_6
+      rect:
+        serializedVersion: 2
+        x: 139
+        y: 139
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf3d393c7131ad400800000000000000
+      internalID: 349612913861055483
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SilenceEffect_Sheet_64x64_7
+      rect:
+        serializedVersion: 2
+        x: 203
+        y: 139
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 33f334467bc8342a0800000000000000
+      internalID: -6754400296836579533
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SilenceEffect_Sheet_64x64_8
+      rect:
+        serializedVersion: 2
+        x: 12
+        y: 75
+        width: 41
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bc2b12dc67409af00800000000000000
+      internalID: 1128438089927209675
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SilenceEffect_Sheet_64x64_9
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 75
+        width: 41
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f963cb40a79797260800000000000000
+      internalID: 7095836252871341727
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SilenceEffect_Sheet_64x64_10
+      rect:
+        serializedVersion: 2
+        x: 141
+        y: 76
+        width: 39
+        height: 39
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1f8db8f8695593f10800000000000000
+      internalID: 2249923593990035697
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SilenceEffect_Sheet_64x64_11
+      rect:
+        serializedVersion: 2
+        x: 205
+        y: 77
+        width: 38
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b07f1c14dcd26d7e0800000000000000
+      internalID: -1741153846337341685
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SilenceEffect_Sheet_64x64_12
+      rect:
+        serializedVersion: 2
+        x: 14
+        y: 14
+        width: 36
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e32b70e81df80f270800000000000000
+      internalID: 8282277844928148030
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SilenceEffect_Sheet_64x64_13
+      rect:
+        serializedVersion: 2
+        x: 79
+        y: 15
+        width: 35
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 941b37d2e690d0bd0800000000000000
+      internalID: -2662461435892485815
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SilenceEffect_Sheet_64x64_14
+      rect:
+        serializedVersion: 2
+        x: 143
+        y: 16
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6cd099009e02002f0800000000000000
+      internalID: -1008770131421491770
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SilenceEffect_Sheet_64x64_15
+      rect:
+        serializedVersion: 2
+        x: 208
+        y: 17
+        width: 33
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f1be19b88cbf4d690800000000000000
+      internalID: -7578155434204075233
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      SilenceEffect_Sheet_64x64_0: -1083181680062326178
+      SilenceEffect_Sheet_64x64_1: 5506097214301508728
+      SilenceEffect_Sheet_64x64_10: 2249923593990035697
+      SilenceEffect_Sheet_64x64_11: -1741153846337341685
+      SilenceEffect_Sheet_64x64_12: 8282277844928148030
+      SilenceEffect_Sheet_64x64_13: -2662461435892485815
+      SilenceEffect_Sheet_64x64_14: -1008770131421491770
+      SilenceEffect_Sheet_64x64_15: -7578155434204075233
+      SilenceEffect_Sheet_64x64_2: 1309983083260180480
+      SilenceEffect_Sheet_64x64_3: 71896945716315390
+      SilenceEffect_Sheet_64x64_4: 2140742315879684905
+      SilenceEffect_Sheet_64x64_5: -5897014622001788878
+      SilenceEffect_Sheet_64x64_6: 349612913861055483
+      SilenceEffect_Sheet_64x64_7: -6754400296836579533
+      SilenceEffect_Sheet_64x64_8: 1128438089927209675
+      SilenceEffect_Sheet_64x64_9: 7095836252871341727
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

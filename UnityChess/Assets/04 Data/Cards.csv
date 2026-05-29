@@ -13,7 +13,7 @@ Me_L,멜로리,Me_L,L,2,8,,
 Me_B,인펙실리아,Me_L,B,1,3,,
 Me_N,하이재키,Me_L,N,2,3,,
 Me_R,디도스,Me_L,R,0,3,,
-Me_P,이브,Me_L,P,1,1,,
+Me_P,이브,Me_L,P,1,1,PawnGeneric,
 Tr_L,트렌트,Tr_L,L,2,7,,
 Tr_B,텔리시아,Tr_L,B,0,3,,Tr_Hard
 Tr_N,벡시아,Tr_L,N,2,3,,

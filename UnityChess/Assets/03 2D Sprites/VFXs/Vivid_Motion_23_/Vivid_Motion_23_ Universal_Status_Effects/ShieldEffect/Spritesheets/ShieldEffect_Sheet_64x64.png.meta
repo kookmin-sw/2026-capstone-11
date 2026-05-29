@@ -1,0 +1,533 @@
+fileFormatVersion: 2
+guid: 481ebcf31c5f1ce55a9e4d714708ec07
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -2501270135328261768
+    second: ShieldEffect_Sheet_64x64_0
+  - first:
+      213: -239420939232320553
+    second: ShieldEffect_Sheet_64x64_1
+  - first:
+      213: -7785379550098147387
+    second: ShieldEffect_Sheet_64x64_2
+  - first:
+      213: 2177228889295985841
+    second: ShieldEffect_Sheet_64x64_3
+  - first:
+      213: -6660280221313071137
+    second: ShieldEffect_Sheet_64x64_4
+  - first:
+      213: 2684012327448150862
+    second: ShieldEffect_Sheet_64x64_5
+  - first:
+      213: -2840706422642881141
+    second: ShieldEffect_Sheet_64x64_6
+  - first:
+      213: 5744774503904181965
+    second: ShieldEffect_Sheet_64x64_7
+  - first:
+      213: -4175841265062687033
+    second: ShieldEffect_Sheet_64x64_8
+  - first:
+      213: -262121879788014642
+    second: ShieldEffect_Sheet_64x64_9
+  - first:
+      213: 8466829723940702601
+    second: ShieldEffect_Sheet_64x64_10
+  - first:
+      213: 4012453706555282743
+    second: ShieldEffect_Sheet_64x64_11
+  - first:
+      213: 7259465870276158069
+    second: ShieldEffect_Sheet_64x64_12
+  - first:
+      213: -7155135213749127540
+    second: ShieldEffect_Sheet_64x64_13
+  - first:
+      213: 6911285548273426512
+    second: ShieldEffect_Sheet_64x64_14
+  - first:
+      213: 3147699922044203391
+    second: ShieldEffect_Sheet_64x64_15
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: ShieldEffect_Sheet_64x64_0
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 205
+        width: 56
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 87937707014b94dd0800000000000000
+      internalID: -2501270135328261768
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShieldEffect_Sheet_64x64_1
+      rect:
+        serializedVersion: 2
+        x: 68
+        y: 205
+        width: 56
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d3644d9ce76dacf0800000000000000
+      internalID: -239420939232320553
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShieldEffect_Sheet_64x64_2
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 205
+        width: 56
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c73fc24c86c4f390800000000000000
+      internalID: -7785379550098147387
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShieldEffect_Sheet_64x64_3
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 205
+        width: 56
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1bc943da322173e10800000000000000
+      internalID: 2177228889295985841
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShieldEffect_Sheet_64x64_4
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 141
+        width: 56
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fd703182d6ee193a0800000000000000
+      internalID: -6660280221313071137
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShieldEffect_Sheet_64x64_5
+      rect:
+        serializedVersion: 2
+        x: 68
+        y: 141
+        width: 56
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e430156cdf68f3520800000000000000
+      internalID: 2684012327448150862
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShieldEffect_Sheet_64x64_6
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 141
+        width: 56
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b8d433f2f88c398d0800000000000000
+      internalID: -2840706422642881141
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShieldEffect_Sheet_64x64_7
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 141
+        width: 56
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dcefde369f989bf40800000000000000
+      internalID: 5744774503904181965
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShieldEffect_Sheet_64x64_8
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 77
+        width: 56
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ce45857e7e6c06c0800000000000000
+      internalID: -4175841265062687033
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShieldEffect_Sheet_64x64_9
+      rect:
+        serializedVersion: 2
+        x: 68
+        y: 77
+        width: 56
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ec3b0630a81cc5cf0800000000000000
+      internalID: -262121879788014642
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShieldEffect_Sheet_64x64_10
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 77
+        width: 56
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 989443556c8308570800000000000000
+      internalID: 8466829723940702601
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShieldEffect_Sheet_64x64_11
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 77
+        width: 56
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7355de023691fa730800000000000000
+      internalID: 4012453706555282743
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShieldEffect_Sheet_64x64_12
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 13
+        width: 56
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 572e1e82fbdceb460800000000000000
+      internalID: 7259465870276158069
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShieldEffect_Sheet_64x64_13
+      rect:
+        serializedVersion: 2
+        x: 68
+        y: 13
+        width: 56
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c863890ce6ad3bc90800000000000000
+      internalID: -7155135213749127540
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShieldEffect_Sheet_64x64_14
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 13
+        width: 56
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 050e02ea691d9ef50800000000000000
+      internalID: 6911285548273426512
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShieldEffect_Sheet_64x64_15
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 13
+        width: 56
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f7138f0e660eeab20800000000000000
+      internalID: 3147699922044203391
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      ShieldEffect_Sheet_64x64_0: -2501270135328261768
+      ShieldEffect_Sheet_64x64_1: -239420939232320553
+      ShieldEffect_Sheet_64x64_10: 8466829723940702601
+      ShieldEffect_Sheet_64x64_11: 4012453706555282743
+      ShieldEffect_Sheet_64x64_12: 7259465870276158069
+      ShieldEffect_Sheet_64x64_13: -7155135213749127540
+      ShieldEffect_Sheet_64x64_14: 6911285548273426512
+      ShieldEffect_Sheet_64x64_15: 3147699922044203391
+      ShieldEffect_Sheet_64x64_2: -7785379550098147387
+      ShieldEffect_Sheet_64x64_3: 2177228889295985841
+      ShieldEffect_Sheet_64x64_4: -6660280221313071137
+      ShieldEffect_Sheet_64x64_5: 2684012327448150862
+      ShieldEffect_Sheet_64x64_6: -2840706422642881141
+      ShieldEffect_Sheet_64x64_7: 5744774503904181965
+      ShieldEffect_Sheet_64x64_8: -4175841265062687033
+      ShieldEffect_Sheet_64x64_9: -262121879788014642
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

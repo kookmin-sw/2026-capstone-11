@@ -18,7 +18,12 @@ namespace events.Animation
             { RenderCommandType.Move, new MoveDispatch() },
             { RenderCommandType.Deploy, new SpawnDispatch() },
             { RenderCommandType.Withdraw, new DestroyDispatch() },
+            { RenderCommandType.Attack, new AttackDispatch() },
             { RenderCommandType.Damage, new DamageDispatch() },
+            { RenderCommandType.Heal, new HealDispatch() },
+            { RenderCommandType.Swap, new SwapDispatch() },
+            { RenderCommandType.BuffApply, new ApplyBuffDispatch() },
+            { RenderCommandType.BuffRemove, new RemoveBuffDispatch() },
             { RenderCommandType.DrawCard, new DrawCardDispatch() },
             { RenderCommandType.UseCard, new UseCardDispatch() },
             { RenderCommandType.Event, new EventDispatch() }

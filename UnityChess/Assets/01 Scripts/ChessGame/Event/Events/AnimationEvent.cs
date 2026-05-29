@@ -57,6 +57,22 @@ namespace evets.Animation
         }
 
         /// <summary>
+        /// 유닛 공격 이벤트
+        /// </summary>
+        public class UnitAttackEvent : IBaseEvent
+        {
+            public RuntimeRenderCommand cmd;
+
+            public RenderCommandType Type => cmd.type;
+
+            public UnitAttackEvent(RuntimeRenderCommand command)
+            {
+                cmd = command;
+            }
+
+        }
+
+        /// <summary>
         /// 유닛 피격 이벤트
         /// </summary>
         public class UnitDamageEvent : IBaseEvent
@@ -66,6 +82,57 @@ namespace evets.Animation
             public RenderCommandType Type => cmd.type;
 
             public UnitDamageEvent(RuntimeRenderCommand command)
+            {
+                cmd = command;
+            }
+        }
+
+        /// <summary>
+        /// 유닛 회복 이벤트
+        /// </summary>
+        public class UnitHealEvent : IBaseEvent
+        {
+            public RuntimeRenderCommand cmd;
+
+            public RenderCommandType Type => cmd.type;
+
+            public UnitHealEvent(RuntimeRenderCommand command)
+            {
+                cmd = command;
+            }
+        }
+        
+        public class UnitSwapEvent : IBaseEvent
+        {
+            public RuntimeRenderCommand cmd;
+
+            public RenderCommandType Type => cmd.type;
+
+            public UnitSwapEvent(RuntimeRenderCommand command)
+            {
+                cmd = command;
+            }
+        }
+
+        public class ApplyBuffEvent : IBaseEvent
+        {
+            public RuntimeRenderCommand cmd;
+
+            public RenderCommandType Type => cmd.type;
+
+            public ApplyBuffEvent(RuntimeRenderCommand command)
+            {
+                cmd = command;
+            }
+        }
+
+        public class RemoveBuffEvent : IBaseEvent
+        {
+            public RuntimeRenderCommand cmd;
+
+            public RenderCommandType Type => cmd.type;
+
+            public RemoveBuffEvent(RuntimeRenderCommand command)
             {
                 cmd = command;
             }

@@ -1,0 +1,1079 @@
+fileFormatVersion: 2
+guid: b3044b55cf3679b15b15d87bce2ecfb7
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -1604836620062467174
+    second: InvisibilityEffect_Sheet_64x64_0
+  - first:
+      213: -1323435063430207464
+    second: InvisibilityEffect_Sheet_64x64_1
+  - first:
+      213: -2203217115496207196
+    second: InvisibilityEffect_Sheet_64x64_2
+  - first:
+      213: -3698878531208795766
+    second: InvisibilityEffect_Sheet_64x64_3
+  - first:
+      213: -1752377447425606666
+    second: InvisibilityEffect_Sheet_64x64_4
+  - first:
+      213: -5225055200308446598
+    second: InvisibilityEffect_Sheet_64x64_5
+  - first:
+      213: 4096205920815464729
+    second: InvisibilityEffect_Sheet_64x64_6
+  - first:
+      213: -2886198235752755316
+    second: InvisibilityEffect_Sheet_64x64_7
+  - first:
+      213: -625324606616842282
+    second: InvisibilityEffect_Sheet_64x64_8
+  - first:
+      213: -1461561896930805441
+    second: InvisibilityEffect_Sheet_64x64_9
+  - first:
+      213: 971499416527965405
+    second: InvisibilityEffect_Sheet_64x64_10
+  - first:
+      213: 1682497408097059712
+    second: InvisibilityEffect_Sheet_64x64_11
+  - first:
+      213: 8497610301951992059
+    second: InvisibilityEffect_Sheet_64x64_12
+  - first:
+      213: -8715166767036753174
+    second: InvisibilityEffect_Sheet_64x64_13
+  - first:
+      213: 142163267104380085
+    second: InvisibilityEffect_Sheet_64x64_14
+  - first:
+      213: -2106982816717145948
+    second: InvisibilityEffect_Sheet_64x64_15
+  - first:
+      213: 1997888933710253583
+    second: InvisibilityEffect_Sheet_64x64_16
+  - first:
+      213: 4204693929135764832
+    second: InvisibilityEffect_Sheet_64x64_17
+  - first:
+      213: -1356827005981537085
+    second: InvisibilityEffect_Sheet_64x64_18
+  - first:
+      213: 4166147055297864908
+    second: InvisibilityEffect_Sheet_64x64_19
+  - first:
+      213: 1498168784794623537
+    second: InvisibilityEffect_Sheet_64x64_20
+  - first:
+      213: 8059845443304931879
+    second: InvisibilityEffect_Sheet_64x64_21
+  - first:
+      213: 1507805589739142533
+    second: InvisibilityEffect_Sheet_64x64_22
+  - first:
+      213: -4734756533627862813
+    second: InvisibilityEffect_Sheet_64x64_23
+  - first:
+      213: 7128120756062778404
+    second: InvisibilityEffect_Sheet_64x64_24
+  - first:
+      213: -2823175856807919385
+    second: InvisibilityEffect_Sheet_64x64_25
+  - first:
+      213: 763385400026419755
+    second: InvisibilityEffect_Sheet_64x64_26
+  - first:
+      213: -5458294066928690644
+    second: InvisibilityEffect_Sheet_64x64_27
+  - first:
+      213: -4588296795559029948
+    second: InvisibilityEffect_Sheet_64x64_28
+  - first:
+      213: 6100741894175208331
+    second: InvisibilityEffect_Sheet_64x64_29
+  - first:
+      213: -5273232351587726864
+    second: InvisibilityEffect_Sheet_64x64_30
+  - first:
+      213: -3268669761403912429
+    second: InvisibilityEffect_Sheet_64x64_31
+  - first:
+      213: 2412750401417077560
+    second: InvisibilityEffect_Sheet_64x64_32
+  - first:
+      213: 6263468147082407349
+    second: InvisibilityEffect_Sheet_64x64_33
+  - first:
+      213: 8685274078868531965
+    second: InvisibilityEffect_Sheet_64x64_34
+  - first:
+      213: 6448115895647359732
+    second: InvisibilityEffect_Sheet_64x64_35
+  - first:
+      213: -6063798955924912769
+    second: InvisibilityEffect_Sheet_64x64_36
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_0
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 212
+        width: 38
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a9b53aac8997ab9e0800000000000000
+      internalID: -1604836620062467174
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_1
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 211
+        width: 40
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 81822f852d632ade0800000000000000
+      internalID: -1323435063430207464
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_2
+      rect:
+        serializedVersion: 2
+        x: 140
+        y: 223
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4aca9c3e4b99c61e0800000000000000
+      internalID: -2203217115496207196
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_3
+      rect:
+        serializedVersion: 2
+        x: 140
+        y: 211
+        width: 31
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a892bf7c291faacc0800000000000000
+      internalID: -3698878531208795766
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_4
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 213
+        width: 37
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6fb7acdfefd4ea7e0800000000000000
+      internalID: -1752377447425606666
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_5
+      rect:
+        serializedVersion: 2
+        x: 203
+        y: 211
+        width: 17
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a7abec59affdc77b0800000000000000
+      internalID: -5225055200308446598
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_6
+      rect:
+        serializedVersion: 2
+        x: 208
+        y: 213
+        width: 33
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 911ce051595a8d830800000000000000
+      internalID: 4096205920815464729
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_7
+      rect:
+        serializedVersion: 2
+        x: 213
+        y: 210
+        width: 33
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c8f099e0ff922f7d0800000000000000
+      internalID: -2886198235752755316
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_8
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 146
+        width: 23
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6dfca4955966257f0800000000000000
+      internalID: -625324606616842282
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_9
+      rect:
+        serializedVersion: 2
+        x: 15
+        y: 146
+        width: 35
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f39713cc23d77bbe0800000000000000
+      internalID: -1461561896930805441
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_10
+      rect:
+        serializedVersion: 2
+        x: 47
+        y: 150
+        width: 7
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ddc06a572957b7d00800000000000000
+      internalID: 971499416527965405
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_11
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 157
+        width: 6
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 08304297a7e695710800000000000000
+      internalID: 1682497408097059712
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_12
+      rect:
+        serializedVersion: 2
+        x: 73
+        y: 154
+        width: 8
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf06c8f1c839de570800000000000000
+      internalID: 8497610301951992059
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_13
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 145
+        width: 42
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aea1c7410028d0780800000000000000
+      internalID: -8715166767036753174
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_14
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 150
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5b49ddbfcb019f100800000000000000
+      internalID: 142163267104380085
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_15
+      rect:
+        serializedVersion: 2
+        x: 141
+        y: 147
+        width: 39
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a8f8bd9a4e72c2e0800000000000000
+      internalID: -2106982816717145948
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_16
+      rect:
+        serializedVersion: 2
+        x: 204
+        y: 147
+        width: 41
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f0ecb72666de9bb10800000000000000
+      internalID: 1997888933710253583
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_17
+      rect:
+        serializedVersion: 2
+        x: 11
+        y: 82
+        width: 43
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 065f063e9d21a5a30800000000000000
+      internalID: 4204693929135764832
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_18
+      rect:
+        serializedVersion: 2
+        x: 75
+        y: 98
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3cc40ded6059b2de0800000000000000
+      internalID: -1356827005981537085
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_19
+      rect:
+        serializedVersion: 2
+        x: 79
+        y: 82
+        width: 35
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cc4a1117ca021d930800000000000000
+      internalID: 4166147055297864908
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_20
+      rect:
+        serializedVersion: 2
+        x: 105
+        y: 96
+        width: 13
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13e134772909ac410800000000000000
+      internalID: 1498168784794623537
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_21
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 83
+        width: 14
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 722cdb05ab25adf60800000000000000
+      internalID: 8059845443304931879
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_22
+      rect:
+        serializedVersion: 2
+        x: 139
+        y: 100
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 58dffb6f13dcce410800000000000000
+      internalID: 1507805589739142533
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_23
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 81
+        width: 37
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3e0c62bb404ca4eb0800000000000000
+      internalID: -4734756533627862813
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_24
+      rect:
+        serializedVersion: 2
+        x: 175
+        y: 97
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 424f53daf0c2ce260800000000000000
+      internalID: 7128120756062778404
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_25
+      rect:
+        serializedVersion: 2
+        x: 205
+        y: 84
+        width: 38
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e0418c148012d8d0800000000000000
+      internalID: -2823175856807919385
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_26
+      rect:
+        serializedVersion: 2
+        x: 74
+        y: 86
+        width: 8
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b225b4b0af6189a00800000000000000
+      internalID: 763385400026419755
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_27
+      rect:
+        serializedVersion: 2
+        x: 109
+        y: 85
+        width: 9
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c2ad715277e3044b0800000000000000
+      internalID: -5458294066928690644
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_28
+      rect:
+        serializedVersion: 2
+        x: 176
+        y: 86
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 44314a0df581350c0800000000000000
+      internalID: -4588296795559029948
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_29
+      rect:
+        serializedVersion: 2
+        x: 12
+        y: 19
+        width: 40
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b8338acfd603aa450800000000000000
+      internalID: 6100741894175208331
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_30
+      rect:
+        serializedVersion: 2
+        x: 75
+        y: 18
+        width: 42
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0f904817d17b1d6b0800000000000000
+      internalID: -5273232351587726864
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_31
+      rect:
+        serializedVersion: 2
+        x: 138
+        y: 18
+        width: 31
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 31f757f8b2a53a2d0800000000000000
+      internalID: -3268669761403912429
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_32
+      rect:
+        serializedVersion: 2
+        x: 143
+        y: 21
+        width: 34
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8336520f4bfcb7120800000000000000
+      internalID: 2412750401417077560
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_33
+      rect:
+        serializedVersion: 2
+        x: 166
+        y: 19
+        width: 16
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5bd22d0381f4ce650800000000000000
+      internalID: 6263468147082407349
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_34
+      rect:
+        serializedVersion: 2
+        x: 201
+        y: 17
+        width: 41
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dfaedd712ca488870800000000000000
+      internalID: 8685274078868531965
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_35
+      rect:
+        serializedVersion: 2
+        x: 203
+        y: 22
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4f25c965e3f4c7950800000000000000
+      internalID: 6448115895647359732
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InvisibilityEffect_Sheet_64x64_36
+      rect:
+        serializedVersion: 2
+        x: 237
+        y: 25
+        width: 10
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f7506ba1afe09dba0800000000000000
+      internalID: -6063798955924912769
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      InvisibilityEffect_Sheet_64x64_0: -1604836620062467174
+      InvisibilityEffect_Sheet_64x64_1: -1323435063430207464
+      InvisibilityEffect_Sheet_64x64_10: 971499416527965405
+      InvisibilityEffect_Sheet_64x64_11: 1682497408097059712
+      InvisibilityEffect_Sheet_64x64_12: 8497610301951992059
+      InvisibilityEffect_Sheet_64x64_13: -8715166767036753174
+      InvisibilityEffect_Sheet_64x64_14: 142163267104380085
+      InvisibilityEffect_Sheet_64x64_15: -2106982816717145948
+      InvisibilityEffect_Sheet_64x64_16: 1997888933710253583
+      InvisibilityEffect_Sheet_64x64_17: 4204693929135764832
+      InvisibilityEffect_Sheet_64x64_18: -1356827005981537085
+      InvisibilityEffect_Sheet_64x64_19: 4166147055297864908
+      InvisibilityEffect_Sheet_64x64_2: -2203217115496207196
+      InvisibilityEffect_Sheet_64x64_20: 1498168784794623537
+      InvisibilityEffect_Sheet_64x64_21: 8059845443304931879
+      InvisibilityEffect_Sheet_64x64_22: 1507805589739142533
+      InvisibilityEffect_Sheet_64x64_23: -4734756533627862813
+      InvisibilityEffect_Sheet_64x64_24: 7128120756062778404
+      InvisibilityEffect_Sheet_64x64_25: -2823175856807919385
+      InvisibilityEffect_Sheet_64x64_26: 763385400026419755
+      InvisibilityEffect_Sheet_64x64_27: -5458294066928690644
+      InvisibilityEffect_Sheet_64x64_28: -4588296795559029948
+      InvisibilityEffect_Sheet_64x64_29: 6100741894175208331
+      InvisibilityEffect_Sheet_64x64_3: -3698878531208795766
+      InvisibilityEffect_Sheet_64x64_30: -5273232351587726864
+      InvisibilityEffect_Sheet_64x64_31: -3268669761403912429
+      InvisibilityEffect_Sheet_64x64_32: 2412750401417077560
+      InvisibilityEffect_Sheet_64x64_33: 6263468147082407349
+      InvisibilityEffect_Sheet_64x64_34: 8685274078868531965
+      InvisibilityEffect_Sheet_64x64_35: 6448115895647359732
+      InvisibilityEffect_Sheet_64x64_36: -6063798955924912769
+      InvisibilityEffect_Sheet_64x64_4: -1752377447425606666
+      InvisibilityEffect_Sheet_64x64_5: -5225055200308446598
+      InvisibilityEffect_Sheet_64x64_6: 4096205920815464729
+      InvisibilityEffect_Sheet_64x64_7: -2886198235752755316
+      InvisibilityEffect_Sheet_64x64_8: -625324606616842282
+      InvisibilityEffect_Sheet_64x64_9: -1461561896930805441
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

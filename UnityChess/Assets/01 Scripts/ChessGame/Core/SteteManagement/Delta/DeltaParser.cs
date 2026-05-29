@@ -32,13 +32,14 @@ namespace Core.Delta
         {
             "OnEvent" => DeltaType.OnEvent,
             "DamageUnit" => DeltaType.DamageUnit,
-            //"HealUnit" => DeltaType.HealUnit,
+            "HealUnit" => DeltaType.HealUnit,
             "AttackUnit" => DeltaType.AttackUnit,
             "MoveUnit" => DeltaType.MoveUnit,
             "DeployUnit" => DeltaType.DeployUnit,
             "WithdrawUnit" => DeltaType.WithdrawUnit,
-            //"ApplyBuff" => DeltaType.ApplyBuff,
-            //"RemoveBuff" => DeltaType.RemoveBuff,
+            "SwapUnit" => DeltaType.SwapUnit,
+            "ApplyBuff" => DeltaType.ApplyBuff,
+            "RemoveBuff" => DeltaType.RemoveBuff,
             "DrawCard" => DeltaType.DrawCard,
             //"ShuffleDeck" => DeltaType.ShuffleDeck,
             _ => DeltaType.Unknown
@@ -133,6 +134,53 @@ namespace Core.Delta
                         actionContext = actionContext,
                         UnitId = new EntityID(dto[1]),
                         Damage = int.Parse(dto[2])
+                    };
+
+                    return delta;
+                }
+                case DeltaType.ApplyBuff:
+                {
+                    var delta = new ApplyBuffDelta
+                    {
+                        Type = DeltaType.ApplyBuff,
+                        actionContext = actionContext,
+                        buffId = dto[1],
+                        amount = int.Parse(dto[2])
+                    };
+
+                    return delta;
+                }
+                case DeltaType.RemoveBuff:
+                {
+                    var delta = new RemoveBuffDelta
+                    {
+                        Type = DeltaType.RemoveBuff,
+                        actionContext = actionContext,
+                        buffId = dto[1]
+                    };
+
+                    return delta;
+                }
+
+                case DeltaType.HealUnit:
+                {
+                    var delta = new HealUnitDelta
+                    {
+                        Type = DeltaType.HealUnit,
+                        actionContext = actionContext,
+                        UnitId = new EntityID(dto[1]),
+                        heal = int.Parse(dto[2])
+                    };
+                    return delta;
+                }
+                case DeltaType.SwapUnit:
+                {
+                    var delta = new SwapUnitDelta
+                    {
+                        Type = DeltaType.SwapUnit,
+                        actionContext = actionContext,
+                        Unit1 = new EntityID(dto[1]),
+                        Unit2 = new EntityID(dto[2])
                     };
 
                     return delta;

@@ -1,0 +1,1053 @@
+fileFormatVersion: 2
+guid: d9654b8df60f1b96799e86deca01f40f
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 4208818756308097753
+    second: Fire-bomb_0
+  - first:
+      213: 4489344109124849290
+    second: Fire-bomb_1
+  - first:
+      213: -1794179056713160445
+    second: Fire-bomb_2
+  - first:
+      213: -3069246578231202153
+    second: Fire-bomb_3
+  - first:
+      213: 4868542670144096376
+    second: Fire-bomb_4
+  - first:
+      213: -2188127173522047304
+    second: Fire-bomb_5
+  - first:
+      213: 8155549677376188158
+    second: Fire-bomb_6
+  - first:
+      213: 4983100565292205969
+    second: Fire-bomb_7
+  - first:
+      213: 6589254519269611479
+    second: Fire-bomb_8
+  - first:
+      213: 2335506680206235567
+    second: Fire-bomb_9
+  - first:
+      213: -6837003640049841753
+    second: Fire-bomb_10
+  - first:
+      213: -707698820555485553
+    second: Fire-bomb_11
+  - first:
+      213: -7258058271463655723
+    second: Fire-bomb_12
+  - first:
+      213: -4035275178467887856
+    second: Fire-bomb_13
+  - first:
+      213: 1787584209667566989
+    second: Fire-bomb_14
+  - first:
+      213: 3340938464777982908
+    second: Fire-bomb_15
+  - first:
+      213: 6405555079183240730
+    second: Fire-bomb_16
+  - first:
+      213: -1046103120045677387
+    second: Fire-bomb_17
+  - first:
+      213: -5124767337877142459
+    second: Fire-bomb_18
+  - first:
+      213: 1863533442566788447
+    second: Fire-bomb_19
+  - first:
+      213: -514399385027633476
+    second: Fire-bomb_20
+  - first:
+      213: 5547613526103920951
+    second: Fire-bomb_21
+  - first:
+      213: 4439409073706347924
+    second: Fire-bomb_22
+  - first:
+      213: -7990853862577806992
+    second: Fire-bomb_23
+  - first:
+      213: -6293396918043677145
+    second: Fire-bomb_24
+  - first:
+      213: 4527241869461650341
+    second: Fire-bomb_25
+  - first:
+      213: -5645859234125815727
+    second: Fire-bomb_26
+  - first:
+      213: -5699999015142142849
+    second: Fire-bomb_27
+  - first:
+      213: -9068946034712034470
+    second: Fire-bomb_28
+  - first:
+      213: 1679093232474825245
+    second: Fire-bomb_29
+  - first:
+      213: 8442176035622063707
+    second: Fire-bomb_30
+  - first:
+      213: -6882517725819901762
+    second: Fire-bomb_31
+  - first:
+      213: -2701416965854814050
+    second: Fire-bomb_32
+  - first:
+      213: -1178995809826475811
+    second: Fire-bomb_33
+  - first:
+      213: -3270303969894738908
+    second: Fire-bomb_34
+  - first:
+      213: 1061393882198069301
+    second: Fire-bomb_35
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Fire-bomb_0
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 54
+        width: 35
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9dadebd0c5ab86a30800000000000000
+      internalID: 4208818756308097753
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_1
+      rect:
+        serializedVersion: 2
+        x: 87
+        y: 50
+        width: 19
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a8e01e28eaa5d4e30800000000000000
+      internalID: 4489344109124849290
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_2
+      rect:
+        serializedVersion: 2
+        x: 770
+        y: 21
+        width: 60
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 309aa2567abc917e0800000000000000
+      internalID: -1794179056713160445
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_3
+      rect:
+        serializedVersion: 2
+        x: 851
+        y: 43
+        width: 26
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 79e2278af78d765d0800000000000000
+      internalID: -3069246578231202153
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_4
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 15
+        width: 10
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 87845cb83c9809340800000000000000
+      internalID: 4868542670144096376
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_5
+      rect:
+        serializedVersion: 2
+        x: 57
+        y: 20
+        width: 8
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8beb6dacde532a1e0800000000000000
+      internalID: -2188127173522047304
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_6
+      rect:
+        serializedVersion: 2
+        x: 73
+        y: 13
+        width: 14
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: efe2f0cb8355e2170800000000000000
+      internalID: 8155549677376188158
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_7
+      rect:
+        serializedVersion: 2
+        x: 107
+        y: 35
+        width: 12
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1974a420097872540800000000000000
+      internalID: 4983100565292205969
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_8
+      rect:
+        serializedVersion: 2
+        x: 589
+        y: 10
+        width: 38
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d7d3bbe21cb17b50800000000000000
+      internalID: 6589254519269611479
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_9
+      rect:
+        serializedVersion: 2
+        x: 647
+        y: 7
+        width: 49
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fa79e3c93f2696020800000000000000
+      internalID: 2335506680206235567
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_10
+      rect:
+        serializedVersion: 2
+        x: 708
+        y: 7
+        width: 56
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7a9c6c2d9651e11a0800000000000000
+      internalID: -6837003640049841753
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_11
+      rect:
+        serializedVersion: 2
+        x: 834
+        y: 11
+        width: 28
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f8ec3d81cafbd26f0800000000000000
+      internalID: -707698820555485553
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_12
+      rect:
+        serializedVersion: 2
+        x: 844
+        y: 44
+        width: 10
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5d6b25af472364b90800000000000000
+      internalID: -7258058271463655723
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_13
+      rect:
+        serializedVersion: 2
+        x: 875
+        y: 43
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0157870ea92dff7c0800000000000000
+      internalID: -4035275178467887856
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_14
+      rect:
+        serializedVersion: 2
+        x: 877
+        y: 11
+        width: 17
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d8d255f1e56cec810800000000000000
+      internalID: 1787584209667566989
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_15
+      rect:
+        serializedVersion: 2
+        x: 94
+        y: 9
+        width: 25
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cb3d78925d56d5e20800000000000000
+      internalID: 3340938464777982908
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_16
+      rect:
+        serializedVersion: 2
+        x: 147
+        y: 21
+        width: 20
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a1e8aeb086a15e850800000000000000
+      internalID: 6405555079183240730
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_17
+      rect:
+        serializedVersion: 2
+        x: 165
+        y: 28
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5b4ef3b31ce7b71f0800000000000000
+      internalID: -1046103120045677387
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_18
+      rect:
+        serializedVersion: 2
+        x: 168
+        y: 16
+        width: 6
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5440f45224b21e8b0800000000000000
+      internalID: -5124767337877142459
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_19
+      rect:
+        serializedVersion: 2
+        x: 346
+        y: 8
+        width: 13
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f551147eac99cd910800000000000000
+      internalID: 1863533442566788447
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_20
+      rect:
+        serializedVersion: 2
+        x: 398
+        y: 8
+        width: 37
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cbe9fb61c7c7cd8f0800000000000000
+      internalID: -514399385027633476
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_21
+      rect:
+        serializedVersion: 2
+        x: 531
+        y: 14
+        width: 26
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 73193960c151dfc40800000000000000
+      internalID: 5547613526103920951
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_22
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 1
+        width: 16
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 49da9e21803fb9d30800000000000000
+      internalID: 4439409073706347924
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_23
+      rect:
+        serializedVersion: 2
+        x: 28
+        y: 0
+        width: 28
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 071edf4dfb8ca1190800000000000000
+      internalID: -7990853862577806992
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_24
+      rect:
+        serializedVersion: 2
+        x: 149
+        y: 12
+        width: 19
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72ee77dc8dc59a8a0800000000000000
+      internalID: -6293396918043677145
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_25
+      rect:
+        serializedVersion: 2
+        x: 221
+        y: 17
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5ab79817e7ef3de30800000000000000
+      internalID: 4527241869461650341
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_26
+      rect:
+        serializedVersion: 2
+        x: 282
+        y: 13
+        width: 13
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 150621a80f0e5a1b0800000000000000
+      internalID: -5645859234125815727
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_27
+      rect:
+        serializedVersion: 2
+        x: 475
+        y: 17
+        width: 10
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f7c406a781985e0b0800000000000000
+      internalID: -5699999015142142849
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_28
+      rect:
+        serializedVersion: 2
+        x: 771
+        y: 14
+        width: 28
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a534dc971a1a42280800000000000000
+      internalID: -9068946034712034470
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_29
+      rect:
+        serializedVersion: 2
+        x: 778
+        y: 9
+        width: 20
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d12ac6216665d4710800000000000000
+      internalID: 1679093232474825245
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_30
+      rect:
+        serializedVersion: 2
+        x: 793
+        y: 6
+        width: 31
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b5e81963062a82570800000000000000
+      internalID: 8442176035622063707
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_31
+      rect:
+        serializedVersion: 2
+        x: 797
+        y: 15
+        width: 9
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eb8ec20f7926c70a0800000000000000
+      internalID: -6882517725819901762
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_32
+      rect:
+        serializedVersion: 2
+        x: 805
+        y: 16
+        width: 12
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e90a2001593a28ad0800000000000000
+      internalID: -2701416965854814050
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_33
+      rect:
+        serializedVersion: 2
+        x: 815
+        y: 18
+        width: 14
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dd07e9bbe8d53afe0800000000000000
+      internalID: -1178995809826475811
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_34
+      rect:
+        serializedVersion: 2
+        x: 820
+        y: 15
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 424dfdebddb8d92d0800000000000000
+      internalID: -3270303969894738908
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire-bomb_35
+      rect:
+        serializedVersion: 2
+        x: 861
+        y: 6
+        width: 20
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5305033cc14dabe00800000000000000
+      internalID: 1061393882198069301
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Fire-bomb_0: 4208818756308097753
+      Fire-bomb_1: 4489344109124849290
+      Fire-bomb_10: -6837003640049841753
+      Fire-bomb_11: -707698820555485553
+      Fire-bomb_12: -7258058271463655723
+      Fire-bomb_13: -4035275178467887856
+      Fire-bomb_14: 1787584209667566989
+      Fire-bomb_15: 3340938464777982908
+      Fire-bomb_16: 6405555079183240730
+      Fire-bomb_17: -1046103120045677387
+      Fire-bomb_18: -5124767337877142459
+      Fire-bomb_19: 1863533442566788447
+      Fire-bomb_2: -1794179056713160445
+      Fire-bomb_20: -514399385027633476
+      Fire-bomb_21: 5547613526103920951
+      Fire-bomb_22: 4439409073706347924
+      Fire-bomb_23: -7990853862577806992
+      Fire-bomb_24: -6293396918043677145
+      Fire-bomb_25: 4527241869461650341
+      Fire-bomb_26: -5645859234125815727
+      Fire-bomb_27: -5699999015142142849
+      Fire-bomb_28: -9068946034712034470
+      Fire-bomb_29: 1679093232474825245
+      Fire-bomb_3: -3069246578231202153
+      Fire-bomb_30: 8442176035622063707
+      Fire-bomb_31: -6882517725819901762
+      Fire-bomb_32: -2701416965854814050
+      Fire-bomb_33: -1178995809826475811
+      Fire-bomb_34: -3270303969894738908
+      Fire-bomb_35: 1061393882198069301
+      Fire-bomb_4: 4868542670144096376
+      Fire-bomb_5: -2188127173522047304
+      Fire-bomb_6: 8155549677376188158
+      Fire-bomb_7: 4983100565292205969
+      Fire-bomb_8: 6589254519269611479
+      Fire-bomb_9: 2335506680206235567
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -107,6 +107,32 @@ namespace ui.view.unit
             UnSubscribe();
         }
 
+        public void SetCurHp(int amount)
+        {
+            if (data.curHP + amount <= 0)
+                data.curHP = 0;
+            else if (data.curHP + amount >= definition.HP)
+                data.curHP = definition.HP;
+            else
+                data.curHP += amount;
+        }
+
+        public void AddBuff(UnitViewData.BuffViewData buff)
+        {
+            data.buffs.Add(buff);
+        }
+
+        public void RemoveBuff(string id)
+        {
+            foreach (var buff in data.buffs)
+            {
+                if (buff.buff.id == id)
+                {
+                    data.buffs.Remove(buff);
+                }
+            }
+        }
+
         public override void Subscribe()
         {
             eventBus.Subscribe<IServerEvents.UnitMoveEvent>(OnUnitMove);

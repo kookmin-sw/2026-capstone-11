@@ -1,0 +1,533 @@
+fileFormatVersion: 2
+guid: ba87b58286f8fdf70a35bfacbf57b9a3
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -4397869019433388150
+    second: ShockEffect_Sheet_64x64_0
+  - first:
+      213: -7047057619695080704
+    second: ShockEffect_Sheet_64x64_1
+  - first:
+      213: -2865973518876683229
+    second: ShockEffect_Sheet_64x64_2
+  - first:
+      213: 2247736158199483681
+    second: ShockEffect_Sheet_64x64_3
+  - first:
+      213: -5167502337198507894
+    second: ShockEffect_Sheet_64x64_4
+  - first:
+      213: -613077874506004694
+    second: ShockEffect_Sheet_64x64_5
+  - first:
+      213: 2659677007543676661
+    second: ShockEffect_Sheet_64x64_6
+  - first:
+      213: 251992469856582941
+    second: ShockEffect_Sheet_64x64_7
+  - first:
+      213: 5180010624535200394
+    second: ShockEffect_Sheet_64x64_8
+  - first:
+      213: 7314635245650138934
+    second: ShockEffect_Sheet_64x64_9
+  - first:
+      213: 7015286408363075975
+    second: ShockEffect_Sheet_64x64_10
+  - first:
+      213: 2522835894687723729
+    second: ShockEffect_Sheet_64x64_11
+  - first:
+      213: -9129147128283770512
+    second: ShockEffect_Sheet_64x64_12
+  - first:
+      213: -2336872826752215814
+    second: ShockEffect_Sheet_64x64_13
+  - first:
+      213: 3539219904099332579
+    second: ShockEffect_Sheet_64x64_14
+  - first:
+      213: -912137323250679951
+    second: ShockEffect_Sheet_64x64_15
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: ShockEffect_Sheet_64x64_0
+      rect:
+        serializedVersion: 2
+        x: 14
+        y: 206
+        width: 36
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a873aff7d61a7f2c0800000000000000
+      internalID: -4397869019433388150
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShockEffect_Sheet_64x64_1
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 206
+        width: 36
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 00b6d5a8e62d33e90800000000000000
+      internalID: -7047057619695080704
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShockEffect_Sheet_64x64_2
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 206
+        width: 36
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 324dda7e4440a38d0800000000000000
+      internalID: -2865973518876683229
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShockEffect_Sheet_64x64_3
+      rect:
+        serializedVersion: 2
+        x: 206
+        y: 206
+        width: 37
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 12d084a7020913f10800000000000000
+      internalID: 2247736158199483681
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShockEffect_Sheet_64x64_4
+      rect:
+        serializedVersion: 2
+        x: 14
+        y: 142
+        width: 36
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a88384fb0085948b0800000000000000
+      internalID: -5167502337198507894
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShockEffect_Sheet_64x64_5
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 142
+        width: 36
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a270b6edbe8ed77f0800000000000000
+      internalID: -613077874506004694
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShockEffect_Sheet_64x64_6
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 142
+        width: 36
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5fe2ae3952219e420800000000000000
+      internalID: 2659677007543676661
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShockEffect_Sheet_64x64_7
+      rect:
+        serializedVersion: 2
+        x: 206
+        y: 142
+        width: 36
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d1dffd3f0d14f7300800000000000000
+      internalID: 251992469856582941
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShockEffect_Sheet_64x64_8
+      rect:
+        serializedVersion: 2
+        x: 14
+        y: 78
+        width: 36
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a828b28d73813e740800000000000000
+      internalID: 5180010624535200394
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShockEffect_Sheet_64x64_9
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 78
+        width: 36
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6375786500ec28560800000000000000
+      internalID: 7314635245650138934
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShockEffect_Sheet_64x64_10
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 78
+        width: 36
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7896b10e1dd4b5160800000000000000
+      internalID: 7015286408363075975
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShockEffect_Sheet_64x64_11
+      rect:
+        serializedVersion: 2
+        x: 206
+        y: 78
+        width: 36
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1d0777131e9e20320800000000000000
+      internalID: 2522835894687723729
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShockEffect_Sheet_64x64_12
+      rect:
+        serializedVersion: 2
+        x: 14
+        y: 14
+        width: 36
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0715e5c1e01ce4180800000000000000
+      internalID: -9129147128283770512
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShockEffect_Sheet_64x64_13
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 14
+        width: 36
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: af4db2c9b82c19fd0800000000000000
+      internalID: -2336872826752215814
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShockEffect_Sheet_64x64_14
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 13
+        width: 37
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3e135dd40c5dd1130800000000000000
+      internalID: 3539219904099332579
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShockEffect_Sheet_64x64_15
+      rect:
+        serializedVersion: 2
+        x: 206
+        y: 14
+        width: 36
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 17f744defef6753f0800000000000000
+      internalID: -912137323250679951
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      ShockEffect_Sheet_64x64_0: -4397869019433388150
+      ShockEffect_Sheet_64x64_1: -7047057619695080704
+      ShockEffect_Sheet_64x64_10: 7015286408363075975
+      ShockEffect_Sheet_64x64_11: 2522835894687723729
+      ShockEffect_Sheet_64x64_12: -9129147128283770512
+      ShockEffect_Sheet_64x64_13: -2336872826752215814
+      ShockEffect_Sheet_64x64_14: 3539219904099332579
+      ShockEffect_Sheet_64x64_15: -912137323250679951
+      ShockEffect_Sheet_64x64_2: -2865973518876683229
+      ShockEffect_Sheet_64x64_3: 2247736158199483681
+      ShockEffect_Sheet_64x64_4: -5167502337198507894
+      ShockEffect_Sheet_64x64_5: -613077874506004694
+      ShockEffect_Sheet_64x64_6: 2659677007543676661
+      ShockEffect_Sheet_64x64_7: 251992469856582941
+      ShockEffect_Sheet_64x64_8: 5180010624535200394
+      ShockEffect_Sheet_64x64_9: 7314635245650138934
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

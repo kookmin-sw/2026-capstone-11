@@ -1,0 +1,663 @@
+fileFormatVersion: 2
+guid: 6f5f5ab6121b5d010a96b0b57d547f29
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -4965461386674320956
+    second: HasteEffect_Sheet_64x64_0
+  - first:
+      213: 2767512872368101590
+    second: HasteEffect_Sheet_64x64_1
+  - first:
+      213: -3154650709727212153
+    second: HasteEffect_Sheet_64x64_2
+  - first:
+      213: 4197550155672469071
+    second: HasteEffect_Sheet_64x64_3
+  - first:
+      213: 8544095637233017539
+    second: HasteEffect_Sheet_64x64_4
+  - first:
+      213: 3232715875015924842
+    second: HasteEffect_Sheet_64x64_5
+  - first:
+      213: -865472079992361682
+    second: HasteEffect_Sheet_64x64_6
+  - first:
+      213: -3040882510606726364
+    second: HasteEffect_Sheet_64x64_7
+  - first:
+      213: 183529119695479382
+    second: HasteEffect_Sheet_64x64_8
+  - first:
+      213: 6246495318474152922
+    second: HasteEffect_Sheet_64x64_9
+  - first:
+      213: 2757782196929828021
+    second: HasteEffect_Sheet_64x64_10
+  - first:
+      213: 989672193485236133
+    second: HasteEffect_Sheet_64x64_11
+  - first:
+      213: -1956455596127592828
+    second: HasteEffect_Sheet_64x64_12
+  - first:
+      213: -2099453883027646928
+    second: HasteEffect_Sheet_64x64_13
+  - first:
+      213: 4746201402229973324
+    second: HasteEffect_Sheet_64x64_14
+  - first:
+      213: -7722315607846520857
+    second: HasteEffect_Sheet_64x64_15
+  - first:
+      213: -8517641318572770172
+    second: HasteEffect_Sheet_64x64_16
+  - first:
+      213: -8238468639440714003
+    second: HasteEffect_Sheet_64x64_17
+  - first:
+      213: 6719416297184769523
+    second: HasteEffect_Sheet_64x64_18
+  - first:
+      213: -1014874619273869224
+    second: HasteEffect_Sheet_64x64_19
+  - first:
+      213: -7397099393323438837
+    second: HasteEffect_Sheet_64x64_20
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: HasteEffect_Sheet_64x64_0
+      rect:
+        serializedVersion: 2
+        x: 15
+        y: 207
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4c9cb5d4d23271bb0800000000000000
+      internalID: -4965461386674320956
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HasteEffect_Sheet_64x64_1
+      rect:
+        serializedVersion: 2
+        x: 77
+        y: 205
+        width: 38
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6d852d46b4e286620800000000000000
+      internalID: 2767512872368101590
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HasteEffect_Sheet_64x64_2
+      rect:
+        serializedVersion: 2
+        x: 140
+        y: 203
+        width: 41
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 78d8640c4ed6834d0800000000000000
+      internalID: -3154650709727212153
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HasteEffect_Sheet_64x64_3
+      rect:
+        serializedVersion: 2
+        x: 204
+        y: 203
+        width: 41
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f4e3eb380a1b04a30800000000000000
+      internalID: 4197550155672469071
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HasteEffect_Sheet_64x64_4
+      rect:
+        serializedVersion: 2
+        x: 12
+        y: 139
+        width: 39
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3c22d38a6b9b29670800000000000000
+      internalID: 8544095637233017539
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HasteEffect_Sheet_64x64_5
+      rect:
+        serializedVersion: 2
+        x: 79
+        y: 143
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a6c171ee5f9ecdc20800000000000000
+      internalID: 3232715875015924842
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HasteEffect_Sheet_64x64_6
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 145
+        width: 33
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e2d690d8ab93df3f0800000000000000
+      internalID: -865472079992361682
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HasteEffect_Sheet_64x64_7
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 160
+        width: 13
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 42b8697c77d9cc5d0800000000000000
+      internalID: -3040882510606726364
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HasteEffect_Sheet_64x64_8
+      rect:
+        serializedVersion: 2
+        x: 205
+        y: 147
+        width: 34
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 652a36113c60c8200800000000000000
+      internalID: 183529119695479382
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HasteEffect_Sheet_64x64_9
+      rect:
+        serializedVersion: 2
+        x: 208
+        y: 169
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: adbdac4956200b650800000000000000
+      internalID: 6246495318474152922
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HasteEffect_Sheet_64x64_10
+      rect:
+        serializedVersion: 2
+        x: 225
+        y: 171
+        width: 14
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5b416e7fb4c954620800000000000000
+      internalID: 2757782196929828021
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HasteEffect_Sheet_64x64_11
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 83
+        width: 32
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5a7e4c0dd950cbd00800000000000000
+      internalID: 989672193485236133
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HasteEffect_Sheet_64x64_12
+      rect:
+        serializedVersion: 2
+        x: 19
+        y: 94
+        width: 33
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 48e5df5400649d4e0800000000000000
+      internalID: -1956455596127592828
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HasteEffect_Sheet_64x64_13
+      rect:
+        serializedVersion: 2
+        x: 82
+        y: 81
+        width: 31
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 03692d711dd3dd2e0800000000000000
+      internalID: -2099453883027646928
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HasteEffect_Sheet_64x64_14
+      rect:
+        serializedVersion: 2
+        x: 89
+        y: 93
+        width: 25
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c41e0646705edd140800000000000000
+      internalID: 4746201402229973324
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HasteEffect_Sheet_64x64_15
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 79
+        width: 34
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e77ad68ed2d4d490800000000000000
+      internalID: -7722315607846520857
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HasteEffect_Sheet_64x64_16
+      rect:
+        serializedVersion: 2
+        x: 205
+        y: 77
+        width: 38
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 48cb74269524bc980800000000000000
+      internalID: -8517641318572770172
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HasteEffect_Sheet_64x64_17
+      rect:
+        serializedVersion: 2
+        x: 12
+        y: 11
+        width: 41
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: de6c0f4fb641bad80800000000000000
+      internalID: -8238468639440714003
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HasteEffect_Sheet_64x64_18
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 11
+        width: 41
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3f53ba37589204d50800000000000000
+      internalID: 6719416297184769523
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HasteEffect_Sheet_64x64_19
+      rect:
+        serializedVersion: 2
+        x: 141
+        y: 12
+        width: 39
+        height: 39
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8580f9a29e07ae1f0800000000000000
+      internalID: -1014874619273869224
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HasteEffect_Sheet_64x64_20
+      rect:
+        serializedVersion: 2
+        x: 207
+        y: 13
+        width: 36
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b0de2b41b49385990800000000000000
+      internalID: -7397099393323438837
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      HasteEffect_Sheet_64x64_0: -4965461386674320956
+      HasteEffect_Sheet_64x64_1: 2767512872368101590
+      HasteEffect_Sheet_64x64_10: 2757782196929828021
+      HasteEffect_Sheet_64x64_11: 989672193485236133
+      HasteEffect_Sheet_64x64_12: -1956455596127592828
+      HasteEffect_Sheet_64x64_13: -2099453883027646928
+      HasteEffect_Sheet_64x64_14: 4746201402229973324
+      HasteEffect_Sheet_64x64_15: -7722315607846520857
+      HasteEffect_Sheet_64x64_16: -8517641318572770172
+      HasteEffect_Sheet_64x64_17: -8238468639440714003
+      HasteEffect_Sheet_64x64_18: 6719416297184769523
+      HasteEffect_Sheet_64x64_19: -1014874619273869224
+      HasteEffect_Sheet_64x64_2: -3154650709727212153
+      HasteEffect_Sheet_64x64_20: -7397099393323438837
+      HasteEffect_Sheet_64x64_3: 4197550155672469071
+      HasteEffect_Sheet_64x64_4: 8544095637233017539
+      HasteEffect_Sheet_64x64_5: 3232715875015924842
+      HasteEffect_Sheet_64x64_6: -865472079992361682
+      HasteEffect_Sheet_64x64_7: -3040882510606726364
+      HasteEffect_Sheet_64x64_8: 183529119695479382
+      HasteEffect_Sheet_64x64_9: 6246495318474152922
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

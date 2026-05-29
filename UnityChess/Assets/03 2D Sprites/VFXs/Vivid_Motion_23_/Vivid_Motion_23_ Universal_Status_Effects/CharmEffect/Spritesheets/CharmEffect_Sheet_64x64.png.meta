@@ -1,0 +1,949 @@
+fileFormatVersion: 2
+guid: f3eb1b6932107a097840e918eef479fc
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 4203944783199025946
+    second: CharmEffect_Sheet_64x64_0
+  - first:
+      213: 9004663141775096105
+    second: CharmEffect_Sheet_64x64_1
+  - first:
+      213: 8029838020324053919
+    second: CharmEffect_Sheet_64x64_2
+  - first:
+      213: 2899864113439068797
+    second: CharmEffect_Sheet_64x64_3
+  - first:
+      213: 4756490898378846991
+    second: CharmEffect_Sheet_64x64_4
+  - first:
+      213: -9145189992401827299
+    second: CharmEffect_Sheet_64x64_5
+  - first:
+      213: -2242618623251966794
+    second: CharmEffect_Sheet_64x64_6
+  - first:
+      213: -8109064727506617496
+    second: CharmEffect_Sheet_64x64_7
+  - first:
+      213: 5080002628580340784
+    second: CharmEffect_Sheet_64x64_8
+  - first:
+      213: 1775815361705107857
+    second: CharmEffect_Sheet_64x64_9
+  - first:
+      213: -2348328887979108369
+    second: CharmEffect_Sheet_64x64_10
+  - first:
+      213: 1146763137600384287
+    second: CharmEffect_Sheet_64x64_11
+  - first:
+      213: 802849637190047583
+    second: CharmEffect_Sheet_64x64_12
+  - first:
+      213: 2755593198315877855
+    second: CharmEffect_Sheet_64x64_13
+  - first:
+      213: -1112598767321917698
+    second: CharmEffect_Sheet_64x64_14
+  - first:
+      213: -6512193218125139337
+    second: CharmEffect_Sheet_64x64_15
+  - first:
+      213: -7899150231942835796
+    second: CharmEffect_Sheet_64x64_16
+  - first:
+      213: 240875894628982985
+    second: CharmEffect_Sheet_64x64_17
+  - first:
+      213: 8238188159846316552
+    second: CharmEffect_Sheet_64x64_18
+  - first:
+      213: -1155603892955192677
+    second: CharmEffect_Sheet_64x64_19
+  - first:
+      213: 6413265187715367814
+    second: CharmEffect_Sheet_64x64_20
+  - first:
+      213: 3535810420632331112
+    second: CharmEffect_Sheet_64x64_21
+  - first:
+      213: -541200171112127589
+    second: CharmEffect_Sheet_64x64_22
+  - first:
+      213: -8646589919475165194
+    second: CharmEffect_Sheet_64x64_23
+  - first:
+      213: -8332360516744978974
+    second: CharmEffect_Sheet_64x64_24
+  - first:
+      213: 2640456832648837783
+    second: CharmEffect_Sheet_64x64_25
+  - first:
+      213: 4453544478532496343
+    second: CharmEffect_Sheet_64x64_26
+  - first:
+      213: -3887219628833067883
+    second: CharmEffect_Sheet_64x64_27
+  - first:
+      213: -5755868675047628155
+    second: CharmEffect_Sheet_64x64_28
+  - first:
+      213: 7015777215413685904
+    second: CharmEffect_Sheet_64x64_29
+  - first:
+      213: 3223183249727355048
+    second: CharmEffect_Sheet_64x64_30
+  - first:
+      213: -8403559372421996499
+    second: CharmEffect_Sheet_64x64_31
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_0
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 248
+        width: 10
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a1b3fe1c189675a30800000000000000
+      internalID: 4203944783199025946
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_1
+      rect:
+        serializedVersion: 2
+        x: 102
+        y: 249
+        width: 11
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 929be8f2b6df6fc70800000000000000
+      internalID: 9004663141775096105
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_2
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 250
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f935755b227bf6f60800000000000000
+      internalID: 8029838020324053919
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_3
+      rect:
+        serializedVersion: 2
+        x: 231
+        y: 251
+        width: 9
+        height: 5
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d72507a0c036e3820800000000000000
+      internalID: 2899864113439068797
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_4
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 205
+        width: 38
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f03ff376543720240800000000000000
+      internalID: 4756490898378846991
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_5
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 203
+        width: 41
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d1a8e6bb722c51180800000000000000
+      internalID: -9145189992401827299
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_6
+      rect:
+        serializedVersion: 2
+        x: 138
+        y: 202
+        width: 44
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6b4146a7e3e90e0e0800000000000000
+      internalID: -2242618623251966794
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_7
+      rect:
+        serializedVersion: 2
+        x: 201
+        y: 201
+        width: 46
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 86b71501890d67f80800000000000000
+      internalID: -8109064727506617496
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_8
+      rect:
+        serializedVersion: 2
+        x: 9
+        y: 136
+        width: 47
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 034f496c97bcf7640800000000000000
+      internalID: 5080002628580340784
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_9
+      rect:
+        serializedVersion: 2
+        x: 73
+        y: 137
+        width: 46
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1916d1da9a6f4a810800000000000000
+      internalID: 1775815361705107857
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_10
+      rect:
+        serializedVersion: 2
+        x: 138
+        y: 137
+        width: 45
+        height: 45
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fe79730815f096fd0800000000000000
+      internalID: -2348328887979108369
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_11
+      rect:
+        serializedVersion: 2
+        x: 158
+        y: 181
+        width: 10
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f1dee227ffe1aef00800000000000000
+      internalID: 1146763137600384287
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_12
+      rect:
+        serializedVersion: 2
+        x: 223
+        y: 182
+        width: 10
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f5793c8cd7b442b00800000000000000
+      internalID: 802849637190047583
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_13
+      rect:
+        serializedVersion: 2
+        x: 203
+        y: 139
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fd5b9130a65dd3620800000000000000
+      internalID: 2755593198315877855
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_14
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 119
+        width: 11
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ef65d30e0514f80f0800000000000000
+      internalID: -1112598767321917698
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_15
+      rect:
+        serializedVersion: 2
+        x: 98
+        y: 120
+        width: 10
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 77271fc65ca00a5a0800000000000000
+      internalID: -6512193218125139337
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_16
+      rect:
+        serializedVersion: 2
+        x: 163
+        y: 120
+        width: 11
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ca15a9d27b4906290800000000000000
+      internalID: -7899150231942835796
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_17
+      rect:
+        serializedVersion: 2
+        x: 228
+        y: 121
+        width: 11
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9c0a0569953c75300800000000000000
+      internalID: 240875894628982985
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_18
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 76
+        width: 39
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 80af77ccb7ce35270800000000000000
+      internalID: 8238188159846316552
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_19
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 78
+        width: 36
+        height: 39
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b92e85bc16876ffe0800000000000000
+      internalID: -1155603892955192677
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_20
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 79
+        width: 33
+        height: 39
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 683472495be700950800000000000000
+      internalID: 6413265187715367814
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_21
+      rect:
+        serializedVersion: 2
+        x: 209
+        y: 81
+        width: 30
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8632ae218d8b11130800000000000000
+      internalID: 3535810420632331112
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_22
+      rect:
+        serializedVersion: 2
+        x: 218
+        y: 110
+        width: 13
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b932b70df454d78f0800000000000000
+      internalID: -541200171112127589
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_23
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 58
+        width: 10
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6f79533a744210880800000000000000
+      internalID: -8646589919475165194
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_24
+      rect:
+        serializedVersion: 2
+        x: 156
+        y: 48
+        width: 12
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2eddceab1428d5c80800000000000000
+      internalID: -8332360516744978974
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_25
+      rect:
+        serializedVersion: 2
+        x: 219
+        y: 49
+        width: 14
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 79a79c2ef79c4a420800000000000000
+      internalID: 2640456832648837783
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_26
+      rect:
+        serializedVersion: 2
+        x: 18
+        y: 17
+        width: 29
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7dbe45a7b1b2ecd30800000000000000
+      internalID: 4453544478532496343
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_27
+      rect:
+        serializedVersion: 2
+        x: 27
+        y: 46
+        width: 12
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 59caa7bc752dd0ac0800000000000000
+      internalID: -3887219628833067883
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_28
+      rect:
+        serializedVersion: 2
+        x: 82
+        y: 17
+        width: 29
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 582ecf99feb0f10b0800000000000000
+      internalID: -5755868675047628155
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_29
+      rect:
+        serializedVersion: 2
+        x: 93
+        y: 47
+        width: 9
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 09e030cc43c0d5160800000000000000
+      internalID: 7015777215413685904
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_30
+      rect:
+        serializedVersion: 2
+        x: 145
+        y: 17
+        width: 30
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8a8fcf5a61c0bbc20800000000000000
+      internalID: 3223183249727355048
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CharmEffect_Sheet_64x64_31
+      rect:
+        serializedVersion: 2
+        x: 208
+        y: 16
+        width: 32
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d20e1e5564f806b80800000000000000
+      internalID: -8403559372421996499
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      CharmEffect_Sheet_64x64_0: 4203944783199025946
+      CharmEffect_Sheet_64x64_1: 9004663141775096105
+      CharmEffect_Sheet_64x64_10: -2348328887979108369
+      CharmEffect_Sheet_64x64_11: 1146763137600384287
+      CharmEffect_Sheet_64x64_12: 802849637190047583
+      CharmEffect_Sheet_64x64_13: 2755593198315877855
+      CharmEffect_Sheet_64x64_14: -1112598767321917698
+      CharmEffect_Sheet_64x64_15: -6512193218125139337
+      CharmEffect_Sheet_64x64_16: -7899150231942835796
+      CharmEffect_Sheet_64x64_17: 240875894628982985
+      CharmEffect_Sheet_64x64_18: 8238188159846316552
+      CharmEffect_Sheet_64x64_19: -1155603892955192677
+      CharmEffect_Sheet_64x64_2: 8029838020324053919
+      CharmEffect_Sheet_64x64_20: 6413265187715367814
+      CharmEffect_Sheet_64x64_21: 3535810420632331112
+      CharmEffect_Sheet_64x64_22: -541200171112127589
+      CharmEffect_Sheet_64x64_23: -8646589919475165194
+      CharmEffect_Sheet_64x64_24: -8332360516744978974
+      CharmEffect_Sheet_64x64_25: 2640456832648837783
+      CharmEffect_Sheet_64x64_26: 4453544478532496343
+      CharmEffect_Sheet_64x64_27: -3887219628833067883
+      CharmEffect_Sheet_64x64_28: -5755868675047628155
+      CharmEffect_Sheet_64x64_29: 7015777215413685904
+      CharmEffect_Sheet_64x64_3: 2899864113439068797
+      CharmEffect_Sheet_64x64_30: 3223183249727355048
+      CharmEffect_Sheet_64x64_31: -8403559372421996499
+      CharmEffect_Sheet_64x64_4: 4756490898378846991
+      CharmEffect_Sheet_64x64_5: -9145189992401827299
+      CharmEffect_Sheet_64x64_6: -2242618623251966794
+      CharmEffect_Sheet_64x64_7: -8109064727506617496
+      CharmEffect_Sheet_64x64_8: 5080002628580340784
+      CharmEffect_Sheet_64x64_9: 1775815361705107857
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

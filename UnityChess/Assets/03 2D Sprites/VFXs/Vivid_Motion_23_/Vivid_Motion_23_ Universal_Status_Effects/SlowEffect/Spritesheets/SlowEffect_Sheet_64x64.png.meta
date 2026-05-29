@@ -1,0 +1,1209 @@
+fileFormatVersion: 2
+guid: 81851fff3d22986cd8885d23d1be3d5c
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -7776030529857846977
+    second: SlowEffect_Sheet_64x64_0
+  - first:
+      213: 2656713018895251023
+    second: SlowEffect_Sheet_64x64_1
+  - first:
+      213: 2287813245094010159
+    second: SlowEffect_Sheet_64x64_2
+  - first:
+      213: -2159813456960630183
+    second: SlowEffect_Sheet_64x64_3
+  - first:
+      213: -7913800156426058090
+    second: SlowEffect_Sheet_64x64_4
+  - first:
+      213: 3632308539767927936
+    second: SlowEffect_Sheet_64x64_5
+  - first:
+      213: 7289238087471945345
+    second: SlowEffect_Sheet_64x64_6
+  - first:
+      213: -8297666247170572683
+    second: SlowEffect_Sheet_64x64_7
+  - first:
+      213: -6309717982996372464
+    second: SlowEffect_Sheet_64x64_8
+  - first:
+      213: -6236962016291411826
+    second: SlowEffect_Sheet_64x64_9
+  - first:
+      213: -5179910688265594920
+    second: SlowEffect_Sheet_64x64_10
+  - first:
+      213: -8983399386329039284
+    second: SlowEffect_Sheet_64x64_11
+  - first:
+      213: -901641392671868895
+    second: SlowEffect_Sheet_64x64_12
+  - first:
+      213: 838707225100216915
+    second: SlowEffect_Sheet_64x64_13
+  - first:
+      213: 8727057204458146093
+    second: SlowEffect_Sheet_64x64_14
+  - first:
+      213: 6181525477039089526
+    second: SlowEffect_Sheet_64x64_15
+  - first:
+      213: -1806914118811671805
+    second: SlowEffect_Sheet_64x64_16
+  - first:
+      213: 406614239794017623
+    second: SlowEffect_Sheet_64x64_17
+  - first:
+      213: 7572703317884983355
+    second: SlowEffect_Sheet_64x64_18
+  - first:
+      213: 7110765700313184221
+    second: SlowEffect_Sheet_64x64_19
+  - first:
+      213: -5726026100304295039
+    second: SlowEffect_Sheet_64x64_20
+  - first:
+      213: 4011560639390399176
+    second: SlowEffect_Sheet_64x64_21
+  - first:
+      213: 4721734146243729601
+    second: SlowEffect_Sheet_64x64_22
+  - first:
+      213: -526186392246262477
+    second: SlowEffect_Sheet_64x64_23
+  - first:
+      213: 5647191598919043864
+    second: SlowEffect_Sheet_64x64_24
+  - first:
+      213: 4931529557160153658
+    second: SlowEffect_Sheet_64x64_25
+  - first:
+      213: -5671705790741401805
+    second: SlowEffect_Sheet_64x64_26
+  - first:
+      213: -6439171585673803099
+    second: SlowEffect_Sheet_64x64_27
+  - first:
+      213: 5515878317997936561
+    second: SlowEffect_Sheet_64x64_28
+  - first:
+      213: -3616673584152796264
+    second: SlowEffect_Sheet_64x64_29
+  - first:
+      213: 5583955877011749435
+    second: SlowEffect_Sheet_64x64_30
+  - first:
+      213: 5573356738086841982
+    second: SlowEffect_Sheet_64x64_31
+  - first:
+      213: 1727011973154119834
+    second: SlowEffect_Sheet_64x64_32
+  - first:
+      213: 5693480093298056386
+    second: SlowEffect_Sheet_64x64_33
+  - first:
+      213: 2676862766718748082
+    second: SlowEffect_Sheet_64x64_34
+  - first:
+      213: -4542771226523250176
+    second: SlowEffect_Sheet_64x64_35
+  - first:
+      213: -3221944978557346491
+    second: SlowEffect_Sheet_64x64_36
+  - first:
+      213: -7518182130707225515
+    second: SlowEffect_Sheet_64x64_37
+  - first:
+      213: -1132770544371818033
+    second: SlowEffect_Sheet_64x64_38
+  - first:
+      213: -3864201546560317319
+    second: SlowEffect_Sheet_64x64_39
+  - first:
+      213: -3627683905085526425
+    second: SlowEffect_Sheet_64x64_40
+  - first:
+      213: 3727374397031552789
+    second: SlowEffect_Sheet_64x64_41
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_0
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 202
+        width: 44
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f310b39ae6df51490800000000000000
+      internalID: -7776030529857846977
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_1
+      rect:
+        serializedVersion: 2
+        x: 74
+        y: 202
+        width: 45
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f4638613a6a8ed420800000000000000
+      internalID: 2656713018895251023
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_2
+      rect:
+        serializedVersion: 2
+        x: 138
+        y: 201
+        width: 45
+        height: 45
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f2d134a6602ffbf10800000000000000
+      internalID: 2287813245094010159
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_3
+      rect:
+        serializedVersion: 2
+        x: 201
+        y: 201
+        width: 46
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 952d0c4aa1dc602e0800000000000000
+      internalID: -2159813456960630183
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_4
+      rect:
+        serializedVersion: 2
+        x: 9
+        y: 137
+        width: 46
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6964bc4dfa88c2290800000000000000
+      internalID: -7913800156426058090
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_5
+      rect:
+        serializedVersion: 2
+        x: 73
+        y: 137
+        width: 20
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0843c734f5d886230800000000000000
+      internalID: 3632308539767927936
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_6
+      rect:
+        serializedVersion: 2
+        x: 74
+        y: 165
+        width: 17
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1865307ab63982560800000000000000
+      internalID: 7289238087471945345
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_7
+      rect:
+        serializedVersion: 2
+        x: 75
+        y: 139
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 57e36a8d284c8dc80800000000000000
+      internalID: -8297666247170572683
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_8
+      rect:
+        serializedVersion: 2
+        x: 90
+        y: 136
+        width: 30
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0146b9ebce06f68a0800000000000000
+      internalID: -6309717982996372464
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_9
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 161
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e88a85d471cd179a0800000000000000
+      internalID: -6236962016291411826
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_10
+      rect:
+        serializedVersion: 2
+        x: 139
+        y: 139
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8d71ea16ca24d18b0800000000000000
+      internalID: -5179910688265594920
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_11
+      rect:
+        serializedVersion: 2
+        x: 158
+        y: 154
+        width: 26
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c4e356eaadd845380800000000000000
+      internalID: -8983399386329039284
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_12
+      rect:
+        serializedVersion: 2
+        x: 200
+        y: 136
+        width: 31
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 12831033ee9bc73f0800000000000000
+      internalID: -901641392671868895
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_13
+      rect:
+        serializedVersion: 2
+        x: 202
+        y: 137
+        width: 46
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 35ae6ae07cfa3ab00800000000000000
+      internalID: 838707225100216915
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_14
+      rect:
+        serializedVersion: 2
+        x: 136
+        y: 136
+        width: 47
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d29cd3e1a4cbc1970800000000000000
+      internalID: 8727057204458146093
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_15
+      rect:
+        serializedVersion: 2
+        x: 8
+        y: 71
+        width: 28
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 67721f49ba039c550800000000000000
+      internalID: 6181525477039089526
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_16
+      rect:
+        serializedVersion: 2
+        x: 11
+        y: 75
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 303a790be2d8ce6e0800000000000000
+      internalID: -1806914118811671805
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_17
+      rect:
+        serializedVersion: 2
+        x: 26
+        y: 92
+        width: 31
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 755b98b2f7594a500800000000000000
+      internalID: 406614239794017623
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_18
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 71
+        width: 48
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b38d4f3bb85a71960800000000000000
+      internalID: 7572703317884983355
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_19
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 96
+        width: 24
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dd7f230eab38ea260800000000000000
+      internalID: 7110765700313184221
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_20
+      rect:
+        serializedVersion: 2
+        x: 75
+        y: 75
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 18b4fbc79911980b0800000000000000
+      internalID: -5726026100304295039
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_21
+      rect:
+        serializedVersion: 2
+        x: 95
+        y: 87
+        width: 26
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8cabdc9b52deba730800000000000000
+      internalID: 4011560639390399176
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_22
+      rect:
+        serializedVersion: 2
+        x: 135
+        y: 71
+        width: 49
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1c890be6038f68140800000000000000
+      internalID: 4721734146243729601
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_23
+      rect:
+        serializedVersion: 2
+        x: 136
+        y: 89
+        width: 49
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 335648c934c92b8f0800000000000000
+      internalID: -526186392246262477
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_24
+      rect:
+        serializedVersion: 2
+        x: 139
+        y: 75
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 81bc320d6dade5e40800000000000000
+      internalID: 5647191598919043864
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_25
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 70
+        width: 31
+        height: 51
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a32deddf000507440800000000000000
+      internalID: 4931529557160153658
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_26
+      rect:
+        serializedVersion: 2
+        x: 203
+        y: 74
+        width: 43
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 33f255022ad0a41b0800000000000000
+      internalID: -5671705790741401805
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_27
+      rect:
+        serializedVersion: 2
+        x: 226
+        y: 71
+        width: 24
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5aacf1c1f8773a6a0800000000000000
+      internalID: -6439171585673803099
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_28
+      rect:
+        serializedVersion: 2
+        x: 229
+        y: 98
+        width: 20
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1bfcb881b165c8c40800000000000000
+      internalID: 5515878317997936561
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_29
+      rect:
+        serializedVersion: 2
+        x: 35
+        y: 72
+        width: 21
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 893a804898efecdc0800000000000000
+      internalID: -3616673584152796264
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_30
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 23
+        width: 51
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b3a7dbaf8423e7d40800000000000000
+      internalID: 5583955877011749435
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_31
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 7
+        width: 21
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e7e2234ac6a885d40800000000000000
+      internalID: 5573356738086841982
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_32
+      rect:
+        serializedVersion: 2
+        x: 11
+        y: 10
+        width: 43
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a90a2be4d3497f710800000000000000
+      internalID: 1727011973154119834
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_33
+      rect:
+        serializedVersion: 2
+        x: 70
+        y: 6
+        width: 51
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2ccd9c0cafd430f40800000000000000
+      internalID: 5693480093298056386
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_34
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 25
+        width: 51
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b58db2f080262520800000000000000
+      internalID: 2676862766718748082
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_35
+      rect:
+        serializedVersion: 2
+        x: 74
+        y: 10
+        width: 44
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 002573b53a5d4f0c0800000000000000
+      internalID: -4542771226523250176
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_36
+      rect:
+        serializedVersion: 2
+        x: 134
+        y: 5
+        width: 53
+        height: 53
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54d5c33dc1a5943d0800000000000000
+      internalID: -3221944978557346491
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_37
+      rect:
+        serializedVersion: 2
+        x: 198
+        y: 5
+        width: 31
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 554a1866f2d0aa790800000000000000
+      internalID: -7518182130707225515
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_38
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 23
+        width: 52
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fc121ba01379740f0800000000000000
+      internalID: -1132770544371818033
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_39
+      rect:
+        serializedVersion: 2
+        x: 202
+        y: 9
+        width: 45
+        height: 45
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 978d1c4ba299f5ac0800000000000000
+      internalID: -3864201546560317319
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_40
+      rect:
+        serializedVersion: 2
+        x: 27
+        y: 6
+        width: 29
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 76ea9f765b0e7adc0800000000000000
+      internalID: -3627683905085526425
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SlowEffect_Sheet_64x64_41
+      rect:
+        serializedVersion: 2
+        x: 228
+        y: 6
+        width: 21
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 51793fff34b4ab330800000000000000
+      internalID: 3727374397031552789
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      SlowEffect_Sheet_64x64_0: -7776030529857846977
+      SlowEffect_Sheet_64x64_1: 2656713018895251023
+      SlowEffect_Sheet_64x64_10: -5179910688265594920
+      SlowEffect_Sheet_64x64_11: -8983399386329039284
+      SlowEffect_Sheet_64x64_12: -901641392671868895
+      SlowEffect_Sheet_64x64_13: 838707225100216915
+      SlowEffect_Sheet_64x64_14: 8727057204458146093
+      SlowEffect_Sheet_64x64_15: 6181525477039089526
+      SlowEffect_Sheet_64x64_16: -1806914118811671805
+      SlowEffect_Sheet_64x64_17: 406614239794017623
+      SlowEffect_Sheet_64x64_18: 7572703317884983355
+      SlowEffect_Sheet_64x64_19: 7110765700313184221
+      SlowEffect_Sheet_64x64_2: 2287813245094010159
+      SlowEffect_Sheet_64x64_20: -5726026100304295039
+      SlowEffect_Sheet_64x64_21: 4011560639390399176
+      SlowEffect_Sheet_64x64_22: 4721734146243729601
+      SlowEffect_Sheet_64x64_23: -526186392246262477
+      SlowEffect_Sheet_64x64_24: 5647191598919043864
+      SlowEffect_Sheet_64x64_25: 4931529557160153658
+      SlowEffect_Sheet_64x64_26: -5671705790741401805
+      SlowEffect_Sheet_64x64_27: -6439171585673803099
+      SlowEffect_Sheet_64x64_28: 5515878317997936561
+      SlowEffect_Sheet_64x64_29: -3616673584152796264
+      SlowEffect_Sheet_64x64_3: -2159813456960630183
+      SlowEffect_Sheet_64x64_30: 5583955877011749435
+      SlowEffect_Sheet_64x64_31: 5573356738086841982
+      SlowEffect_Sheet_64x64_32: 1727011973154119834
+      SlowEffect_Sheet_64x64_33: 5693480093298056386
+      SlowEffect_Sheet_64x64_34: 2676862766718748082
+      SlowEffect_Sheet_64x64_35: -4542771226523250176
+      SlowEffect_Sheet_64x64_36: -3221944978557346491
+      SlowEffect_Sheet_64x64_37: -7518182130707225515
+      SlowEffect_Sheet_64x64_38: -1132770544371818033
+      SlowEffect_Sheet_64x64_39: -3864201546560317319
+      SlowEffect_Sheet_64x64_4: -7913800156426058090
+      SlowEffect_Sheet_64x64_40: -3627683905085526425
+      SlowEffect_Sheet_64x64_41: 3727374397031552789
+      SlowEffect_Sheet_64x64_5: 3632308539767927936
+      SlowEffect_Sheet_64x64_6: 7289238087471945345
+      SlowEffect_Sheet_64x64_7: -8297666247170572683
+      SlowEffect_Sheet_64x64_8: -6309717982996372464
+      SlowEffect_Sheet_64x64_9: -6236962016291411826
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

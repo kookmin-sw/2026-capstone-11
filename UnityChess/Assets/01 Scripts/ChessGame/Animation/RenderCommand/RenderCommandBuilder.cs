@@ -13,7 +13,12 @@ namespace Animations
             { DeltaType.MoveUnit, new MoveCommandBuilder() },
             { DeltaType.DeployUnit, new DeployCommandBuilder() },
             { DeltaType.WithdrawUnit, new WithdrawCommandBuilder() },
+            { DeltaType.AttackUnit, new AttackCommandBuilder() },
             { DeltaType.DamageUnit, new DamageCommandBuilder() },
+            { DeltaType.HealUnit, new HealCommandBuilder() },
+            { DeltaType.SwapUnit, new SwapCommandBuilder() },
+            { DeltaType.ApplyBuff, new ApplyBuffBuilder() },
+            { DeltaType.RemoveBuff, new RemoveBuffBuilder() },
             { DeltaType.DrawCard, new CardDrawCommandBuilder() },
             { DeltaType.OnEvent, new EventCommandBuilder() }
         };

@@ -1,0 +1,845 @@
+fileFormatVersion: 2
+guid: a3ad079a924c97c368d1a7abb50b1544
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -6863419273888529115
+    second: RegenEffect_Sheet_64x64_0
+  - first:
+      213: -9074563815764691549
+    second: RegenEffect_Sheet_64x64_1
+  - first:
+      213: -181103918163993749
+    second: RegenEffect_Sheet_64x64_2
+  - first:
+      213: -6307197419529474295
+    second: RegenEffect_Sheet_64x64_3
+  - first:
+      213: 1576846670460532960
+    second: RegenEffect_Sheet_64x64_4
+  - first:
+      213: 565503345370398917
+    second: RegenEffect_Sheet_64x64_5
+  - first:
+      213: -7159150798210574295
+    second: RegenEffect_Sheet_64x64_6
+  - first:
+      213: -951583193942441763
+    second: RegenEffect_Sheet_64x64_7
+  - first:
+      213: 8714147747378377291
+    second: RegenEffect_Sheet_64x64_8
+  - first:
+      213: -8063274175520943197
+    second: RegenEffect_Sheet_64x64_9
+  - first:
+      213: 5969964485537120945
+    second: RegenEffect_Sheet_64x64_10
+  - first:
+      213: 5166780236301258372
+    second: RegenEffect_Sheet_64x64_11
+  - first:
+      213: 4882667477526233782
+    second: RegenEffect_Sheet_64x64_12
+  - first:
+      213: 7273107177790976580
+    second: RegenEffect_Sheet_64x64_13
+  - first:
+      213: 6589589455710901913
+    second: RegenEffect_Sheet_64x64_14
+  - first:
+      213: -5755368946571915491
+    second: RegenEffect_Sheet_64x64_15
+  - first:
+      213: 4733515628266794677
+    second: RegenEffect_Sheet_64x64_16
+  - first:
+      213: 2534797082575894814
+    second: RegenEffect_Sheet_64x64_17
+  - first:
+      213: -130064749102450748
+    second: RegenEffect_Sheet_64x64_18
+  - first:
+      213: -5645293525445678652
+    second: RegenEffect_Sheet_64x64_19
+  - first:
+      213: -6730099542846388785
+    second: RegenEffect_Sheet_64x64_20
+  - first:
+      213: 1476451967735931742
+    second: RegenEffect_Sheet_64x64_21
+  - first:
+      213: 2905602040747154759
+    second: RegenEffect_Sheet_64x64_22
+  - first:
+      213: 8600813367274065216
+    second: RegenEffect_Sheet_64x64_23
+  - first:
+      213: 994897966607454011
+    second: RegenEffect_Sheet_64x64_24
+  - first:
+      213: -7953626723124286132
+    second: RegenEffect_Sheet_64x64_25
+  - first:
+      213: 640430400619650609
+    second: RegenEffect_Sheet_64x64_26
+  - first:
+      213: -3988737505636154884
+    second: RegenEffect_Sheet_64x64_27
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_0
+      rect:
+        serializedVersion: 2
+        x: 11
+        y: 202
+        width: 40
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5250e4bc88c30c0a0800000000000000
+      internalID: -6863419273888529115
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_1
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 207
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3a57bb5e94ca01280800000000000000
+      internalID: -9074563815764691549
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_2
+      rect:
+        serializedVersion: 2
+        x: 42
+        y: 214
+        width: 12
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b6b576a22f69c7df0800000000000000
+      internalID: -181103918163993749
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_3
+      rect:
+        serializedVersion: 2
+        x: 77
+        y: 203
+        width: 37
+        height: 39
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 90f6fa82d555878a0800000000000000
+      internalID: -6307197419529474295
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_4
+      rect:
+        serializedVersion: 2
+        x: 141
+        y: 205
+        width: 38
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0e8be0a31b512e510800000000000000
+      internalID: 1576846670460532960
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_5
+      rect:
+        serializedVersion: 2
+        x: 203
+        y: 203
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c00914eb4219d700800000000000000
+      internalID: 565503345370398917
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_6
+      rect:
+        serializedVersion: 2
+        x: 44
+        y: 207
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9285433a74695ac90800000000000000
+      internalID: -7159150798210574295
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_7
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 137
+        width: 45
+        height: 45
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dd044d6702c4bc2f0800000000000000
+      internalID: -951583193942441763
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_8
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 139
+        width: 41
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b4232cae43fdee870800000000000000
+      internalID: 8714147747378377291
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_9
+      rect:
+        serializedVersion: 2
+        x: 139
+        y: 139
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3a35e71cbde791090800000000000000
+      internalID: -8063274175520943197
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_10
+      rect:
+        serializedVersion: 2
+        x: 202
+        y: 138
+        width: 44
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b24322c11399d250800000000000000
+      internalID: 5969964485537120945
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_11
+      rect:
+        serializedVersion: 2
+        x: 12
+        y: 75
+        width: 41
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 48ece39004714b740800000000000000
+      internalID: 5166780236301258372
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_12
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 76
+        width: 40
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6b2cd4a8338b2c340800000000000000
+      internalID: 4882667477526233782
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_13
+      rect:
+        serializedVersion: 2
+        x: 139
+        y: 74
+        width: 43
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 442339191744fe460800000000000000
+      internalID: 7273107177790976580
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_14
+      rect:
+        serializedVersion: 2
+        x: 170
+        y: 99
+        width: 11
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 996de4362bce27b50800000000000000
+      internalID: 6589589455710901913
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_15
+      rect:
+        serializedVersion: 2
+        x: 205
+        y: 75
+        width: 38
+        height: 39
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d1f4444bf62d020b0800000000000000
+      internalID: -5755368946571915491
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_16
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 13
+        width: 38
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5be2a997263d0b140800000000000000
+      internalID: 4733515628266794677
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_17
+      rect:
+        serializedVersion: 2
+        x: 75
+        y: 11
+        width: 41
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e19f1a444886d2320800000000000000
+      internalID: 2534797082575894814
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_18
+      rect:
+        serializedVersion: 2
+        x: 79
+        y: 42
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4c7b2ffbccae13ef0800000000000000
+      internalID: -130064749102450748
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_19
+      rect:
+        serializedVersion: 2
+        x: 108
+        y: 26
+        width: 9
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4c96ffad273e7a1b0800000000000000
+      internalID: -5645293525445678652
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_20
+      rect:
+        serializedVersion: 2
+        x: 138
+        y: 9
+        width: 45
+        height: 45
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fc54f959f12e992a0800000000000000
+      internalID: -6730099542846388785
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_21
+      rect:
+        serializedVersion: 2
+        x: 207
+        y: 37
+        width: 10
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e53a3d8fd396d7410800000000000000
+      internalID: 1476451967735931742
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_22
+      rect:
+        serializedVersion: 2
+        x: 210
+        y: 17
+        width: 32
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 74d526959a5c25820800000000000000
+      internalID: 2905602040747154759
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_23
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 28
+        width: 27
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04d4dcf303a3c5770800000000000000
+      internalID: 8600813367274065216
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_24
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 15
+        width: 7
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b3f456fed669ecd00800000000000000
+      internalID: 994897966607454011
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_25
+      rect:
+        serializedVersion: 2
+        x: 106
+        y: 14
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c4d6f1ca2aa0f9190800000000000000
+      internalID: -7953626723124286132
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_26
+      rect:
+        serializedVersion: 2
+        x: 206
+        y: 14
+        width: 15
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13e9b446e0443e800800000000000000
+      internalID: 640430400619650609
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RegenEffect_Sheet_64x64_27
+      rect:
+        serializedVersion: 2
+        x: 220
+        y: 13
+        width: 19
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cf187423f5825a8c0800000000000000
+      internalID: -3988737505636154884
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      RegenEffect_Sheet_64x64_0: -6863419273888529115
+      RegenEffect_Sheet_64x64_1: -9074563815764691549
+      RegenEffect_Sheet_64x64_10: 5969964485537120945
+      RegenEffect_Sheet_64x64_11: 5166780236301258372
+      RegenEffect_Sheet_64x64_12: 4882667477526233782
+      RegenEffect_Sheet_64x64_13: 7273107177790976580
+      RegenEffect_Sheet_64x64_14: 6589589455710901913
+      RegenEffect_Sheet_64x64_15: -5755368946571915491
+      RegenEffect_Sheet_64x64_16: 4733515628266794677
+      RegenEffect_Sheet_64x64_17: 2534797082575894814
+      RegenEffect_Sheet_64x64_18: -130064749102450748
+      RegenEffect_Sheet_64x64_19: -5645293525445678652
+      RegenEffect_Sheet_64x64_2: -181103918163993749
+      RegenEffect_Sheet_64x64_20: -6730099542846388785
+      RegenEffect_Sheet_64x64_21: 1476451967735931742
+      RegenEffect_Sheet_64x64_22: 2905602040747154759
+      RegenEffect_Sheet_64x64_23: 8600813367274065216
+      RegenEffect_Sheet_64x64_24: 994897966607454011
+      RegenEffect_Sheet_64x64_25: -7953626723124286132
+      RegenEffect_Sheet_64x64_26: 640430400619650609
+      RegenEffect_Sheet_64x64_27: -3988737505636154884
+      RegenEffect_Sheet_64x64_3: -6307197419529474295
+      RegenEffect_Sheet_64x64_4: 1576846670460532960
+      RegenEffect_Sheet_64x64_5: 565503345370398917
+      RegenEffect_Sheet_64x64_6: -7159150798210574295
+      RegenEffect_Sheet_64x64_7: -951583193942441763
+      RegenEffect_Sheet_64x64_8: 8714147747378377291
+      RegenEffect_Sheet_64x64_9: -8063274175520943197
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
